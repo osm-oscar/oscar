@@ -14,7 +14,6 @@ TextSearch.cpp
 GeoSearch.cpp
 CellTextCompleter.cpp
 CellOpTree.cpp
-OscarItemPayload.cpp
 )
 
 add_target_properties(sserialize COMPILE_FLAGS -fPIC)
