@@ -1,0 +1,30 @@
+LONGTERM:
+Out of memory creation
+
+LONGTERM:
+xz compression (complete abstract compression)
+
+LONGTERM:
+Multiple set operation polcies for cells and items so it's possible to do:
+a=rohrdommel
+b=marabu
+c=intersect(a,b, cells, unite items)
+
+LONGTERM: 
+Query Language improvements:
+improve query refinement options: +-/^ neben dem key/value sodass man den key/value z.b. abziehen kann
+
+LONGTERM:
+HierarchicalCQR:
+Based on Regions. Essential the GeoHierarchy::SubSet in a compressed form. Set-Operations can then be done on this subgraph.
+In order to make this work, the graph has to be transformed to tree. We can simply do this by following the graph in in-order and skipping processed regions.
+To create the real SubSet a bottom-up traversal is then needed. But the set-operations can all be done on the tree-subgraph.
+Layout may be as follows (for a single region entry)
+----------------------------------------------------------------------------------------------------------------------
+SUBTREESIZE|SUBTREE|CHILDRENCOUNT|CHILDRENOFFSETS|REGION_IS_FULLMATCH|REGION_EXCLUSIVE_PARTIAL_MATCHED_CELLS(ID,PTR)
+----------------------------------------------------------------------------------------------------------------------
+u32        |*      |u32          |[u32]          |boolean            |[(u32, u32)]
+----------------------------------------------------------------------------------------------------------------------
+
+LONGTERM:
+full support for relations

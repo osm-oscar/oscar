@@ -1,0 +1,1683 @@
+<!DOCTYPE html>
+<!--
+-->
+<html>
+    <head>
+        <title>OSCAR - OpenStreetMap at your fingertips</title>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="A simple search engine for OpenStreetMap">
+	<meta name="author" content="Daniel Bahrdt" >
+        <link rel="stylesheet" href="js/libs/leaflet/leaflet.css">
+        <link rel="stylesheet" media="screen" href="js/libs/twitter-bootstrap/css/bootstrap.css">
+        <!--<link rel="stylesheet" media="screen" href="js/libs/twitter-bootstrap/css/bootstrap-theme.css">-->
+        <link rel="stylesheet" href="js/libs/fuelux/css/fuelux.css">
+        <link rel="stylesheet" href="css/style.css">
+        <link rel="stylesheet" href="css/loadingspinner.css">
+        <script id="itemListEntryHtmlTemplate" type="text/x-tmpl-mustache">
+            <div class="panel panel-default" id="{{{shapeSrcType}}}PanelRoot{{{itemId}}}">
+                <div class="panel-heading results-panel-title" role="tab">
+                    <div class="panel-title" id="{{{shapeSrcType}}}PanelTitle{{{itemId}}}">
+                        <h4>
+                            <a class="accordion-toggle {{{matchingTagClass}}}" data-toggle="collapse" data-parent="#{{{shapeSrcType}}}List" href="#{{{shapeSrcType}}}Details{{{itemId}}}" id="{{{shapeSrcType}}}NameLink{{{itemId}}}" aria-expanded="true">
+                                {{itemName}}
+                            </a>
+                        </h4>
+                    </div>
+                </div>
+                <div class="panel-collapse collapse" role="tabpanel" id="{{{shapeSrcType}}}Details{{{itemId}}}" data-item-id="{{{itemId}}}" aria-expanded="true">
+                    <div class="panel-body">
+                        <table class="table table-hover table-bordered table-condensed">
+                            <thead>
+                                <tr>
+                                    <th>Key</th>
+                                    <th>Value</th>
+                                <tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <span>id</span>
+                                    </td>
+                                    <td>
+                                        <span>{{itemId}}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <span>OSM Id</span>
+                                    </td>
+                                    <td>
+                                        <span><a href="http://www.openstreetmap.org/{{{osmType}}}/{{{osmId}}}" target="_blank">{{osmId}}</a></span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <span>score</span>
+                                    </td>
+                                    <td>
+                                        <span>{{score}}</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <table class="table table-hover table-bordered table-condensed">
+                            <thead>
+                                <tr>
+                                    <th>Key</th>
+                                    <th>Value</th>
+                                <tr>
+                            </thead>                       
+                            <tbody>
+                            {{#wikilink}}
+                                <tr>
+                                    <td>
+                                        <span title='Add key to query'>
+                                            <a href='#{{{shapeSrcType}}}Details{{{itemId}}}' class='item-detail-key' data-query-key='wikipedia'>wikipedia</a>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span title='Open in new window'>
+                                            <a href='http://en.wikipedia.org/wiki/{{wikilink}}' target="_blank">{{wikilink}}</a>
+                                        </span>
+                                    </td>
+                                </tr>
+                            {{/wikilink}}
+                            {{#urlkvs}}
+                                <tr>
+                                    <td>
+                                        <span title='Add key to query'>
+                                            <a href='#{{{shapeSrcType}}}Details{{{itemId}}}' class='item-detail-key {{kc}}' data-query-key='{{k}}'>{{k}}</a>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span title='Open in new window'>
+                                            <a href='{{v}}' target="_blank" class='{{vc}}'>{{v}}</a>
+                                        </span>
+                                    </td>
+                                </tr>
+                            {{/urlkvs}}
+                            {{#kv}}
+                                <tr>
+                                    <td>
+                                        <span title='Add key to query'>
+                                            <a href='#{{{shapeSrcType}}}Details{{{itemId}}}' class='item-detail-key {{kc}}' data-query-key='{{k}}'>{{k}}</a>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span title='Add key:value to query'>
+                                            <a href='#{{{shapeSrcType}}}Details{{{itemId}}}' class='item-detail-value {{vc}}' data-query-key='{{k}}' data-query-value='{{v}}'>{{v}}</a>
+                                        </span>
+                                    </td>
+                                </tr>
+                            {{/kv}}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </script>
+        <script id="tree_template" type="text/x-tmpl-mustache">
+            <li class="tree-branch hide" data-template="treebranch" role="treeitem" aria-expanded="false">
+                <div class="tree-branch-header">
+                    <button class="tree-branch-name">
+                        <span class="glyphicon icon-caret glyphicon-play"></span>
+                        <span class="glyphicon icon-folder glyphicon-folder-close"></span>
+                        <span class="tree-label">Example Folder</span>
+                    </button>
+                </div>
+                <ul class="tree-branch-children" role="group"></ul>
+                <div class="tree-loader" role="alert">Loading...</div>
+            </li>
+            <li class="tree-item hide" data-template="treeitem" role="treeitem">
+                <button class="tree-item-name">
+                    <span class="glyphicon icon-item fueluxicon-bullet"></span>
+                    <span class="tree-label">Example Item</span>
+                    </button>
+            </li>
+        </script>
+    </head>
+    <body>
+	<div id="content_container">
+            <div id="search_container">
+                <form class="form-inline pull-left" id="search_form">
+                    <input name="q" type="text" placeholder="What do you want to find?" class="form-control" id="search_text">
+                </form>
+                <div id="loading_spinner_parent" class="">
+                    <h2 class="text-center">...WORKING...</h2>
+                </div>
+            </div>
+            <!--<div class="hidden">-->
+            
+            <div id="left_menu_parent" class="menu_parent">
+                <div id='options_parent' class='text-center'>
+                    <button type="button" class="btn btn-default" id="toggle_right_menu_button">Toggle options menu</button>
+                </div>
+            <!--</div>-->
+                <div id="results_tree_parent" class="fuelux">
+                    <div class="fuelux_tree" id="fuelux_tree_parent">
+                    </div>
+                </div>
+            <!--</div>
+            <div class="hidden">-->
+                <div id="items_parent">
+                    <div>
+                        <h2>
+                            Search Results<span id="itemsList_counter"></span>
+                        </h2>
+                    </div>
+                    <div class="panel-group" id="itemsList" role="tablist">
+                    </div>
+                </div>
+            </div>
+            <div id="map"></div>
+            <div id='options_menu_parent' class='menu_parent'>
+                <div id='config_parent'>
+                    <div class='form-group-sm'>
+                        <label for='show_help_checkbox'>
+                            <input type="checkbox" class="checkbox" id="show_help_checkbox">Show Help
+                        </label>
+                        <label for='show_item_relatives_checkbox'>
+                            <input type="checkbox" class="checkbox" id="show_item_relatives_checkbox">Show item's parents
+                        </label>
+                        <span class="glyphicon glyphicon-move" aria-hidden="true" id='config_menu_movehandle'></span>
+                    </div>
+                    <div class='form-group'>
+                        <div class="input-group" id='itemload_group'>
+                            <span class="input-group-addon">Load additional</span>
+                            <input class='form-control' type="number" value='500' min='0' max='5000' id='itemload_spinner' step="100"/>
+                            <span class="input-group-btn" id='itemload_accept_button_span'>
+                                <button type="button" class="btn btn-default" id="itemload_accept_button">results!</button>
+                            </span>
+                        </div>
+                    </div>
+                    <div class='form-group'>
+                        <button type="button" class="btn btn-default" id="pathquery_selectbutton">Select path</button>
+                        <span>
+                            Radius:
+                            <input id="pathquery_radius" type="number" value="100" min="50" max="20000" step="50"/>
+                        </span>
+                        <button type="button" class="btn btn-default" id="pathquery_acceptbutton">Accept path</button>
+                    </div>
+                    <div class='form-group'>
+                        <button type="button" class="btn btn-default" id="geoquery_selectbutton">Select rectangle:</button>
+                        <span data-class="geoquery_min_coord">
+                            (<input id="geoquery_minlat" data-class="geoquery_min_coord" type="number" value="0" min="-90" max="90" step="1"/>,
+                            <input id="geoquery_minlon" data-class="geoquery_min_coord" type="number" value="0" min="-180" max="180" step="1"/>)
+                        </span>
+                        X
+                        <span data-class="geoquery_max_coord">
+                            (<input id="geoquery_maxlat"  data-class="geoquery_max_coord" type="number" value="0" min="-90" max="90" step="1"/>,
+                            <input id="geoquery_maxlon"  data-class="geoquery_max_coord" type="number" value="0" min="-180" max="180" step="1"/>)
+                        </span>
+                        <button type="button" class="btn btn-default" id="geoquery_acceptbutton">Accept</button>
+                    </div>
+                    <div class='form-group'>
+                        <label for="visualize_all_results_checkbox">
+                            <input type="checkbox" class="checkbox" id="visualize_all_results_checkbox" checked>Visualize results
+                        </label>
+                        <label for='subset_type_checkbox'>
+                            <input type="checkbox" class="checkbox" id="subset_type_checkbox">Full CQR
+                        </label>
+                        <label for='oht_checkbox'>
+                            <input type="checkbox" class="checkbox" id="oht_checkbox" checked>Global unfold ratio
+                        </label>
+                        <div class="input-group" id='ohf_spinner_group'>
+                            <span class="input-group-addon">unfold ratio</span>
+                            <input class='form-control' type="number" value='95' min='0' max='100' id='ohf_spinner' step="1"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="right_menu_parent" class="menu_parent hidden">
+                <div id='right_menu_movehandle'></div>
+                <div id='right_menu_scroll_area'>
+                    <div id="help_parent" class='hidden'>
+                    <h2>Help</h2>
+                    <div>
+                        <p>OSCAR is a system to search the OpenStreetMap data set for items with matching tags.</p>
+                        <p>
+                            A query consists of query statements which are strings an item needs to have.
+                            Each query statement can be viewed as producing the set of items matching it.
+                            You can then make the usual operations with these sets like intersecting them.
+                            There is some special syntax to define the type of match and the set operation.
+                            See the table below for an overview. Some examples are listed underneath it.
+                            You may also make spatial queries which select all items in the vicinity of the given query rectangle. 
+                        </p>
+                        <p>
+                            The result is clustered and visualized in a hierarchy which you can find on the left side.
+                            In order to view the items within an entry of the hierarchy, you have to click on its name.
+                            The items will then be presented below the hierarchy.
+                        </p>
+                        <p>
+                            If you click on an item in this list, the map will zoom to it and the item will be highlighted.
+                            If you activate the <span class="label label-info">visualize results</span> checkbox, then all items in the result list will be drawn on the map.
+                            You can click on a blue item to scroll to its definition in the result list.
+                        </p>
+                        <p>
+                            If you enable the <span class="label label-info">Show item's parents</span> checkbox, then a list of intersecting regions will be presented on right for the currently selected item
+                        </p>
+                        <p>
+                            If you enable the <span class="label label-info">Full CQR</span> checkbox,
+                            then the complete hierarchy will be transfered instead of the currently viewed regions.
+                            Don't enable this if you want to make queries with a large result on a small bandwidth device.
+                            Large queries may transfer up to 10 Megabytes of data and take multiple seconds to analyze by the browser since all data is transfered in binary.
+                            Furthermore if you click on a region of the hierarchy, then its complete item index will be loaded, though the items themselves will be loaded dynamically.
+                        </p>
+                        <p>
+                            You can further improve the query by adding more statements for example by clicking on the key or values of items in the result list.
+                            This will add the key or key:value to the query. Some keys are special like the wikipedia or url key.
+                            Clicking on the value will take you to the respective wikipedia entry or the url defined as value.
+                        </p>
+                    </div>
+                    <table class="table table-hover table-bordered table-condensed">
+                        <tbody>
+                            <tr><th colspan="3">Query statements</th></tr>
+                            <tr>
+                                <td>Strings</td>
+                                <td>STRING</td>
+                                <td>A single query statement. i.e. Stuttgart. Spaces need to be escaped or the query needs to be surrounded with apostrophes and explicit match request</td>
+                            </tr>
+                            <tr>
+                                <td>Tags</td>
+                                <td>@key:value</td>
+                                <td>You can search for tags with the special prefix @key:value. i.e. @waterway:waterfall</td>
+                            </tr>
+                            <tr>
+                                <td>Region</td>
+                                <td>$region:id</td>
+                                <td>Search for region with id=id</td>
+                            </tr>
+                            <tr>
+                                <td>Cell</td>
+                                <td>$cell:id</td>
+                                <td>Search for cell with id=id</td>
+                            </tr>
+                            <tr>
+                                <td>Exact match</td>
+                                <td><span>"STRING"</span></td>
+                                <td>Matching elements exactly. i.e. "Stuttgart"</td>
+                            </tr>
+                            <tr>
+                                <td>Suffix match</td>
+                                <td><span>?STRING</span> or <span>?"STRING"</span></td>
+                                <td>Matching elements with STRING as suffix. i.e. ?"uttgart"</td>
+                            </tr>
+                            <tr>
+                                <td>Prefix match</td>
+                                <td><span>STRING?</span> or <span>"STRING"?</span></td>
+                                <td>Matching elements with STRING as prefix. i.e. "Stutt"?</td>
+                            </tr>
+                            <tr>
+                                <td>Substring match</td>
+                                <td>STRING or <span>?STRING?</span> or <span>?"STRING"?</span></td>
+                                <td>Matching elements with STRING as substring. i.e. ?"uttgar"?</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table class="table table-hover table-bordered table-condensed">
+                        <tbody>
+                            <tr><th colspan="3">Operations</th></tr>
+                            <tr>
+                                <td>Intersection</td>
+                                <td>SPACE or / surrounded by spaces</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>Union</td>
+                                <td>+ surrounded by spaces</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>Difference</td>
+                                <td>- surrounded by spaces</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>Symmetric-Difference</td>
+                                <td>^ surrounded by spaces</td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table class="table table-hover table-bordered table-condensed">
+                        <tbody>
+                            <tr><th colspan="3">Nesting</th></tr>
+                            <tr>
+                                <td>Braces</td>
+                                <td>()</td>
+                                <td>You can nest queries with braces</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table class="table table-hover table-bordered table-condensed">
+                        <tbody>
+                            <tr><th colspan="2">Examples</th></tr>
+                            <tr>
+                                <td><a href="#dummy" class="example-query-string" title="Click to use this as query">@waterway:waterfall germany</a></td>
+                                <td>List all waterfalls in Germany</td>
+                            </tr>
+                            <tr>
+                                <td><a href="#dummy" class="example-query-string" title="Click to use this as query">@tourism:hotel "new york"</a></td>
+                                <td>List all hotels in New York</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <a href="#dummy" class="example-query-string" title="Click to use this as query">@amenity:restaurant (@cuisine:italian + @cuisine:french) munich</a>
+                                </td>
+                                <td>List all restaurants with italian or french cuisine in Munich</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <a href="#dummy" class="example-query-string" title="Click to use this as query">@amenity:fast_food munich - (burger? ?king) - (mc? ?donald?)</a>
+                                </td>
+                                <td>
+                                    List all fast food places in Munich excluding burger king and McDonald.
+                                    Here the braces are important to filter only those items that have "burger" as prefix and "king" as suffix in their name tags.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div>
+                        <h4>What if I don't know the tags?</h4>
+                        Oscar currently does not try understand what you want search. In order to find point-of-interests it is therefore necessary to input the correct tags. You can find a list of tags at <a href='https://wiki.openstreetmap.org/wiki/Map_Features' target='blank'>OpenStreetMap</a>.
+                    </div>
+                </div>
+                    <div id="relatives_parent" class='hidden'>
+                        <h2>Item <span id="relativesList_itemId"></span> has inherited tags from the following <span id="relativesList_counter"></span> regions:
+                        </h2>
+                        <div class="panel-group" id="relativesList" role="tablist"></div>
+                    </div>
+                </div>
+            </div>
+	</div>
+        <script type="text/javascript" src="js/libs/require.js/require.js"></script>
+        <script type="text/javascript">
+            var myConfig = {
+                styles : {
+                            shapes : {
+                                regions : {
+                                    normal : {color: 'yellow', stroke: true, fill: false, opacity: 0.8},
+                                    highlight : {color: 'yellow', stroke: true, fill: false, opacity: 1.0}
+                                },
+                                items : {
+                                    normal : {color: 'blue', stroke: true, fill: false, opacity: 0.8},
+                                    highlight : {color: 'red', stroke: true, fill: false, opacity: 1.0}
+                                },
+                                relatives : {
+                                    normal : {color: 'green', stroke: true, fill: false, opacity: 0.7},
+                                    highlight : {color: 'green', stroke: true, fill: false, opacity: 1.0}
+                                },
+                                geoquery : {
+                                    normal : {color: '#00BFFF', stroke: true, fill: true, opacity: 0.5},
+                                    highlight : {color: '#00BFFF', stroke: true, fill: true, opacity: 1.0}
+                                },
+                                pathquery : {
+                                    normal : {color: '#00BFFF', stroke: true, fill: false, opacity: 0.5},
+                                    highlight : {color: '#00BFFF', stroke: true, fill: false, opacity: 1.0}
+                                }
+                            },
+                            menu : {
+                                fadeopacity : 0.9
+                            }
+                        },
+                resultsview : {
+                            urltags : {"url" : 1, "website" : 1, "link" : 1, "contact:website" : 1}
+                },
+                geoquery : {
+                    samplecount : 10
+                },
+                functionality : {
+                    shapes : {
+                        "highlightListItemOnClick" : {
+                            "items" : true,
+                            "relatives" : false
+                        }
+                    }
+                },
+                timeouts : {
+                    query : 10000,
+                    loadingSpinner : 1000,
+                    geoquery_select : 10000,
+                    pathquery : {
+                        select : 10000
+                    }
+                }
+            };
+            function SimpleHash() {
+                var m_size = 0;
+                var m_values = {};
+                return {
+                    values : function() { return m_values; },
+                    size : function() { return m_size; },
+                    insert : function(key, value) {
+                        if (m_values[key] === undefined) {
+                            m_size += 1;
+                        }
+                        m_values[key] = value;
+                    },
+                    count : function(key) {
+                        return m_values[key] !== undefined;
+                    },
+                    at : function(key) {
+                        return m_values[key];
+                    },
+                    erase : function(key) {
+                       if (m_values[key] !== undefined) {
+                           m_size -= 1;
+                           delete m_values[key];
+                       }
+                    },
+                    clear : function() {
+                        m_size = 0;
+                        m_values = {};
+                    }
+                };
+            };
+            requirejs.config({
+                baseUrl: "js/libs",
+                config: {
+                    'oscar' : { url : "http://127.0.0.1:8080"}
+                },
+                paths: {
+                    "jquery": "jquery/jquery",
+                    "leaflet" : "leaflet/leaflet",
+                    "jdataview" : "jdataview/jdataview",
+                    "jbinary" : "jbinary/jbinary",
+                    "sserialize" : "sserialize/sserialize",
+                    "bootstrap" : "twitter-bootstrap/js/bootstrap",
+                    "oscar" : "oscar/oscar",
+                    "fuelux" : "fuelux/js/fuelux",
+                    "moment" : "moment/moment.min",
+                    "mustache" : "mustache/mustache",
+                    "jqueryui" : "jqueryui/jquery-ui"
+                },
+                shim: {
+                    'bootstrap' : { deps : ['jquery'] }
+                },
+                waitSeconds: 10
+            });
+            
+            requirejs( ["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "mustache", "jqueryui"],
+            function(oscar, leaflet, jQuery, bootstrap, fuelux, jbinary, mustache) {
+                //main entry point
+                var osmAttr = '&copy; <a target="_blank" href="http://www.openstreetmap.org">OpenStreetMap</a>';
+                var state = {
+                    map : {},
+                    regions : {
+                        promised : {},//referenced by id
+                        drawn : SimpleHash(),//id -> [Leaflet-Item]
+                        highlighted : {}//id -> leaflet-item (stored in drawn)
+                    },
+                    items : {
+                        shapes : {
+                            promised : {},//referenced by id
+                            drawn : SimpleHash(),//id -> [leaflet-item]
+                            regular : {}, //id -> id (stored in drawn)
+                            highlighted : {}//id -> id (stored in drawn)
+                        },
+                        listview : {
+                            promised : SimpleHash(),//referenced by id
+                            drawn : SimpleHash(),//referenced by id
+                            hasmore : false,
+                            loadsmore : false, //currently loads more into the result list
+                            visualizeall: false,
+                            loadtarget : 0,
+                            selectedRegionId : undefined
+                        }
+                    },
+                    relatives : {
+                        shapes : {
+                            promised : {},//referenced by id
+                            drawn : SimpleHash(),//id -> [leaflet-item]
+                            regular : {}, //id -> id (stored in drawn)
+                            highlighted : {}//id -> id (stored in drawn)
+                        },
+                        listview : {
+                            promised : SimpleHash(),//referenced by id
+                            drawn : SimpleHash()//referenced by id
+                        }
+                    },
+                    loadingtasks : 1, //number of tasks currently loading, initially 1 for this page
+                    cqr : {},
+                    cqrRegExp : undefined,
+                    queries : {
+                        activeCqrId : -1,
+                        lastReturned : -1,
+                        lastSubmited : 0,
+                        lastQuery : "",
+                        queryInBound : false
+                    },
+                    timers : {
+                        geoquery : undefined,
+                        pathquery: undefined,
+                        query : undefined,
+                        loadingSpinner : undefined
+                    },
+                    geoquery : {
+                        active : false,
+                        clickcount : 0,
+                        mapshape : undefined
+                    },
+                    pathquery : {
+                        mapshape : undefined,
+                        selectButtonState : 'select'
+                    },
+                    domcache : {
+                        searchResultsCounter : undefined
+                    }
+                };
+                var itemListEntryTemplateString = jQuery('#itemListEntryHtmlTemplate').html();
+                state.map = leaflet.map('map').setView([48.74568, 9.1047], 17);
+                leaflet.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: osmAttr}).addTo(state.map);
+                var defErrorCB = function(textStatus, errorThrown) {
+                                                console.log("xmlhttprequest error textstatus=" + textStatus + "; errorThrown="+errorThrown);
+                                                if (confirm("Error occured. Refresh automatically?")) {
+                                                    location.reload();
+                                                }
+                                            };
+                function isMatchedTag(key, value) {
+                    var testString = key + ":" + value;
+                    var res = state.cqrRegExp.test(testString);
+                    return res;
+                };
+                function resultListTemplateDataFromItem(item, shapeSrcType) {
+                    itemKv = [];
+                    itemUrls = [];
+                    wikilink = undefined;
+                    var hasMatchingTag = false;
+                    var protoRegExp = /^.*:\/\//;
+                    for(i=0; i < item.size(); ++i) {
+                        var itemKey = item.key(i);
+                        var itemValue = item.value(i);
+                        if (itemKey === "wikipedia") {
+                            if (protoRegExp.test(itemValue)) {
+                                itemUrls.push({"k" : itemKey, "v" : itemValue});
+                            }
+                            else {
+                                wikilink = itemValue;
+                            }
+                        }
+                        else if (myConfig.resultsview.urltags[itemKey] !== undefined) {
+                            if (!protoRegExp.test(itemValue)) {
+                                itemValue = "http://" + itemValue;
+                            }
+                            itemUrls.push({"k" : itemKey, "v" : itemValue});
+                        }
+                        else {
+                            var tmp = {"k" : itemKey, "v" : itemValue};
+                            if (isMatchedTag(itemKey, itemValue)) {
+                                tmp["kc"] = "matched-key-color";
+                                tmp["vc"] = "matched-value-color";
+                                hasMatchingTag = true;
+                            }
+                            itemKv.push(tmp);
+                        }
+                    }
+                    return {
+                        "shapeSrcType" : shapeSrcType,
+                        "itemId" : item.id(),
+                        "score" : item.score(),
+                        "osmId" : item.osmid(),
+                        "osmType" : item.type(),
+                        "itemName" : item.name(),
+                        "matchingTagClass" : (hasMatchingTag ? "name-has-matched-tag" : false),
+                        "wikilink" : wikilink,
+                        "urlkvs" : itemUrls,
+                        "kv" : itemKv //{k,v, kc, vc}
+                    };
+                };
+                function displayLoadingSpinner() {
+                    if (state.timers.loadingSpinner !== undefined) {
+                        clearTimeout(state.timers.loadingSpinner);
+                        state.timers.loadingSpinner = undefined;
+                    }
+                    if (state.loadingtasks > 0) {
+                        jQuery('#loading_spinner_parent').removeClass('hidden');
+                    }
+                }
+                function startLoadingSpinner() {
+                    if (state.timers.loadingSpinner === undefined) {
+                        state.timers.loadingSpinner = setTimeout(displayLoadingSpinner, myConfig.timeouts.loadingSpinner);
+                    }
+                    state.loadingtasks += 1;
+                };
+                function endLoadingSpinner() {
+                    if (state.loadingtasks === 1) {
+                        state.loadingtasks = 0;
+                        if (state.timers.loadingSpinner !== undefined) {
+                            clearTimeout(state.timers.loadingSpinner);
+                            state.timers.loadingSpinner = undefined;
+                        }
+                        jQuery('#loading_spinner_parent').addClass('hidden');
+                    }
+                    else {
+                        state.loadingtasks -= 1;
+                    }
+                };
+                function clearGeoQueryMapShape() {
+                    if (state.geoquery.mapshape !== undefined) {
+                        state.map.removeLayer(state.geoquery.mapshape);
+                        state.geoquery.mapshape = undefined;
+                    }
+                }
+                function clearGeoQuerySelect() {
+                        endGeoQuerySelect();
+                        jQuery('#geoquery_acceptbutton').removeClass('btn-info');
+                        jQuery('#geoquery_selectbutton').html('Select rectangle');
+                        state.geoquery.active = false;
+                        clearGeoQueryMapShape();
+                }
+                function updateGeoQueryMapShape() {
+                    clearGeoQueryMapShape();
+                    var sampleStep = 1.0 / myConfig.geoquery.samplecount;
+                    var sampleCount = myConfig.geoquery.samplecount;
+                    var pts = [];
+                    function fillPts(sLat, sLng, tLat, tLng) {
+                        var latDiff = (tLat-sLat)*sampleStep;
+                        var lngDiff = (tLng-sLng)*sampleStep;
+                        for(i=0; i < sampleCount; ++i) {
+                            pts.push(L.latLng(sLat, sLng));
+                            sLat += latDiff;
+                            sLng += lngDiff;
+                        }
+                    }
+                    var minLat = parseFloat(jQuery('#geoquery_minlat').val());
+                    var maxLat = parseFloat(jQuery('#geoquery_maxlat').val());
+                    var minLng = parseFloat(jQuery('#geoquery_minlon').val());
+                    var maxLng = parseFloat(jQuery('#geoquery_maxlon').val());
+                    
+                    fillPts(minLat, minLng, minLat, maxLng);
+                    fillPts(minLat, maxLng, maxLat, maxLng);
+                    fillPts(maxLat, maxLng, maxLat, minLng);
+                    fillPts(maxLat, minLng, minLat, minLng);
+                    
+                    state.geoquery.mapshape = L.polygon(pts, myConfig.styles.shapes.geoquery.normal);
+                    state.map.addLayer(state.geoquery.mapshape);
+                    
+                };
+                function geoQuerySelect(e) {
+                    if (state.geoquery.clickcount === 0) {
+                        jQuery('#geoquery_minlat').val(e.latlng.lat);
+                        jQuery('#geoquery_minlon').val(e.latlng.lng);
+                        jQuery('[data-class="geoquery_min_coord"]').removeClass('bg-info');
+                        jQuery('[data-class="geoquery_max_coord"]').addClass('bg-info');
+                        state.geoquery.clickcount = 1;
+                    }
+                    else if (state.geoquery.clickcount === 1) {
+                        jQuery('#geoquery_maxlat').val(e.latlng.lat);
+                        jQuery('#geoquery_maxlon').val(e.latlng.lng);
+                        state.geoquery.clickcount = 2;
+                        endGeoQuerySelect();
+                    }
+                }
+                function endGeoQuerySelect() {
+                    if (state.timers.geoquery !== undefined) {
+                        clearTimeout(state.timers.geoquery);
+                        state.timers.geoquery = undefined;
+                    }
+                    jQuery('#geoquery_selectbutton').removeClass("btn-info");
+                    jQuery('[data-class="geoquery_min_coord"]').removeClass('bg-info');
+                    jQuery('[data-class="geoquery_max_coord"]').removeClass('bg-info');
+                    state.map.removeEventListener('click', geoQuerySelect);
+                    jQuery('#geoquery_acceptbutton').addClass('btn-info');
+                    updateGeoQueryMapShape();
+                }
+                function startGeoQuerySelect() {
+                    if (state.timers.geoquery !== undefined) {
+                        clearTimeout(state.timers.geoquery);
+                    }
+                    jQuery('#geoquery_acceptbutton').removeClass('btn-info');
+                    state.geoquery.clickcount = 0;
+                    state.geoquery.active = true;
+                    jQuery('#geoquery_selectbutton').addClass("btn-info");
+                    jQuery('#geoquery_selectbutton').html('Clear rectangle');
+                    jQuery('[data-class="geoquery_min_coord"]').addClass('bg-info');
+                    state.map.on('click', geoQuerySelect);
+                    state.timers.geoquery = setTimeout(endGeoQuerySelect, myConfig.timeouts.geoquery_select);
+                }
+                function resetPathQuery() {
+                    if (state.timers.pathquery !== undefined) {
+                        clearTimeout(state.timers.pathquery);
+                    }
+                    state.map.removeEventListener('click', pathQuerySelect);
+                    state.map.removeLayer(state.pathquery.mapshape);
+                    state.pathquery.mapshape = undefined;
+                    state.pathquery.selectButtonState = 'select';
+                    jQuery('#pathquery_acceptbutton').removeClass("btn-info");
+                    jQuery('#pathquery_selectbutton').removeClass("btn-info");
+                    jQuery('#pathquery_selectbutton').html('Select path');
+                }
+                function pathQuerySelect(e) {
+                    if (state.timers.pathquery !== undefined) {
+                        clearTimeout(state.timers.pathquery);
+                        state.timers.pathquery = setTimeout(endPathQuery, myConfig.timeouts.pathquery.select);
+                    }
+                    if (state.pathquery.mapshape === undefined) {
+                        state.pathquery.mapshape = L.polyline([], myConfig.styles.shapes.pathquery.highlight).addTo(state.map);
+                    }
+                    state.pathquery.mapshape.addLatLng(e.latlng);
+                }
+                function endPathQuery() {
+                    if (state.timers.pathquery !== undefined) {
+                        clearTimeout(state.timers.pathquery);
+                    }
+                    state.map.removeEventListener('click', pathQuerySelect);
+                    jQuery('#pathquery_acceptbutton').addClass("btn-info");
+                    jQuery('#pathquery_selectbutton').removeClass("btn-info");
+                    jQuery('#pathquery_selectbutton').html('Clear path');
+                    state.pathquery.selectButtonState = 'clear';
+                }
+                function startPathQuery() {
+                    if (state.timers.pathquery !== undefined) {
+                        clearTimeout(state.timers.pathquery);
+                    }
+                    state.pathquery.points = []
+                    jQuery('#pathquery_acceptbutton').removeClass("btn-info");
+                    jQuery('#pathquery_selectbutton').addClass("btn-info");
+                    jQuery('#pathquery_selectbutton').html("Finish path");
+                    state.pathquery.selectButtonState = 'finish';
+                    state.map.on('click', pathQuerySelect);
+                    state.timers.pathquery = setTimeout(endPathQuery, myConfig.timeouts.pathquery.select);
+                }
+                function addSingleQueryStatementToQuery(qstr) {
+                    var searchInput = jQuery('#search_text');
+                    qstr = searchInput.val() + " " + qstr.replace(' ', '\\ '); 
+                    searchInput.val(qstr);
+                    searchInput.change();
+                }
+                function addShapeToMap(leafletItem, itemId, shapeSrcType) {
+                    var itemDetailsId = '#' + shapeSrcType + 'Details' + itemId;
+                    var itemPanelRootId = '#' + shapeSrcType + 'PanelRoot' + itemId;
+                    if (myConfig.functionality.shapes.highlightListItemOnClick[shapeSrcType]) {
+                        leafletItem.on('click', function() {
+                                jQuery('#' + shapeSrcType + "List").find('.panel-collapse').each(
+                                        function() {
+                                                if (jQuery(this).hasClass('in')) {
+                                                        jQuery(this).collapse('hide');
+                                                }
+                                        }
+                                );
+                                jQuery(itemDetailsId).collapse('show');
+                                showItemRelatives(itemId);
+                                var container = jQuery('#'+ shapeSrcType +'_parent');
+                                var itemPanelRootDiv = jQuery(itemPanelRootId);
+                                if (itemPanelRootDiv === undefined) {
+                                    console.log("addShapeToMap: undefined PanelRoot", leafletItem, itemId, shapeSrcType, state);
+                                }
+                                else {
+                                    var scrollPos = itemPanelRootDiv.offset().top - container.offset().top + container.scrollTop();
+                                    container.animate({scrollTop: scrollPos });
+                                }
+                                highlightShape(itemId, shapeSrcType);
+                        });
+                    }
+                    state.map.addLayer(leafletItem);
+                    state[shapeSrcType].shapes.drawn.insert(itemId, leafletItem);
+                };
+                function clearListAndShapes(shapeSrcType) {
+                    jQuery('#'+shapeSrcType+'List').empty();
+                    for(i in state[shapeSrcType].shapes.drawn.values()) {
+                        state.map.removeLayer(state[shapeSrcType].shapes.drawn.at(i));
+                        state[shapeSrcType].shapes.drawn.erase(i);
+                    }
+                    state[shapeSrcType].listview.drawn.clear();
+                    state[shapeSrcType].listview.promised.clear();
+                    state[shapeSrcType].shapes.highlighted = {};
+                    state[shapeSrcType].shapes.regular = {};
+                    state[shapeSrcType].shapes.promised = {};
+                    
+                };
+                function clearViews() {
+                    jQuery('#itemsList').empty();
+                    jQuery('#itemsList_counter').empty();
+                    jQuery('#relativesList').empty();
+                    jQuery('#relativesList_counter').empty();
+                    jQuery('#relativesList_itemId').empty();
+                    state.regions.highlighted = {};
+                    state.regions.promised = {};
+                    state.items.listview.drawn.clear();
+                    state.items.listview.promised.clear();
+                    state.items.listview.hasmore = false;
+                    state.items.listview.selectedRegionId = undefined;
+                    state.items.shapes.highlighted = {};
+                    state.items.shapes.regular = {};
+                    state.items.shapes.promised = {};
+                    state.relatives.listview.drawn.clear();
+                    state.relatives.listview.promised.clear();
+                    state.relatives.shapes.highlighted = {};
+                    state.relatives.shapes.regular = {};
+                    state.relatives.shapes.promised = {};
+                    state.items.listview.loadtarget = 0;
+                    for (i in state.regions.drawn.values()) {
+                        state.map.removeLayer(state.regions.drawn.at(i));
+                        state.regions.drawn.erase(i);
+                    }
+                    for(i in state.items.shapes.drawn.values()) {
+                        state.map.removeLayer(state.items.shapes.drawn.at(i));
+                        state.items.shapes.drawn.erase(i);
+                    }
+                    for(i in state.relatives.shapes.drawn.values()) {
+                        state.map.removeLayer(state.relatives.shapes.drawn.at(i));
+                        state.relatives.shapes.drawn.erase(i);
+                    }
+                    jQuery('#MyTree').tree('destroy');
+                    jQuery('<ul>', {'id' : "MyTree", 'class' : "tree", 'role' : "tree"}).appendTo('#fuelux_tree_parent');
+                    jQuery('#MyTree').append(jQuery('#tree_template').html());
+                    jQuery('#search_results_counter').empty();
+                };
+                function clearHighlightedShapes(shapeSrcType) {
+                    for(i in state[shapeSrcType].shapes.highlighted) {
+                        if (state[shapeSrcType].shapes.regular[i] === undefined) {//if it's not regularly drawn, remove it
+                            state.map.removeLayer(state[shapeSrcType].shapes.drawn.at(i));
+                            state[shapeSrcType].shapes.drawn.erase(i);
+                        }
+                        else {
+                            state[shapeSrcType].shapes.drawn.at(i).setStyle(myConfig.styles.shapes[shapeSrcType]['normal']);
+                        }
+                    }
+                    state[shapeSrcType].shapes.highlighted = {};
+                };
+                function clearVisualizedItems() {
+                    state.items.shapes.promised = {};
+                    state.items.shapes.regular = {};
+                    state.items.shapes.highlighted = {};
+                    for(i in state.items.shapes.drawn.values()) {
+                        if (state.items.shapes.highlighted[i] === undefined) {
+                            state.map.removeLayer(state.items.shapes.drawn.at(i));
+                        }
+                    }
+                    state.items.shapes.drawn.clear();
+                };
+                function visualizeResultListItems() {
+                    state.items.shapes.promised = {};
+                    var itemsToDraw = [];
+                    for(i in state.items.listview.drawn.values()) {
+                        if (!state.items.shapes.drawn.count(i)) {
+                            state.items.shapes.promised[i] = state.items.listview.drawn.at(i);
+                            itemsToDraw.push(i);
+                        }
+                    }
+                    startLoadingSpinner();
+                    oscar.getShapes(itemsToDraw, function(shapes) {
+                        endLoadingSpinner();
+                        for(i in itemsToDraw) {
+                            var itemId = itemsToDraw[i];
+                            if (state.items.shapes.promised[itemId] === undefined) {
+                                continue;
+                            }
+                            if (shapes[itemId] === undefined ||
+                                !state.items.listview.drawn.count(itemId) ||
+                                state.items.shapes.drawn.count(itemId))
+                            {
+                                delete state.items.shapes.promised[itemId];
+                                continue;
+                            }
+                            delete state.items.shapes.promised[itemId];
+                            var itemShape = oscar.leafletItemFromShape(shapes[itemId]);
+                            itemShape.setStyle(myConfig.styles.shapes.items.normal);
+                            state.items.shapes.regular[itemId] = itemId;
+                            addShapeToMap(itemShape, itemId, "items");
+                        }
+                    }, defErrorCB);
+                };
+ 
+
+                function highlightShape(itemId, shapeSrcType) {
+                    if (state[shapeSrcType].shapes.highlighted[itemId] !== undefined) {//already highlighted
+                        return;
+                    } 
+                    if (state[shapeSrcType].shapes.drawn.count(itemId)) { //this already on the map, change the style
+                        var lfi = state[shapeSrcType].shapes.drawn.at(itemId);
+                        clearHighlightedShapes(shapeSrcType);
+                        state[shapeSrcType].shapes.highlighted[itemId] = lfi;
+                        lfi.setStyle(myConfig.styles.shapes[shapeSrcType]['highlight']);
+                        state.map.fitBounds(lfi.getBounds());
+                    }
+                    else {
+                        state[shapeSrcType].shapes.promised = {};
+                        state[shapeSrcType].shapes.promised[itemId] = itemId;
+                        oscar.getShape(itemId,
+                                        function(shape) {
+                                            if ((state[shapeSrcType].shapes.promised[itemId] === undefined) || (state[shapeSrcType].shapes.drawn[itemId] !== undefined)) {
+                                                return;
+                                            }
+                                            clearHighlightedShapes(shapeSrcType);
+                                            var leafLetItem = oscar.leafletItemFromShape(shape);
+                                            leafLetItem.setStyle(myConfig.styles.shapes[shapeSrcType]['highlight']);
+                                            state[shapeSrcType].shapes.highlighted[itemId] = itemId;
+                                            addShapeToMap(leafLetItem, itemId, shapeSrcType);
+                                        },
+                                        defErrorCB
+                        );
+                        oscar.getItem(itemId,
+                                        function(item) {
+                                            state.map.fitBounds(item.bbox());
+                                        }, defErrorCB);
+                    }
+                };
+                function appendItemToListView(item, shapeSrcType) {
+                    if (item === undefined) {
+                        console.log("Undefined item displayed");
+                        return;
+                    }
+                    var itemId = item.id();
+                    if (state[shapeSrcType].listview.drawn.count(itemId)) {
+                        return;
+                    }
+                    state[shapeSrcType].listview.drawn.insert(itemId, itemId);
+                    
+                    var itemTemplateData = resultListTemplateDataFromItem(item, shapeSrcType);
+                    var rendered = mustache.render(itemListEntryTemplateString, itemTemplateData);
+                    var inserted = jQuery( jQuery(rendered).appendTo('#' + shapeSrcType + 'List') );
+                    jQuery('#' + shapeSrcType + 'NameLink'+itemId, inserted).click(
+                            function() {
+                                highlightShape(itemId, shapeSrcType);
+                                if (shapeSrcType !== "relatives") {
+                                    showItemRelatives(itemId);
+                                }
+                            }
+                    );
+                    function itemDetailQuery(e) {
+                        var me = jQuery(this);
+                        var myKey = me.attr('data-query-key');
+                        if (myKey === undefined) {
+                            return false;
+                        }
+                        var myQstr = "@" + myKey;
+                        var myValue = me.attr('data-query-value');
+                        if (myValue !== undefined) {
+                            myQstr += ":" + myValue;
+                        }
+                        addSingleQueryStatementToQuery(myQstr);
+                        return false;
+                    }
+                    jQuery('#' + shapeSrcType + 'Details'+itemId+" .item-detail-key", inserted).click(itemDetailQuery);
+                    jQuery('#' + shapeSrcType + 'Details'+itemId+" .item-detail-value", inserted).click(itemDetailQuery);
+                    searchResultsCounter = jQuery('#' + shapeSrcType + 'List_counter');
+                    searchResultsCounter.empty();
+                    searchResultsCounter.append("(" + state[shapeSrcType].listview.drawn.size() + ")");
+                    return;
+                };
+                function showItemRelatives(itemId) {
+                    if (!jQuery('#show_item_relatives_checkbox').is(":checked")) {
+                        return;
+                    }
+                    oscar.getItemsRelativesIds(itemId, function(relativesIds) {
+                        oscar.getItems(relativesIds, function(relatives) {
+                            clearListAndShapes("relatives");
+                            for(i in relatives) {
+                                appendItemToListView(relatives[i], "relatives");
+                            }
+                            {
+                                var tmp = jQuery('#relativesList_itemId');
+                                tmp.empty();
+                                tmp.append(""+itemId);
+                            }
+                        }, defErrorCB);
+                    }, defErrorCB);
+                };
+                ///Try to fill result list with up to about count items
+                function loadMoreIntoResultList() {
+                    var resultListOffset = state.items.listview.drawn.size() + state.items.listview.promised.size();
+                    
+                    var selectedRegionId = state.items.listview.selectedRegionId;
+                    
+                    if (state.items.listview.selectedRegionId === undefined ||
+                        !state.items.listview.hasmore ||
+                        state.items.listview.loadsmore) {
+                        return;
+                    }
+                    state.items.listview.loadsmore = true;
+                    startLoadingSpinner();
+                    state.cqr.regionItemIds(state.items.listview.selectedRegionId,
+                    function(itemIds) {
+                        for(i in itemIds) {
+                            var itemId = itemIds[i];
+                            state.items.listview.promised.insert(itemId, itemId);
+                        }
+                        endLoadingSpinner();
+                        var mySelectedRegionId = selectedRegionId;
+                        startLoadingSpinner();
+                        oscar.getItems(itemIds,
+                        function(items) {
+                            endLoadingSpinner();
+                            state.items.listview.hasmore = items.length > 0 && items.length >= oscar.maxFetchItems;
+                            state.items.listview.loadsmore = false;
+                            if (state.items.listview.loadtarget > resultListOffset + items.length && state.items.listview.hasmore && mySelectedRegionId === state.items.listview.selectedRegionId) {
+                                loadMoreIntoResultList();
+                            }
+                            for(i in items) {
+                                var item = items[i];
+                                var itemId = item.id();
+                                if (state.items.listview.promised.count(itemId)) {
+                                    appendItemToListView(item, "items");
+                                    state.items.listview.promised.erase(itemId);
+                                }
+                            }
+                            if (state.items.listview.visualizeall) {
+                                visualizeResultListItems();
+                            }
+                            if (state.items.listview.drawn.size() === 1) {
+                                for(i in state.items.listview.drawn.values()) {
+                                    jQuery('#itemsNameLink' + i).click();
+                                    break;
+                                }
+                            }
+                        },
+                        defErrorCB
+                        );
+                    },
+                    defErrorCB,
+                    resultListOffset
+                    );
+                };
+                function regionLayersToFront() {
+                    for(i in state.regions.drawn.values()) {
+                        state.regions.drawn.values()[i].bringToFront();
+                    }
+                }
+                function updateMapRegions(regions) {
+                    state.regions.promised = {};
+                    var availableMapRegions = {};
+                    var fetchMapRegions = [];
+                    for(rid in regions) {
+                        if (state.regions.drawn.count(rid)) {
+                            availableMapRegions[rid] = state.regions.drawn.at(rid);
+                            state.regions.drawn.erase(rid);
+                        }
+                        else {
+                            fetchMapRegions.push(rid);
+                        }
+                    }
+                    //remove unused regions from map
+                    for(rid in state.regions.drawn.values()) {
+                        state.map.removeLayer(state.regions.drawn.at(rid));
+                        state.regions.drawn.erase(rid);
+                    }
+                    //replace old state.regions.drawn with new one
+                    state.regions.drawn.clear();
+                    for(i in availableMapRegions) {
+                        state.regions.drawn.insert(i, availableMapRegions[i]);
+                    }
+                    //fetch missing shapes
+                    if (fetchMapRegions.length) {
+                        for(i in fetchMapRegions) {
+                            state.regions.promised[fetchMapRegions[i]] = fetchMapRegions[i];
+                        }
+                        startLoadingSpinner();
+                        oscar.getShapes(fetchMapRegions,
+                                        function(shapes) {
+                                            endLoadingSpinner();
+                                            for(shapeId in shapes) {
+                                                if (state.regions.promised[shapeId] !== undefined && !state.regions.drawn.count(shapeId)) {
+                                                    delete state.regions.promised[shapeId];
+                                                    var shape = shapes[shapeId];
+                                                    var leafletItem = oscar.leafletItemFromShape(shape);
+                                                    leafletItem.setStyle(myConfig.styles.shapes['regions']['normal']);
+                                                    state.regions.drawn.insert(shapeId, leafletItem);
+                                                    state.map.addLayer(leafletItem);
+                                                }
+                                            }
+                                            regionLayersToFront();
+                                        },
+                                        defErrorCB
+                        );
+                    }
+                    else {
+                        regionLayersToFront();
+                    }
+                }
+                function displayRegionsItem() {
+                    var cqr = state.cqr;
+                    var rid = state.items.listview.selectedRegionId;
+                    if (cqr === undefined || rid === undefined) {
+                        return;
+                    }
+                    clearHighlightedShapes("items");
+                    clearVisualizedItems();
+                    state.items.listview.selectedRegionId = rid;
+                    //don't fetch bbox of "world"
+                    if (rid !== 0xFFFFFFFF) {
+                        oscar.getItem(rid, function(item) {
+                            state.map.fitBounds(item.bbox());
+                            var mapRegion = state.regions.drawn.at(rid);
+                            if (mapRegion !== undefined) {
+                                for(i in state.regions.highlighted) {
+                                    state.regions.highlighted[i].setStyle(myConfig.styles.shapes.regions.normal);
+                                    delete state.regions.highlighted[i];
+                                }
+                                state.regions.highlighted[rid] = mapRegion;
+                                mapRegion.setStyle(myConfig.styles.shapes.regions.highlight);
+                            }
+                        }, defErrorCB);
+                    }
+                    else {
+                        state.map.fitWorld();
+                    }
+                    jQuery('#itemsList').empty();
+                    state.items.listview.drawn.clear();
+                    state.items.listview.promised.clear();
+                    state.items.listview.hasmore = true;
+                    loadMoreIntoResultList();
+                };
+
+                ///returns the region ids of opened regions in dest
+                ///This only takes care of regions with children (inner nodes)
+                function getOpenRegions(node, dest) {
+                    jQuery(node).children('.tree\\-branch\\-children').not('.hidden').children('.tree\\-branch.tree\\-open').each(function() {
+                        var rid = jQuery(this).attr('rid');
+                        dest[rid] = rid;
+                        getOpenRegions(this, dest);
+                    });
+                };
+                function getOpenRegionsInTree() {
+                    var dest = {};
+                    jQuery('#MyTree').children('.tree\\-branch.tree\\-open').each(function() {
+                        var rid = jQuery(this).attr('rid');
+                        dest[rid] = rid;
+                        getOpenRegions(this, dest);
+                    });
+                    //and get the selected regions
+                    var selectedRegions = jQuery('#MyTree').tree('selectedItems');
+                    for(i in selectedRegions) {
+                        var rid = selectedRegions[i].dataAttributes.rid;
+                        if (rid !== 0xFFFFFFFF) { //filter root
+                            dest[rid] = rid;
+                        }
+                    }
+                    return dest;
+                };
+                function fullSubSetTreeDataSource(cqr) {
+                    return function(options, callback) {
+                        var subSet = cqr.subSet();
+                        var regionChildren = [];
+                        if (options.dataAttributes !== undefined) {
+                            regionChildren = subSet.regions[options.dataAttributes.rid].children;
+                        }
+                        else {
+                            regionChildren = subSet.rootchildren;
+                        }
+                        
+                        //fetch the items
+                        oscar.getItems(regionChildren,
+                            function(items) {
+                                var res = {data : []};
+                                if (options.dataAttributes !== undefined) {
+                                    res.data.push({name : options.name, type : 'item', dataAttributes : options.dataAttributes});
+                                }
+                                for (i in items) {
+                                    var item = items[i];
+                                    var itemId = item.id();
+                                    var regionInSubSet = subSet.regions[itemId];
+                                    res.data.push({
+                                                name : item.name() + ( regionInSubSet.apxitems > 0 ? " [~" + regionInSubSet.apxitems + "]" : ""),
+                                                type : ((regionInSubSet.children !== undefined && regionInSubSet.children.length) ? 'folder' : 'item'),
+                                                dataAttributes: {rid : itemId}
+                                        });
+                                }
+                                res.data.sort(function(a, b) {
+                                    var aSize = subSet.regions[a.dataAttributes.rid].apxitems;
+                                    var bSize = subSet.regions[b.dataAttributes.rid].apxitems;
+                                    return bSize-aSize;
+                                });
+                                callback(res);
+                            },
+                            defErrorCB
+                        );
+                    };
+                };
+                function flatCqrTreeDataSource(cqr) {
+                    function getItems(regionChildrenInfo, options, callback) {
+                        //fetch the items
+                        var regionChildrenApxItemsMap = {};
+                        var childIds = [];
+                        for(i in regionChildrenInfo) {
+                            var ci = regionChildrenInfo[i];
+                            regionChildrenApxItemsMap[ci['id']] = ci['apxitems'];
+                            childIds.push(ci['id']);
+                        }
+                        oscar.getItems(childIds,
+                            function(items) {
+                                var res = {data : []};
+                                if (options.dataAttributes !== undefined) {
+                                    res.data.push({name : options.name, type : 'item', dataAttributes : options.dataAttributes});
+                                }
+                                else {//add a World item
+                                    res.data.push({name : "Everything", type : 'item', dataAttributes : {rid : 0xFFFFFFFF, 'data-rid' : 0xFFFFFFFF}});
+                                }
+                                for (i in items) {
+                                    var item = items[i];
+                                    var itemId = item.id();
+                                    var apxItems = regionChildrenApxItemsMap[itemId];
+                                    res.data.push({
+                                                name : item.name() + ( apxItems > 0 ? " [~" + apxItems + "]" : ""),
+                                                type : 'folder',
+                                                //attr : {
+                                                //            id : 'treefolder'+itemId
+                                                //            rid2 : itemId
+                                                //},
+                                                dataAttributes: {rid : itemId, 'data-rid' : itemId}
+                                        });
+                                }
+                                callback(res);
+                            },
+                            defErrorCB
+                        );
+                    };
+                    return function(options, callback) {
+                        var rid;
+                        if (options.dataAttributes !== undefined) {
+                            rid = options.dataAttributes.rid;
+                        }
+                        else {
+                            rid = undefined;
+                        }
+                        startLoadingSpinner();
+                        cqr.regionChildrenInfo(rid,
+                                            function(regionChildrenInfo) {
+                                                endLoadingSpinner();
+                                                getItems(regionChildrenInfo, options, callback);
+                                            },
+                                            defErrorCB
+                        );
+                    };
+                };
+                function displayCqrAsTree(cqr) {
+                    clearViews();
+                    if (!cqr.hasResults()) {
+                        searchResultsCounter = jQuery('#search_results_counter');
+                        searchResultsCounter.empty();
+                        searchResultsCounter.append('(no results)');
+                        return;
+                    }
+                    var myDataSource;
+                    if (cqr.isFull()) {
+                        myDataSource = fullSubSetTreeDataSource(cqr);
+                    }
+                    else {
+                        myDataSource = flatCqrTreeDataSource(cqr);
+                    }
+                    var myTree = jQuery('#MyTree');
+                    myTree.tree({
+                            dataSource: myDataSource,
+                            multiSelect: false,
+                            cacheItems: true,
+                            folderSelect: false
+                    });
+
+                    jQuery('#MyTree').on('selected.fu.tree',  function(e, node) {
+                        if (node !== undefined && node.selected !== undefined) {
+                            for(i in node.selected) {
+                                var rid = node.selected[i].dataAttributes.rid;
+                                state.items.listview.selectedRegionId = rid;
+                                displayRegionsItem();
+                                break;
+                            }
+                            updateMapRegions(getOpenRegionsInTree());
+                        }
+                    });
+                    jQuery('#MyTree').on('deselected.fu.tree', function(e, node) {
+                        if (node !== undefined && node.selected !== undefined) {
+                            updateMapRegions(getOpenRegionsInTree());
+                        }
+                    });
+                    jQuery('#MyTree').on('opened.fu.tree', function(e, node) {
+                        updateMapRegions(getOpenRegionsInTree());
+                    });
+                    jQuery('#MyTree').on('closed.fu.tree', function(e, node) {
+                        updateMapRegions(getOpenRegionsInTree());
+                    });
+                    //open the tree if cqr.ohPath is available
+                    if (cqr.ohPath().length) {
+                        var myCqr = cqr;
+                        var ohPath = myCqr.ohPath();
+                        var ohPathPos = 0;
+                        var myTree = jQuery('#MyTree');
+                        var evHandler = function(e, node) {
+                            expand();
+                        };
+                        function expand() {
+                            if (ohPathPos >= ohPath.length) {
+                                //FullCQR currently has no opening hints, no need to check for that;
+                                var mySelectNode = jQuery("[class*='tree\\-item']" + '[rid=' + ohPath[ohPathPos-1] + "]", myTree);
+                                if (mySelectNode.length) {
+                                    var mySearchNode = jQuery('[data-rid=' + ohPath[ohPathPos-1] + '] .tree\\-branch\\-header', myTree);
+                                    myTree.off('loaded.fu.tree', evHandler);
+                                    var scrollPos = mySearchNode.offset().top - myTree.offset().top + myTree.scrollTop();
+                                    myTree.animate({scrollTop: scrollPos });
+                                    myTree.tree('selectItem', mySelectNode);
+                                }
+                            }
+                            else {
+                                var mySearchNode = jQuery('[data-rid=' + ohPath[ohPathPos] + '] .tree\\-branch\\-header', myTree);
+                                if (mySearchNode.length) {
+                                    ++ohPathPos;
+                                    myTree.tree('discloseFolder', mySearchNode);
+                                }
+                            }
+                        };
+                        myTree.on('loaded.fu.tree', evHandler);
+                        expand();
+                        /*
+                        var myInitialLoadChecker = function(e, node) {
+                            var mySearchNode = jQuery('[data-rid=' + ohPath[ohPathPos] + ']', myTree);
+                            if (mySearchNode.length) {
+                                myTree.off('loaded.fu.tree', myInitialLoadChecker);
+                                myTree.on('loaded.fu.tree', evHandler);
+                                expand();
+                            }
+                        };
+                        if (jQuery('[data-rid=' + ohPath[ohPathPos] + ']', myTree).length) {
+                            expand();
+                        }
+                        else {
+                            myTree.on('loaded.fu.tree', myInitialLoadChecker);
+                        }
+                        */
+                    }
+                };
+                function doCompletion() {
+                    if (jQuery("#search_text").val() === state.queries.lastQuery) {
+                        return;
+                    }
+                    
+                    //query has changed, ddos the server! TODO: call off all ajax loads from earlier calls
+                    var myQuery = jQuery("#search_text").val();
+                    state.queries.lastQuery = myQuery + "";//make sure state hold a copy
+                    
+                    var ohf = (parseInt(jQuery('#ohf_spinner').val())/100.0);
+                    var globalOht = jQuery('#oht_checkbox').is(':checked');
+                    //ready for lift-off
+                    var myQueryCounter = state.queries.lastSubmited + 0;
+                    state.queries.lastSubmited += 1;
+                    var callFunc;
+                    //call sequence starts
+                    if (jQuery("#subset_type_checkbox").is(':checked')) {
+                        callFunc = function(q, scb, ecb) {
+                            oscar.completeFull(q, scb, ecb);
+                        };
+                    }
+                    else {
+                        callFunc = function(q, scb, ecb) {
+                          oscar.completeSimple(q, scb, ecb, ohf, globalOht);  
+                        };
+                    }
+                    //ignite loading feedback
+                    startLoadingSpinner();
+                    
+                    //push our query as history state
+                    window.history.pushState({"q" : myQuery}, undefined, location.pathname + "?q="+encodeURIComponent(myQuery));
+                    
+                    //lift-off
+                    callFunc(myQuery,
+                                     function(cqr) {
+                                        //orbit reached, iniate coupling with user
+                                        endLoadingSpinner();
+                                        if (state.queries.lastReturned < myQueryCounter) {
+                                            state.queries.lastReturned = myQueryCounter + 0;
+                                            state.queries.activeCqrId = cqr.sequenceId();
+                                            state.cqr = cqr;
+                                            state.cqrRegExp = oscar.cqrRexExpFromQuery(cqr.query());
+                                            displayCqrAsTree(cqr);
+                                        }
+                                     },
+                                     function(jqXHR, textStatus, errorThrown) {
+                                        //BOOM!
+                                        endLoadingSpinner();
+					alert("Failed to retrieve completion results. textstatus=" + textStatus + "; errorThrown=" + errorThrown);
+                                    });
+                };
+                function instantCompletion() {
+                    if (state.timers.query !== undefined) {
+                        clearTimeout(state.timers.query);
+                    }
+                    doCompletion();
+                };
+                function delayedCompletion() {
+                    if (state.timers.query !== undefined) {
+                        clearTimeout(state.timers.query);
+                    }
+                    state.timers.query = setTimeout(instantCompletion, myConfig.timeouts.query);
+                };
+                //https://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
+                function getParameterByName(name) {
+                    name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+                    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+                    results = regex.exec(location.search);
+                    return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+                }
+                function queryFromSearchLocation() {
+                    var myQ = getParameterByName("q");
+                    if (myQ.length) {
+                        jQuery('#search_text').val(myQ);
+                        instantCompletion();
+                    }
+                }
+                jQuery(document).ready(function() {
+                    
+                    //setup menus
+                    jQuery('#left_menu_parent').hover(function() {
+                        var selector;
+                        if (jQuery('#help_parent').hasClass('hidden') && jQuery('#relatives_parent').hasClass('hidden')) {
+                            selector = '#left_menu_parent';
+                        }
+                        else {
+                            selector = '#left_menu_parent, #right_menu_parent';
+                        }
+                        jQuery(selector).stop().fadeTo(200, 1.0);
+                    }, function() {
+                        var selector;
+                        if (jQuery('#help_parent').hasClass('hidden') && jQuery('#relatives_parent').hasClass('hidden')) {
+                            selector = '#left_menu_parent';
+                        }
+                        else {
+                            selector = '#left_menu_parent, #right_menu_parent';
+                        }
+                        jQuery(selector).fadeTo(2000, myConfig.styles.menu.fadeopacity);
+                    });
+                    
+                    jQuery('#right_menu_parent').hover(function() {
+                        var selector;
+                        if (jQuery('#help_parent').hasClass('hidden')) {
+                            selector = '#right_menu_parent';
+                        }
+                        else {
+                            selector = '#left_menu_parent, #right_menu_parent, #options_menu_parent';
+                        }
+                        jQuery(selector).stop().fadeTo(200, 1.0);
+                    }, function() {
+                        var selector;
+                        if (jQuery('#help_parent').hasClass('hidden')) {
+                            selector = '#right_menu_parent';
+                        }
+                        else {
+                            selector = '#left_menu_parent, #right_menu_parent, #options_menu_parent';
+                        }
+                        jQuery(selector).fadeTo(2000, myConfig.styles.menu.fadeopacity);
+                    });
+                    
+                    jQuery('#options_menu_parent').hover(function() {
+                        jQuery('#options_menu_parent').stop().fadeTo(200, 1.0);
+                    }, function() {
+                        jQuery('#options_menu_parent').fadeTo(2000, myConfig.styles.menu.fadeopacity);
+                    });
+                    
+                    //setup left menu
+                    jQuery('#toggle_right_menu_button').click(function() {
+                        jQuery('#options_menu_parent').toggleClass('hidden');
+                    });
+                    jQuery('#left_menu_parent').draggable({'handle': '#options_parent'});
+                    jQuery('#items_parent').bind('scroll', function() {
+                        if (jQuery(this).scrollTop() + jQuery(this).innerHeight() >= jQuery(this)[0].scrollHeight - 20) {
+                            loadMoreIntoResultList();
+                        }
+                    });
+                    
+                    //setup right menu
+                    jQuery('#right_menu_parent').draggable({'handle' : '#right_menu_movehandle'});
+                    jQuery('#right_menu_parent, #options_menu_parent').resizable();
+                    
+                    //setup options menu
+                    jQuery('#options_menu_parent').draggable({'handle' : '#config_menu_movehandle'});
+                    
+                    //setup config panel
+                    state.items.listview.visualizeall = jQuery('#visualize_all_results_checkbox').is(':checked');
+                    jQuery('#visualize_all_results_checkbox').bind('change',
+                        function() {
+                            state.items.listview.visualizeall = jQuery('#visualize_all_results_checkbox').is(':checked');
+                            if (!state.items.listview.visualizeall) {
+                                clearVisualizedItems();
+                            }
+                            else {
+                                visualizeResultListItems();
+                            }
+                        }
+                    );
+                    jQuery('#show_help_checkbox').bind('change',
+                        function() {
+                            var helpOn = jQuery('#show_help_checkbox').is(':checked');
+                            var relativesOn = jQuery('#show_item_relatives_checkbox').is(':checked');
+                            if (helpOn) {
+                                jQuery('#help_parent').removeClass('hidden');
+                            }
+                            else {
+                                jQuery('#help_parent').addClass('hidden');
+                            }
+                            if (helpOn || relativesOn) {
+                                jQuery('#right_menu_parent').removeClass('hidden');
+                            }
+                            else {
+                                jQuery('#right_menu_parent').addClass('hidden');
+                            }
+                        }
+                    );
+                    jQuery('#show_item_relatives_checkbox').bind('change',
+                        function() {
+                            var helpOn = jQuery('#show_help_checkbox').is(':checked');
+                            var relativesOn = jQuery('#show_item_relatives_checkbox').is(':checked');
+                            if (relativesOn) {
+                                jQuery('#relatives_parent').removeClass('hidden');
+                                //fetch parents of currently selected item
+                                for(i in state.items.shapes.highlighted) {
+                                    showItemRelatives(i);
+                                    break;
+                                }
+                            }
+                            else {
+                                jQuery('#relatives_parent').addClass('hidden');
+                                clearHighlightedShapes('relatives');
+                            }
+                            if (helpOn || relativesOn) {
+                                jQuery('#right_menu_parent').removeClass('hidden');
+                            }
+                            else {
+                                jQuery('#right_menu_parent').addClass('hidden');
+                            }
+                        }
+                    );
+                    jQuery('#itemload_accept_button').click(function(e) {
+                        var st = parseInt(jQuery('#itemload_spinner').val());
+                        if (st > 0) {
+                            state.items.listview.loadtarget = state.items.listview.promised.size() + state.items.listview.drawn.size() + st;
+                            loadMoreIntoResultList();
+                        }
+                    });
+                    jQuery('#geoquery_selectbutton').click(function() {
+                        if (state.geoquery.active) {
+                            clearGeoQuerySelect();
+                        }
+                        else {
+                            startGeoQuerySelect();
+                        }
+                    });
+                    jQuery('#geoquery_acceptbutton').click(function() {
+                        //first fetch the coordinates
+                        var minlat = parseFloat(jQuery('#geoquery_minlat').val());
+                        var minlon = parseFloat(jQuery('#geoquery_minlon').val());
+                        var maxlat = parseFloat(jQuery('#geoquery_maxlat').val());
+                        var maxlon = parseFloat(jQuery('#geoquery_maxlon').val());
+                        
+                        //end the geoquery
+                        clearGeoQuerySelect();
+                        
+                        if (minlat > maxlat) {
+                            tmp = maxlat;
+                            maxlat = minlat;
+                            minlat = tmp;
+                        }
+                        if (minlon > maxlon) {
+                            tmp = maxlon;
+                            maxlon = minlon;
+                            minlon = tmp;
+                        }
+                        var q = "$geo:" + minlon + "," + minlat + "," + maxlon + "," + maxlat;
+                        var st = jQuery('#search_text');
+                        st.val(st.val() + " " + q);
+                        st.change();
+                        clearGeoQueryMapShape();
+                    });
+                    jQuery('#geoquery_minlat, #geoquery_maxlat, #geoquery_minlon, #geoquery_maxlon').change(function(e) {
+                        updateGeoQueryMapShape();
+                    });
+                    
+                    jQuery('#pathquery_selectbutton').click(function() {
+                        if (state.pathquery.selectButtonState === 'select') {
+                            startPathQuery();
+                        }
+                        else if (state.pathquery.selectButtonState === 'finish') {
+                            endPathQuery();
+                        }
+                        else {
+                            resetPathQuery();
+                        }
+                    });
+                    jQuery('#pathquery_acceptbutton').click(function() {
+                        endPathQuery();
+                        if (state.pathquery.mapshape !== undefined) {
+                            var latLngs = state.pathquery.mapshape.getLatLngs();
+                            if (latLngs.length) {
+                                var qStr = "$path:" + jQuery('#pathquery_radius').val();
+                                
+                                for(i in latLngs) {
+                                    qStr += "," + latLngs[i].lat + "," + latLngs[i].lng;
+                                }
+                            
+                                var st = jQuery('#search_text');
+                                st.val(st.val() + " " + qStr);
+                                st.change();
+                            }
+                        }
+                        resetPathQuery();
+                    });
+                    
+                    //setup help
+                    jQuery('.example-query-string').bind('click', function() {
+                        var st = jQuery('#search_text');
+                        st.val(this.firstChild.data);
+                        st.change();
+                    });
+                    
+                    //setup search field
+                    jQuery('#search_text').bind('change', delayedCompletion);
+                    jQuery('#search_text').bind('keyup', delayedCompletion);
+                    jQuery('#search_form').bind('submit', function(e) {
+                        e.preventDefault();
+                        instantCompletion();
+                    });
+                    jQuery('#search_button').bind('click', instantCompletion);
+                    
+                    jQuery(window).bind('popstate', function(e) {
+                        queryFromSearchLocation();
+                    });
+                    
+                    //check if there's a query in our location string
+                    queryFromSearchLocation();
+                    
+                    endLoadingSpinner();
+                });
+            });
+        </script>
+    </body>
+</html>
