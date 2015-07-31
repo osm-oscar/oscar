@@ -322,7 +322,8 @@ public:
 	void clear();
 	std::ostream & stats(std::ostream & out);
 	
-	bool addFromPBF(CreationConfig & cc);
+	///BUG: this only supports adding a single file, not multiple!
+	bool populate(CreationConfig & cc);
 	
 	inline Item at(uint32_t pos) const {
 		return Item(pos, MyBaseClass::at(pos));

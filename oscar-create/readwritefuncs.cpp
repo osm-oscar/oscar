@@ -9,68 +9,17 @@
 #include <sserialize/Static/TrieNodePrivates/TrieNodePrivates.h>
 #include <iostream>
 
-using namespace std;
-using namespace sserialize;
-
-//TODO: stringfactory auf id basiertes umstellen, tagstore filter auf id basiert umstellen, hash in ItemIndexFactory verbessern (evtl. den kompletten index hashen)
-//TODO:kvstore needs resizing
-
 namespace oscar_create {
 
-uint64_t getNumBlocks(const std::string & fileName) {
-	osmpbf::OSMFileIn inFile(fileName, false);
-	osmpbf::PrimitiveBlockInputAdaptor pbi;
-
-	if (!inFile.open()) {
-		std::cout << "Failed to open " <<  fileName << std::endl;
-		return 0;
-	}
-	
-	uint64_t blockCount = 0;
-	while(inFile.skipBlock()) {
-		++blockCount;
-	}
-	return blockCount;
-}
-
-bool findNodeIdBounds(const string & fileName, uint64_t & smallestId, uint64_t & largestId) {
-	osmpbf::OSMFileIn inFile(fileName, false);
-	if (!inFile.open()) {
-		std::cout << "Failed to open " <<  fileName << std::endl;
-		return false;
-	}
-	
-	sserialize::AtomicMinMax<int64_t> minMaxId;
-	std::atomic<uint64_t> numNodes(0);
-	
-	auto workFunc = [&minMaxId, &numNodes](osmpbf::PrimitiveBlockInputAdaptor & pbi) {
-		sserialize::MinMax<int64_t> myMinMax;
-		for(osmpbf::IWayStream way = pbi.getWayStream(); !way.isNull(); way.next()) {
-			for(osmpbf::IWayStream::RefIterator it(way.refBegin()), end(way.refEnd()); it != end; ++it) {
-				int64_t nId = std::max<int64_t>(*it, 0); //clip the id in case there are invalid entries (like negative ids)
-				myMinMax.update(nId);
-			}
-		}
-		minMaxId.update(myMinMax);
-		numNodes += pbi.nodesSize();
-	};
-	
-	osmpbf::parseFileCPPThreads(inFile, workFunc);
-	
-	largestId = std::max<int64_t>(minMaxId.max(), 0);
-	smallestId = std::min<int64_t>(minMaxId.min(), 0);
-	return largestId != smallestId;
-}
-
-UByteArrayAdapter ubaFromFC(const oscar_create::Config & opts, liboscar::FileConfig fc) {
+sserialize::UByteArrayAdapter ubaFromFC(const oscar_create::Config & opts, liboscar::FileConfig fc) {
 	std::string fileName = liboscar::fileNameFromFileConfig(opts.getOutFileDir(), fc, false);
-	return UByteArrayAdapter::openRo(fileName, false, MAX_SIZE_FOR_FULL_MMAP, CHUNKED_MMAP_EXPONENT);
+	return sserialize::UByteArrayAdapter::openRo(fileName, false, MAX_SIZE_FOR_FULL_MMAP, CHUNKED_MMAP_EXPONENT);
 }
 
 liboscar::Static::OsmKeyValueObjectStore mangleAndWriteKv(oscar_create::OsmKeyValueObjectStore & store, const oscar_create::Config & opts) {
 	std::cout << "Serializing KeyValueStore" << std::endl;
-	UByteArrayAdapter dataBaseListAdapter(sserialize::UByteArrayAdapter::createFile(1024*1024, opts.getOutFileName(liboscar::FC_KV_STORE)) );
-	UByteArrayAdapter idxFactoryData(sserialize::UByteArrayAdapter::createFile(1024*1024, opts.getOutFileName(liboscar::FC_INDEX)) );
+	sserialize::UByteArrayAdapter dataBaseListAdapter(sserialize::UByteArrayAdapter::createFile(1024*1024, opts.getOutFileName(liboscar::FC_KV_STORE)) );
+	sserialize::UByteArrayAdapter idxFactoryData(sserialize::UByteArrayAdapter::createFile(1024*1024, opts.getOutFileName(liboscar::FC_INDEX)) );
 	sserialize::ItemIndexFactory idxFactory;
 	idxFactory.setType(opts.indexType);
 	idxFactory.setIndexFile(idxFactoryData);
@@ -320,7 +269,7 @@ struct CellTextCompleterDerfer: public OsmKeyValueObjectStoreDerfer {
 	}
 	bool inSensitive;
 	bool diacriticInSensitive;
-	DiacriticRemover dr;
+	sserialize::DiacriticRemover dr;
 	std::unordered_set<uint32_t> seps;
 	
 	void operator()(const liboscar::Static::OsmKeyValueObjectStore::Item & item, StringsContainer & itemStrings, bool insertsAsItem) const {
@@ -379,7 +328,7 @@ struct CellTextCompleterDerfer: public OsmKeyValueObjectStoreDerfer {
 	}
 };
 
-void createTagStore(liboscar::Static::OsmKeyValueObjectStore & store, Config & opts, ItemIndexFactory & indexFactory) {
+void createTagStore(liboscar::Static::OsmKeyValueObjectStore & store, Config & opts, sserialize::ItemIndexFactory & indexFactory) {
 	std::cout << "Doing a sanitycheck before processing..." << std::flush;
 	if (store.sanityCheck()) {
 		std::cout << "OK" << std::endl;
@@ -389,7 +338,7 @@ void createTagStore(liboscar::Static::OsmKeyValueObjectStore & store, Config & o
 		return;
 	}
 
-	ProgressInfo info;
+	sserialize::ProgressInfo info;
 	std::cout << "Caching string tables to memory..." << std::flush;
 	std::vector<std::string> keyStringTable(store.keyStringTable().cbegin(), store.keyStringTable().cend());
 	std::vector<std::string> valueStringTable(store.valueStringTable().cbegin(), store.valueStringTable().cend());
@@ -412,7 +361,7 @@ void createTagStore(liboscar::Static::OsmKeyValueObjectStore & store, Config & o
 	info.end();
 	std::cout << "TagStore node count:" << tagStore.nodeCount() << std::endl;
 	
-	UByteArrayAdapter tagStoreAdapter(UByteArrayAdapter::createFile(1, opts.getOutFileName(liboscar::FC_TAGSTORE)));
+	sserialize::UByteArrayAdapter tagStoreAdapter(sserialize::UByteArrayAdapter::createFile(1, opts.getOutFileName(liboscar::FC_TAGSTORE)));
 
 	std::cout << "Serializing TagStore" << std::endl;	
 	tagStore.serialize(tagStoreAdapter, indexFactory);
@@ -422,7 +371,7 @@ void createTagStore(liboscar::Static::OsmKeyValueObjectStore & store, Config & o
 void
 handleSimpleTextSearch(
 const std::pair<liboscar::TextSearch::Type, TextSearchConfig> & x, Config & opts,
-liboscar::Static::OsmKeyValueObjectStore & store, ItemIndexFactory & indexFactory, sserialize::UByteArrayAdapter & dest) {
+liboscar::Static::OsmKeyValueObjectStore & store, sserialize::ItemIndexFactory & indexFactory, sserialize::UByteArrayAdapter & dest) {
 	OsmKeyValueObjectStoreDerfer itemsDerefer(x.second, store);
 	uint32_t itemsBegin = 0;
 	uint32_t itemsEnd = 0;
@@ -438,7 +387,7 @@ liboscar::Static::OsmKeyValueObjectStore & store, ItemIndexFactory & indexFactor
 
 	if (x.second.type == TextSearchConfig::Type::FULL_INDEX_TRIE ) {
 		sserialize::GeneralizedTrie::SinglePassTrie * tree = new sserialize::GeneralizedTrie::SinglePassTrie();
-		GeneralizedTrie::GeneralizedTrieCreatorConfig trieCfg = opts.toTrieConfig(x.second);
+		sserialize::GeneralizedTrie::GeneralizedTrieCreatorConfig trieCfg = opts.toTrieConfig(x.second);
 
 		trieCfg.trieList = &treeList;
 		trieCfg.indexFactory = &indexFactory;
@@ -460,7 +409,7 @@ void
 handleCellTextSearchBase(
 const std::pair<liboscar::TextSearch::Type, TextSearchConfig> & x,
 liboscar::Static::OsmKeyValueObjectStore & store, const sserialize::Static::ItemIndexStore & idxStore,
-ItemIndexFactory & indexFactory, sserialize::UByteArrayAdapter & dest) {
+sserialize::ItemIndexFactory & indexFactory, sserialize::UByteArrayAdapter & dest) {
 	TCT ct(x.second.mmType);
 	ct.create(store, idxStore, CellTextCompleterDerfer(x.second, store));
 	sserialize::UByteArrayAdapter::OffsetType bO = dest.tellPutPtr();
@@ -487,7 +436,7 @@ void
 handleCellTextSearch(
 const std::pair<liboscar::TextSearch::Type, TextSearchConfig> & x,
 liboscar::Static::OsmKeyValueObjectStore & store, const sserialize::Static::ItemIndexStore & idxStore,
-ItemIndexFactory & indexFactory, sserialize::UByteArrayAdapter & dest) {
+sserialize::ItemIndexFactory & indexFactory, sserialize::UByteArrayAdapter & dest) {
 	if (x.second.type == TextSearchConfig::Type::FLAT_TRIE) {
 		handleCellTextSearchBase< oscar_create::CellTextCompleterFlatTrie>(x, store, idxStore, indexFactory, dest);
 	}
@@ -501,7 +450,7 @@ ItemIndexFactory & indexFactory, sserialize::UByteArrayAdapter & dest) {
 
 void handleTextSearch(
 liboscar::Static::OsmKeyValueObjectStore & store,
-Config & opts, ItemIndexFactory & indexFactory, const sserialize::Static::ItemIndexStore & idxStore) {
+Config & opts, sserialize::ItemIndexFactory & indexFactory, const sserialize::Static::ItemIndexStore & idxStore) {
 	std::string fn = liboscar::fileNameFromFileConfig(opts.getOutFileDir(), liboscar::FC_TEXT_SEARCH, false);
 	sserialize::UByteArrayAdapter dest( sserialize::UByteArrayAdapter::createFile(1, fn) );
 	if (dest.size() != 1) {
@@ -535,7 +484,7 @@ Config & opts, ItemIndexFactory & indexFactory, const sserialize::Static::ItemIn
 	tsCreator.flush();
 }
 
-void handleGeoSearch(liboscar::Static::OsmKeyValueObjectStore & store, Config & opts, ItemIndexFactory & indexFactory) {
+void handleGeoSearch(liboscar::Static::OsmKeyValueObjectStore & store, Config & opts, sserialize::ItemIndexFactory & indexFactory) {
 	std::string fn = liboscar::fileNameFromFileConfig(opts.getOutFileDir(), liboscar::FC_GEO_SEARCH, false);
 	sserialize::UByteArrayAdapter dest( sserialize::UByteArrayAdapter::createFile(1, fn) );
 	if (dest.size() != 1) {
@@ -577,7 +526,7 @@ void handleKv(liboscar::Static::OsmKeyValueObjectStore & store, Config & opts) {
 	sserialize::Static::ItemIndexStore inputIndexStore;
 	{
 		std::cout << "Using index at " << opts.inputIndexStore << " as base for ItemIndexFactory" << std::endl;
-		inputIndexStore = sserialize::Static::ItemIndexStore(UByteArrayAdapter::openRo(opts.inputIndexStore, false));
+		inputIndexStore = sserialize::Static::ItemIndexStore(sserialize::UByteArrayAdapter::openRo(opts.inputIndexStore, false));
 		std::vector<uint32_t> tmp = indexFactory.insert(inputIndexStore);
 		for(uint32_t i = 0, s = tmp.size(); i < s; ++i) {
 			if (i != tmp[i])  {
@@ -590,9 +539,10 @@ void handleKv(liboscar::Static::OsmKeyValueObjectStore & store, Config & opts) {
 	//disable deduplication after inserting index as otherwise index ids change since the null index is always part of an store
 	indexFactory.setDeduplication(opts.indexDedup);
 
-	if (opts.memUsage)
+	if (opts.memUsage) {
 		sserialize::MemUsage().print();
-
+	}
+	
 	if (opts.tagStoreConfig.create)  {
 		createTagStore(store, opts, indexFactory);
 	}
@@ -601,9 +551,9 @@ void handleKv(liboscar::Static::OsmKeyValueObjectStore & store, Config & opts) {
 		handleGeoSearch(store, opts, indexFactory);
 	}
 
-	
-	if (opts.memUsage)
+	if (opts.memUsage) {
 		sserialize::MemUsage().print();
+	}
 	
 	if (opts.textSearchConfig.size()) {
 		handleTextSearch(store, opts, indexFactory, inputIndexStore);
@@ -611,8 +561,9 @@ void handleKv(liboscar::Static::OsmKeyValueObjectStore & store, Config & opts) {
 	
 	writeItemIndexFactory(indexFactory);
 	
-	if (opts.memUsage)
+	if (opts.memUsage) {
 		sserialize::MemUsage().print();
+	}
 	
 	totalTime.end();
 	std::cout << "Total time spent to handle KVS: " << totalTime << std::endl;
@@ -621,11 +572,11 @@ void handleKv(liboscar::Static::OsmKeyValueObjectStore & store, Config & opts) {
 bool writeItemIndexFactory(sserialize::ItemIndexFactory & indexFactory) {
 	
 	std::cout << "Serializing index" << std::endl;
-	OffsetType indexFlushedLength = indexFactory.flush();
+	sserialize::OffsetType indexFlushedLength = indexFactory.flush();
 	std::cout << "Index size: " << indexFlushedLength << std::endl;
 	if (indexFlushedLength) {
 		if (indexFlushedLength < 1024*1024 || indexFlushedLength < indexFactory.getFlushedData().size()) {
-			UByteArrayAdapter indexStorage = indexFactory.getFlushedData();
+			sserialize::UByteArrayAdapter indexStorage = indexFactory.getFlushedData();
 			indexFactory = sserialize::ItemIndexFactory();
 			if (!indexStorage.shrinkStorage(indexStorage.size() - indexFlushedLength) || indexStorage.size() != indexFlushedLength) {
 				std::cout << "Failed to shrink index to correct size. Should=" << indexFlushedLength << " is " << indexStorage.size() << std::endl;

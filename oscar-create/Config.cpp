@@ -758,6 +758,4 @@ std::ostream& operator<<(std::ostream& out, const Config & opts) {
 	return out;
 }
 
-
-
 }//end namespace oscar_create

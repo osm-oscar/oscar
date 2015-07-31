@@ -968,7 +968,7 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 	ct.nodeIdToGeoPoint = Context::GeoPointHashMap();
 }
 
-bool OsmKeyValueObjectStore::addFromPBF(CreationConfig & cc) {
+bool OsmKeyValueObjectStore::populate(CreationConfig & cc) {
 	std::cout << "Parsing file: " << cc.fileName << std::endl;
 	
 	assert(cc.rc.triangMaxCentroidDist > 1);

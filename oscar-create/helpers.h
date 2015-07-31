@@ -7,6 +7,9 @@
 
 namespace oscar_create {
 
+bool findNodeIdBounds(const std::string & fileName, uint64_t & smallestId, uint64_t & largestId);
+uint64_t getNumBlocks(const std::string & fileName);
+
 template<typename TOutPutIterator>
 bool readKeysFromFile(const std::string & fileName, TOutPutIterator out) {
 	if (!sserialize::MmappedFile::fileExists(fileName)) {
