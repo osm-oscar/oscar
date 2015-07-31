@@ -5,8 +5,6 @@
 
 namespace oscar_create {
 
-//TODO: add ability to specify filter to decrease storage usage during boundary extraction
-//Simple imitgation: do the extraction in rounds and thus reducing the storage amount
 class AreaExtractor {
 	osmtools::AreaExtractor m_ae;
 public:

@@ -3,8 +3,8 @@
 #include <sserialize/utility/printers.h>
 #include "OsmKeyValueObjectStore.h"
 
-inline size_t hashCellId(const std::vector<uint32_t> & v) {
-	size_t seed = 0;
+inline std::size_t hashCellId(const std::vector<uint32_t> & v) {
+	std::size_t seed = 0;
 	for(std::vector<uint32_t>::const_iterator it(v.begin()), end(v.end()); it != end; ++it) {
 		::hash_combine(seed, *it);
 	}
