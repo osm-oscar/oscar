@@ -115,12 +115,15 @@ public:
 	Config();
 	~Config() {}
 	ReturnValues fromCmdLineArgs(int argc, char** argv);
-	static std::string help();
 	sserialize::GeneralizedTrie::GeneralizedTrieCreatorConfig toTrieConfig(const TextSearchConfig & cfg);
 	std::string getOutFileDir() const;
 	///out file name with full path
 	std::string getOutFileName(liboscar::FileConfig fc) const;
+	sserialize::UByteArrayAdapter ubaFromFC(liboscar::FileConfig fc) const;
+
+	static std::string help();
 	static std::string toString(sserialize::Static::TrieNode::Types nodeType);
+
 
 	//Variables
 	std::list<std::string> inFileNames;

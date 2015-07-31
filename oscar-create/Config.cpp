@@ -559,6 +559,11 @@ std::string Config::getOutFileName(liboscar::FileConfig fc) const {
 	return liboscar::fileNameFromFileConfig(getOutFileDir(), fc, false);
 }
 
+sserialize::UByteArrayAdapter Config::ubaFromFC(liboscar::FileConfig fc) const {
+	std::string fileName = liboscar::fileNameFromFileConfig(getOutFileDir(), fc, false);
+	return sserialize::UByteArrayAdapter::openRo(fileName, false);
+}
+
 std::string Config::toString(sserialize::Static::TrieNode::Types nodeType) {
 	if (nodeType == sserialize::Static::TrieNode::T_SIMPLE) {
 		return "simple";
