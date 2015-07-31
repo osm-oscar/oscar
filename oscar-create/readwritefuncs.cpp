@@ -62,12 +62,12 @@ bool findNodeIdBounds(const string & fileName, uint64_t & smallestId, uint64_t &
 	return largestId != smallestId;
 }
 
-UByteArrayAdapter ubaFromFC(const oscar_create::Options & opts, liboscar::FileConfig fc) {
+UByteArrayAdapter ubaFromFC(const oscar_create::Config & opts, liboscar::FileConfig fc) {
 	std::string fileName = liboscar::fileNameFromFileConfig(opts.getOutFileDir(), fc, false);
 	return UByteArrayAdapter::openRo(fileName, false, MAX_SIZE_FOR_FULL_MMAP, CHUNKED_MMAP_EXPONENT);
 }
 
-liboscar::Static::OsmKeyValueObjectStore mangleAndWriteKv(oscar_create::OsmKeyValueObjectStore & store, const oscar_create::Options & opts) {
+liboscar::Static::OsmKeyValueObjectStore mangleAndWriteKv(oscar_create::OsmKeyValueObjectStore & store, const oscar_create::Config & opts) {
 	std::cout << "Serializing KeyValueStore" << std::endl;
 	UByteArrayAdapter dataBaseListAdapter(sserialize::UByteArrayAdapter::createFile(1024*1024, opts.getOutFileName(liboscar::FC_KV_STORE)) );
 	UByteArrayAdapter idxFactoryData(sserialize::UByteArrayAdapter::createFile(1024*1024, opts.getOutFileName(liboscar::FC_INDEX)) );
@@ -191,7 +191,7 @@ struct TagStoreFilter {
 };
 
 struct OsmKeyValueObjectStoreDerfer {
-	OsmKeyValueObjectStoreDerfer(const Options::TextSearchConfig & tsc, const liboscar::Static::OsmKeyValueObjectStore & store) :
+	OsmKeyValueObjectStoreDerfer(const Config::TextSearchConfig & tsc, const liboscar::Static::OsmKeyValueObjectStore & store) :
 	m_store(store),
 	m_filter( std::make_shared< std::unordered_set<uint32_t> >() ),
 	m_tagPrefixSearchFilter( std::make_shared< std::unordered_map<uint32_t, std::string> >() ),
@@ -310,7 +310,7 @@ struct OsmKeyValueObjectStoreDerfer {
 
 struct CellTextCompleterDerfer: public OsmKeyValueObjectStoreDerfer {
 	typedef detail::CellTextCompleter::SampleItemStringsContainer StringsContainer;
-	CellTextCompleterDerfer(const Options::TextSearchConfig & tsc, const liboscar::Static::OsmKeyValueObjectStore & store) :
+	CellTextCompleterDerfer(const Config::TextSearchConfig & tsc, const liboscar::Static::OsmKeyValueObjectStore & store) :
 	OsmKeyValueObjectStoreDerfer(tsc, store),
 	inSensitive(!tsc.caseSensitive),
 	diacriticInSensitive(tsc.diacritcInSensitive),
@@ -379,7 +379,7 @@ struct CellTextCompleterDerfer: public OsmKeyValueObjectStoreDerfer {
 	}
 };
 
-void createTagStore(liboscar::Static::OsmKeyValueObjectStore & store, Options & opts, ItemIndexFactory & indexFactory) {
+void createTagStore(liboscar::Static::OsmKeyValueObjectStore & store, Config & opts, ItemIndexFactory & indexFactory) {
 	std::cout << "Doing a sanitycheck before processing..." << std::flush;
 	if (store.sanityCheck()) {
 		std::cout << "OK" << std::endl;
@@ -421,7 +421,7 @@ void createTagStore(liboscar::Static::OsmKeyValueObjectStore & store, Options & 
 
 void
 handleSimpleTextSearch(
-const std::pair<liboscar::TextSearch::Type, Options::TextSearchConfig> & x, Options & opts,
+const std::pair<liboscar::TextSearch::Type, Config::TextSearchConfig> & x, Config & opts,
 liboscar::Static::OsmKeyValueObjectStore & store, ItemIndexFactory & indexFactory, sserialize::UByteArrayAdapter & dest) {
 	OsmKeyValueObjectStoreDerfer itemsDerefer(x.second, store);
 	uint32_t itemsBegin = 0;
@@ -436,7 +436,7 @@ liboscar::Static::OsmKeyValueObjectStore & store, ItemIndexFactory & indexFactor
 	}
 	std::deque<uint8_t> treeList;
 
-	if (x.second.type == Options::TextSearchConfig::Type::FULL_INDEX_TRIE ) {
+	if (x.second.type == Config::TextSearchConfig::Type::FULL_INDEX_TRIE ) {
 		sserialize::GeneralizedTrie::SinglePassTrie * tree = new sserialize::GeneralizedTrie::SinglePassTrie();
 		GeneralizedTrie::GeneralizedTrieCreatorConfig trieCfg = opts.toTrieConfig(x.second);
 
@@ -458,7 +458,7 @@ liboscar::Static::OsmKeyValueObjectStore & store, ItemIndexFactory & indexFactor
 template<typename TCT>
 void
 handleCellTextSearchBase(
-const std::pair<liboscar::TextSearch::Type, Options::TextSearchConfig> & x,
+const std::pair<liboscar::TextSearch::Type, Config::TextSearchConfig> & x,
 liboscar::Static::OsmKeyValueObjectStore & store, const sserialize::Static::ItemIndexStore & idxStore,
 ItemIndexFactory & indexFactory, sserialize::UByteArrayAdapter & dest) {
 	TCT ct(x.second.mmType);
@@ -485,13 +485,13 @@ ItemIndexFactory & indexFactory, sserialize::UByteArrayAdapter & dest) {
 
 void
 handleCellTextSearch(
-const std::pair<liboscar::TextSearch::Type, Options::TextSearchConfig> & x,
+const std::pair<liboscar::TextSearch::Type, Config::TextSearchConfig> & x,
 liboscar::Static::OsmKeyValueObjectStore & store, const sserialize::Static::ItemIndexStore & idxStore,
 ItemIndexFactory & indexFactory, sserialize::UByteArrayAdapter & dest) {
-	if (x.second.type == Options::TextSearchConfig::Type::FLAT_TRIE) {
+	if (x.second.type == Config::TextSearchConfig::Type::FLAT_TRIE) {
 		handleCellTextSearchBase< oscar_create::CellTextCompleterFlatTrie>(x, store, idxStore, indexFactory, dest);
 	}
-	else if (x.second.type == Options::TextSearchConfig::Type::TRIE) {
+	else if (x.second.type == Config::TextSearchConfig::Type::TRIE) {
 		handleCellTextSearchBase< oscar_create::CellTextCompleterUnicodeTrie>(x, store, idxStore, indexFactory, dest);
 	}
 	else {
@@ -501,7 +501,7 @@ ItemIndexFactory & indexFactory, sserialize::UByteArrayAdapter & dest) {
 
 void handleTextSearch(
 liboscar::Static::OsmKeyValueObjectStore & store,
-Options & opts, ItemIndexFactory & indexFactory, const sserialize::Static::ItemIndexStore & idxStore) {
+Config & opts, ItemIndexFactory & indexFactory, const sserialize::Static::ItemIndexStore & idxStore) {
 	std::string fn = liboscar::fileNameFromFileConfig(opts.getOutFileDir(), liboscar::FC_TEXT_SEARCH, false);
 	sserialize::UByteArrayAdapter dest( sserialize::UByteArrayAdapter::createFile(1, fn) );
 	if (dest.size() != 1) {
@@ -510,7 +510,7 @@ Options & opts, ItemIndexFactory & indexFactory, const sserialize::Static::ItemI
 	}
 	liboscar::TextSearchCreator tsCreator(dest);
 	
-	for(const std::pair<liboscar::TextSearch::Type, Options::TextSearchConfig> & x : opts.textSearchConfig) {
+	for(const std::pair<liboscar::TextSearch::Type, Config::TextSearchConfig> & x : opts.textSearchConfig) {
 		tsCreator.beginRawPut(x.first);
 		if (x.first == liboscar::TextSearch::GEOCELL) {
 			handleCellTextSearch(x, store, idxStore, indexFactory, tsCreator.rawPut());
@@ -535,7 +535,7 @@ Options & opts, ItemIndexFactory & indexFactory, const sserialize::Static::ItemI
 	tsCreator.flush();
 }
 
-void handleGeoSearch(liboscar::Static::OsmKeyValueObjectStore & store, Options & opts, ItemIndexFactory & indexFactory) {
+void handleGeoSearch(liboscar::Static::OsmKeyValueObjectStore & store, Config & opts, ItemIndexFactory & indexFactory) {
 	std::string fn = liboscar::fileNameFromFileConfig(opts.getOutFileDir(), liboscar::FC_GEO_SEARCH, false);
 	sserialize::UByteArrayAdapter dest( sserialize::UByteArrayAdapter::createFile(1, fn) );
 	if (dest.size() != 1) {
@@ -564,7 +564,7 @@ void handleGeoSearch(liboscar::Static::OsmKeyValueObjectStore & store, Options &
 
 }
 
-void handleKv(liboscar::Static::OsmKeyValueObjectStore & store, Options & opts) {
+void handleKv(liboscar::Static::OsmKeyValueObjectStore & store, Config & opts) {
 	sserialize::TimeMeasurer totalTime; totalTime.begin();
 	sserialize::ItemIndexFactory indexFactory;
 	indexFactory.setCheckIndex(opts.checkIndex);;

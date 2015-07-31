@@ -9,7 +9,7 @@
 
 void printHelp() {
 	std::cout << "oscar-create creates all data necessary for oscar-(web|cmd|gui) out of .osm.bf files." << std::endl;
-	std::cout << oscar_create::Options::help() << std::endl;
+	std::cout << oscar_create::Config::help() << std::endl;
 }
 
 int main(int argc, char ** argv) {
@@ -19,9 +19,9 @@ int main(int argc, char ** argv) {
 	srand(t1.tv_usec * t1.tv_sec);
 	}
 	std::cout.precision(10);
-	oscar_create::Options opts;
+	oscar_create::Config opts;
 	int ret = opts.fromCmdLineArgs(argc, argv);
-	if (ret != oscar_create::Options::RV_OK) {
+	if (ret != oscar_create::Config::RV_OK) {
 		printHelp();
 		return 1;
 	}

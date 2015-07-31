@@ -10,7 +10,7 @@
 
 namespace oscar_create {
 
-class Options {
+class Config {
 public:
 	enum ReturnValues { RV_OK, RV_FAILED, RV_HELP};
 	struct TextSearchConfig {
@@ -111,11 +111,11 @@ private:
 	std::string m_outFileName;
 	bool m_appendConfigToOutFileName;
 public:
-	Options();
-	~Options() {}
+	Config();
+	~Config() {}
 	ReturnValues fromCmdLineArgs(int argc, char** argv);
 	static std::string help();
-	sserialize::GeneralizedTrie::GeneralizedTrieCreatorConfig toTrieConfig(const oscar_create::Options::TextSearchConfig & cfg);
+	sserialize::GeneralizedTrie::GeneralizedTrieCreatorConfig toTrieConfig(const oscar_create::Config::TextSearchConfig & cfg);
 	std::string getOutFileDir() const;
 	///out file name with full path
 	std::string getOutFileName(liboscar::FileConfig fc) const;
@@ -154,7 +154,7 @@ public:
 };
 
 
-std::ostream& operator<<(std::ostream & out, const Options & opts);
+std::ostream& operator<<(std::ostream & out, const Config & opts);
 
 }//end namespace oscar_create
 

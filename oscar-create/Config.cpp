@@ -8,7 +8,7 @@
 namespace oscar_create {
 
 
-Options::TextSearchConfig::TextSearchConfig(const std::string& str) :
+Config::TextSearchConfig::TextSearchConfig(const std::string& str) :
 caseSensitive(false), diacritcInSensitive(false), suffixes(false),
 aggressiveMem(false), mmType(sserialize::MM_FILEBASED), mergeIndex(false), extensiveChecking(false),
 nodeType(sserialize::Static::TrieNode::T_LARGE_COMPACT),
@@ -158,7 +158,7 @@ type(Type::TRIE), threadCount(1)
 	}
 }
 
-Options::TagStoreConfig::TagStoreConfig(const std::string& str) : create(true) {
+Config::TagStoreConfig::TagStoreConfig(const std::string& str) : create(true) {
 	std::vector<std::string> ks = sserialize::split< std::vector<std::string> >(str, ',', '\\');
 	std::vector< std::pair<std::string, std::string> > kvs;
 	for(std::vector<std::string>::const_iterator it(ks.cbegin()), end(ks.cend()); it != end; ++it) {
@@ -191,7 +191,7 @@ Options::TagStoreConfig::TagStoreConfig(const std::string& str) : create(true) {
 	}
 }
 
-Options::KVStoreConfig::KVStoreConfig() :
+Config::KVStoreConfig::KVStoreConfig() :
 maxNodeHashTableSize(std::numeric_limits<uint32_t>::max()),
 saveEverything(false),
 saveEveryTag(false),
@@ -206,7 +206,7 @@ numThreads(0)
 {}
 
 
-Options::KVStoreConfig::KVStoreConfig(const std::string& str) :
+Config::KVStoreConfig::KVStoreConfig(const std::string& str) :
 maxNodeHashTableSize(std::numeric_limits<uint32_t>::max()),
 saveEverything(false),
 saveEveryTag(false),
@@ -334,7 +334,7 @@ itemSortOrder(OsmKeyValueObjectStore::ISO_NONE)
 
 
 
-Options::Options() :
+Config::Config() :
 m_appendConfigToOutFileName(false),
 createKVStore(false),
 indexType(sserialize::ItemIndex::T_RLE_DE),
@@ -346,7 +346,7 @@ gridRTreeLonCount(0),
 memUsage(false)
 {}
 
-Options::ReturnValues Options::fromCmdLineArgs(int argc, char** argv) {
+Config::ReturnValues Config::fromCmdLineArgs(int argc, char** argv) {
 	for(int i=1; i < argc; i++) {
 		std::string str(argv[i]);
 		if (str == "-o" && i+1 < argc) {
@@ -499,8 +499,8 @@ Options::ReturnValues Options::fromCmdLineArgs(int argc, char** argv) {
 	return RV_OK;
 }
 
-std::string Options::help() {
-	return std::string("Options: \n \
+std::string Config::help() {
+	return std::string("Config: \n \
 -i path\tinput index store \n \
 -it rline|simple|wah|de|rlede|native\tset the index type. rline=regression line, wah=rle word aligned bit vector, de=delta encoded, rlede=delta+run-length encoded\n \
 -ci\tcheck every index for correct serialization \n \
@@ -518,7 +518,7 @@ std::string Options::help() {
 }
 
 
-sserialize::GeneralizedTrie::GeneralizedTrieCreatorConfig Options::toTrieConfig(const TextSearchConfig & cfg) {
+sserialize::GeneralizedTrie::GeneralizedTrieCreatorConfig Config::toTrieConfig(const TextSearchConfig & cfg) {
 	sserialize::GeneralizedTrie::GeneralizedTrieCreatorConfig config;
 	config.deleteRootTrie = cfg.aggressiveMem;
 	config.levelsWithoutFullIndex = cfg.levelsWithoutIndex;
@@ -529,7 +529,7 @@ sserialize::GeneralizedTrie::GeneralizedTrieCreatorConfig Options::toTrieConfig(
 	return config;
 }
 
-std::string Options::getOutFileDir() const {
+std::string Config::getOutFileDir() const {
 	if (m_appendConfigToOutFileName) {
 		std::stringstream ss;
 		ss << m_outFileName;
@@ -555,11 +555,11 @@ std::string Options::getOutFileDir() const {
 	}
 }
 
-std::string Options::getOutFileName(liboscar::FileConfig fc) const {
+std::string Config::getOutFileName(liboscar::FileConfig fc) const {
 	return liboscar::fileNameFromFileConfig(getOutFileDir(), fc, false);
 }
 
-std::string Options::toString(sserialize::Static::TrieNode::Types nodeType) {
+std::string Config::toString(sserialize::Static::TrieNode::Types nodeType) {
 	if (nodeType == sserialize::Static::TrieNode::T_SIMPLE) {
 		return "simple";
 	}
@@ -574,7 +574,7 @@ std::string Options::toString(sserialize::Static::TrieNode::Types nodeType) {
 	}
 }
 
-std::ostream& operator<<(std::ostream& out, const Options & opts) {
+std::ostream& operator<<(std::ostream& out, const Config & opts) {
 	if (opts.createKVStore) {
 		std::cout << "Creating KeyValueStore at " << opts.getOutFileName(liboscar::FC_KV_STORE) << std::endl;
 		out << "Number of threads: " << opts.kvStoreConfig.numThreads << std::endl;
@@ -674,7 +674,7 @@ std::ostream& operator<<(std::ostream& out, const Options & opts) {
 			out << "\tConsidered Key=Values" << opts.tagStoreConfig.tagKeyValues << std::endl;
 		}
 		
-		for(const std::pair<liboscar::TextSearch::Type, oscar_create::Options::TextSearchConfig> & x : opts.textSearchConfig) {
+		for(const std::pair<liboscar::TextSearch::Type, oscar_create::Config::TextSearchConfig> & x : opts.textSearchConfig) {
 			std::cout << "Text-Search-Type:";
 			if (x.first == liboscar::TextSearch::GEOHIERARCHY) {
 				std::cout << "GeoHierarchy";
@@ -707,7 +707,7 @@ std::ostream& operator<<(std::ostream& out, const Options & opts) {
 			out << "\tKeys to use for the text search: " << x.second.keyFile << std::endl;
 			out << "\tTags to store  for prefix search: " << x.second.storeTagsPrefixFile << std::endl;
 			out << "\tTags to store  for suffix search: " << x.second.storeTagsSuffixFile << std::endl;
-			out << "\tNodeType: " << oscar_create::Options::toString(x.second.nodeType) << std::endl;
+			out << "\tNodeType: " << oscar_create::Config::toString(x.second.nodeType) << std::endl;
 			out << "\tAggressive memory usage: " <<  sserialize::toString(x.second.aggressiveMem) << std::endl;
 			out << "\tMemory storage type: ";
 			switch (x.second.mmType) {
@@ -727,16 +727,16 @@ std::ostream& operator<<(std::ostream& out, const Options & opts) {
 			out << std::endl;
 			out << "\tMerge Index: " << sserialize::toString(x.second.mergeIndex) <<  std::endl;
 			out << "\tTrie-Type: ";
-			if (x.second.type == oscar_create::Options::TextSearchConfig::Type::FULL_INDEX_TRIE) {
+			if (x.second.type == oscar_create::Config::TextSearchConfig::Type::FULL_INDEX_TRIE) {
 				out << "full-index-trie";
 			}
-			else if (x.second.type == oscar_create::Options::TextSearchConfig::Type::TRIE) {
+			else if (x.second.type == oscar_create::Config::TextSearchConfig::Type::TRIE) {
 				out << "trie";
 			}
-			else if (x.second.type == oscar_create::Options::TextSearchConfig::Type::FLAT_GST) {
+			else if (x.second.type == oscar_create::Config::TextSearchConfig::Type::FLAT_GST) {
 				out << "fgst";
 			}
-			else if (x.second.type == oscar_create::Options::TextSearchConfig::Type::FLAT_TRIE) {
+			else if (x.second.type == oscar_create::Config::TextSearchConfig::Type::FLAT_TRIE) {
 				out << "flattrie";
 			}
 			out << std::endl;

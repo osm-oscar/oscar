@@ -16,15 +16,15 @@ namespace oscar_create {
 bool findNodeIdBounds(const std::string & fileName, uint64_t & smallestId, uint64_t & largestId);
 uint64_t getNumBlocks(const std::string & fileName);
 
-liboscar::Static::OsmKeyValueObjectStore mangleAndWriteKv(oscar_create::OsmKeyValueObjectStore & store, const oscar_create::Options & opts);
-void handleKv(liboscar::Static::OsmKeyValueObjectStore & kvStore, oscar_create::Options & opts);
+liboscar::Static::OsmKeyValueObjectStore mangleAndWriteKv(oscar_create::OsmKeyValueObjectStore & store, const oscar_create::Config & opts);
+void handleKv(liboscar::Static::OsmKeyValueObjectStore & kvStore, oscar_create::Config & opts);
 bool writeItemIndexFactory(sserialize::ItemIndexFactory& indexFactory);
 
 ///Rewerites data if it should be compressed @param src source data to be processed (should already be on disk)
-// void handleData(sserialize::UByteArrayAdapter & src, const oscar_create::Options & opts, liboscar::FileConfig fc);
+// void handleData(sserialize::UByteArrayAdapter & src, const oscar_create::Config & opts, liboscar::FileConfig fc);
 
 template<typename T_DATABASE_TYPE>
-bool createAndWriteGrid(const oscar_create::Options& opts, T_DATABASE_TYPE & db, sserialize::ItemIndexFactory& indexFactory, sserialize::UByteArrayAdapter & dest) {
+bool createAndWriteGrid(const oscar_create::Config& opts, T_DATABASE_TYPE & db, sserialize::ItemIndexFactory& indexFactory, sserialize::UByteArrayAdapter & dest) {
 	if (opts.gridLatCount == 0 || opts.gridLonCount == 0)
 		return false;
 	std::cout << "Finding grid dimensions..." << std::flush;
@@ -66,7 +66,7 @@ struct ItemBoundaryGenerator {
 };
 
 template<typename T_DATABASE_TYPE>
-bool createAndWriteGridRTree(const oscar_create::Options& opts, T_DATABASE_TYPE & db, sserialize::ItemIndexFactory& indexFactory, sserialize::UByteArrayAdapter & dest) {
+bool createAndWriteGridRTree(const oscar_create::Config& opts, T_DATABASE_TYPE & db, sserialize::ItemIndexFactory& indexFactory, sserialize::UByteArrayAdapter & dest) {
 	if (opts.gridRTreeLatCount == 0 || opts.gridRTreeLonCount == 0)
 		return false;
 	std::cout << "Finding grid dimensions..." << std::flush;
