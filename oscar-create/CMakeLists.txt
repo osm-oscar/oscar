@@ -32,7 +32,7 @@ OsmKeyValueObjectStore.cpp
 readwritefuncs.cpp
 ScoreCreator.cpp
 TagStore.cpp
-types.cpp
+Config.cpp
 )
 
 add_executable(${PROJECT_NAME} ${OSCAR_CREATE_SOURCES_CPP} ${LIBOSMTOOLS_SOURCES_CPP})

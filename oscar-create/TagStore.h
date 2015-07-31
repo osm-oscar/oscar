@@ -1,11 +1,20 @@
-#ifndef TAG_STORE_H
-#define TAG_STORE_H
-#include <string>
+#ifndef OSCAR_CREATE_TAG_STORE_H
+#define OSCAR_CREATE_TAG_STORE_H
 #include <sserialize/containers/TreeNode.h>
 #include <sserialize/algorithm/hashspecializations.h>
+#include <string>
 #include <unordered_set>
 #include <unordered_map>
-#include "types.h"
+#include <set>
+
+namespace sserialize {
+	class ItemIndexFactory;
+}
+
+namespace liboscar {
+namespace Static {
+	class TagStore;
+}}
 
 namespace oscar_create {
 

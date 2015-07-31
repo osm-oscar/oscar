@@ -1,7 +1,5 @@
 #ifndef OSCAR_CREATE_OSM_KEY_VALUE_OBJECT_STORE_H
 #define OSCAR_CREATE_OSM_KEY_VALUE_OBJECT_STORE_H
-#include <algorithm>
-#include <utility>
 #include <sserialize/Static/DynamicKeyValueObjectStore.h>
 #include <sserialize/Static/DynamicVector.h>
 #include <sserialize/spatial/GeoHierarchy.h>
@@ -12,10 +10,12 @@
 #include <sserialize/containers/DirectHugeHashSet.h>
 #include <osmpbf/filter.h>
 #include <osmpbf/osmfile.h>
+#include <liboscar/OsmKeyValueObjectStore.h>
+#include <algorithm>
+#include <utility>
 #include "ScoreCreator.h"
 #include "CellCreator.h"
 #include "TagStore.h"
-#include <liboscar/OsmIdType.h>
 
 namespace oscar_create {
 

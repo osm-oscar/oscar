@@ -8,6 +8,7 @@
 #include <sserialize/spatial/GridRTree.h>
 #include <string>
 #include "types.h"
+#include "Config.h"
 #include "TagStore.h"
 #include "OsmKeyValueObjectStore.h"
 

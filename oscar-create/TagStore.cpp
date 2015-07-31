@@ -1,5 +1,8 @@
 #include "TagStore.h"
 #include <sserialize/algorithm/utilfuncs.h>
+#include <sserialize/Static/Map.h>
+#include <liboscar/StaticTagStore.h>
+#include <sserialize/containers/ItemIndexFactory.h>
 
 using namespace sserialize;
 
@@ -193,7 +196,7 @@ bool TagStore::getNodesInLevelOrder(std::vector< oscar_create::TagStore::Node* >
 	return true;
 }
 
-bool TagStore::equal(const liboscar::Static::TagStore& sTagStore) {
+bool TagStore::equal(const liboscar::Static::TagStore & sTagStore) {
 	std::vector< oscar_create::TagStore::Node* > nodes;
 	getNodesInLevelOrder(nodes);
 	std::map<oscar_create::TagStore::Node*, uint16_t> nodePtrToId;

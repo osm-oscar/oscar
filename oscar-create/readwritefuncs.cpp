@@ -1,12 +1,13 @@
-#include <sserialize/utility/printers.h>
 #include "readwritefuncs.h"
 #include "CellTextCompleter.h"
-#include <iostream>
+#include <liboscar/GeoSearch.h>
 #include <osmpbf/iway.h>
 #include <osmpbf/parsehelpers.h>
+#include <sserialize/utility/printers.h>
 #include <sserialize/stats/ProgressInfo.h>
 #include <sserialize/stats/memusage.h>
 #include <sserialize/Static/TrieNodePrivates/TrieNodePrivates.h>
+#include <iostream>
 
 using namespace std;
 using namespace sserialize;
