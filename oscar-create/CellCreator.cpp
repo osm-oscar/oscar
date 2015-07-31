@@ -1,7 +1,6 @@
 #include "CellCreator.h"
 #include <sserialize/Static/GeoWay.h>
 #include <sserialize/utility/printers.h>
-#include "types.h"
 #include "OsmKeyValueObjectStore.h"
 
 inline size_t hashCellId(const std::vector<uint32_t> & v) {

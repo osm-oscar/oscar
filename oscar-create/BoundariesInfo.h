@@ -1,5 +1,5 @@
-#ifndef OSCAR_CREATE_TYPES_H
-#define OSCAR_CREATE_TYPES_H
+#ifndef OSCAR_CREATE_BOUNDARIES_INFO_H
+#define OSCAR_CREATE_BOUNDARIES_INFO_H
 #include <liboscar/OsmIdType.h>
 #include <ostream>
 

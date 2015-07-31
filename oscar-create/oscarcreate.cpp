@@ -3,7 +3,6 @@
 #include <sserialize/stats/TimeMeasuerer.h>
 #include <sserialize/stats/memusage.h>
 #include "OsmKeyValueObjectStore.h"
-#include "types.h"
 #include "helpers.h"
 #include "readwritefuncs.h"
 #include "AreaExtractor.h"
