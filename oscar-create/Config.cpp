@@ -8,7 +8,7 @@
 namespace oscar_create {
 
 
-Config::TextSearchConfig::TextSearchConfig(const std::string& str) :
+TextSearchConfig::TextSearchConfig(const std::string& str) :
 caseSensitive(false), diacritcInSensitive(false), suffixes(false),
 aggressiveMem(false), mmType(sserialize::MM_FILEBASED), mergeIndex(false), extensiveChecking(false),
 nodeType(sserialize::Static::TrieNode::T_LARGE_COMPACT),
@@ -158,7 +158,7 @@ type(Type::TRIE), threadCount(1)
 	}
 }
 
-Config::TagStoreConfig::TagStoreConfig(const std::string& str) : create(true) {
+TagStoreConfig::TagStoreConfig(const std::string& str) : create(true) {
 	std::vector<std::string> ks = sserialize::split< std::vector<std::string> >(str, ',', '\\');
 	std::vector< std::pair<std::string, std::string> > kvs;
 	for(std::vector<std::string>::const_iterator it(ks.cbegin()), end(ks.cend()); it != end; ++it) {
@@ -191,7 +191,7 @@ Config::TagStoreConfig::TagStoreConfig(const std::string& str) : create(true) {
 	}
 }
 
-Config::KVStoreConfig::KVStoreConfig() :
+KVStoreConfig::KVStoreConfig() :
 maxNodeHashTableSize(std::numeric_limits<uint32_t>::max()),
 saveEverything(false),
 saveEveryTag(false),
@@ -206,7 +206,7 @@ numThreads(0)
 {}
 
 
-Config::KVStoreConfig::KVStoreConfig(const std::string& str) :
+KVStoreConfig::KVStoreConfig(const std::string& str) :
 maxNodeHashTableSize(std::numeric_limits<uint32_t>::max()),
 saveEverything(false),
 saveEveryTag(false),
@@ -674,7 +674,7 @@ std::ostream& operator<<(std::ostream& out, const Config & opts) {
 			out << "\tConsidered Key=Values" << opts.tagStoreConfig.tagKeyValues << std::endl;
 		}
 		
-		for(const std::pair<liboscar::TextSearch::Type, oscar_create::Config::TextSearchConfig> & x : opts.textSearchConfig) {
+		for(const std::pair<liboscar::TextSearch::Type, oscar_create::TextSearchConfig> & x : opts.textSearchConfig) {
 			std::cout << "Text-Search-Type:";
 			if (x.first == liboscar::TextSearch::GEOHIERARCHY) {
 				std::cout << "GeoHierarchy";
@@ -727,16 +727,16 @@ std::ostream& operator<<(std::ostream& out, const Config & opts) {
 			out << std::endl;
 			out << "\tMerge Index: " << sserialize::toString(x.second.mergeIndex) <<  std::endl;
 			out << "\tTrie-Type: ";
-			if (x.second.type == oscar_create::Config::TextSearchConfig::Type::FULL_INDEX_TRIE) {
+			if (x.second.type == oscar_create::TextSearchConfig::Type::FULL_INDEX_TRIE) {
 				out << "full-index-trie";
 			}
-			else if (x.second.type == oscar_create::Config::TextSearchConfig::Type::TRIE) {
+			else if (x.second.type == oscar_create::TextSearchConfig::Type::TRIE) {
 				out << "trie";
 			}
-			else if (x.second.type == oscar_create::Config::TextSearchConfig::Type::FLAT_GST) {
+			else if (x.second.type == oscar_create::TextSearchConfig::Type::FLAT_GST) {
 				out << "fgst";
 			}
-			else if (x.second.type == oscar_create::Config::TextSearchConfig::Type::FLAT_TRIE) {
+			else if (x.second.type == oscar_create::TextSearchConfig::Type::FLAT_TRIE) {
 				out << "flattrie";
 			}
 			out << std::endl;

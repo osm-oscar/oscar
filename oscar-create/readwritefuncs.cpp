@@ -191,7 +191,7 @@ struct TagStoreFilter {
 };
 
 struct OsmKeyValueObjectStoreDerfer {
-	OsmKeyValueObjectStoreDerfer(const Config::TextSearchConfig & tsc, const liboscar::Static::OsmKeyValueObjectStore & store) :
+	OsmKeyValueObjectStoreDerfer(const TextSearchConfig & tsc, const liboscar::Static::OsmKeyValueObjectStore & store) :
 	m_store(store),
 	m_filter( std::make_shared< std::unordered_set<uint32_t> >() ),
 	m_tagPrefixSearchFilter( std::make_shared< std::unordered_map<uint32_t, std::string> >() ),
@@ -310,7 +310,7 @@ struct OsmKeyValueObjectStoreDerfer {
 
 struct CellTextCompleterDerfer: public OsmKeyValueObjectStoreDerfer {
 	typedef detail::CellTextCompleter::SampleItemStringsContainer StringsContainer;
-	CellTextCompleterDerfer(const Config::TextSearchConfig & tsc, const liboscar::Static::OsmKeyValueObjectStore & store) :
+	CellTextCompleterDerfer(const TextSearchConfig & tsc, const liboscar::Static::OsmKeyValueObjectStore & store) :
 	OsmKeyValueObjectStoreDerfer(tsc, store),
 	inSensitive(!tsc.caseSensitive),
 	diacriticInSensitive(tsc.diacritcInSensitive),
@@ -421,7 +421,7 @@ void createTagStore(liboscar::Static::OsmKeyValueObjectStore & store, Config & o
 
 void
 handleSimpleTextSearch(
-const std::pair<liboscar::TextSearch::Type, Config::TextSearchConfig> & x, Config & opts,
+const std::pair<liboscar::TextSearch::Type, TextSearchConfig> & x, Config & opts,
 liboscar::Static::OsmKeyValueObjectStore & store, ItemIndexFactory & indexFactory, sserialize::UByteArrayAdapter & dest) {
 	OsmKeyValueObjectStoreDerfer itemsDerefer(x.second, store);
 	uint32_t itemsBegin = 0;
@@ -436,7 +436,7 @@ liboscar::Static::OsmKeyValueObjectStore & store, ItemIndexFactory & indexFactor
 	}
 	std::deque<uint8_t> treeList;
 
-	if (x.second.type == Config::TextSearchConfig::Type::FULL_INDEX_TRIE ) {
+	if (x.second.type == TextSearchConfig::Type::FULL_INDEX_TRIE ) {
 		sserialize::GeneralizedTrie::SinglePassTrie * tree = new sserialize::GeneralizedTrie::SinglePassTrie();
 		GeneralizedTrie::GeneralizedTrieCreatorConfig trieCfg = opts.toTrieConfig(x.second);
 
@@ -458,7 +458,7 @@ liboscar::Static::OsmKeyValueObjectStore & store, ItemIndexFactory & indexFactor
 template<typename TCT>
 void
 handleCellTextSearchBase(
-const std::pair<liboscar::TextSearch::Type, Config::TextSearchConfig> & x,
+const std::pair<liboscar::TextSearch::Type, TextSearchConfig> & x,
 liboscar::Static::OsmKeyValueObjectStore & store, const sserialize::Static::ItemIndexStore & idxStore,
 ItemIndexFactory & indexFactory, sserialize::UByteArrayAdapter & dest) {
 	TCT ct(x.second.mmType);
@@ -485,13 +485,13 @@ ItemIndexFactory & indexFactory, sserialize::UByteArrayAdapter & dest) {
 
 void
 handleCellTextSearch(
-const std::pair<liboscar::TextSearch::Type, Config::TextSearchConfig> & x,
+const std::pair<liboscar::TextSearch::Type, TextSearchConfig> & x,
 liboscar::Static::OsmKeyValueObjectStore & store, const sserialize::Static::ItemIndexStore & idxStore,
 ItemIndexFactory & indexFactory, sserialize::UByteArrayAdapter & dest) {
-	if (x.second.type == Config::TextSearchConfig::Type::FLAT_TRIE) {
+	if (x.second.type == TextSearchConfig::Type::FLAT_TRIE) {
 		handleCellTextSearchBase< oscar_create::CellTextCompleterFlatTrie>(x, store, idxStore, indexFactory, dest);
 	}
-	else if (x.second.type == Config::TextSearchConfig::Type::TRIE) {
+	else if (x.second.type == TextSearchConfig::Type::TRIE) {
 		handleCellTextSearchBase< oscar_create::CellTextCompleterUnicodeTrie>(x, store, idxStore, indexFactory, dest);
 	}
 	else {
@@ -510,7 +510,7 @@ Config & opts, ItemIndexFactory & indexFactory, const sserialize::Static::ItemIn
 	}
 	liboscar::TextSearchCreator tsCreator(dest);
 	
-	for(const std::pair<liboscar::TextSearch::Type, Config::TextSearchConfig> & x : opts.textSearchConfig) {
+	for(const std::pair<liboscar::TextSearch::Type, TextSearchConfig> & x : opts.textSearchConfig) {
 		tsCreator.beginRawPut(x.first);
 		if (x.first == liboscar::TextSearch::GEOCELL) {
 			handleCellTextSearch(x, store, idxStore, indexFactory, tsCreator.rawPut());
