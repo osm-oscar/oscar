@@ -1,0 +1,9 @@
+natural
+beach
+natural
+glacier
+landuse
+forest
+landuse
+cemetery
+
