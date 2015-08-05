@@ -675,7 +675,7 @@ void handleSearchCreation(Config & opts) {
 		store = liboscar::Static::OsmKeyValueObjectStore(sserialize::UByteArrayAdapter::openRo(opts.inFileNames.front(), false));
 	}
 	catch (sserialize::Exception & e) {
-		throw std::runtime_error("Failed to open store file at " + opts.inFileNames.front());
+		throw std::runtime_error("Failed to open store file at " + opts.inFileNames.front() + std::string(" with error message: ") + e.what());
 	}
 	
 	sserialize::ItemIndexFactory indexFactory;
