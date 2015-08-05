@@ -294,7 +294,7 @@ private:
 	PayloadContainerType m_data;
 	std::vector<uint32_t> m_newToOldItemId;
 	sserialize::spatial::GeoHierarchy m_gh;
-	sserialize::UByteArrayAdapter m_ra; //triangulation geohierarchy arrangement
+	sserialize::UByteArrayAdapter m_ra; //triangulation geohierarchy arrangement with cellgraph
 private:
 	void push_back(const OsmKeyValueRawItem & item);
 	uint32_t addKeyValues(oscar_create::OsmKeyValueRawItem::RawKeyValuesContainer& kvs);

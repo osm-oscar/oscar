@@ -49,6 +49,10 @@ const sserialize::Static::spatial::TriangulationGeoHierarchyArrangement& OsmKeyV
 	return priv()->regionArrangement();
 }
 
+const sserialize::Static::spatial::TracGraph& OsmKeyValueObjectStore::cellGraph() const {
+	return priv()->cellGraph();
+}
+
 sserialize::UByteArrayAdapter::OffsetType OsmKeyValueObjectStore::getSizeInBytes() const {
 	return priv()->getSizeInBytes();
 }

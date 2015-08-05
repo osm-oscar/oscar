@@ -7,9 +7,10 @@
 #include <sserialize/containers/ItemIndexPrivates/ItemIndexPrivateSimple.h>
 #include <sserialize/Static/GeoHierarchy.h>
 #include <sserialize/Static/TriangulationGeoHierarchyArrangement.h>
+#include <sserialize/Static/TracGraph.h>
 #include <liboscar/constants.h>
 #include <liboscar/OsmIdType.h>
-#define LIBOSCAR_OSM_KEY_VALUE_OBJECT_STORE_VERSION 4
+#define LIBOSCAR_OSM_KEY_VALUE_OBJECT_STORE_VERSION 6
 
 namespace liboscar {
 namespace Static {
@@ -19,7 +20,8 @@ namespace Static {
   * v2: isInCell for Payload, GeoHierarchy
   * v3: add support for reorder map
   * v4: add support for OsmIdType (currently implemented)
-  * v5: add support for region triangulation (later: GeoRegionStore)
+  * v5: add support for region triangulation
+  * v6: add support for region arrangement cell graph
   * v?: add support for relations by storing their data in GeoShape
   *
   * {
@@ -28,7 +30,8 @@ namespace Static {
   *   REORDER_MAP         sserialize::BoundedCompactUintArray
   *   KeyValues           sserialize::Static::KeyValueObjectStore
   *   GeoHierarchy        sserialize::Static::GeoHierarchy
-  *   RegionArrangement   sserialize::Static::spatial::TriangulationRegionArrangement
+  *   RegionArrangement   sserialize::Static::spatial::TriangulationGeoHierarchyArrangement
+  *   RACellGraph         sserialize::Static::spatial::TRACGraph;
   * }
   *
   *Payload (v3)
@@ -91,6 +94,7 @@ public:
 	const ValueStringTable & valueStringTable() const;
 	const sserialize::Static::spatial::GeoHierarchy & geoHierarchy() const;
 	const sserialize::Static::spatial::TriangulationGeoHierarchyArrangement & regionArrangement() const;
+	const sserialize::Static::spatial::TracGraph & cellGraph() const;
 	sserialize::UByteArrayAdapter::OffsetType getSizeInBytes() const;
 	
 	uint32_t toInternalId(uint32_t itemId) const;
@@ -200,6 +204,7 @@ private:
 	sserialize::Static::KeyValueObjectStore m_kv; //objects are ordered according to their internalId
 	sserialize::Static::spatial::GeoHierarchy m_gh; //storeId is the remapped id, not the internalId
 	sserialize::Static::spatial::TriangulationGeoHierarchyArrangement m_ra;
+	sserialize::Static::spatial::TracGraph m_cg;
 	uint32_t m_size;
 public:
 	OsmKeyValueObjectStorePrivate(const sserialize::UByteArrayAdapter & data);
@@ -213,6 +218,7 @@ public:
 	inline const ValueStringTable & valueStringTable() const { return m_kv.valueStringTable(); }
 	inline const sserialize::Static::spatial::GeoHierarchy & geoHierarchy() const { return m_gh; }
 	inline const sserialize::Static::spatial::TriangulationGeoHierarchyArrangement & regionArrangement() const { return m_ra; }
+	inline const sserialize::Static::spatial::TracGraph & cellGraph() const { return m_cg; }
 	sserialize::Static::KeyValueObjectStoreItem kvItem(uint32_t pos) const;
 	
 	sserialize::ItemIndex complete(const sserialize::spatial::GeoRect & rect) const;
