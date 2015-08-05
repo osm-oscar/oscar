@@ -43,7 +43,7 @@ private:
 	void setCompleter(QString fileName);
 	void updateTextSearchTypes();
 private slots:
-	void viewSetCalcCompleted(const sserialize::ItemIndex& resultIdx, uint64_t runId, qlonglong timeInUsec);
+	void viewSetCalcCompleted(const sserialize::ItemIndex& resultIdx, const sserialize::ItemIndex & cells, uint64_t runId, qlonglong timeInUsec);
 public:
 	OscarQtMainWindow(QString completerPath);
 	virtual ~OscarQtMainWindow();
@@ -65,6 +65,7 @@ Q_SIGNALS:
 	void viewSetChanged(uint32_t begin, uint32_t end);
 	void selectedTableItemChanged(uint32_t pos);
 	void selectedSubSetItemChanged(const liboscar::Static::OsmKeyValueObjectStore::Item & item);
+	void activeCellsChanged(const sserialize::ItemIndex & cells);
 };
 
 }//end namespace

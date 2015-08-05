@@ -4,8 +4,8 @@
 
 namespace oscar_gui {
 
-void SubSetNodeFlattenerCommunicator::completedSignal(const sserialize::ItemIndex& resultIdx, uint64_t runId, qlonglong timeInUsecs) {
-	emit completed(resultIdx, runId, timeInUsecs);
+void SubSetNodeFlattenerCommunicator::completedSignal(const sserialize::ItemIndex& resultIdx, const sserialize::ItemIndex & cells, uint64_t runId, qlonglong timeInUsecs) {
+	emit completed(resultIdx, cells, runId, timeInUsecs);
 }
 
 SubSetNodeFlattener::~SubSetNodeFlattener() {
@@ -16,8 +16,9 @@ void SubSetNodeFlattener::run() {
 	sserialize::TimeMeasurer tm;
 	tm.begin();
 	sserialize::ItemIndex idx( m_subSet->idx(m_selectedNode) );
+	sserialize::ItemIndex cells( m_subSet->cells(m_selectedNode) );
 	tm.end();
-	m_com->completedSignal(idx, m_runId, tm.elapsedUseconds());
+	m_com->completedSignal(idx, cells, m_runId, tm.elapsedUseconds());
 }
 
 }//end namespace

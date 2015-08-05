@@ -121,10 +121,12 @@ m_subSetFlattenerRunId(0)
 	connect(this, SIGNAL(viewSetChanged(uint32_t, uint32_t)), m_map, SLOT(viewSetChanged(uint32_t, uint32_t) ));
 	connect(this, SIGNAL(viewSetChanged(const sserialize::ItemIndex &)), m_map, SLOT(viewSetChanged(const sserialize::ItemIndex &) ));
 	connect(this, SIGNAL(viewSetChanged(const sserialize::ItemIndex &)), m_itemSetView, SLOT(setIndex(const sserialize::ItemIndex&))); 
+	connect(this, SIGNAL(activeCellsChanged(const sserialize::ItemIndex&)), m_map, SLOT(activeCellsChanged(const sserialize::ItemIndex&)));
 	connect(m_tbl->verticalScrollBar(), SIGNAL(valueChanged(int)), SLOT(tableViewChanged()));
 	connect(m_tbl->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)), SLOT(tableSelectedRowChanged(QItemSelection,QItemSelection)));
 	connect(m_subSetView->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)), SLOT(subSetSelectionChanged(QItemSelection,QItemSelection)));
 	connect(this, SIGNAL(selectedTableItemChanged(uint32_t)), m_map, SLOT(zoomToItem(uint32_t)));
+	
 	connect(this, SIGNAL(selectedSubSetItemChanged(liboscar::Static::OsmKeyValueObjectStore::Item)), m_map, SLOT(drawAndZoomTo(liboscar::Static::OsmKeyValueObjectStore::Item)));
 	
 	//set the central widget
@@ -337,7 +339,7 @@ void OscarQtMainWindow::subSetSelectionChanged(const QItemSelection& selected, c
 			m_runningFlatteners[m_subSetFlattenerRunId] = ssf;
 			++m_subSetFlattenerRunId;
 			ssf->setAutoDelete(false);
-			connect(ssf->com(), SIGNAL(completed(const sserialize::ItemIndex &, uint64_t, qlonglong)), this, SLOT(viewSetCalcCompleted(const sserialize::ItemIndex &, uint64_t, qlonglong)));
+			connect(ssf->com(), SIGNAL(completed(const sserialize::ItemIndex &, const sserialize::ItemIndex &, uint64_t, qlonglong)), this, SLOT(viewSetCalcCompleted(const sserialize::ItemIndex &, const sserialize::ItemIndex&, uint64_t, qlonglong)));
 			QThreadPool::globalInstance()->start(ssf);
 		}
 	}
@@ -352,11 +354,12 @@ void OscarQtMainWindow::completionSetChanged() {
 	tableViewChanged();
 }
 
-void OscarQtMainWindow::viewSetCalcCompleted(const sserialize::ItemIndex& resultIdx, uint64_t runId, qlonglong timeInUsec) {
+void OscarQtMainWindow::viewSetCalcCompleted(const sserialize::ItemIndex& resultIdx, const sserialize::ItemIndex & cells, uint64_t runId, qlonglong timeInUsec) {
 	if (m_subSetFlattenerRunId <= runId) {
 		m_subSetFlattenerRunId = runId;
 		m_flattenStatsLabel->setText(QString("Viewset size: %1\nTime to flatten: %2 us").arg(resultIdx.size()).arg(timeInUsec));
 		emit viewSetChanged(resultIdx);
+		emit activeCellsChanged(cells);
 	}
 	delete m_runningFlatteners[runId];
 	m_runningFlatteners.erase(runId);

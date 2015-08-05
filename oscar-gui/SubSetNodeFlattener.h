@@ -12,9 +12,9 @@ class SubSetNodeFlattenerCommunicator: public QObject {
 public:
 	SubSetNodeFlattenerCommunicator(QObject * parent) : QObject(parent) {}
 	~SubSetNodeFlattenerCommunicator() {}
-	void completedSignal(const sserialize::ItemIndex & resultIdx, uint64_t runId, qlonglong timeInUsecs);
+	void completedSignal(const sserialize::ItemIndex & resultIdx, const sserialize::ItemIndex & cells, uint64_t runId, qlonglong timeInUsecs);
 Q_SIGNALS:
-	void completed(const sserialize::ItemIndex & resultIdx, uint64_t runId, qlonglong timeInUsecs);
+	void completed(const sserialize::ItemIndex & resultIdx, const sserialize::ItemIndex & cells, uint64_t runId, qlonglong timeInUsecs);
 };
 
 class SubSetNodeFlattener: public QRunnable {

@@ -179,11 +179,75 @@ bool MarbleMap::MySingleItemLayer::render(Marble::GeoPainter * painter, Marble::
 	return MyBaseLayer::doRender(m_item, itemName(m_item), painter);
 }
 
+MarbleMap::MyCellLayer::MyCellLayer(const QStringList& renderPos, qreal zVal) :
+MyLockableBaseLayer(renderPos, zVal)
+{}
+
+bool MarbleMap::MyCellLayer::doRender(const std::vector<uint32_t> & faces, const QColor& color, Marble::GeoPainter* painter) {
+	QColor lineColor(color);
+	lineColor.setAlpha(255);
+	painter->setPen(QPen(QBrush(lineColor, Qt::BrushStyle::SolidPattern), 1));
+	QColor fillColor(lineColor);
+	fillColor.setAlpha(255);
+	
+	for (uint32_t faceId : faces) {
+		Marble::GeoDataLinearRing l;
+		sserialize::Static::spatial::Triangulation::Face fh = m_store.regionArrangement().tds().face(faceId);
+		for(int j(0); j < 3; ++j) {
+			sserialize::Static::spatial::Triangulation::Point p(fh.point(j));
+			l.append(Marble::GeoDataCoordinates(p.lon(), p.lat(), 0.0, Marble::GeoDataCoordinates::Degree));
+		}
+		painter->setBrush( QBrush(fillColor, Qt::SolidPattern) );
+		painter->drawPolygon(l);
+	}
+	return true;
+}
+
+bool MarbleMap::MyCellLayer::render(Marble::GeoPainter* painter, Marble::ViewportParams* /*viewport*/, const QString& /*renderPos*/, Marble::GeoSceneLayer* /*layer*/) {
+	SemaphoreLocker locker(lock(), L_READ);
+	bool ok = true;
+	for(const std::pair<const uint32_t, Graph> x : m_cgm) {
+		ok = doRender(x.second, QColor("green"), painter) && ok;
+	}
+	return ok;
+}
+
+void MarbleMap::MyCellLayer::setCells(const sserialize::ItemIndex& cells) {
+	SemaphoreLocker locker(lock(), L_WRITE);
+	GraphMap tmp;
+	for(uint32_t cellId : cells) {
+		if (m_cgm.count(cellId)) {
+			tmp[cellId] = std::move(m_cgm[cellId]);
+		}
+		else {
+			std::vector<uint32_t> & d = tmp[cellId];
+			struct MyOutIt {
+				std::vector<uint32_t> * cells;
+				MyOutIt & operator++() { return *this; }
+				MyOutIt & operator*() { return *this; }
+				MyOutIt & operator=(const sserialize::Static::spatial::TriangulationGeoHierarchyArrangement::CFGraph::Node & n) {
+					cells->push_back(n.face().id());
+					return *this;
+				}
+			};
+			MyOutIt outIt({.cells = &d});
+			m_store.regionArrangement().cfGraph(cellId).visit(outIt);
+		}
+	}
+	m_cgm = std::move(tmp);
+}
+
+void MarbleMap::MyCellLayer::setStore(const liboscar::Static::OsmKeyValueObjectStore& store) {
+	SemaphoreLocker locker(lock(), L_WRITE);
+	m_cgm.clear();
+	m_store = store;
+}
 
 MarbleMap::MarbleMap(): MarbleWidget() {
 	m_baseItemLayer = new MyItemSetLayer({"HOVERS_ABOVE_SURFACE"}, 0.0);
 	m_highlightItemLayer = new MySingleItemLayer({"HOVERS_ABOVE_SURFACE"}, 1.0);
 	m_singleItemLayer = new MySingleItemLayer({"HOVERS_ABOVE_SURFACE"}, 2.0);
+	m_cellLayer = new MyCellLayer({"HOVERS_ABOVE_SURFACE"}, 0.1);
 	for(uint32_t i(sserialize::spatial::GS_BEGIN), s(sserialize::spatial::GS_END); i < s; ++i) {
 		m_highlightItemLayer->shapeColor(i) = QColor(Qt::red);
 		m_singleItemLayer->shapeColor(i) = QColor(Qt::darkYellow);
@@ -191,20 +255,28 @@ MarbleMap::MarbleMap(): MarbleWidget() {
 	addLayer(m_baseItemLayer);
 	addLayer(m_highlightItemLayer);
 	addLayer(m_singleItemLayer);
+	addLayer(m_cellLayer);
 }
 
 MarbleMap::~MarbleMap() {
 	removeLayer(m_baseItemLayer);
 	removeLayer(m_highlightItemLayer);
 	removeLayer(m_singleItemLayer);
+	removeLayer(m_cellLayer);
 	delete m_baseItemLayer;
 	delete m_highlightItemLayer;
 	delete m_singleItemLayer;
+	delete m_cellLayer;
 }
 
 void MarbleMap::itemStoreChanged(const liboscar::Static::OsmKeyValueObjectStore& store) {
 	m_store = store;
 	m_baseItemLayer->setStore(store);
+	m_cellLayer->setStore(store);
+}
+
+void MarbleMap::activeCellsChanged(const sserialize::ItemIndex& cells) {
+	m_cellLayer->setCells(cells);
 }
 
 void MarbleMap::viewSetChanged(uint32_t begin, uint32_t end) {
@@ -250,7 +322,5 @@ void MarbleMap::drawAndZoomTo(const liboscar::Static::OsmKeyValueObjectStore::It
 		centerOn(marbleBounds, true);
 	}
 }
-
-
 
 }

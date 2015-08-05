@@ -65,17 +65,36 @@ private:
 		void setItem(const liboscar::Static::OsmKeyValueObjectStore::Item & item);
 	};
 	
+	class MyCellLayer: public MyLockableBaseLayer {
+	private:
+		typedef std::vector<uint32_t> Graph;
+		typedef std::unordered_map<uint32_t, Graph> GraphMap;
+	private:
+		liboscar::Static::OsmKeyValueObjectStore m_store;
+		GraphMap m_cgm;
+	protected:
+		bool doRender(const std::vector<uint32_t> & faces, const QColor& color, Marble::GeoPainter* painter);
+	public:
+		MyCellLayer(const QStringList & renderPos, qreal zVal);
+		virtual ~MyCellLayer() {}
+		virtual bool render(Marble::GeoPainter *painter, Marble::ViewportParams * viewport, const QString & renderPos, Marble::GeoSceneLayer * layer);
+		void setCells(const sserialize::ItemIndex & cells);
+		void setStore(const liboscar::Static::OsmKeyValueObjectStore & store);
+	};
+	
 private:
 	sserialize::ItemIndex m_set;
 	liboscar::Static::OsmKeyValueObjectStore m_store;
 	MyItemSetLayer * m_baseItemLayer;
 	MySingleItemLayer * m_highlightItemLayer;
 	MySingleItemLayer * m_singleItemLayer;
+	MyCellLayer * m_cellLayer;
 public:
 	MarbleMap();
 	virtual ~MarbleMap();
 public Q_SLOTS:
 	void itemStoreChanged(const liboscar::Static::OsmKeyValueObjectStore & store);
+	void activeCellsChanged(const sserialize::ItemIndex & cells);
 	void viewSetChanged(uint32_t begin, uint32_t end);
 	void viewSetChanged(const sserialize::ItemIndex & set);
 	void zoomToItem(uint32_t itemPos);
