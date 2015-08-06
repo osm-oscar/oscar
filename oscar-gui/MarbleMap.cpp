@@ -188,9 +188,9 @@ bool MarbleMap::MyCellLayer::doRender(const std::vector<uint32_t> & faces, const
 	lineColor.setAlpha(255);
 	painter->setPen(QPen(QBrush(lineColor, Qt::BrushStyle::SolidPattern), 1));
 	QColor fillColor(lineColor);
-	fillColor.setAlpha(255);
+	fillColor.setAlpha(0.7*255);
 	
-	for (uint32_t faceId : faces) {
+	for(uint32_t faceId : faces) {
 		Marble::GeoDataLinearRing l;
 		sserialize::Static::spatial::Triangulation::Face fh = m_store.regionArrangement().tds().face(faceId);
 		for(int j(0); j < 3; ++j) {
@@ -225,8 +225,8 @@ void MarbleMap::MyCellLayer::setCells(const sserialize::ItemIndex& cells) {
 				std::vector<uint32_t> * cells;
 				MyOutIt & operator++() { return *this; }
 				MyOutIt & operator*() { return *this; }
-				MyOutIt & operator=(const sserialize::Static::spatial::TriangulationGeoHierarchyArrangement::CFGraph::Node & n) {
-					cells->push_back(n.face().id());
+				MyOutIt & operator=(const sserialize::Static::spatial::TriangulationGeoHierarchyArrangement::CFGraph::Face & f) {
+					cells->push_back(f.id());
 					return *this;
 				}
 			};
@@ -245,17 +245,17 @@ void MarbleMap::MyCellLayer::setStore(const liboscar::Static::OsmKeyValueObjectS
 
 MarbleMap::MarbleMap(): MarbleWidget() {
 	m_baseItemLayer = new MyItemSetLayer({"HOVERS_ABOVE_SURFACE"}, 0.0);
-	m_highlightItemLayer = new MySingleItemLayer({"HOVERS_ABOVE_SURFACE"}, 1.0);
-	m_singleItemLayer = new MySingleItemLayer({"HOVERS_ABOVE_SURFACE"}, 2.0);
-	m_cellLayer = new MyCellLayer({"HOVERS_ABOVE_SURFACE"}, 0.1);
+	m_cellLayer = new MyCellLayer({"HOVERS_ABOVE_SURFACE"}, 1.0);
+	m_highlightItemLayer = new MySingleItemLayer({"HOVERS_ABOVE_SURFACE"}, 2.0);
+	m_singleItemLayer = new MySingleItemLayer({"HOVERS_ABOVE_SURFACE"}, 3.0);
 	for(uint32_t i(sserialize::spatial::GS_BEGIN), s(sserialize::spatial::GS_END); i < s; ++i) {
 		m_highlightItemLayer->shapeColor(i) = QColor(Qt::red);
 		m_singleItemLayer->shapeColor(i) = QColor(Qt::darkYellow);
 	}
 	addLayer(m_baseItemLayer);
+	addLayer(m_cellLayer);
 	addLayer(m_highlightItemLayer);
 	addLayer(m_singleItemLayer);
-	addLayer(m_cellLayer);
 }
 
 MarbleMap::~MarbleMap() {
@@ -277,6 +277,7 @@ void MarbleMap::itemStoreChanged(const liboscar::Static::OsmKeyValueObjectStore&
 
 void MarbleMap::activeCellsChanged(const sserialize::ItemIndex& cells) {
 	m_cellLayer->setCells(cells);
+	this->update();
 }
 
 void MarbleMap::viewSetChanged(uint32_t begin, uint32_t end) {
@@ -308,7 +309,7 @@ void MarbleMap::zoomToItem(uint32_t itemPos) {
 		centerOn(marbleBounds, true);
 	}
 	else {
-		std::cerr << "Invalid i: " << itemPos << std::endl;
+		std::cerr << "Invalid item: " << itemPos << std::endl;
 	}
 }
 
