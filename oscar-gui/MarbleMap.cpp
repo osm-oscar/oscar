@@ -183,6 +183,38 @@ MarbleMap::MyCellLayer::MyCellLayer(const QStringList& renderPos, qreal zVal) :
 MyLockableBaseLayer(renderPos, zVal)
 {}
 
+void MarbleMap::MyCellLayer::calcCellColors() {
+	auto cg = m_store.cellGraph();
+	std::vector<uint8_t> tmpColors(cg.size(), Qt::GlobalColor::color0);
+	for(uint32_t i(0), s(cg.size()); i < s; ++i) {
+		auto cn = cg.node(i);
+		if (cn.size()) {
+			uint32_t neighborColors = 0;
+			for(uint32_t j(0), js(cn.size()); j < js; ++j) {
+				neighborColors |= static_cast<uint32_t>(1) << tmpColors.at(cn.neighborId(j));
+			}
+			for(uint8_t color(Qt::GlobalColor::red); color < Qt::GlobalColor::darkYellow; ++color) {
+				if ((neighborColors & (static_cast<uint32_t>(1) << color)) == 0) {
+					tmpColors.at(i) = color;
+					break;
+				}
+			}
+			//now other color was found
+			if (tmpColors.at(i) == Qt::GlobalColor::color0) {
+				tmpColors.at(i) = Qt::GlobalColor::black;
+			}
+		}
+		else {
+			tmpColors.at(i) = Qt::GlobalColor::white;
+		}
+	}
+	m_cellColors.clear();
+	m_cellColors.resize(cg.size());
+	for(uint32_t i(0), s(cg.size()); i < s; ++i) {
+		m_cellColors.at(i) = QColor((Qt::GlobalColor) tmpColors.at(i));
+	}
+}
+
 bool MarbleMap::MyCellLayer::doRender(const std::vector<uint32_t> & faces, const QColor& color, Marble::GeoPainter* painter) {
 	QColor lineColor(color);
 	lineColor.setAlpha(255);
@@ -207,7 +239,7 @@ bool MarbleMap::MyCellLayer::render(Marble::GeoPainter* painter, Marble::Viewpor
 	SemaphoreLocker locker(lock(), L_READ);
 	bool ok = true;
 	for(const std::pair<const uint32_t, Graph> x : m_cgm) {
-		ok = doRender(x.second, QColor("green"), painter) && ok;
+		ok = doRender(x.second, m_cellColors.at(x.first), painter) && ok;
 	}
 	return ok;
 }
@@ -241,6 +273,7 @@ void MarbleMap::MyCellLayer::setStore(const liboscar::Static::OsmKeyValueObjectS
 	SemaphoreLocker locker(lock(), L_WRITE);
 	m_cgm.clear();
 	m_store = store;
+	calcCellColors();
 }
 
 MarbleMap::MarbleMap(): MarbleWidget() {

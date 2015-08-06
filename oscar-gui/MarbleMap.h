@@ -71,7 +71,10 @@ private:
 		typedef std::unordered_map<uint32_t, Graph> GraphMap;
 	private:
 		liboscar::Static::OsmKeyValueObjectStore m_store;
+		std::vector<QColor> m_cellColors;
 		GraphMap m_cgm;
+	private:
+		void calcCellColors();
 	protected:
 		bool doRender(const std::vector<uint32_t> & faces, const QColor& color, Marble::GeoPainter* painter);
 	public:
