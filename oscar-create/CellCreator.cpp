@@ -206,7 +206,7 @@ void CellCreator::createGeoHierarchy(FlatCellList& cellList, uint32_t geoRegionC
 		}
 		std::sort(tmp.begin(), tmp.end());
 		geoRegionCellSplitData.reserve(tmp.size());
-		geoRegionCellSplit.resize(geoRegionCount);
+		geoRegionCellSplit.resize(geoRegionCount, CellsOfGeoRegion(&geoRegionCellSplitData, 0, 0));
 		uint32_t prevRegionId = 0;
 		sserialize::UByteArrayAdapter::OffsetType prevRegionOffset = 0;
 		for(auto & x : tmp) {
