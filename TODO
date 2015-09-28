@@ -15,6 +15,9 @@ Query Language improvements:
 improve query refinement options: +-/^ neben dem key/value sodass man den key/value z.b. abziehen kann
 
 LONGTERM:
+Re-order treed-cqr set operations
+
+LONGTERM:
 HierarchicalCQR:
 Based on Regions. Essential the GeoHierarchy::SubSet in a compressed form. Set-Operations can then be done on this subgraph.
 In order to make this work, the graph has to be transformed to tree. We can simply do this by following the graph in in-order and skipping processed regions.
@@ -28,3 +31,6 @@ u32        |*      |u32          |[u32]          |boolean            |[(u32, u32
 
 LONGTERM:
 full support for relations
+
+LONGTERM:
+anderer zwischen-bla-blub query der die hierarchie nutzt.
