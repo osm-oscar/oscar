@@ -239,7 +239,7 @@ void CellCreator::createGeoHierarchy(FlatCellList& cellList, uint32_t geoRegionC
 			std::set<uint32_t, decltype(geoRegionCellSizeComparer)> tmpChildRegions(geoRegionCellSizeComparer);
 			std::unordered_set<uint32_t> checkedCandidateRegions;
 			checkedCandidateRegions.insert(i);
-			for(auto cit(geoRegionCellSplit.at(i).begin()), cend(geoRegionCellSplit.at(i).end()); cit != cend; ++cit) {
+			for(auto cit(myCellList.begin()), cend(myCellList.end()); cit != cend; ++cit) {
 				for(auto pit(cellList.at(*cit).parentsBegin()), pend(cellList.at(*cit).parentsEnd()); pit != pend; ++pit) {
 					if (!checkedCandidateRegions.count(*pit)) {
 						if (sserialize::subset_of(geoRegionCellSplit.at(*pit).cbegin(), geoRegionCellSplit.at(*pit).cend(), myCellList.cbegin(), myCellList.cend())) {
