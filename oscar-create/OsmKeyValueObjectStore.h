@@ -165,6 +165,7 @@ public:
 		std::unordered_set<std::string> inflateValues;
 		ItemSortOrder sortOrder;
 		std::string prioStringsFn;//needed if sortOrder == ISO_SCORE_PRIO_STRINGS
+		bool addRegionsToCells;
 		//a filter that defines regions
 		struct RegionConfig {
 			generics::RCPtr<osmpbf::AbstractTagFilter> regionFilter;
@@ -172,7 +173,9 @@ public:
 			uint32_t polyStoreLonCount;
 			uint32_t polyStoreMaxTriangPerCell;
 			double triangMaxCentroidDist;
+			RegionConfig() : polyStoreLatCount(100), polyStoreLonCount(100), polyStoreMaxTriangPerCell(std::numeric_limits<uint32_t>::max()), triangMaxCentroidDist(std::numeric_limits<double>::max()) {}
 		} rc;
+		CreationConfig() : maxNodeCoordTableSize(std::numeric_limits<uint32_t>::max()), minNodeId(0), maxNodeId(0), numThreads(1), sortOrder(ISO_SCORE), addRegionsToCells(false) {}
 		inline bool incremental() { return maxNodeCoordTableSize != std::numeric_limits<uint32_t>::max(); }
 	};
 

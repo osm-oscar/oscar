@@ -655,10 +655,12 @@ void OsmKeyValueObjectStore::addPolyStoreItems(Context & ctx) {
 	ctx.progressInfo.end();
 	
 	//add regions to their cells
-	for(uint32_t cellId(0), s(ctx.trs.cellCount()); cellId < s; ++cellId) {
-		for(uint32_t regionId : ctx.trs.regions(cellId)) {
-			//BUG: cell boundaries are not correct here!
-			ctx.cellMap.insert(cellId, regionId, sserialize::spatial::GeoRect());
+	if (ctx.cc->addRegionsToCells) {
+		for(uint32_t cellId(0), s(ctx.trs.cellCount()); cellId < s; ++cellId) {
+			for(uint32_t regionId : ctx.trs.regions(cellId)) {
+				//BUG: cell boundaries are not correct here!
+				ctx.cellMap.insert(cellId, regionId, sserialize::spatial::GeoRect());
+			}
 		}
 	}
 	assert(size() == ctx.polyStore.size());
