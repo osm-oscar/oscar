@@ -34,3 +34,9 @@ full support for relations
 
 LONGTERM:
 anderer zwischen-bla-blub query der die hierarchie nutzt.
+
+HIGH IMPORTANCE:
+neighbor-pointers in GeoHierarchy
+
+HIGH IMPORTANCE:
+dynamic polygon simplification
