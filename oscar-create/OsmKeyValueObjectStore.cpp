@@ -293,7 +293,6 @@ osmpbf::AbstractTagFilter* OsmKeyValueObjectStore::MyRegionFilter::copy(osmpbf::
 		return copies.at(this);
 	}
 	MyRegionFilter * tmp = new MyRegionFilter(m_d);
-	tmp->m_Invert = this->m_Invert;
 	copies[this] = tmp;
 	return tmp;
 }
@@ -336,14 +335,14 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 
 	{//fetch all residential areas without a name, try to name them with their city-node
 		std::cout << "Fetching residential areas without matching tags but with a place-node inside" << std::endl;
-		ct.cc->rc.regionFilter->setInverted(true);
+		osmpbf::InversionFilter::invert( ct.cc->rc.regionFilter );
 		generics::RCPtr<osmpbf::AbstractTagFilter> myFilter(
 			osmpbf::newAnd(
 				new osmpbf::KeyValueTagFilter("landuse", "residential"),
 				ct.cc->rc.regionFilter->copy()
 			)
 		);
-		ct.cc->rc.regionFilter->setInverted(false);
+		osmpbf::InversionFilter::invert( ct.cc->rc.regionFilter );
 		
 		osmtools::OsmGridRegionTree<RegionInfo> polyStore;
 		ae.extract(ct.cc->fileName, [&polyStore](const std::shared_ptr<sserialize::spatial::GeoRegion> & region, osmpbf::IPrimitive & primitive) {
@@ -844,7 +843,7 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 		{//handle relation multi polyons skip the ones that are in the store
 			osmtools::AreaExtractor ae;
 			generics::RCPtr<osmpbf::AbstractTagFilter> myRegionFilter(new MyRegionFilter(&ct.regionItems));
-			myRegionFilter->invert();
+			osmpbf::InversionFilter::invert(myRegionFilter);
 			auto wf = [&ct, &wct, &rwct](const std::shared_ptr<sserialize::spatial::GeoRegion> & region, osmpbf::IPrimitive & primitive) {
 				OsmKeyValueRawItem rawItem;
 				ct.inflateValues(rawItem, primitive);
