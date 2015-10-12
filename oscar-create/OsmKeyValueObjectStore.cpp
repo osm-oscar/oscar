@@ -1196,6 +1196,7 @@ bool OsmKeyValueObjectStore::processCellMap(Context & ctx) {
 	//Let's create our Hierarchy
 	CellCreator::CellListType cellList;
 	CellCreator cc;
+	sserialize::Static::spatial::TracGraph tracGraph;
 	{//create celllist and the TriangulationGeoHierarchyArrangement
 		std::vector<uint32_t> newToOldCellId;
 		cc.createCellList(ctx.cellMap, ctx.trs, cellList, newToOldCellId);
@@ -1205,10 +1206,14 @@ bool OsmKeyValueObjectStore::processCellMap(Context & ctx) {
 		}
 		m_ra = sserialize::UByteArrayAdapter::createCache(newToOldCellId.size()*4, sserialize::MM_FILEBASED);
 		ctx.trs.append(m_ra, oldToNewCellId);
+		sserialize::UByteArrayAdapter::OffsetType tracGraphBegin = m_ra.size();
 		ctx.trs.cellGraph().append(m_ra, oldToNewCellId);
+		tracGraph = sserialize::Static::spatial::TracGraph(m_ra+tracGraphBegin);
 		ctx.trs.clear();
 	}
 	cc.createGeoHierarchy(cellList, ctx.regionInfo.size(), m_gh);
+	//set the neighbor pointers
+	m_gh.createNeighborPointers(tracGraph);
 	m_gh.printStats(std::cout);
 	{ //remap the items in the gh to the unremapped ids
 		
