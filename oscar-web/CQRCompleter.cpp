@@ -50,6 +50,7 @@ void CQRCompleter::writeSubSet(std::ostream& out, const std::string & sst, const
 void CQRCompleter::fullCQR() {
 	sserialize::TimeMeasurer ttm;
 	ttm.begin();
+
 	std::string cqs = request().get("q");
 	std::string sst = request().get("sst");
 	bool ssonly = sserialize::toBool(request().get("ssonly"));
@@ -59,7 +60,6 @@ void CQRCompleter::fullCQR() {
 	
 	std::cout << "cqr.size=" << subSet.cqr().cellCount() << std::endl;
 	
-	response().set_header("Access-Control-Allow-Origin","*");
 	if (!ssonly || sst == "binary") {
 		response().set_content_header("application/octet-stream");
 	}
@@ -91,12 +91,11 @@ void CQRCompleter::fullCQR() {
 
 void CQRCompleter::simpleCQR() {
 	typedef sserialize::Static::spatial::GeoHierarchy::SubSet::NodePtr SubSetNodePtr;
-	const sserialize::Static::spatial::GeoHierarchy & gh = m_dataPtr->completer->store().geoHierarchy();
-	
 	sserialize::TimeMeasurer ttm;
 	ttm.begin();
 
-	response().set_header("Access-Control-Allow-Origin","*");
+	const sserialize::Static::spatial::GeoHierarchy & gh = m_dataPtr->completer->store().geoHierarchy();
+
 	response().set_content_header("text/json");
 	
 	//params
@@ -191,7 +190,6 @@ void CQRCompleter::items() {
 	sserialize::TimeMeasurer ttm;
 	ttm.begin();
 
-	response().set_header("Access-Control-Allow-Origin","*");
 	response().set_content_header("text/json");
 	
 	//params
@@ -249,7 +247,7 @@ void CQRCompleter::children() {
 	sserialize::TimeMeasurer ttm;
 	ttm.begin();
 	const sserialize::Static::spatial::GeoHierarchy & gh = m_dataPtr->completer->store().geoHierarchy();
-	response().set_header("Access-Control-Allow-Origin","*");
+
 	response().set_content_header("text/json");
 	
 	//params

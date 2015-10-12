@@ -36,7 +36,6 @@ MainHandler::~MainHandler() {}
 
 void MainHandler::describe() {
     // Handle CORS
-	response().set_header("Access-Control-Allow-Origin","*");
 	response().set_content_header("text/xml");
 	std::ostream & out = response().out();
 	out << "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>";
