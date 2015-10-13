@@ -40,7 +40,7 @@ struct OsmKeyValueRawItem {
 
 	OsmKeyValueRawItem() {}
 	OsmKeyValueRawItem(const OsmKeyValueRawItem & other) : rawKeyValues(other.rawKeyValues), data(other.data) {}
-	OsmKeyValueRawItem(OsmKeyValueRawItem && other) : rawKeyValues(std::move(other.rawKeyValues)), data(other.data) {}
+	OsmKeyValueRawItem(OsmKeyValueRawItem && other) : rawKeyValues(std::move(other.rawKeyValues)), data(std::move(other.data)) {}
 	
 	OsmKeyValueRawItem & operator=(const OsmKeyValueRawItem & other) {
 		rawKeyValues = other.rawKeyValues;
@@ -49,9 +49,8 @@ struct OsmKeyValueRawItem {
 	}
 
 	OsmKeyValueRawItem & operator=(OsmKeyValueRawItem && other) {
-		using std::swap;
-		swap(rawKeyValues, other.rawKeyValues);
-		data = other.data;
+		rawKeyValues = std::move(other.rawKeyValues);
+		data = std::move(other.data);
 		return *this;
 	}
 

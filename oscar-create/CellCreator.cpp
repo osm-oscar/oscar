@@ -30,9 +30,9 @@ CellCreator::FlatCellMap& CellCreator::FlatCellMap::operator=(CellCreator::FlatC
 	std::unique_lock<std::mutex>(other.m_cellItemLock);
 
 	using std::swap;
-	swap(m_cellCount, other.m_cellCount);
-	swap(m_cellItemEntries, other.m_cellItemEntries);
-	swap(m_cellBoundaries, other.m_cellBoundaries);
+	m_cellCount = std::move(other.m_cellCount);
+	m_cellItemEntries = std::move(other.m_cellItemEntries);
+	m_cellBoundaries = std::move(other.m_cellBoundaries);
 	
 	return *this;
 }
