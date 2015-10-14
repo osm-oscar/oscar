@@ -74,7 +74,7 @@ T_CQR_TYPE CellOpTreeImp<T_CQR_TYPE>::qc(const std::string & str) {
 	if (!str.size()) {
 		return T_CQR_TYPE();
 	}
-	if (str[0] == '$') {
+	if (str[0] == '$') { //for internal purposes, inserted by the gui
 		if (str.compare(1, sizeof("region")-1, "region") == 0) {//special query
 			uint32_t id = atoi(str.c_str()+(sizeof("$region:")-1)); //-1 fo the terminating 0
 			return m_qc.cqrFromRegionStoreId<T_CQR_TYPE>(id);
@@ -122,10 +122,24 @@ T_CQR_TYPE CellOpTreeImp<T_CQR_TYPE>::qc(const std::string & str) {
 			}
 		}
 	}
-	std::string qstr(str);
+	std::string qstr;
+	if ('!' == str[0] || '#' == str[0]) {
+		qstr.insert(qstr.end(), str.begin(), str.end());
+	}
+	else {
+		qstr =str;
+	}
 	sserialize::StringCompleter::QuerryType qt = sserialize::StringCompleter::QT_NONE;
 	qt = sserialize::StringCompleter::normalize(qstr);
-	return m_qc.complete<T_CQR_TYPE>(qstr, qt);
+	if ('!' == str[0]) {
+		return m_qc.items<T_CQR_TYPE>(qstr, qt);
+	}
+	else if ('#' == str[0]) {
+		return m_qc.regions<T_CQR_TYPE>(qstr, qt);
+	}
+	else {
+		return m_qc.complete<T_CQR_TYPE>(qstr, qt);
+	}
 }
 
 template<typename T_CQR_TYPE>

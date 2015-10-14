@@ -111,6 +111,12 @@ public:
 	T_CQR_TYPE complete(const std::string & qstr, const sserialize::StringCompleter::QuerryType qt) const;
 	
 	template<typename T_CQR_TYPE>
+	T_CQR_TYPE regions(const std::string & qstr, const sserialize::StringCompleter::QuerryType qt) const;
+	
+	template<typename T_CQR_TYPE>
+	T_CQR_TYPE items(const std::string & qstr, const sserialize::StringCompleter::QuerryType qt) const;
+	
+	template<typename T_CQR_TYPE>
 	T_CQR_TYPE fromRegionStoreId(uint32_t id) const;
 	
 	template<typename T_CQR_TYPE>
@@ -131,6 +137,28 @@ T_CQR_TYPE CellTextCompleter::complete(const std::string& qstr, const sserialize
 	try {
 		Payload::Type t(typeFromCompletion(qstr, qt));
 		return T_CQR_TYPE(m_idxStore.at( t.fmPtr() ), m_idxStore.at( t.pPtr() ), t.pItemsPtrBegin(), m_gh, m_idxStore);
+	}
+	catch (const sserialize::OutOfBoundsException & e) {
+		return T_CQR_TYPE();
+	}
+}
+
+template<typename T_CQR_TYPE>
+T_CQR_TYPE CellTextCompleter::regions(const std::string& qstr, const sserialize::StringCompleter::QuerryType qt) const {
+	try {
+		Payload::Type t(typeFromCompletion(qstr, qt));
+		return T_CQR_TYPE(m_idxStore.at( t.fmPtr() ), m_gh, m_idxStore);
+	}
+	catch (const sserialize::OutOfBoundsException & e) {
+		return T_CQR_TYPE();
+	}
+}
+
+template<typename T_CQR_TYPE>
+T_CQR_TYPE CellTextCompleter::items(const std::string& qstr, const sserialize::StringCompleter::QuerryType qt) const {
+	try {
+		Payload::Type t(typeFromCompletion(qstr, qt));
+		return T_CQR_TYPE(sserialize::ItemIndex(), m_idxStore.at( t.pPtr() ), t.pItemsPtrBegin(), m_gh, m_idxStore);
 	}
 	catch (const sserialize::OutOfBoundsException & e) {
 		return T_CQR_TYPE();
@@ -220,6 +248,16 @@ public:
 	template<typename T_CQR_TYPE = sserialize::CellQueryResult>
 	inline T_CQR_TYPE complete(const std::string & qstr, const sserialize::StringCompleter::QuerryType qt) const {
 		return priv()->complete<T_CQR_TYPE>(qstr, qt);
+	}
+	
+	template<typename T_CQR_TYPE = sserialize::CellQueryResult>
+	inline T_CQR_TYPE regions(const std::string & qstr, const sserialize::StringCompleter::QuerryType qt) const {
+		return priv()->regions<T_CQR_TYPE>(qstr, qt);
+	}
+	
+	template<typename T_CQR_TYPE = sserialize::CellQueryResult>
+	inline T_CQR_TYPE items(const std::string & qstr, const sserialize::StringCompleter::QuerryType qt) const {
+		return priv()->items<T_CQR_TYPE>(qstr, qt);
 	}
 	
 	template<typename T_CQR_TYPE = sserialize::CellQueryResult>
