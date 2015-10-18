@@ -18,6 +18,27 @@ struct AlwaysFalseStringHinter: sserialize::OpTree::detail::SetOpsOpTreeParser::
 	virtual bool operator()(const std::string::const_iterator& begin, const std::string::const_iterator end) const;
 };
 
+/**
+  * The CellOpTree currently support the following special syntax:
+  * STATEMENT = STATEMENT OP STATEMENT
+  * OP = (as support by sserialize::OpTree::detail::SetOpsOpTreeParser)
+  *   <space>
+  *   /
+  *   +
+  *   -
+  *   ^
+  * STATEMENT =
+  *   $region:<regionid> = query for region with id=regionid
+  *   $cell:<cellid> = query for cell with id=cellid
+  *   $rect:<sserialize::spatial::GeoRect> = define a rectangle 
+  *   $path:radius,lat,lon,[lat,lon] = define a path
+  *   STRING a region+items query
+  *   !STRING a items query
+  *   #STRING a region query
+  * STRING = as defined by StringCompleter::normalize
+  *
+  */
+
 template<typename T_CQR_TYPE = sserialize::CellQueryResult>
 class CellOpTreeImp: public sserialize::OpTree::detail::OpTree<T_CQR_TYPE> {
 public:
