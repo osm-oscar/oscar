@@ -4,6 +4,7 @@
 #include <sserialize/containers/MMVector.h>
 #include <sserialize/containers/HashBasedFlatTrie.h>
 #include <sserialize/iterator/TransformIterator.h>
+#include <sserialize/algorithm/oom_algorithm.h>
 
 #include <limits>
 
@@ -280,10 +281,8 @@ bool OOMCTCValuesCreator<TBaseTraits>::finalize() {
 	LessThan ltp(m_traits.nodeIdentifierLessThanComparator());
 	Equal ep(m_traits.NodeIdentifierEqualPredicate());
 	
-	///BUG:this has to be out of memory
-	sserialize::mt_sort(m_entries.begin(), m_entries.end(), ltp);
-	///BUG:this has to be out of memory
-	 std::unique(m_entries.begin(), m_entries.end(), ep);
+	sserialize::oom_sort(m_entries.begin(), m_entries.end(), ltp, 1 << 30, 1 << 22, sserialize::MM_FILEBASED, 2);
+	sserialize::oom_unique(m_entries.begin(), m_entries.end(), sserialize::MM_FILEBASED, ep);
 }
 
 
