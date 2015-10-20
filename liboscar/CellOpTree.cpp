@@ -5,7 +5,7 @@ namespace liboscar {
 namespace detail {
 namespace CellOpTree {
 
-CTCStringHinter::CTCStringHinter(const Static::CellTextCompleter & qc) : 
+CTCStringHinter::CTCStringHinter(const sserialize::Static::CellTextCompleter & qc) : 
 m_qc(qc)
 {}
 

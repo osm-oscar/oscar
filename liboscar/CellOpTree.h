@@ -2,17 +2,17 @@
 #define LIBOSCAR_CELL_OP_TREE_H
 #include <sserialize/strings/stringfunctions.h>
 #include <sserialize/search/OpTree.h>
-#include "CellTextCompleter.h"
+#include <sserialize/Static/CellTextCompleter.h>
 
 namespace liboscar {
 namespace detail {
 namespace CellOpTree {
 
 struct CTCStringHinter: sserialize::OpTree::detail::SetOpsOpTreeParser::StringHinter {
-	CTCStringHinter(const Static::CellTextCompleter & qc);
+	CTCStringHinter(const sserialize::Static::CellTextCompleter & qc);
 	~CTCStringHinter();
 	virtual bool operator()(const std::string::const_iterator& begin, const std::string::const_iterator end) const;
-	Static::CellTextCompleter m_qc;
+	sserialize::Static::CellTextCompleter m_qc;
 };
 struct AlwaysFalseStringHinter: sserialize::OpTree::detail::SetOpsOpTreeParser::StringHinter {
 	virtual bool operator()(const std::string::const_iterator& begin, const std::string::const_iterator end) const;
@@ -46,14 +46,14 @@ public:
 private:
 
 private:
-	Static::CellTextCompleter m_qc;
+	sserialize::Static::CellTextCompleter m_qc;
 	sserialize::OpTree::detail::SetOpsOpTreeParser m_parser;
 	sserialize::OpTree::detail::Node * m_root;
 private:
 	T_CQR_TYPE qc(const std::string & str);
 	T_CQR_TYPE calc(sserialize::OpTree::detail::Node * node);
 public:
-	CellOpTreeImp(const Static::CellTextCompleter & qc, bool spacesAreIntersections);
+	CellOpTreeImp(const sserialize::Static::CellTextCompleter & qc, bool spacesAreIntersections);
 	CellOpTreeImp(const CellOpTreeImp & other);
 	virtual ~CellOpTreeImp() {
 		delete m_root;
@@ -79,7 +79,7 @@ m_root((other.m_root ? other.m_root->copy() : 0))
 {}
 
 template<typename T_CQR_TYPE>
-CellOpTreeImp<T_CQR_TYPE>::CellOpTreeImp(const liboscar::Static::CellTextCompleter & qc, bool spacesAreIntersections) :
+CellOpTreeImp<T_CQR_TYPE>::CellOpTreeImp(const sserialize::Static::CellTextCompleter & qc, bool spacesAreIntersections) :
 m_qc(qc),
 m_parser(sserialize::OpTree::detail::SetOpsOpTreeParser::StringHinterSharedPtr(
 			spacesAreIntersections ? 
@@ -200,7 +200,7 @@ class CellOpTree: public sserialize::OpTree::OpTree<T_CQR_TYPE> {
 public:
 	typedef sserialize::OpTree::OpTree<T_CQR_TYPE> MyBaseClass;
 public:
-	CellOpTree(const liboscar::Static::CellTextCompleter& qc, bool spacesAreIntersections): 
+	CellOpTree(const sserialize::Static::CellTextCompleter& qc, bool spacesAreIntersections): 
 	MyBaseClass(new detail::CellOpTree::CellOpTreeImp<T_CQR_TYPE>(qc, spacesAreIntersections))
 	{}
 	virtual ~CellOpTree() {}

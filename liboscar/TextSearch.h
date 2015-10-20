@@ -94,7 +94,7 @@ public:
 };
 }//end namespace liboscar
 
-#include "CellTextCompleter.h"
+#include <sserialize/Static/CellTextCompleter.h>
 
 namespace liboscar {
 
@@ -116,9 +116,9 @@ struct TextSearch::CompleterType<liboscar::TextSearch::GEOHIERARCHY> {
 
 template<>
 struct TextSearch::CompleterType<liboscar::TextSearch::GEOCELL> {
-	typedef liboscar::Static::CellTextCompleter type;
+	typedef sserialize::Static::CellTextCompleter type;
 	static type get(sserialize::RefCountObject * base) {
-		return type( dynamic_cast<liboscar::Static::detail::CellTextCompleter*>(base) );
+		return type( dynamic_cast<sserialize::Static::detail::CellTextCompleter*>(base) );
 	}
 };
 

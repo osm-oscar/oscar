@@ -496,7 +496,7 @@ sserialize::ItemIndexFactory & indexFactory, sserialize::UByteArrayAdapter & des
 		tmp.setPutPtr(bO);
 		tmp.shrinkToPutPtr();
 		tmp.resetPtrs();
-		liboscar::Static::CellTextCompleter sct( tmp, sserialize::Static::ItemIndexStore(), sserialize::Static::spatial::GeoHierarchy(), sserialize::Static::spatial::TriangulationGeoHierarchyArrangement());
+		sserialize::Static::CellTextCompleter sct( tmp, sserialize::Static::ItemIndexStore(), sserialize::Static::spatial::GeoHierarchy(), sserialize::Static::spatial::TriangulationGeoHierarchyArrangement());
 		if (ct.equal(sct, [&indexFactory](uint32_t id){ return indexFactory.indexById(id);})) {
 			std::cout << "CellTextCompleter is equal" << std::endl;
 		}

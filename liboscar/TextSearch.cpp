@@ -1,5 +1,5 @@
 #include <liboscar/TextSearch.h>
-#include "CellTextCompleter.h"
+#include <sserialize/Static/CellTextCompleter.h>
 #include <sserialize/Static/StringCompleter.h>
 #include <sserialize/search/StringCompleterPrivateGeoHierarchyUnclustered.h>
 
@@ -30,9 +30,9 @@ TextSearch::TextSearch(const sserialize::UByteArrayAdapter& d, const sserialize:
 			break;
 		case GEOCELL:
 			{
-				sserialize::RCPtrWrapper<Static::detail::CellTextCompleter> cellTextCompleter(new Static::detail::CellTextCompleter(td+1, indexStore, gh, ra));
+				sserialize::RCPtrWrapper<sserialize::Static::detail::CellTextCompleter> cellTextCompleter(new sserialize::Static::detail::CellTextCompleter(td+1, indexStore, gh, ra));
 				m_completers[GEOCELL].emplace_back(cellTextCompleter.priv());
-				m_completers[ITEMS].emplace_back(new Static::CellTextCompleterUnclustered(Static::CellTextCompleter(cellTextCompleter), gh));
+				m_completers[ITEMS].emplace_back(new sserialize::Static::CellTextCompleterUnclustered(sserialize::Static::CellTextCompleter(cellTextCompleter), gh));
 			}
 			break;
 		default:
