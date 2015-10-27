@@ -159,6 +159,9 @@ void CQRCompleter::simpleCQR() {
 	//now write the data
 	BinaryWriter bw(response().out());
 
+	//root region apx item count
+	bw.putU32(subSetRootPtr->maxItemsSize());
+	
 	//ohPath
 	bw.putU32(ohPath.size());
 	for(auto x : ohPath) {
