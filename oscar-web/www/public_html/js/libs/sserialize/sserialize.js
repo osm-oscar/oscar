@@ -203,7 +203,6 @@ define(['jbinary'], function (jBinary) { return {
 			}
 		}),
 		//Returns {
-		//			'items': [item ids as int],
 		//			'ohPath' : [region ids as int], 
 		//			regionInfo : {
 		//							regionid : [{'id' : <childid>, 'apxitems' : <apxitems in child>}]
@@ -214,6 +213,7 @@ define(['jbinary'], function (jBinary) { return {
 	    SimpleCellQueryResult: jBinary.Template({
 			setParams: function () {
 				this.baseType = {
+									rootRegionApxItemCount : 'uint32',
 									ohPath: 'U32Array',
 									childrenInfoSize : 'uint32', //region children
 									childrenInfo : ['array', 'U32Array', 'childrenInfoSize']
@@ -238,7 +238,7 @@ define(['jbinary'], function (jBinary) { return {
 										});
 					myRegionInfo[regionId] = myChildrenInfo;
 				}
-				return {ohPath : d.ohPath, regionInfo : myRegionInfo};
+				return {ohPath : d.ohPath, regionInfo : myRegionInfo, rootRegionApxItemCount : d.rootRegionApxItemCount};
 			}
 		}),
 	   ReducedCellQueryResult: jBinary.Template({

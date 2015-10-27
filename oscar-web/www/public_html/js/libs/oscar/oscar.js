@@ -306,6 +306,9 @@ SimpleCellQueryResult : function(data, parent, sqId) {
 		rootRegionChildrenInfo : function() {
 			return this.d.regionInfo[0xFFFFFFFF];
 		},
+		rootRegionApxItemCount : function() {
+			return this.d.rootRegionApxItemCount;
+		},
 		//returning an array in successCB with objects={id : int, apxitems : int}
 		//returns rootRegionChildrenInfo if regionId is undefined
 		regionChildrenInfo : function(regionId, successCB, errorCB) {

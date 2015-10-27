@@ -1245,7 +1245,7 @@
                                     res.data.push({name : options.name, type : 'item', dataAttributes : options.dataAttributes});
                                 }
                                 else {//add a World item
-                                    res.data.push({name : "Everything", type : 'item', dataAttributes : {rid : 0xFFFFFFFF, 'data-rid' : 0xFFFFFFFF}});
+                                    res.data.push({name : "Everything [~" + cqr.rootRegionApxItemCount() + "]", type : 'item', dataAttributes : {rid : 0xFFFFFFFF, 'data-rid' : 0xFFFFFFFF}});
                                 }
                                 for (i in items) {
                                     var item = items[i];
