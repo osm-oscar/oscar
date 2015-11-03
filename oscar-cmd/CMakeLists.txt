@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 2.8)
 project(oscar-cmd)
-include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_SOURCE_DIR})
+
 find_package(LIBRT REQUIRED)
+
+include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_SOURCE_DIR})
 
 set(OSCAR_SOURCES_CPP
 oscarmain.cpp
@@ -22,7 +24,4 @@ SET(OSCAR_LINK_LIBS
 add_executable(${PROJECT_NAME} ${OSCAR_SOURCES_CPP})
 add_dependencies(${PROJECT_NAME} liboscar sserialize)
 target_link_libraries(${PROJECT_NAME} ${OSCAR_LINK_LIBS})
-
-add_target_properties(${PROJECT_NAME} COMPILE_FLAGS "-fopenmp")
-add_target_properties(${PROJECT_NAME} LINK_FLAGS "-fopenmp")
 

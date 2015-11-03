@@ -5,7 +5,6 @@
 #include <osmpbf/inode.h>
 #include <osmpbf/parsehelpers.h>
 #include <sserialize/algorithm/utilfuncs.h>
-#include <sserialize/algorithm/OutOfMemoryAlgos.h>
 #include <sserialize/containers/SimpleBitVector.h>
 #include <liboscar/OsmKeyValueObjectStore.h>
 #include <liboscar/constants.h>
@@ -293,7 +292,6 @@ osmpbf::AbstractTagFilter* OsmKeyValueObjectStore::MyRegionFilter::copy(osmpbf::
 		return copies.at(this);
 	}
 	MyRegionFilter * tmp = new MyRegionFilter(m_d);
-	tmp->m_Invert = this->m_Invert;
 	copies[this] = tmp;
 	return tmp;
 }
@@ -336,14 +334,14 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 
 	{//fetch all residential areas without a name, try to name them with their city-node
 		std::cout << "Fetching residential areas without matching tags but with a place-node inside" << std::endl;
-		ct.cc->rc.regionFilter->setInverted(true);
+		osmpbf::InversionFilter::invert( ct.cc->rc.regionFilter );
 		generics::RCPtr<osmpbf::AbstractTagFilter> myFilter(
 			osmpbf::newAnd(
 				new osmpbf::KeyValueTagFilter("landuse", "residential"),
 				ct.cc->rc.regionFilter->copy()
 			)
 		);
-		ct.cc->rc.regionFilter->setInverted(false);
+		osmpbf::InversionFilter::invert( ct.cc->rc.regionFilter );
 		
 		osmtools::OsmGridRegionTree<RegionInfo> polyStore;
 		ae.extract(ct.cc->fileName, [&polyStore](const std::shared_ptr<sserialize::spatial::GeoRegion> & region, osmpbf::IPrimitive & primitive) {
@@ -655,10 +653,12 @@ void OsmKeyValueObjectStore::addPolyStoreItems(Context & ctx) {
 	ctx.progressInfo.end();
 	
 	//add regions to their cells
-	for(uint32_t cellId(0), s(ctx.trs.cellCount()); cellId < s; ++cellId) {
-		for(uint32_t regionId : ctx.trs.regions(cellId)) {
-			//BUG: cell boundaries are not correct here!
-			ctx.cellMap.insert(cellId, regionId, sserialize::spatial::GeoRect());
+	if (ctx.cc->addRegionsToCells) {
+		for(uint32_t cellId(0), s(ctx.trs.cellCount()); cellId < s; ++cellId) {
+			for(uint32_t regionId : ctx.trs.regions(cellId)) {
+				//BUG: cell boundaries are not correct here!
+				ctx.cellMap.insert(cellId, regionId, sserialize::spatial::GeoRect());
+			}
 		}
 	}
 	assert(size() == ctx.polyStore.size());
@@ -842,7 +842,7 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 		{//handle relation multi polyons skip the ones that are in the store
 			osmtools::AreaExtractor ae;
 			generics::RCPtr<osmpbf::AbstractTagFilter> myRegionFilter(new MyRegionFilter(&ct.regionItems));
-			myRegionFilter->invert();
+			osmpbf::InversionFilter::invert(myRegionFilter);
 			auto wf = [&ct, &wct, &rwct](const std::shared_ptr<sserialize::spatial::GeoRegion> & region, osmpbf::IPrimitive & primitive) {
 				OsmKeyValueRawItem rawItem;
 				ct.inflateValues(rawItem, primitive);
@@ -1195,6 +1195,7 @@ bool OsmKeyValueObjectStore::processCellMap(Context & ctx) {
 	//Let's create our Hierarchy
 	CellCreator::CellListType cellList;
 	CellCreator cc;
+	sserialize::Static::spatial::TracGraph tracGraph;
 	{//create celllist and the TriangulationGeoHierarchyArrangement
 		std::vector<uint32_t> newToOldCellId;
 		cc.createCellList(ctx.cellMap, ctx.trs, cellList, newToOldCellId);
@@ -1204,10 +1205,14 @@ bool OsmKeyValueObjectStore::processCellMap(Context & ctx) {
 		}
 		m_ra = sserialize::UByteArrayAdapter::createCache(newToOldCellId.size()*4, sserialize::MM_FILEBASED);
 		ctx.trs.append(m_ra, oldToNewCellId);
+		sserialize::UByteArrayAdapter::OffsetType tracGraphBegin = m_ra.size();
 		ctx.trs.cellGraph().append(m_ra, oldToNewCellId);
+		tracGraph = sserialize::Static::spatial::TracGraph(m_ra+tracGraphBegin);
 		ctx.trs.clear();
 	}
 	cc.createGeoHierarchy(cellList, ctx.regionInfo.size(), m_gh);
+	//set the neighbor pointers
+	m_gh.createNeighborPointers(tracGraph);
 	m_gh.printStats(std::cout);
 	{ //remap the items in the gh to the unremapped ids
 		

@@ -246,7 +246,7 @@ sserialize::CellQueryResult OsmCompleter::cqrComplete(const std::string& query, 
 		std::cout << "No support fo clustered completion available" << std::endl;
 		return sserialize::CellQueryResult();
 	}
-	liboscar::Static::CellTextCompleter cmp( m_textSearch.get<liboscar::TextSearch::Type::GEOCELL>() );
+	sserialize::Static::CellTextCompleter cmp( m_textSearch.get<liboscar::TextSearch::Type::GEOCELL>() );
 	
 	std::cout << "BEGIN: CLUSTERED COMPLETE" << std::endl;
 	

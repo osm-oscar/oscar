@@ -9,6 +9,8 @@
 #include <sserialize/spatial/ItemGeoGrid.h>
 #include <sserialize/spatial/GridRTree.h>
 #include <iostream>
+#include <regex>
+
 #include "CellTextCompleter.h"
 #include "OsmKeyValueObjectStore.h"
 #include "helpers.h"
@@ -230,12 +232,23 @@ struct OsmKeyValueObjectStoreDerfer {
 		};
 		{
 			std::unordered_set<std::string> keysToStore;
-			
 			if (!tsc.keyFile.empty()) {
-				keyFun(tsc.keyFile, keysToStore);
+				std::regex keysToStoreRegex;
+				{
+					keyFun(tsc.keyFile, keysToStore);
+					std::string regexString("(");
+					for(const std::string & x : keysToStore) {
+						regexString += x + "|";
+					}
+					regexString.back() = ')';
+					keysToStore.clear();
+					
+					keysToStoreRegex = std::regex(regexString);
+				}
+				
 				for(uint32_t i = 0, s = keyStringTable.size(); i < s; ++i) {
 					std::string t = keyStringTable.at(i);
-					if (keysToStore.count(t)) {
+					if (std::regex_match(t, keysToStoreRegex)) {
 						m_filter->insert(i);
 						m_largestId = std::max(m_largestId, i);
 					}
@@ -483,7 +496,7 @@ sserialize::ItemIndexFactory & indexFactory, sserialize::UByteArrayAdapter & des
 		tmp.setPutPtr(bO);
 		tmp.shrinkToPutPtr();
 		tmp.resetPtrs();
-		liboscar::Static::CellTextCompleter sct( tmp, sserialize::Static::ItemIndexStore(), sserialize::Static::spatial::GeoHierarchy(), sserialize::Static::spatial::TriangulationGeoHierarchyArrangement());
+		sserialize::Static::CellTextCompleter sct( tmp, sserialize::Static::ItemIndexStore(), sserialize::Static::spatial::GeoHierarchy(), sserialize::Static::spatial::TriangulationGeoHierarchyArrangement());
 		if (ct.equal(sct, [&indexFactory](uint32_t id){ return indexFactory.indexById(id);})) {
 			std::cout << "CellTextCompleter is equal" << std::endl;
 		}

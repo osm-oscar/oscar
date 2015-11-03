@@ -57,6 +57,22 @@ sserialize::UByteArrayAdapter::OffsetType OsmKeyValueObjectStore::getSizeInBytes
 	return priv()->getSizeInBytes();
 }
 
+OsmKeyValueObjectStore::const_iterator OsmKeyValueObjectStore::begin() const {
+	return const_iterator(0, *this);
+}
+
+OsmKeyValueObjectStore::const_iterator OsmKeyValueObjectStore::cbegin() const {
+	return const_iterator(0, *this);
+}
+
+OsmKeyValueObjectStore::const_iterator OsmKeyValueObjectStore::end() const {
+	return const_iterator(size(), *this);
+}
+
+OsmKeyValueObjectStore::const_iterator OsmKeyValueObjectStore::cend() const {
+	return const_iterator(size(), *this);
+}
+
 uint32_t OsmKeyValueObjectStore::toInternalId(uint32_t itemId) const {
 	return priv()->toInternalId(itemId);
 }

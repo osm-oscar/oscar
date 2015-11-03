@@ -171,7 +171,6 @@ m_maxPerRequest(10)
 ItemDB::~ItemDB() {}
 
 void ItemDB::single(std::string num) {
-	response().set_header("Access-Control-Allow-Origin","*");
 	response().set_content_header("text/json"); //content_type needs to be text/ in order for compression to work
 	
 	uint32_t id = atoi(num.c_str());
@@ -182,7 +181,6 @@ void ItemDB::single(std::string num) {
 }
 
 void ItemDB::multiple() {
-	response().set_header("Access-Control-Allow-Origin","*");
 	response().set_content_header("text/json");
 
 	std::vector<uint64_t> filteredRequestedItems;
@@ -222,7 +220,6 @@ void ItemDB::multiple() {
 }
 
 void ItemDB::multipleShapes() {
-	response().set_header("Access-Control-Allow-Origin","*");
 	response().set_content_header("text/json");
 	
 	std::stringstream rawIdxIds;
@@ -260,7 +257,6 @@ void ItemDB::multipleShapes() {
 
 
 void ItemDB::multipleNames() {
-	response().set_header("Access-Control-Allow-Origin","*");
 	response().set_content_header("text/json");
 	
 	std::stringstream rawIdxIds;
@@ -296,7 +292,6 @@ void ItemDB::multipleNames() {
 }
 
 void ItemDB::itemCells(std::string strId) {
-	response().set_header("Access-Control-Allow-Origin","*");
 	response().content_type("application/octet-stream");
 	
 	BinaryWriter bw(response().out());
@@ -315,7 +310,6 @@ void ItemDB::itemCells(std::string strId) {
 }
 
 void ItemDB::cellParents(std::string cellIdStr) {
-	response().set_header("Access-Control-Allow-Origin","*");
 	response().content_type("application/octet-stream");
 	
 	const sserialize::Static::spatial::GeoHierarchy & gh = m_store.geoHierarchy();
@@ -335,7 +329,6 @@ void ItemDB::cellParents(std::string cellIdStr) {
 }
 
 void ItemDB::itemParents(std::string itemIdStr) {
-	response().set_header("Access-Control-Allow-Origin","*");
 	response().content_type("application/octet-stream");
 	
 	const sserialize::Static::spatial::GeoHierarchy & gh = m_store.geoHierarchy();
@@ -391,7 +384,6 @@ void ItemDB::itemParents(std::string itemIdStr) {
 }
 
 void ItemDB::itemRelatives(std::string itemIdStr) {
-	response().set_header("Access-Control-Allow-Origin","*");
 	response().content_type("application/octet-stream");
 	
 	const sserialize::Static::spatial::GeoHierarchy & gh = m_store.geoHierarchy();

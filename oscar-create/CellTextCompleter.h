@@ -5,7 +5,7 @@
 #include <sserialize/strings/stringfunctions.h>
 #include <sserialize/stats/ProgressInfo.h>
 #include <sserialize/containers/ItemIndexFactory.h>
-#include <liboscar/CellTextCompleter.h>
+#include <sserialize/Static/CellTextCompleter.h>
 #include <sserialize/utility/printers.h>
 #include <sserialize/stats/memusage.h>
 #include <sserialize/containers/WindowedArray.h>
@@ -554,8 +554,8 @@ struct PayloadComparatorBase {
 		}
 	};
 	
-	bool eq(const DataGatherer::MatchDesc & a, const liboscar::Static::CellTextCompleter::Payload::Type & b) const;
-	bool eq(const MatchDesc & a, const liboscar::Static::CellTextCompleter::Payload::Type & b) const;
+	bool eq(const DataGatherer::MatchDesc & a, const sserialize::Static::CellTextCompleter::Payload::Type & b) const;
+	bool eq(const MatchDesc & a, const sserialize::Static::CellTextCompleter::Payload::Type & b) const;
 };
 
 template<typename TStaticTrie>
@@ -563,7 +563,7 @@ struct PayloadComparator: public PayloadComparatorBase {
 	TStaticTrie trie;
 	template<typename TNodePtr>
 	bool operator()(TNodePtr node, const typename TStaticTrie::Node & snode) const {
-		liboscar::Static::CellTextCompleter::Payload p( trie.payload(snode.payloadPtr() ) );
+		sserialize::Static::CellTextCompleter::Payload p( trie.payload(snode.payloadPtr() ) );
 		DataGatherer dg;
 		for(auto it(node->begin()), end(node->end()); it != end; ++it) {
 			NodePtrHandler::childPtr(it)->apply(dg);
@@ -734,7 +734,7 @@ public:
 	sserialize::UByteArrayAdapter & append(sserialize::StringCompleter::SupportedQuerries sq, sserialize::UByteArrayAdapter& dest, sserialize::ItemIndexFactory & idxFactory, uint32_t threadCount);
 	
 	//this only valid before calling create, so in order to test the equality you have to create the data twice
-	bool equal(liboscar::Static::CellTextCompleter sct, std::function< sserialize::ItemIndex(uint32_t)> idxDerefer);
+	bool equal(sserialize::Static::CellTextCompleter sct, std::function< sserialize::ItemIndex(uint32_t)> idxDerefer);
 	bool checkConsistency(bool checkItemIndex);
 	bool checkParentChildRelations();
 };
@@ -1227,12 +1227,12 @@ CellTextCompleter< sserialize::HashBasedFlatTrie<detail::CellTextCompleter::Data
 template<>
 bool
 CellTextCompleter< sserialize::UnicodeTrie::Trie<detail::CellTextCompleter::Data>  >::
-equal(liboscar::Static::CellTextCompleter sct, std::function< sserialize::ItemIndex(uint32_t)> idxDerefer);
+equal(sserialize::Static::CellTextCompleter sct, std::function< sserialize::ItemIndex(uint32_t)> idxDerefer);
 
 template<>
 bool
 CellTextCompleter< sserialize::HashBasedFlatTrie<detail::CellTextCompleter::Data> >::
-equal(liboscar::Static::CellTextCompleter sct, std::function< sserialize::ItemIndex(uint32_t)> idxDerefer);
+equal(sserialize::Static::CellTextCompleter sct, std::function< sserialize::ItemIndex(uint32_t)> idxDerefer);
 
 
 typedef CellTextCompleter< sserialize::UnicodeTrie::Trie<detail::CellTextCompleter::Data> > CellTextCompleterUnicodeTrie;

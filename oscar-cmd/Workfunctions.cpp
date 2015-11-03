@@ -111,9 +111,9 @@ void Worker::printCQRDataSize(const WD_PrintCQRDataSize& data) {
 	std::string qstr = data.value;
 	const sserialize::Static::spatial::GeoHierarchy & gh = completer.store().geoHierarchy();
 	const sserialize::Static::ItemIndexStore & idxStore = completer.indexStore();
-	liboscar::Static::CellTextCompleter cmp( completer.textSearch().get<liboscar::TextSearch::Type::GEOCELL>() );
+	sserialize::Static::CellTextCompleter cmp( completer.textSearch().get<liboscar::TextSearch::Type::GEOCELL>() );
 	sserialize::StringCompleter::QuerryType qt = sserialize::StringCompleter::normalize(qstr);
-	liboscar::Static::CellTextCompleter::Payload::Type t = cmp.typeFromCompletion(qstr, qt);
+	sserialize::Static::CellTextCompleter::Payload::Type t = cmp.typeFromCompletion(qstr, qt);
 	sserialize::ItemIndex fmIdx = idxStore.at( t.fmPtr() );
 	sserialize::ItemIndex pmIdx = idxStore.at( t.pPtr() );
 	sserialize::CellQueryResult r(fmIdx, pmIdx, t.pItemsPtrBegin(), gh, idxStore);
@@ -154,7 +154,7 @@ void Worker::printCQRDataSize(const WD_PrintCQRDataSize& data) {
 }
 
 void Worker::printCTCSelectiveStorageStats(const WD_PrintCTCSelectiveStorageStats& data) {
-	typedef liboscar::Static::CellTextCompleter CTC;
+	typedef sserialize::Static::CellTextCompleter CTC;
 	sserialize::StringCompleter::QuerryType qt = sserialize::StringCompleter::QT_NONE;
 	if (data.value == "exact") {
 		qt = sserialize::StringCompleter::QT_EXACT;
@@ -226,7 +226,7 @@ void Worker::printCTCStorageStats(const WD_PrintCTCStorageStats & data) {
 		throw std::runtime_error("Failed to open file: " + data.value);
 	}
 
-	typedef liboscar::Static::CellTextCompleter CTC;
+	typedef sserialize::Static::CellTextCompleter CTC;
 	struct Stats {
 		std::unordered_map<uint32_t, std::vector<sserialize::UByteArrayAdapter::OffsetType> > index;
 		std::vector<sserialize::UByteArrayAdapter::OffsetType> tree;

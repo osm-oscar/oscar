@@ -157,7 +157,7 @@ void Benchmarker::doGeocellBench(const std::vector<std::string> & strs, bool col
 		return;
 	}
 	//out << "#Query;Time for set operations;Time for subgraph creation;Number of cells;Number of items\n";
-	liboscar::Static::CellTextCompleter cmp( m_completer.textSearch().get<liboscar::TextSearch::Type::GEOCELL>() );
+	sserialize::Static::CellTextCompleter cmp( m_completer.textSearch().get<liboscar::TextSearch::Type::GEOCELL>() );
 	sserialize::TimeMeasurer tm;
 	long int cqrTime, subsetTime;
 	int fd = -1;

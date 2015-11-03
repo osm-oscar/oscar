@@ -58,7 +58,6 @@ void IndexDB::writeHeader(std::ostream& out, sserialize::ItemIndex::Types indexT
 
 void IndexDB::single(std::string num) {
 	//now do the respone
-	response().set_header("Access-Control-Allow-Origin","*");
 	response().content_type("application/octet-stream");
 	
 	uint32_t idxId = atoi(num.c_str());
@@ -74,7 +73,6 @@ void IndexDB::single(std::string num) {
 
 void IndexDB::multiple() {
 	//now do the respone
-	response().set_header("Access-Control-Allow-Origin","*");
 	response().content_type("application/octet-stream");
 	
 	std::vector<uint64_t> filteredRequestedIndices;
@@ -107,7 +105,6 @@ void IndexDB::multiple() {
 
 void IndexDB::cellIndexIds() {
 	//now do the respone
-	response().set_header("Access-Control-Allow-Origin","*");
 	response().content_type("application/octet-stream");
 	
 	cppcms::json::value jsonCellIds;

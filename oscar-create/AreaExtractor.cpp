@@ -32,7 +32,13 @@ AreaExtractor::nameFilter(const std::string & keysDefiningRegionsFile, const std
 
 	generics::RCPtr<osmpbf::AbstractTagFilter> filter;
 	if (keys.size()) {
-		filter.reset( new osmpbf::MultiKeyTagFilter(keys.begin(), keys.end()) );
+		std::string regexString = "(";
+		for(const std::string & x : keys) {
+			regexString += "(" + x + ")|";
+		}
+		regexString.back() = ')';
+		
+		filter.reset( new osmpbf::RegexKeyTagFilter(regexString) );
 	}
 	if (keyValues.size()) {
 		osmpbf::MultiKeyMultiValueTagFilter * kvFilter = new osmpbf::MultiKeyMultiValueTagFilter();

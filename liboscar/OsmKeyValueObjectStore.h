@@ -79,6 +79,7 @@ public:
 	typedef OsmKeyValueObjectStoreItem Item;
 	typedef sserialize::Static::KeyValueObjectStore::ValueStringTable ValueStringTable;
 	typedef sserialize::Static::KeyValueObjectStore::KeyStringTable KeyStringTable;
+	typedef sserialize::ReadOnlyAtStlIterator<OsmKeyValueObjectStore, OsmKeyValueObjectStore::Item> const_iterator;
 public:
 	static constexpr uint32_t npos = 0xFFFFFFFF;
 private:
@@ -96,6 +97,11 @@ public:
 	const sserialize::Static::spatial::TriangulationGeoHierarchyArrangement & regionArrangement() const;
 	const sserialize::Static::spatial::TracGraph & cellGraph() const;
 	sserialize::UByteArrayAdapter::OffsetType getSizeInBytes() const;
+	
+	const_iterator begin() const;
+	const_iterator cbegin() const;
+	const_iterator end() const;
+	const_iterator cend() const;
 	
 	uint32_t toInternalId(uint32_t itemId) const;
 	

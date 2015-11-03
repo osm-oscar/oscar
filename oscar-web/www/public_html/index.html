@@ -323,6 +323,18 @@
                                 <td>List all waterfalls in Germany</td>
                             </tr>
                             <tr>
+                                <td>
+                                    <a href="#dummy" class="example-query-string" title="Click to use this as query">"Yosemite National Park" @highway</a>
+                                </td>
+                                <td>List all higways in Yosemite National Park</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <a href="#dummy" class="example-query-string" title="Click to use this as query">@amenity:restaurant + @amenity:fast_food miami </a>
+                                </td>
+                                <td>List all restaurants and fast-food places in Miami</td>
+                            </tr>
+                            <tr>
                                 <td><a href="#dummy" class="example-query-string" title="Click to use this as query">@tourism:hotel "new york"</a></td>
                                 <td>List all hotels in New York</td>
                             </tr>
@@ -1442,7 +1454,7 @@
                                     res.data.push({name : options.name, type : 'item', dataAttributes : options.dataAttributes});
                                 }
                                 else {//add a World item
-                                    res.data.push({name : "Everything", type : 'item', dataAttributes : {rid : 0xFFFFFFFF, 'data-rid' : 0xFFFFFFFF}});
+                                    res.data.push({name : "Everything [~" + cqr.rootRegionApxItemCount() + "]", type : 'item', dataAttributes : {rid : 0xFFFFFFFF, 'data-rid' : 0xFFFFFFFF}});
                                 }
                                 for (i in items) {
                                     var item = items[i];

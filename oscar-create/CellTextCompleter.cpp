@@ -453,11 +453,11 @@ void PayloadComparatorBase::DataGatherer::MatchDesc::insert(const detail::CellTe
 		}
 	}
 }
-bool PayloadComparatorBase::eq(const DataGatherer::MatchDesc & /*a*/, const liboscar::Static::CellTextCompleter::Payload::Type & /*b*/) const {
+bool PayloadComparatorBase::eq(const DataGatherer::MatchDesc & /*a*/, const sserialize::Static::CellTextCompleter::Payload::Type & /*b*/) const {
 	return false;//it's not possible to check the payload for equality as it get's destroyed during serialization
 }
 
-bool PayloadComparatorBase::eq(const detail::CellTextCompleter::MatchDesc & /*a*/, const liboscar::Static::CellTextCompleter::Payload::Type & /*b*/) const {
+bool PayloadComparatorBase::eq(const detail::CellTextCompleter::MatchDesc & /*a*/, const sserialize::Static::CellTextCompleter::Payload::Type & /*b*/) const {
 	return false;
 }
 
@@ -471,7 +471,7 @@ CellTextCompleter< sserialize::UnicodeTrie::Trie<detail::CellTextCompleter::Data
 	sserialize::UnicodeTrie::Trie<TrieData>::NodeCreatorPtr nc(new sserialize::Static::UnicodeTrie::detail::SimpleNodeCreator());
 	dest.putUint8(2); //Version
 	dest.putUint8(sq); //SupportedQuerries
-	dest.putUint8(liboscar::Static::CellTextCompleter::TrieTypeMarker::TT_TRIE);//Trie type marker
+	dest.putUint8(sserialize::Static::CellTextCompleter::TrieTypeMarker::TT_TRIE);//Trie type marker
 	m_trie.append<detail::CellTextCompleter::PayloadHandler, detail::CellTextCompleter::Payload>(dest, ph, nc);
 	return dest;
 }
@@ -483,7 +483,7 @@ CellTextCompleter< sserialize::HashBasedFlatTrie<detail::CellTextCompleter::Data
 	ph.idxFactory = &idxFactory;
 	dest.putUint8(2); //Version
 	dest.putUint8(sq);//SupportedQuerries
-	dest.putUint8(liboscar::Static::CellTextCompleter::TrieTypeMarker::TT_FLAT_TRIE);//Trie type marker
+	dest.putUint8(sserialize::Static::CellTextCompleter::TrieTypeMarker::TT_FLAT_TRIE);//Trie type marker
 	m_trie.append<detail::CellTextCompleter::PayloadHandler, detail::CellTextCompleter::Payload>(dest, ph, threadCount);
 	return dest;
 }
@@ -499,8 +499,8 @@ m_sh(sserialize::MM_SHARED_MEMORY, mmt)
 template<>
 bool
 CellTextCompleter< sserialize::UnicodeTrie::Trie<detail::CellTextCompleter::Data>  >::
-equal(liboscar::Static::CellTextCompleter sct, std::function< sserialize::ItemIndex(uint32_t)> /*idxDerefer*/) {
-	typedef liboscar::Static::CellTextCompleter::TrieType MyStaticTrieType;
+equal(sserialize::Static::CellTextCompleter sct, std::function< sserialize::ItemIndex(uint32_t)> /*idxDerefer*/) {
+	typedef sserialize::Static::CellTextCompleter::TrieType MyStaticTrieType;
 	sserialize::RCPtrWrapper<MyStaticTrieType> st(sct.trie().as<MyStaticTrieType>());
 	return false;
 }
@@ -508,8 +508,8 @@ equal(liboscar::Static::CellTextCompleter sct, std::function< sserialize::ItemIn
 template<>
 bool
 CellTextCompleter< sserialize::HashBasedFlatTrie<detail::CellTextCompleter::Data> >::
-equal(liboscar::Static::CellTextCompleter sct, std::function< sserialize::ItemIndex(uint32_t)> /*idxDerefer*/) {
-	typedef liboscar::Static::CellTextCompleter::FlatTrieType MyStaticUnicodeMap;
+equal(sserialize::Static::CellTextCompleter sct, std::function< sserialize::ItemIndex(uint32_t)> /*idxDerefer*/) {
+	typedef sserialize::Static::CellTextCompleter::FlatTrieType MyStaticUnicodeMap;
 	typedef MyStaticUnicodeMap::TrieType MyStaticTrieType;
 	sserialize::RCPtrWrapper<MyStaticUnicodeMap> sum(sct.trie().as<MyStaticUnicodeMap>());
 	const MyStaticTrieType & st = sum->trie();

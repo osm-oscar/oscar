@@ -2,21 +2,42 @@
 #define LIBOSCAR_CELL_OP_TREE_H
 #include <sserialize/strings/stringfunctions.h>
 #include <sserialize/search/OpTree.h>
-#include "CellTextCompleter.h"
+#include <sserialize/Static/CellTextCompleter.h>
 
 namespace liboscar {
 namespace detail {
 namespace CellOpTree {
 
 struct CTCStringHinter: sserialize::OpTree::detail::SetOpsOpTreeParser::StringHinter {
-	CTCStringHinter(const Static::CellTextCompleter & qc);
+	CTCStringHinter(const sserialize::Static::CellTextCompleter & qc);
 	~CTCStringHinter();
 	virtual bool operator()(const std::string::const_iterator& begin, const std::string::const_iterator end) const;
-	Static::CellTextCompleter m_qc;
+	sserialize::Static::CellTextCompleter m_qc;
 };
 struct AlwaysFalseStringHinter: sserialize::OpTree::detail::SetOpsOpTreeParser::StringHinter {
 	virtual bool operator()(const std::string::const_iterator& begin, const std::string::const_iterator end) const;
 };
+
+/**
+  * The CellOpTree currently support the following special syntax:
+  * STATEMENT = STATEMENT OP STATEMENT
+  * OP = (as support by sserialize::OpTree::detail::SetOpsOpTreeParser)
+  *   <space>
+  *   /
+  *   +
+  *   -
+  *   ^
+  * STATEMENT =
+  *   $region:<regionid> = query for region with id=regionid
+  *   $cell:<cellid> = query for cell with id=cellid
+  *   $rect:<sserialize::spatial::GeoRect> = define a rectangle 
+  *   $path:radius,lat,lon,[lat,lon] = define a path
+  *   STRING a region+items query
+  *   !STRING a items query
+  *   #STRING a region query
+  * STRING = as defined by StringCompleter::normalize
+  *
+  */
 
 template<typename T_CQR_TYPE = sserialize::CellQueryResult>
 class CellOpTreeImp: public sserialize::OpTree::detail::OpTree<T_CQR_TYPE> {
@@ -25,14 +46,14 @@ public:
 private:
 
 private:
-	Static::CellTextCompleter m_qc;
+	sserialize::Static::CellTextCompleter m_qc;
 	sserialize::OpTree::detail::SetOpsOpTreeParser m_parser;
 	sserialize::OpTree::detail::Node * m_root;
 private:
 	T_CQR_TYPE qc(const std::string & str);
 	T_CQR_TYPE calc(sserialize::OpTree::detail::Node * node);
 public:
-	CellOpTreeImp(const Static::CellTextCompleter & qc, bool spacesAreIntersections);
+	CellOpTreeImp(const sserialize::Static::CellTextCompleter & qc, bool spacesAreIntersections);
 	CellOpTreeImp(const CellOpTreeImp & other);
 	virtual ~CellOpTreeImp() {
 		delete m_root;
@@ -58,7 +79,7 @@ m_root((other.m_root ? other.m_root->copy() : 0))
 {}
 
 template<typename T_CQR_TYPE>
-CellOpTreeImp<T_CQR_TYPE>::CellOpTreeImp(const liboscar::Static::CellTextCompleter & qc, bool spacesAreIntersections) :
+CellOpTreeImp<T_CQR_TYPE>::CellOpTreeImp(const sserialize::Static::CellTextCompleter & qc, bool spacesAreIntersections) :
 m_qc(qc),
 m_parser(sserialize::OpTree::detail::SetOpsOpTreeParser::StringHinterSharedPtr(
 			spacesAreIntersections ? 
@@ -74,7 +95,7 @@ T_CQR_TYPE CellOpTreeImp<T_CQR_TYPE>::qc(const std::string & str) {
 	if (!str.size()) {
 		return T_CQR_TYPE();
 	}
-	if (str[0] == '$') {
+	if (str[0] == '$') { //for internal purposes, inserted by the gui
 		if (str.compare(1, sizeof("region")-1, "region") == 0) {//special query
 			uint32_t id = atoi(str.c_str()+(sizeof("$region:")-1)); //-1 fo the terminating 0
 			return m_qc.cqrFromRegionStoreId<T_CQR_TYPE>(id);
@@ -122,10 +143,24 @@ T_CQR_TYPE CellOpTreeImp<T_CQR_TYPE>::qc(const std::string & str) {
 			}
 		}
 	}
-	std::string qstr(str);
+	std::string qstr;
+	if ('!' == str[0] || '#' == str[0]) {
+		qstr.insert(qstr.end(), str.begin(), str.end());
+	}
+	else {
+		qstr =str;
+	}
 	sserialize::StringCompleter::QuerryType qt = sserialize::StringCompleter::QT_NONE;
 	qt = sserialize::StringCompleter::normalize(qstr);
-	return m_qc.complete<T_CQR_TYPE>(qstr, qt);
+	if ('!' == str[0]) {
+		return m_qc.items<T_CQR_TYPE>(qstr, qt);
+	}
+	else if ('#' == str[0]) {
+		return m_qc.regions<T_CQR_TYPE>(qstr, qt);
+	}
+	else {
+		return m_qc.complete<T_CQR_TYPE>(qstr, qt);
+	}
 }
 
 template<typename T_CQR_TYPE>
@@ -165,7 +200,7 @@ class CellOpTree: public sserialize::OpTree::OpTree<T_CQR_TYPE> {
 public:
 	typedef sserialize::OpTree::OpTree<T_CQR_TYPE> MyBaseClass;
 public:
-	CellOpTree(const liboscar::Static::CellTextCompleter& qc, bool spacesAreIntersections): 
+	CellOpTree(const sserialize::Static::CellTextCompleter& qc, bool spacesAreIntersections): 
 	MyBaseClass(new detail::CellOpTree::CellOpTreeImp<T_CQR_TYPE>(qc, spacesAreIntersections))
 	{}
 	virtual ~CellOpTree() {}

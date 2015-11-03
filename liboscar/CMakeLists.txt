@@ -12,7 +12,6 @@ SetOpTreePrivateGeo.cpp
 OsmKeyValueObjectStore.cpp
 TextSearch.cpp
 GeoSearch.cpp
-CellTextCompleter.cpp
 CellOpTree.cpp
 )
 

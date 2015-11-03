@@ -7,7 +7,7 @@
 #include "tagcompleters.h"
 #include "TextSearch.h"
 #include "GeoSearch.h"
-#include "CellTextCompleter.h"
+#include <sserialize/Static/CellTextCompleter.h>
 #include <sserialize/search/GeoCompleter.h>
 #include <sserialize/spatial/GeoConstraintSetOpTreeEF.h>
 #include <sserialize/Static/GeoHierarchySubSetCreator.h>

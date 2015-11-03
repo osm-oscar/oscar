@@ -30,9 +30,9 @@ CellCreator::FlatCellMap& CellCreator::FlatCellMap::operator=(CellCreator::FlatC
 	std::unique_lock<std::mutex>(other.m_cellItemLock);
 
 	using std::swap;
-	swap(m_cellCount, other.m_cellCount);
-	swap(m_cellItemEntries, other.m_cellItemEntries);
-	swap(m_cellBoundaries, other.m_cellBoundaries);
+	m_cellCount = std::move(other.m_cellCount);
+	m_cellItemEntries = std::move(other.m_cellItemEntries);
+	m_cellBoundaries = std::move(other.m_cellBoundaries);
 	
 	return *this;
 }
@@ -181,6 +181,9 @@ struct ChildrenOfGeoRegion {
 	const uint32_t * cend() const { return u.p.m_end; }
 	uint32_t size() const { return end()-begin(); }
 };
+
+//BUG?: on plankton with planet: geoRegionCellSplit had a non-initialized entry which means that the cell is empty (this should have been filtered before?)
+
 void CellCreator::createGeoHierarchy(FlatCellList& cellList, uint32_t geoRegionCount, sserialize::spatial::GeoHierarchy& gh) {
 	typedef sserialize::CFLArray< sserialize::MMVector<uint32_t> > CellsOfGeoRegion;
 	typedef sserialize::MMVector< CellsOfGeoRegion > GeoRegionCellSplitListType;
@@ -326,7 +329,7 @@ void CellCreator::createGeoHierarchy(FlatCellList& cellList, uint32_t geoRegionC
 			}
 			gh.regions().regionData().push_back(geoRegionCellSplit.at(i).cbegin(), geoRegionCellSplit.at(i).cend());
 		
-			gh.regions().regionDescriptions().emplace_back(&(gh.regions().regionData()), off, geoRegionGraph.at(i).size(), parentsSize, geoRegionCellSplit.at(i).size() );
+			gh.regions().regionDescriptions().emplace_back(&(gh.regions().regionData()), off, geoRegionGraph.at(i).size(), parentsSize, geoRegionCellSplit.at(i).size(), 0);
 			sserialize::spatial::GeoHierarchy::Region & r = gh.regions().regionDescriptions().back();
 			
 			r.storeId = i;

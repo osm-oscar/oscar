@@ -505,7 +505,7 @@ std::string Config::help() {
 -it rline|simple|wah|de|rlede|native\tset the index type. rline=regression line, wah=rle word aligned bit vector, de=delta encoded, rlede=delta+run-length encoded\n \
 -ci\tcheck every index for correct serialization \n \
 --no-index-dedup\tdisable deduplicaton for index store \n \
---create-kv fri,p=LatxLonxTriangPerCellxTriangSize,pa,hs=[auto|begin:end],nts=num,sk=path,skv=path,sik=path,sikv=path,se,st,kvi=path,pdr=path,kvdr=path,tc=num,sc=path,iso=(score|name|path) \n \
+--create-kv fri,p=LatxLonxTriangPerCellxTriangSize,pa,hs=[auto|begin:end],nts=num,sk=path,skv=path,sik=path,sikv=path,se,st,kvi=path,kdr=path,kvdr=path,tc=num,sc=path,iso=(score|name|path) \n \
 -tempdir string\t sets the temp directory \n \
 -fasttempdir string\t sets the fast temp directory \n \
 --create-grid lat lon\tAlso create a GeoGrid with lat*lon buckets for GeoCompletion \n \
