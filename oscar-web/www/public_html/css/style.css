@@ -17,57 +17,59 @@ body {
     top: 0px;
 }
 
-#loading_spinner_parent {
-    //position: fixed;
-    bottom: auto;
-    left: 0%;
-    right: 0%;
-    top: 0%;
-    width: 100%;
-    height: fit-content;
-    padding: 0px 0px 0px 0px;
-    overflow-x: hidden;
-    overflow-y: hidden;
-    //z-index: 100;
-}
-
 #search_container {
     position: fixed;
     bottom: auto;
     left: 35%;
     right: 35%;
-    top: 5%;
+    top: 1%;
     width: 30%;
     height: fit-content;
     padding: 10px 10px 10px 10px;
     overflow-x: hidden;
     overflow-y: hidden;
     z-index: 100;
+	border-radius: 10px;
 }
 
+#categories{
+	width: 45%;
+	height: fit-content;
+	float: left;
+}
+
+#sub_categories{
+	width: 45%;
+	height: fit-content;
+	float: right;
+}
+#categorieWrapper{
+	padding-top : 50px;
+	width: 100%;
+	color: #000;
+}
+#credits{
+	width: 130px;
+	position: absolute;
+	font-size: 8px;
+	bottom: 20px;
+	right: 1px;
+}
 .menu_parent {
-    border: 2px solid;
-    border-radius: 10px;
-    border-color: #c0e4ff;
-    background-color: #FFFFFF;
-    //background-color: rgba(0,0,0,0);
     z-index: 100;
-    padding: 10px 10px 10px 10px;
     overflow-y: hidden;
     overflow-x: hidden;
 }
 
 #left_menu_parent {
-    position: fixed;
     bottom: auto;
     left: 5%;
     right: auto;
-    top: 10%;
+    top: 5%;
     width: auto;
-    min-width: 20%;
-    max-width: 30%;
     height: 80%;
     max-height: 80%;
+	display: none;
 }
 
 #right_menu_parent {
@@ -138,15 +140,15 @@ body {
 }
 
 #results_tree_parent {
-    height: 30%;
+    height: 200px;
     width: 100%;
-    padding: 0px 0px 0px 0px;
+    padding-right: 20px;
     overflow-y: hidden;
 }
 
 #items_parent {
     max-height: 60%;
-    width: 100%;
+    width: 95%;
     padding: 0px 0px 0px 0px;
     overflow-y: auto;
     overflow-x: auto;
