@@ -24,10 +24,10 @@
 
 <body>
 <div id="content_container">
+    <form class="form-inline pull-left" id="search_form">
+        <input name="q" type="text" placeholder="Wo möchten Sie suchen?" class="form-control" id="search_text">
+    </form>
     <div id="search_container">
-        <form class="form-inline pull-left" id="search_form">
-            <input name="q" type="text" placeholder="Wo möchten Sie suchen?" class="form-control" id="search_text">
-        </form>
         <div id="categorieWrapper">
             <div id="categories"></div>
             <div id="subCategories"></div>
@@ -1157,6 +1157,7 @@
                         return;
                     }
                     state.sidebar.open("search");
+                    $("#search_container").css("display", "none");
 
                     //query has changed, ddos the server! TODO: call off all ajax loads from earlier calls
                     var myQuery = $("#search_text").val();

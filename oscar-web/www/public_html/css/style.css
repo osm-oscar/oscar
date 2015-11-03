@@ -17,13 +17,22 @@ body {
     top: 0px;
 }
 
+#search_form {
+    position: fixed;
+    width:  30%;
+    left: 50%;
+    margin-left: -15%; /* half the width */
+    top: 3%;
+    z-index: 200;
+}
+
 #search_container {
     position: fixed;
     bottom: auto;
-    left: 35%;
-    right: 35%;
+    left: 50%;
+    margin-left: -17.5%; /* half the width */
     top: 1%;
-    width: 30%;
+    width: 35%;
     height: fit-content;
     padding: 10px 10px 10px 10px;
     overflow-x: hidden;
@@ -160,10 +169,6 @@ body {
     width: 100%;
     overflow-y: scroll;
     overflow-x: scroll;
-}
-
-#search_form {
-    width:  100%;
 }
 
 #search_text {

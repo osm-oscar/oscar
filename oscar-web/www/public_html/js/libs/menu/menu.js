@@ -1,5 +1,6 @@
 var menu = {
     displayCategories: function () {
+        $("#search_container").css("display", "block");
         var c = $("#categories");
         if (c.is(":empty")) {
             $("#search_container").css("box-shadow", "5px 5px 5px #888888");
@@ -52,7 +53,7 @@ var menu = {
             img: "home",
             subcategories: {
                 restaurant: {value: "restaurant", desc: "Restaurant"},
-                cafe: {value: "cafe", desc: "Café"},
+                cafe: {value: "cafe", desc: "CafÃ©"},
                 pharmacy: {value: "pharmacy", desc: "Pharmacy"},
                 hospital: {value: "hospital", desc: "Hospital"},
                 police: {value: "police", desc: "Police"},
@@ -82,7 +83,7 @@ var menu = {
                 airport: {key: "aeroway", value: "taxiway", desc: "Airport"},
                 taxi: {key: "amenity", value: "taxi", desc: "Taxi"},
                 ferry: {key: "amenity", value: "ferry_terminal", desc: "Ferry"},
-                oepnv: {value: "platform", desc: "ÖPNV"},
+                oepnv: {value: "platform", desc: "Ã–PNV"},
             }
         },
         leisure: {
