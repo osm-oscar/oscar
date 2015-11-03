@@ -1,0 +1,34 @@
+function SimpleHash() {
+    var m_size = 0;
+    var m_values = {};
+    return {
+        values: function () {
+            return m_values;
+        },
+        size: function () {
+            return m_size;
+        },
+        insert: function (key, value) {
+            if (m_values[key] === undefined) {
+                m_size += 1;
+            }
+            m_values[key] = value;
+        },
+        count: function (key) {
+            return m_values[key] !== undefined;
+        },
+        at: function (key) {
+            return m_values[key];
+        },
+        erase: function (key) {
+            if (m_values[key] !== undefined) {
+                m_size -= 1;
+                delete m_values[key];
+            }
+        },
+        clear: function () {
+            m_size = 0;
+            m_values = {};
+        }
+    };
+};

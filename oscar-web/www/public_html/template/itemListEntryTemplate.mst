@@ -1,0 +1,103 @@
+<script id="itemListEntryHtmlTemplate" type="text/x-tmpl-mustache">
+    <div class="panel panel-default" id="{{{shapeSrcType}}}PanelRoot{{{itemId}}}">
+        <div class="panel-heading results-panel-title" role="tab">
+            <div class="panel-title" id="{{{shapeSrcType}}}PanelTitle{{{itemId}}}">
+                <h4>
+                    <a class="accordion-toggle {{{matchingTagClass}}}" data-toggle="collapse" data-parent="#{{{shapeSrcType}}}List" href="#{{{shapeSrcType}}}Details{{{itemId}}}" id="{{{shapeSrcType}}}NameLink{{{itemId}}}" aria-expanded="true">
+                        {{itemName}}
+                    </a>
+                </h4>
+            </div>
+        </div>
+        <div class="panel-collapse collapse" role="tabpanel" id="{{{shapeSrcType}}}Details{{{itemId}}}" data-item-id="{{{itemId}}}" aria-expanded="true">
+            <div class="panel-body">
+                <table class="table table-hover table-bordered table-condensed">
+                    <thead>
+                        <tr>
+                            <th>Key</th>
+                            <th>Value</th>
+                        <tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <span>id</span>
+                            </td>
+                            <td>
+                                <span>{{itemId}}</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span>OSM Id</span>
+                            </td>
+                            <td>
+                                <span><a href="http://www.openstreetmap.org/{{{osmType}}}/{{{osmId}}}" target="_blank">{{osmId}}</a></span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span>score</span>
+                            </td>
+                            <td>
+                                <span>{{score}}</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <table class="table table-hover table-bordered table-condensed">
+                    <thead>
+                        <tr>
+                            <th>Key</th>
+                            <th>Value</th>
+                        <tr>
+                    </thead>
+                    <tbody>
+                    {{#wikilink}}
+                        <tr>
+                            <td>
+                                <span title='Add key to query'>
+                                    <a href='#{{{shapeSrcType}}}Details{{{itemId}}}' class='item-detail-key' data-query-key='wikipedia'>wikipedia</a>
+                                </span>
+                            </td>
+                            <td>
+                                <span title='Open in new window'>
+                                    <a href='http://en.wikipedia.org/wiki/{{wikilink}}' target="_blank">{{wikilink}}</a>
+                                </span>
+                            </td>
+                        </tr>
+                    {{/wikilink}}
+                    {{#urlkvs}}
+                        <tr>
+                            <td>
+                                <span title='Add key to query'>
+                                    <a href='#{{{shapeSrcType}}}Details{{{itemId}}}' class='item-detail-key {{kc}}' data-query-key='{{k}}'>{{k}}</a>
+                                </span>
+                            </td>
+                            <td>
+                                <span title='Open in new window'>
+                                    <a href='{{v}}' target="_blank" class='{{vc}}'>{{v}}</a>
+                                </span>
+                            </td>
+                        </tr>
+                    {{/urlkvs}}
+                    {{#kv}}
+                        <tr>
+                            <td>
+                                <span title='Add key to query'>
+                                    <a href='#{{{shapeSrcType}}}Details{{{itemId}}}' class='item-detail-key {{kc}}' data-query-key='{{k}}'>{{k}}</a>
+                                </span>
+                            </td>
+                            <td>
+                                <span title='Add key:value to query'>
+                                    <a href='#{{{shapeSrcType}}}Details{{{itemId}}}' class='item-detail-value {{vc}}' data-query-key='{{k}}' data-query-value='{{v}}'>{{v}}</a>
+                                </span>
+                            </td>
+                        </tr>
+                    {{/kv}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</script>

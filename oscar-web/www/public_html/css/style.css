@@ -38,7 +38,7 @@ body {
 	float: left;
 }
 
-#sub_categories{
+#subCategories{
 	width: 45%;
 	height: fit-content;
 	float: right;
@@ -47,13 +47,6 @@ body {
 	padding-top : 50px;
 	width: 100%;
 	color: #000;
-}
-#credits{
-	width: 130px;
-	position: absolute;
-	font-size: 8px;
-	bottom: 20px;
-	right: 1px;
 }
 .menu_parent {
     z-index: 100;

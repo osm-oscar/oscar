@@ -1,0 +1,161 @@
+<h1 class="sidebar-header">Help<div class="sidebar-close"><i class="fa fa-caret-left"></i></div></h1>
+<div>
+    <p>OSCAR is a system to search the OpenStreetMap data set for items with matching tags.</p>
+    <p>
+        A query consists of query statements which are strings an item needs to have.
+        Each query statement can be viewed as producing the set of items matching it.
+        You can then make the usual operations with these sets like intersecting them.
+        There is some special syntax to define the type of match and the set operation.
+        See the table below for an overview. Some examples are listed underneath it.
+        You may also make spatial queries which select all items in the vicinity of the given query rectangle.
+    </p>
+    <p>
+        The result is clustered and visualized in a hierarchy which you can find on the left side.
+        In order to view the items within an entry of the hierarchy, you have to click on its name.
+        The items will then be presented below the hierarchy.
+    </p>
+    <p>
+        If you click on an item in this list, the map will zoom to it and the item will be highlighted.
+        If you activate the <span class="label label-info">visualize results</span> checkbox, then all items in the result list will be drawn on the map.
+        You can click on a blue item to scroll to its definition in the result list.
+    </p>
+    <p>
+        If you enable the <span class="label label-info">Show item's parents</span> checkbox, then a list of intersecting regions will be presented on right for the currently selected item
+    </p>
+    <p>
+        If you enable the <span class="label label-info">Full CQR</span> checkbox,
+        then the complete hierarchy will be transfered instead of the currently viewed regions.
+        Don't enable this if you want to make queries with a large result on a small bandwidth device.
+        Large queries may transfer up to 10 Megabytes of data and take multiple seconds to analyze by the browser since all data is transfered in binary.
+        Furthermore if you click on a region of the hierarchy, then its complete item index will be loaded, though the items themselves will be loaded dynamically.
+    </p>
+    <p>
+        You can further improve the query by adding more statements for example by clicking on the key or values of items in the result list.
+        This will add the key or key:value to the query. Some keys are special like the wikipedia or url key.
+        Clicking on the value will take you to the respective wikipedia entry or the url defined as value.
+    </p>
+</div>
+<table class="table table-hover table-bordered table-condensed">
+    <tbody>
+    <tr><th colspan="3">Query statements</th></tr>
+    <tr>
+        <td>Strings</td>
+        <td>STRING</td>
+        <td>A single query statement. i.e. Stuttgart. Spaces need to be escaped or the query needs to be surrounded with apostrophes and explicit match request</td>
+    </tr>
+    <tr>
+        <td>Tags</td>
+        <td>@key:value</td>
+        <td>You can search for tags with the special prefix @key:value. i.e. @waterway:waterfall</td>
+    </tr>
+    <tr>
+        <td>Region</td>
+        <td>$region:id</td>
+        <td>Search for region with id=id</td>
+    </tr>
+    <tr>
+        <td>Cell</td>
+        <td>$cell:id</td>
+        <td>Search for cell with id=id</td>
+    </tr>
+    <tr>
+        <td>Exact match</td>
+        <td><span>"STRING"</span></td>
+        <td>Matching elements exactly. i.e. "Stuttgart"</td>
+    </tr>
+    <tr>
+        <td>Suffix match</td>
+        <td><span>?STRING</span> or <span>?"STRING"</span></td>
+        <td>Matching elements with STRING as suffix. i.e. ?"uttgart"</td>
+    </tr>
+    <tr>
+        <td>Prefix match</td>
+        <td><span>STRING?</span> or <span>"STRING"?</span></td>
+        <td>Matching elements with STRING as prefix. i.e. "Stutt"?</td>
+    </tr>
+    <tr>
+        <td>Substring match</td>
+        <td>STRING or <span>?STRING?</span> or <span>?"STRING"?</span></td>
+        <td>Matching elements with STRING as substring. i.e. ?"uttgar"?</td>
+    </tr>
+    </tbody>
+</table>
+<table class="table table-hover table-bordered table-condensed">
+    <tbody>
+    <tr><th colspan="3">Operations</th></tr>
+    <tr>
+        <td>Intersection</td>
+        <td>SPACE or / surrounded by spaces</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Union</td>
+        <td>+ surrounded by spaces</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Difference</td>
+        <td>- surrounded by spaces</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Symmetric-Difference</td>
+        <td>^ surrounded by spaces</td>
+        <td></td>
+    </tr>
+    </tbody>
+</table>
+<table class="table table-hover table-bordered table-condensed">
+    <tbody>
+    <tr><th colspan="3">Nesting</th></tr>
+    <tr>
+        <td>Braces</td>
+        <td>()</td>
+        <td>You can nest queries with braces</td>
+    </tr>
+    </tbody>
+</table>
+<table class="table table-hover table-bordered table-condensed">
+    <tbody>
+    <tr><th colspan="2">Examples</th></tr>
+    <tr>
+        <td><a href="#dummy" class="example-query-string" title="Click to use this as query">@waterway:waterfall germany</a></td>
+        <td>List all waterfalls in Germany</td>
+    </tr>
+    <tr>
+        <td>
+            <a href="#dummy" class="example-query-string" title="Click to use this as query">"Yosemite National Park" @highway</a>
+        </td>
+        <td>List all higways in Yosemite National Park</td>
+    </tr>
+    <tr>
+        <td>
+            <a href="#dummy" class="example-query-string" title="Click to use this as query">@amenity:restaurant + @amenity:fast_food miami </a>
+        </td>
+        <td>List all restaurants and fast-food places in Miami</td>
+    </tr>
+    <tr>
+        <td><a href="#dummy" class="example-query-string" title="Click to use this as query">@tourism:hotel "new york"</a></td>
+        <td>List all hotels in New York</td>
+    </tr>
+    <tr>
+        <td>
+            <a href="#dummy" class="example-query-string" title="Click to use this as query">@amenity:restaurant (@cuisine:italian + @cuisine:french) munich</a>
+        </td>
+        <td>List all restaurants with italian or french cuisine in Munich</td>
+    </tr>
+    <tr>
+        <td>
+            <a href="#dummy" class="example-query-string" title="Click to use this as query">@amenity:fast_food munich - (burger? ?king) - (mc? ?donald?)</a>
+        </td>
+        <td>
+            List all fast food places in Munich excluding burger king and McDonald.
+            Here the braces are important to filter only those items that have "burger" as prefix and "king" as suffix in their name tags.
+        </td>
+    </tr>
+    </tbody>
+</table>
+<div>
+    <h4>What if I don't know the tags?</h4>
+    Oscar currently does not try understand what you want search. In order to find point-of-interests it is therefore necessary to input the correct tags. You can find a list of tags at <a href='https://wiki.openstreetmap.org/wiki/Map_Features' target='blank'>OpenStreetMap</a>.
+</div>
