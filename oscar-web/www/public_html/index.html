@@ -24,23 +24,13 @@
 
 <body>
 <div id="content_container">
-    <form class="form-inline pull-left" id="search_form">
-        <input name="q" type="text" placeholder="Wo möchten Sie suchen?" class="form-control" id="search_text">
-    </form>
-    <div id="search_container">
-        <div id="categorieWrapper">
-            <div id="categories"></div>
-            <div id="subCategories"></div>
-        </div>
-        <div id="loader"></div>
-    </div>
-
     <div id="sidebar" class="sidebar collapsed">
         <!-- Nav tabs -->
         <div class="sidebar-tabs">
             <ul role="tablist">
-                <li><a href="#help" role="tab"><i class="fa fa-envelope"></i></a></li>
                 <li><a href="#search" role="tab"><i class="fa fa-search"></i></a></li>
+                <li><a href="#help" role="tab"><i class="fa fa-envelope"></i></a></li>
+                <li><a href="#options" role="tab"><i class="fa fa-wrench"></i></a></li>
             </ul>
         </div>
 
@@ -50,12 +40,20 @@
                 <h1 class="sidebar-header">Search
                     <div class="sidebar-close"><i class="fa fa-caret-left"></i></div>
                 </h1>
-                <div id="left_menu_parent" class="menu_parent">
-                    <div id='options_parent' class='text-center'>
-                        <button type="button" class="btn btn-default" id="toggle_right_menu_button">Toggle options
-                            menu
-                        </button>
+
+                <form class="form-inline pull-left" id="search_form">
+                    <input name="q" type="text" placeholder="Wo möchten Sie suchen?" class="form-control" id="search_text">
+                </form>
+                <div id="search_container">
+                    <div id="categorieWrapper">
+                        <div id="categories"></div>
+                        <div id="subCategories"></div>
                     </div>
+                    <div id="loader"></div>
+                </div>
+
+
+                <div id="left_menu_parent" class="menu_parent">
                     <div id="results_tree_parent" class="fuelux">
                         <div class="fuelux_tree" id="fuelux_tree_parent">
                         </div>
@@ -73,6 +71,16 @@
             </div>
 
             <div class="sidebar-pane" id="help">
+            </div>
+            <div class="sidebar-pane" id="options">
+                <h1 class="sidebar-header">Options
+                    <div class="sidebar-close"><i class="fa fa-caret-left"></i></div>
+                </h1>
+                <div id='options_parent' class='text-center'>
+                    <button type="button" class="btn btn-default" id="toggle_right_menu_button">Toggle options
+                        menu
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -166,7 +174,7 @@
     requirejs.config({
         baseUrl: "js/libs",
         config: {
-            'oscar': {url: "http://oscar.fmi.uni-stuttgart.de/oscar"}
+            'oscar': {url: "http://oscardev.fmi.uni-stuttgart.de/oscar"}
         },
         paths: {
             "jquery": "jquery/jquery",
@@ -1157,7 +1165,7 @@
                         return;
                     }
                     state.sidebar.open("search");
-                    $("#search_container").css("display", "none");
+                    //$("#search_container").css("display", "none");
 
                     //query has changed, ddos the server! TODO: call off all ajax loads from earlier calls
                     var myQuery = $("#search_text").val();
@@ -1287,7 +1295,7 @@
                     $('#toggle_right_menu_button').click(function () {
                         $('#options_menu_parent').toggleClass('hidden');
                     });
-                    $('#left_menu_parent').draggable({'handle': '#options_parent'});
+                    //$('#left_menu_parent').draggable({'handle': '#options_parent'});
                     $('#items_parent').bind('scroll', function () {
                         if ($(this).scrollTop() + $(this).innerHeight() >= $(this)[0].scrollHeight - 20) {
                             loadMoreIntoResultList();
@@ -1295,11 +1303,11 @@
                     });
 
                     //setup right menu
-                    $('#right_menu_parent').draggable({'handle': '#right_menu_movehandle'});
+                    //$('#right_menu_parent').draggable({'handle': '#right_menu_movehandle'});
                     $('#right_menu_parent, #options_menu_parent').resizable();
 
                     //setup options menu
-                    $('#options_menu_parent').draggable({'handle': '#config_menu_movehandle'});
+                    //$('#options_menu_parent').draggable({'handle': '#config_menu_movehandle'});
 
                     //setup config panel
                     state.items.listview.visualizeall = $('#visualize_all_results_checkbox').is(':checked');

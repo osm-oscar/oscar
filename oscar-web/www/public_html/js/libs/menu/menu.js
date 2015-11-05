@@ -3,14 +3,12 @@ var menu = {
         $("#search_container").css("display", "block");
         var c = $("#categories");
         if (c.is(":empty")) {
-            $("#search_container").css("box-shadow", "5px 5px 5px #888888");
             var d = "<div class='list-group'>";
             for (category in menu.categories) {
                 d += "<a style='border: none' class='list-group-item' onclick=\"menu.displaySubCategories('" + category + "')\"><i class='fa fa-" + menu.categories[category].img + "'></i>&nbsp; " + menu.categories[category].desc + "</a>";
             }
             d += "</div>";
             c.append(d);
-            $("#search_container").css("background-color", "#fff");
         }
     },
     displaySubCategories: function (category) {
