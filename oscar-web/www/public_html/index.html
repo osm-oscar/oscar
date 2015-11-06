@@ -287,6 +287,7 @@
                 $.Mustache.load('template/itemListEntryTemplate.mst');
                 $.Mustache.load('template/treeTemplate.mst');
                 $("#help").load('template/help.html');
+                menu.displayCategories();
 
                 // init the map and sidebar
                 state.map = L.map('map').setView([48.74568, 9.1047], 17);
@@ -1295,7 +1296,6 @@
                     $('#toggle_right_menu_button').click(function () {
                         $('#options_menu_parent').toggleClass('hidden');
                     });
-                    //$('#left_menu_parent').draggable({'handle': '#options_parent'});
                     $('#items_parent').bind('scroll', function () {
                         if ($(this).scrollTop() + $(this).innerHeight() >= $(this)[0].scrollHeight - 20) {
                             loadMoreIntoResultList();
@@ -1303,11 +1303,9 @@
                     });
 
                     //setup right menu
-                    //$('#right_menu_parent').draggable({'handle': '#right_menu_movehandle'});
                     $('#right_menu_parent, #options_menu_parent').resizable();
 
                     //setup options menu
-                    //$('#options_menu_parent').draggable({'handle': '#config_menu_movehandle'});
 
                     //setup config panel
                     state.items.listview.visualizeall = $('#visualize_all_results_checkbox').is(':checked');
@@ -1447,7 +1445,6 @@
                     });
 
                     //setup search field
-                    $("#search_text").bind("focus", menu.displayCategories);
                     $('#search_text').bind('change', delayedCompletion);
                     $('#search_text').bind('keyup', delayedCompletion);
                     $('#search_form').bind('submit', function (e) {

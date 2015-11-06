@@ -1,6 +1,5 @@
 var menu = {
     displayCategories: function () {
-        $("#search_container").css("display", "block");
         var c = $("#categories");
         if (c.is(":empty")) {
             var d = "<div class='list-group'>";

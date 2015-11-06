@@ -30,6 +30,7 @@ body {
     overflow-y: hidden;
     z-index: 100;
 	border-radius: 10px;
+    display: block;
 }
 
 #categories{
@@ -45,6 +46,14 @@ body {
 #categorieWrapper a:hover{
     background-color: #0074d9;
     color: white;
+    cursor: pointer;
+}
+
+#loader{
+    position: fixed;
+    z-index: 1000;
+    top: 50%;
+    right: 50%;
 }
 
 #subCategories{
