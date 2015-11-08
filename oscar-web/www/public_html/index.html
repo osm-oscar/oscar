@@ -220,7 +220,6 @@
                             promised: {},//referenced by id
                             drawn: SimpleHash(),//id -> [leaflet-item]
                             regular: {}, //id -> id (stored in drawn)
-                            regular: {}, //id -> id (stored in drawn)
                             highlighted: {}//id -> id (stored in drawn)
                         },
                         listview: {
@@ -278,7 +277,9 @@
 
                 // extend the type "Marker" with a leafletItem, which can be a circle, polygon, ...
                 // it is shown, when the Marker is clicked
-                L.Marker.prototype.leafletItem = undefined;
+                L.Marker.include({
+                    leafletItem : undefined
+                });
 
                 // mustache-template-loader needs this
                 window.Mustache = mustache;
@@ -293,7 +294,12 @@
                 state.map = L.map('map').setView([48.74568, 9.1047], 17);
                 state.sidebar = L.control.sidebar('sidebar').addTo(map);
                 L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: osmAttr}).addTo(state.map);
-
+                /*var a = new L.DivIcon({ html: '<div><span>' + 1 + '</span></div>', className: 'marker-cluster marker-cluster-small', iconSize: new L.Point(40, 40) });
+                L.marker([47.2701, 5.86632], {icon: a}).addTo(state.map);
+                a = new L.DivIcon({ html: '<div><span>' + 1 + '</span></div>', className: 'marker-cluster marker-cluster-small', iconSize: new L.Point(40, 40) });
+                L.marker([55.0992, 15.0419], {icon: a}).addTo(state.map);
+                a = new L.DivIcon({ html: '<div><span>' + 1 + '</span></div>', className: 'marker-cluster marker-cluster-small', iconSize: new L.Point(40, 40) });
+                L.marker(oscar.centerPoint(), {icon: a}).addTo(state.map);*/
                 var defErrorCB = function (textStatus, errorThrown) {
                     console.log("xmlhttprequest error textstatus=" + textStatus + "; errorThrown=" + errorThrown);
                     if (confirm("Error occured. Refresh automatically?")) {
@@ -1038,7 +1044,18 @@
                                             //},
                                             dataAttributes: {rid: itemId, 'data-rid': itemId}
                                         });
+                                        /*var c = ' marker-cluster-';
+                                        if (apxItems < 10) {
+                                            c += 'small';
+                                        } else if (apxItems < 100) {
+                                            c += 'medium';
+                                        } else {
+                                            c += 'large';
+                                        }
+                                        var a = new L.DivIcon({ html: '<div><span>' + apxItems + '</span></div>', className: 'marker-cluster' + c, iconSize: new L.Point(40, 40) });
+                                        L.marker(item.centerPoint(), {icon: a}).addTo(state.map);*/
                                     }
+
                                     callback(res);
                                 },
                                 defErrorCB
@@ -1085,9 +1102,6 @@
                         cacheItems: true,
                         folderSelect: false
                     });
-                    //var markers = leaflet.MarkerClusterGroup();
-                    //state.map.addLayer(markers);      // add it to the map
-                    //state.map.fitBounds(markers.getBounds()); //set view on the cluster extent
 
                     $('#MyTree').on('selected.fu.tree', function (e, node) {
                         if (node !== undefined && node.selected !== undefined) {

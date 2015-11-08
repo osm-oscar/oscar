@@ -168,8 +168,23 @@ Item: function(d) {
 			}
 			return message;
 		},
+		toRadians : function(p) { return p * Math.PI / 180; },
+		toDegrees : function(p) { return p * 180 / Math.PI; },
 		centerPoint : function() {
-			return [this.data.bbox[0], this.data.bbox[2]];
+				// see http://mathforum.org/library/drmath/view/51822.html for derivation
+				var phi1 = this.toRadians(this.bbox()[0][1]), lambda1 = this.toRadians(this.bbox()[0][0]);
+				var phi2 = this.toRadians(this.bbox()[1][1]);
+				var deltalambda = this.toRadians((this.bbox()[1][0]-this.bbox()[0][0]));
+
+				var Bx = Math.cos(phi2) * Math.cos(deltalambda);
+				var By = Math.cos(phi2) * Math.sin(deltalambda);
+
+				var phi3 = Math.atan2(Math.sin(phi1)+Math.sin(phi2),
+					Math.sqrt( (Math.cos(phi1)+Bx)*(Math.cos(phi1)+Bx) + By*By) );
+				var lambda3 = lambda1 + Math.atan2(By, Math.cos(phi1) + Bx);
+				lambda3 = (lambda3+3*Math.PI) % (2*Math.PI) - Math.PI; // normalise to -180..+180°
+
+				return [this.toDegrees(lambda3), this.toDegrees(phi3)];
 		},
 		//[southWest, northEast]
 		bbox : function() {
