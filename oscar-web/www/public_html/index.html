@@ -42,7 +42,8 @@
                 </h1>
 
                 <form class="form-inline pull-left" id="search_form">
-                    <input name="q" type="text" placeholder="Wo möchten Sie suchen?" class="form-control" id="search_text">
+                    <input name="q" type="text" placeholder="Wo möchten Sie suchen?" class="form-control"
+                           id="search_text">
                 </form>
                 <div id="search_container">
                     <div id="categorieWrapper">
@@ -180,7 +181,7 @@
             "jquery": "jquery/jquery",
             "spin": "spin/spin",
             "leaflet": "leaflet/leaflet.0.7.2",
-            "leafletCluster": "leaflet/leaflet.markercluster",
+            "leafletCluster": "leaflet/leaflet.markercluster-src",
             "sidebar": "leaflet/leaflet-sidebar",
             "jdataview": "jdataview/jdataview",
             "jbinary": "jbinary/jbinary",
@@ -275,10 +276,9 @@
                     spinner: new spinner(myConfig.spinnerOpts)
                 };
 
-                // extend the type "Marker" with a leafletItem, which can be a circle, polygon, ...
-                // it is shown, when the Marker is clicked
+                // extend the type "Marker" with a leafletItem, which can be a circle, polygon, ... it is shown, when the Marker is clicked
                 L.Marker.include({
-                    leafletItem : undefined
+                    leafletItem: undefined
                 });
 
                 // mustache-template-loader needs this
@@ -295,11 +295,11 @@
                 state.sidebar = L.control.sidebar('sidebar').addTo(map);
                 L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: osmAttr}).addTo(state.map);
                 /*var a = new L.DivIcon({ html: '<div><span>' + 1 + '</span></div>', className: 'marker-cluster marker-cluster-small', iconSize: new L.Point(40, 40) });
-                L.marker([47.2701, 5.86632], {icon: a}).addTo(state.map);
-                a = new L.DivIcon({ html: '<div><span>' + 1 + '</span></div>', className: 'marker-cluster marker-cluster-small', iconSize: new L.Point(40, 40) });
-                L.marker([55.0992, 15.0419], {icon: a}).addTo(state.map);
-                a = new L.DivIcon({ html: '<div><span>' + 1 + '</span></div>', className: 'marker-cluster marker-cluster-small', iconSize: new L.Point(40, 40) });
-                L.marker(oscar.centerPoint(), {icon: a}).addTo(state.map);*/
+                 L.marker([47.2701, 5.86632], {icon: a}).addTo(state.map);
+                 a = new L.DivIcon({ html: '<div><span>' + 1 + '</span></div>', className: 'marker-cluster marker-cluster-small', iconSize: new L.Point(40, 40) });
+                 L.marker([55.0992, 15.0419], {icon: a}).addTo(state.map);
+                 a = new L.DivIcon({ html: '<div><span>' + 1 + '</span></div>', className: 'marker-cluster marker-cluster-small', iconSize: new L.Point(40, 40) });
+                 L.marker(oscar.centerPoint(), {icon: a}).addTo(state.map);*/
                 var defErrorCB = function (textStatus, errorThrown) {
                     console.log("xmlhttprequest error textstatus=" + textStatus + "; errorThrown=" + errorThrown);
                     if (confirm("Error occured. Refresh automatically?")) {
@@ -1016,8 +1016,12 @@
                         }
                         oscar.getItems(childIds,
                                 function (items) {
+                                    var skip = false;
                                     var res = {data: []};
                                     if (options.dataAttributes !== undefined) {
+                                        if(cqr.d.ohPath[cqr.d.ohPath.length-1] == options.rid){
+                                            skip = true;
+                                        }
                                         res.data.push({
                                             name: options.name,
                                             type: 'item',
@@ -1044,18 +1048,29 @@
                                             //},
                                             dataAttributes: {rid: itemId, 'data-rid': itemId}
                                         });
-                                        /*var c = ' marker-cluster-';
-                                        if (apxItems < 10) {
-                                            c += 'small';
-                                        } else if (apxItems < 100) {
-                                            c += 'medium';
-                                        } else {
-                                            c += 'large';
+                                        //state.items.shapes.regular[itemId] = itemId;
+                                        //state["items"].shapes.drawn.insert(itemId, itemShape);
+                                        /* is a path available?
+                                         yes => don't create a clusterelement, go deeper into the tree
+                                         no => show clusterlement for the whole subtree */
+                                        if ($.inArray(itemId, cqr.d.ohPath) == -1 && !skip) {
+                                            var marker = L.marker(item.centerPoint());
+                                            marker.count = apxItems;
+                                            marker.rid = itemId;
+                                            if (apxItems > 1) {
+                                                marker.on("click", function (e) {
+                                                    // get that button ...
+                                                    $($("li[class='tree-branch'][rid='" + e.target.rid + "']").children()[0]).children()[0].click();
+                                                    state.markers.removeLayer(e.target);
+                                                });
+                                            }
+                                            state.markers.addLayer(marker);
                                         }
-                                        var a = new L.DivIcon({ html: '<div><span>' + apxItems + '</span></div>', className: 'marker-cluster' + c, iconSize: new L.Point(40, 40) });
-                                        L.marker(item.centerPoint(), {icon: a}).addTo(state.map);*/
                                     }
-
+                                    state.map.addLayer(state.markers);
+                                    if (!cqr.d.ohPath.length) {
+                                        state.map.fitBounds(items[0].bbox());
+                                    }
                                     callback(res);
                                 },
                                 defErrorCB
