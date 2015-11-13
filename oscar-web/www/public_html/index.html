@@ -1016,12 +1016,12 @@
                         }
                         oscar.getItems(childIds,
                                 function (items) {
-                                    var skip = false;
+                                    //var skip = false;
                                     var res = {data: []};
                                     if (options.dataAttributes !== undefined) {
-                                        if(cqr.d.ohPath[cqr.d.ohPath.length-1] == options.rid){
+                                        /*if(cqr.d.ohPath[cqr.d.ohPath.length-1] == options.rid){
                                             skip = true;
-                                        }
+                                        }*/
                                         res.data.push({
                                             name: options.name,
                                             type: 'item',
@@ -1030,7 +1030,7 @@
                                     }
                                     else {//add a World item
                                         res.data.push({
-                                            name: "Everything [~" + cqr.rootRegionApxItemCount() + "]",
+                                            name: "Everything [~" + cqr.rootRegionApxItemCount()  +"]",
                                             type: 'item',
                                             dataAttributes: {rid: 0xFFFFFFFF, 'data-rid': 0xFFFFFFFF}
                                         });
@@ -1040,8 +1040,9 @@
                                         var itemId = item.id();
                                         var apxItems = regionChildrenApxItemsMap[itemId];
                                         res.data.push({
-                                            name: item.name() + ( apxItems > 0 ? " [~" + apxItems + "]" : ""),
+                                            name: item.name() + ( apxItems > 0 ? " [~" + apxItems+ ":"+itemId + "]" : ""),
                                             type: 'folder',
+                                            bbox : item.bbox(),
                                             //attr : {
                                             //            id : 'treefolder'+itemId
                                             //            rid2 : itemId
@@ -1053,7 +1054,7 @@
                                         /* is a path available?
                                          yes => don't create a clusterelement, go deeper into the tree
                                          no => show clusterlement for the whole subtree */
-                                        if ($.inArray(itemId, cqr.d.ohPath) == -1 && !skip) {
+                                        if (!cqr.d.ohPath.length) {
                                             var marker = L.marker(item.centerPoint());
                                             marker.count = apxItems;
                                             marker.rid = itemId;
@@ -1069,7 +1070,11 @@
                                     }
                                     state.map.addLayer(state.markers);
                                     if (!cqr.d.ohPath.length) {
-                                        state.map.fitBounds(items[0].bbox());
+                                        if(options.bbox){
+                                            state.map.fitBounds(options.bbox);
+                                        }else{
+                                            state.map.fitBounds(items[0].bbox());
+                                        }
                                     }
                                     callback(res);
                                 },

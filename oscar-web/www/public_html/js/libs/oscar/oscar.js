@@ -75,9 +75,9 @@ jQuery.ajaxTransport("+*", function(options, originalOptions, jqXHR) {
 return {
 
 completerBaseUrl : module.config().url,
-maxFetchItems : 100,
-maxFetchShapes : 100,
-maxFetchIdx : 100,
+maxFetchItems : 1000,
+maxFetchShapes : 1000,
+maxFetchIdx : 1000,
 cqrCounter : 0,
 itemCache : {},
 shapeCache : {},
