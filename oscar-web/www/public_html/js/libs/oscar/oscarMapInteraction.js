@@ -33,8 +33,8 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
     function (oscar, L, jQuery, bootstrap, fuelux, jbinary, mustache, jqueryui, leafletCluster, spinner, sidebar, mustacheLoader) {
         //main entry point
         var osmAttr = '&copy; <a target="_blank" href="http://www.openstreetmap.org">OpenStreetMap</a>';
-        var clustering = true; // gets set either when oscar.maxFetchItems is smaller than final cell in ohPath or ohPath isn't even set in cqr
         var state = {
+            clustering : true, // gets set either when oscar.maxFetchItems is smaller than the final cell in ohPath or ohPath isn't even set in cqr
             map: {},
             DAG: SimpleHash(), // represents the hierarchie-tree for a query
             markers: L.markerClusterGroup(),
@@ -140,14 +140,16 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
             var testString = key + ":" + value;
             var res = state.cqrRegExp.test(testString);
             return res;
-        };
+        }
+
         function resultListTemplateDataFromItem(item, shapeSrcType) {
-            itemKv = [];
-            itemUrls = [];
-            wikilink = undefined;
+            var itemKv = [];
+            var itemUrls = [];
+            var wikiLink = undefined;
             var hasMatchingTag = false;
             var protoRegExp = /^.*:\/\//;
-            for (i = 0; i < item.size(); ++i) {
+
+            for (var i = 0; i < item.size(); ++i) {
                 var itemKey = item.key(i);
                 var itemValue = item.value(i);
                 if (itemKey === "wikipedia") {
@@ -155,7 +157,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                         itemUrls.push({"k": itemKey, "v": itemValue});
                     }
                     else {
-                        wikilink = itemValue;
+                        wikiLink = itemValue;
                     }
                 }
                 else if (myConfig.resultsview.urltags[itemKey] !== undefined) {
@@ -182,11 +184,12 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                 "osmType": item.type(),
                 "itemName": item.name(),
                 "matchingTagClass": (hasMatchingTag ? "name-has-matched-tag" : false),
-                "wikilink": wikilink,
+                "wikilink": wikiLink,
                 "urlkvs": itemUrls,
                 "kv": itemKv //{k,v, kc, vc}
             };
-        };
+        }
+
         function displayLoadingSpinner() {
             if (state.timers.loadingSpinner !== undefined) {
                 clearTimeout(state.timers.loadingSpinner);
@@ -203,7 +206,8 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                 state.timers.loadingSpinner = setTimeout(displayLoadingSpinner, myConfig.timeouts.loadingSpinner);
             }
             state.loadingtasks += 1;
-        };
+        }
+
         function endLoadingSpinner() {
             if (state.loadingtasks === 1) {
                 state.loadingtasks = 0;
@@ -217,6 +221,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                 state.loadingtasks -= 1;
             }
         };
+
         function clearGeoQueryMapShape() {
             if (state.geoquery.mapshape !== undefined) {
                 state.map.removeLayer(state.geoquery.mapshape);
@@ -241,7 +246,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
             function fillPts(sLat, sLng, tLat, tLng) {
                 var latDiff = (tLat - sLat) * sampleStep;
                 var lngDiff = (tLng - sLng) * sampleStep;
-                for (i = 0; i < sampleCount; ++i) {
+                for (var i = 0; i < sampleCount; ++i) {
                     pts.push(L.latLng(sLat, sLng));
                     sLat += latDiff;
                     sLng += lngDiff;
@@ -261,7 +266,8 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
             state.geoquery.mapshape = L.polygon(pts, myConfig.styles.shapes.geoquery.normal);
             state.map.addLayer(state.geoquery.mapshape);
 
-        };
+        }
+
         function geoQuerySelect(e) {
             if (state.geoquery.clickcount === 0) {
                 $('#geoquery_minlat').val(e.latlng.lat);
@@ -388,12 +394,11 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                     highlightShape(itemId, shapeSrcType);
                 });
             }
-            //state.map.addLayer(leafletItem);
-            //state[shapeSrcType].shapes.drawn.insert(itemId, leafletItem);
-        };
+        }
+
         function clearListAndShapes(shapeSrcType) {
             $('#' + shapeSrcType + 'List').empty();
-            for (i in state[shapeSrcType].shapes.drawn.values()) {
+            for (var i in state[shapeSrcType].shapes.drawn.values()) {
                 state.map.removeLayer(state[shapeSrcType].shapes.drawn.at(i));
                 state[shapeSrcType].shapes.drawn.erase(i);
             }
@@ -402,7 +407,8 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
             state[shapeSrcType].shapes.highlighted = {};
             state[shapeSrcType].shapes.promised = {};
 
-        };
+        }
+
         function clearViews() {
             $('#itemsList').empty();
             $('#itemsList_counter').empty();
@@ -425,31 +431,31 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
             state.relatives.shapes.highlighted = {};
             state.relatives.shapes.promised = {};
             state.items.listview.loadtarget = 0;
-            for (i in state.regions.drawn.values()) {
+            for (var i in state.regions.drawn.values()) {
                 state.map.removeLayer(state.regions.drawn.at(i));
                 state.regions.drawn.erase(i);
             }
-            for (i in state.items.shapes.drawn.values()) {
+            for (var i in state.items.shapes.drawn.values()) {
                 state.map.removeLayer(state.items.shapes.drawn.at(i));
                 state.items.shapes.drawn.erase(i);
             }
-            for (i in state.relatives.shapes.drawn.values()) {
+            for (var i in state.relatives.shapes.drawn.values()) {
                 state.map.removeLayer(state.relatives.shapes.drawn.at(i));
                 state.relatives.shapes.drawn.erase(i);
             }
-            for (i in state.items.clusters.drawn.values()) {
+            for (var i in state.items.clusters.drawn.values()) {
                 state.map.removeLayer(state.items.clusters.drawn.at(i));
                 state.items.clusters.drawn.erase(i);
             }
             $('#MyTree').tree('destroy');
             $('<ul>', {'id': "MyTree", 'class': "tree", 'role': "tree"}).appendTo('#fuelux_tree_parent');
-            //$('#MyTree').append($('#tree_template').html());
             $('#MyTree').append($.Mustache.render('tree_template', null));
             $('#search_results_counter').empty();
-        };
+        }
+
         function clearHighlightedShapes(shapeSrcType) {
-            for (i in state[shapeSrcType].shapes.highlighted) {
-                if (state[shapeSrcType].shapes.drawn[i] === undefined) {//if it's not regularly drawn, remove it
+            for (var i in state[shapeSrcType].shapes.highlighted) {
+                if (state[shapeSrcType].shapes.drawn[i] === undefined) {
                     state.map.removeLayer(state[shapeSrcType].shapes.drawn.at(i));
                     state[shapeSrcType].shapes.drawn.erase(i);
                 }
@@ -458,25 +464,27 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                 }
             }
             state[shapeSrcType].shapes.highlighted = {};
-        };
+        }
+
         function clearVisualizedItems() {
             state.items.shapes.promised = {};
             state.items.shapes.highlighted = {};
-            for (i in state.items.shapes.drawn.values()) {
+            for (var i in state.items.shapes.drawn.values()) {
                 if (state.items.shapes.highlighted[i] === undefined) {
                     state.map.removeLayer(state.items.shapes.drawn.at(i));
                 }
             }
-            for (i in state.items.clusters.drawn.values()) {
+            for (var i in state.items.clusters.drawn.values()) {
                 state.map.removeLayer(state.items.clusters.drawn.at(i));
             }
             state.items.clusters.drawn.clear();
             state.items.shapes.drawn.clear();
-        };
+        }
+
         function visualizeResultListItems() {
             state.items.shapes.promised = {};
             var itemsToDraw = [];
-            for (i in state.items.listview.drawn.values()) {
+            for (var i in state.items.listview.drawn.values()) {
                 if (!state.items.shapes.drawn.count(i)) {
                     state.items.shapes.promised[i] = state.items.listview.drawn.at(i);
                     itemsToDraw.push(i);
@@ -486,7 +494,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
             oscar.getShapes(itemsToDraw, function (shapes) {
                 endLoadingSpinner();
                 var marker;
-                for (i in itemsToDraw) {
+                for (var i in itemsToDraw) {
                     var itemId = itemsToDraw[i];
                     if (state.items.shapes.promised[itemId] === undefined) {
                         continue;
@@ -515,13 +523,11 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                     });
                     state.markers.addLayer(marker);
                     state["items"].shapes.drawn.insert(itemId, itemShape);
-                    //addShapeToMap(itemShape, itemId, "items");
                     addShapeToMap(marker, itemId, "items");
                 }
                 state.map.addLayer(state.markers);
             }, defErrorCB);
-        };
-
+        }
 
         function highlightShape(itemId, shapeSrcType) {
             if (state[shapeSrcType].shapes.highlighted[itemId] !== undefined) {//already highlighted
@@ -555,7 +561,8 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                         state.map.fitBounds(item.bbox());
                     }, defErrorCB);
             }
-        };
+        }
+
         function appendItemToListView(item, shapeSrcType) {
             if (item === undefined) {
                 console.log("Undefined item displayed");
@@ -568,7 +575,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
             state[shapeSrcType].listview.drawn.insert(itemId, itemId);
 
             var itemTemplateData = resultListTemplateDataFromItem(item, shapeSrcType);
-            //var rendered = mustache.render(itemListEntryTemplateString, itemTemplateData);
             var rendered = $.Mustache.render('itemListEntryHtmlTemplate', itemTemplateData);
             var inserted = $($(rendered).appendTo('#' + shapeSrcType + 'List'));
             $('#' + shapeSrcType + 'NameLink' + itemId, inserted).click(
@@ -600,7 +606,8 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
             searchResultsCounter.empty();
             searchResultsCounter.append("(" + state[shapeSrcType].listview.drawn.size() + ")");
             return;
-        };
+        }
+
         function showItemRelatives(itemId) {
             if (!$('#show_item_relatives_checkbox').is(":checked")) {
                 return;
@@ -608,7 +615,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
             oscar.getItemsRelativesIds(itemId, function (relativesIds) {
                 oscar.getItems(relativesIds, function (relatives) {
                     clearListAndShapes("relatives");
-                    for (i in relatives) {
+                    for (var i in relatives) {
                         appendItemToListView(relatives[i], "relatives");
                     }
                     {
@@ -618,12 +625,11 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                     }
                 }, defErrorCB);
             }, defErrorCB);
-        };
+        }
+
         ///Try to fill result list with up to about count items
         function loadMoreIntoResultList() {
             var resultListOffset = state.items.listview.drawn.size() + state.items.listview.promised.size();
-
-            var selectedRegionId = state.items.listview.selectedRegionId;
 
             if (state.items.listview.selectedRegionId === undefined || !state.items.listview.hasmore ||
                 state.items.listview.loadsmore) {
@@ -632,49 +638,14 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
             state.items.listview.loadsmore = true;
             startLoadingSpinner();
             state.cqr.regionItemIds(state.items.listview.selectedRegionId,
-                function (itemIds) {
-                    for (i in itemIds) {
-                        var itemId = itemIds[i];
-                        state.items.listview.promised.insert(itemId, itemId);
-                    }
-                    endLoadingSpinner();
-                    var mySelectedRegionId = selectedRegionId;
-                    startLoadingSpinner();
-                    oscar.getItems(itemIds,
-                        function (items) {
-                            endLoadingSpinner();
-                            state.items.listview.hasmore = items.length > 0 && items.length >= oscar.maxFetchItems;
-                            state.items.listview.loadsmore = false;
-                            if (state.items.listview.loadtarget > resultListOffset + items.length && state.items.listview.hasmore && mySelectedRegionId === state.items.listview.selectedRegionId) {
-                                loadMoreIntoResultList();
-                            }
-                            for (i in items) {
-                                var item = items[i];
-                                var itemId = item.id();
-                                if (state.items.listview.promised.count(itemId)) {
-                                    appendItemToListView(item, "items");
-                                    state.items.listview.promised.erase(itemId);
-                                }
-                            }
-                            if (state.items.listview.visualizeall) {
-                                visualizeResultListItems();
-                            }
-                            if (state.items.listview.drawn.size() === 1) {
-                                for (i in state.items.listview.drawn.values()) {
-                                    $('#itemsNameLink' + i).click();
-                                    break;
-                                }
-                            }
-                        },
-                        defErrorCB
-                    );
-                },
+                getItemIds,
                 defErrorCB,
                 resultListOffset
             );
-        };
+        }
+
         function regionLayersToFront() {
-            for (i in state.regions.drawn.values()) {
+            for (var i in state.regions.drawn.values()) {
                 state.regions.drawn.values()[i].bringToFront();
             }
         }
@@ -683,7 +654,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
             state.regions.promised = {};
             var availableMapRegions = {};
             var fetchMapRegions = [];
-            for (rid in regions) {
+            for (var rid in regions) {
                 if (state.regions.drawn.count(rid)) {
                     availableMapRegions[rid] = state.regions.drawn.at(rid);
                     state.regions.drawn.erase(rid);
@@ -693,32 +664,31 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                 }
             }
             //remove unused regions from map
-            for (rid in state.regions.drawn.values()) {
+            for (var rid in state.regions.drawn.values()) {
                 state.map.removeLayer(state.regions.drawn.at(rid));
                 state.regions.drawn.erase(rid);
             }
             //replace old state.regions.drawn with new one
             state.regions.drawn.clear();
-            for (i in availableMapRegions) {
+            for (var i in availableMapRegions) {
                 state.regions.drawn.insert(i, availableMapRegions[i]);
             }
             //fetch missing shapes
             if (fetchMapRegions.length) {
-                for (i in fetchMapRegions) {
+                for (var i in fetchMapRegions) {
                     state.regions.promised[fetchMapRegions[i]] = fetchMapRegions[i];
                 }
                 startLoadingSpinner();
                 oscar.getShapes(fetchMapRegions,
                     function (shapes) {
                         endLoadingSpinner();
-                        for (shapeId in shapes) {
+                        for (var shapeId in shapes) {
                             if (state.regions.promised[shapeId] !== undefined && !state.regions.drawn.count(shapeId)) {
                                 delete state.regions.promised[shapeId];
                                 var shape = shapes[shapeId];
                                 var leafletItem = oscar.leafletItemFromShape(shape);
                                 leafletItem.setStyle(myConfig.styles.shapes['regions']['normal']);
                                 state.regions.drawn.insert(shapeId, leafletItem);
-                                //state.map.addLayer(leafletItem);
                                 state.markers.addLayer(leafletItem);
                             }
                         }
@@ -748,7 +718,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                     state.map.fitBounds(item.bbox());
                     var mapRegion = state.regions.drawn.at(rid);
                     if (mapRegion !== undefined) {
-                        for (i in state.regions.highlighted) {
+                        for (var i in state.regions.highlighted) {
                             state.regions.highlighted[i].setStyle(myConfig.styles.shapes.regions.normal);
                             delete state.regions.highlighted[i];
                         }
@@ -765,7 +735,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
             state.items.listview.promised.clear();
             state.items.listview.hasmore = true;
             loadMoreIntoResultList();
-        };
+        }
 
         ///returns the region ids of opened regions in dest
         ///This only takes care of regions with children (inner nodes)
@@ -775,7 +745,8 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                 dest[rid] = rid;
                 getOpenRegions(this, dest);
             });
-        };
+        }
+
         function getOpenRegionsInTree() {
             var dest = {};
             $('#MyTree').children('.tree\\-branch.tree\\-open').each(function () {
@@ -785,14 +756,15 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
             });
             //and get the selected regions
             var selectedRegions = $('#MyTree').tree('selectedItems');
-            for (i in selectedRegions) {
+            for (var i in selectedRegions) {
                 var rid = selectedRegions[i].dataAttributes.rid;
                 if (rid !== 0xFFFFFFFF) { //filter root
                     dest[rid] = rid;
                 }
             }
             return dest;
-        };
+        }
+
         function fullSubSetTreeDataSource(cqr) {
             return function (options, callback) {
                 var subSet = cqr.subSet();
@@ -815,7 +787,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                                 dataAttributes: options.dataAttributes
                             });
                         }
-                        for (i in items) {
+                        for (var i in items) {
                             var item = items[i];
                             var itemId = item.id();
                             var regionInSubSet = subSet.regions[itemId];
@@ -835,13 +807,14 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                     defErrorCB
                 );
             };
-        };
+        }
+
         function flatCqrTreeDataSource(cqr) {
             function getItems(regionChildrenInfo, options, callback) {
                 //fetch the items
                 var regionChildrenApxItemsMap = {};
                 var childIds = [];
-                for (i in regionChildrenInfo) {
+                for (var i in regionChildrenInfo) {
                     var ci = regionChildrenInfo[i];
                     regionChildrenApxItemsMap[ci['id']] = ci['apxitems'];
                     childIds.push(ci['id']);
@@ -868,46 +841,9 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
 
                         if (!items.length) {
                             var resultListOffset = state.items.listview.drawn.size() + state.items.listview.promised.size();
-                            var selectedRegionId = state.items.listview.selectedRegionId;
                             state.items.listview.selectedRegionId = options.rid;
                             state.cqr.regionItemIds(state.items.listview.selectedRegionId,
-                                function (itemIds) {
-                                    for (i in itemIds) {
-                                        var itemId = itemIds[i];
-                                        state.items.listview.promised.insert(itemId, itemId);
-                                    }
-                                    endLoadingSpinner();
-                                    var mySelectedRegionId = selectedRegionId;
-                                    startLoadingSpinner();
-                                    oscar.getItems(itemIds,
-                                        function (items) {
-                                            endLoadingSpinner();
-                                            state.items.listview.hasmore = items.length > 0 && items.length >= oscar.maxFetchItems;
-                                            state.items.listview.loadsmore = false;
-                                            if (state.items.listview.loadtarget > resultListOffset + items.length && state.items.listview.hasmore && mySelectedRegionId === state.items.listview.selectedRegionId) {
-                                                loadMoreIntoResultList();
-                                            }
-                                            for (i in items) {
-                                                var item = items[i];
-                                                var itemId = item.id();
-                                                if (state.items.listview.promised.count(itemId)) {
-                                                    appendItemToListView(item, "items");
-                                                    state.items.listview.promised.erase(itemId);
-                                                }
-                                            }
-                                            if (state.items.listview.visualizeall) {
-                                                visualizeResultListItems();
-                                            }
-                                            if (state.items.listview.drawn.size() === 1) {
-                                                for (i in state.items.listview.drawn.values()) {
-                                                    $('#itemsNameLink' + i).click();
-                                                    break;
-                                                }
-                                            }
-                                        },
-                                        defErrorCB
-                                    );
-                                },
+                                getItemIds,
                                 defErrorCB,
                                 resultListOffset
                             );
@@ -918,7 +854,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                                 state.items.clusters.drawn.erase(parentRid);
                             }
                         }
-                        for (i in items) {
+                        for (var i in items) {
                             var item = items[i];
                             var itemId = item.id();
                             var apxItems = regionChildrenApxItemsMap[itemId];
@@ -945,17 +881,14 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                                     var marker = L.marker(item.centerPoint());
                                     marker.count = apxItems;
                                     marker.rid = itemId;
-                                    marker.children = apxItems !== undefined;
-                                    //if (apxItems > 1) {
+
                                     marker.on("click", function (e) {
                                         state.items.clusters.drawn.erase(e.target.rid);
                                         state.markers.removeLayer(e.target);
                                         $($("li[class='tree-branch'][rid='" + e.target.rid + "']").children()[0]).children()[0].click();
-                                        /*if(!$("li[class='tree-branch tree-open'][rid='" + e.target.rid + "']").find("ul").children().length) {
-                                         $($("li[class='tree-item'][rid='" + e.target.rid + "']").children()[0]).click();
-                                         }*/
+
                                     });
-                                    //}
+
                                     if
                                     (!state.items.clusters.drawn.count(itemId)) {
                                         state.items.clusters.drawn.insert(itemId, marker);
@@ -976,7 +909,8 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                     },
                     defErrorCB
                 );
-            };
+            }
+
             return function (options, callback) {
                 var rid;
                 if (options.dataAttributes !== undefined) {
@@ -994,18 +928,56 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                     defErrorCB
                 );
             };
-        };
+        }
+
+        function getItemIds(itemIds) {
+            var resultListOffset = state.items.listview.drawn.size() + state.items.listview.promised.size();
+            var selectedRegionId = state.items.listview.selectedRegionId;
+
+            for (var i in itemIds) {
+                var itemId = itemIds[i];
+                state.items.listview.promised.insert(itemId, itemId);
+            }
+
+            endLoadingSpinner();
+            var mySelectedRegionId = selectedRegionId;
+            startLoadingSpinner();
+
+            oscar.getItems(itemIds,
+                function (items) {
+                    endLoadingSpinner();
+                    state.items.listview.hasmore = items.length > 0 && items.length >= oscar.maxFetchItems;
+                    state.items.listview.loadsmore = false;
+                    if (state.items.listview.loadtarget > resultListOffset + items.length && state.items.listview.hasmore && mySelectedRegionId === state.items.listview.selectedRegionId) {
+                        loadMoreIntoResultList();
+                    }
+                    for (var i in items) {
+                        var item = items[i];
+                        var itemId = item.id();
+                        if (state.items.listview.promised.count(itemId)) {
+                            appendItemToListView(item, "items");
+                            state.items.listview.promised.erase(itemId);
+                        }
+                    }
+                    if (state.items.listview.visualizeall) {
+                        visualizeResultListItems();
+                    }
+                    if (state.items.listview.drawn.size() === 1) {
+                        for (var i in state.items.listview.drawn.values()) {
+                            $('#itemsNameLink' + i).click();
+                            break;
+                        }
+                    }
+                },
+                defErrorCB
+            );
+        }
+
         function displayCqrAsTree(cqr) {
             clearViews();
             state.clustering = true;
-
-            if (!cqr.hasResults()) {
-                searchResultsCounter = $('#search_results_counter');
-                searchResultsCounter.empty();
-                searchResultsCounter.append('(no results)');
-                return;
-            }
             $("#left_menu_parent").css("display", "block");
+
             var myDataSource;
             if (cqr.isFull()) {
                 myDataSource = fullSubSetTreeDataSource(cqr);
@@ -1013,6 +985,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
             else {
                 myDataSource = flatCqrTreeDataSource(cqr);
             }
+
             var myTree = $('#MyTree');
             myTree.tree({
                 dataSource: myDataSource,
@@ -1021,32 +994,34 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                 folderSelect: false
             });
 
-            $('#MyTree').on('selected.fu.tree', function (e, node) {
+            myTree.on('selected.fu.tree', function (e, node) {
                 if (node !== undefined && node.selected !== undefined) {
-                    for (i in node.selected) {
-                        var rid = node.selected[i].dataAttributes.rid;
-                        state.items.listview.selectedRegionId = rid;
+                    for (var i in node.selected) {
+                        state.items.listview.selectedRegionId = node.selected[i].dataAttributes.rid;
                         displayRegionsItem();
                         break;
                     }
                     updateMapRegions(getOpenRegionsInTree());
                 }
             });
-            $('#MyTree').on('deselected.fu.tree', function (e, node) {
+
+            myTree.on('deselected.fu.tree', function (e, node) {
                 if (node !== undefined && node.selected !== undefined) {
                     updateMapRegions(getOpenRegionsInTree());
                 }
             });
-            $('#MyTree').on('opened.fu.tree', function (e, node) {
+
+            myTree.on('opened.fu.tree', function (e, node) {
                 updateMapRegions(getOpenRegionsInTree());
             });
-            $('#MyTree').on('closed.fu.tree', function (e, node) {
+
+            myTree.on('closed.fu.tree', function (e, node) {
                 updateMapRegions(getOpenRegionsInTree());
             });
 
             var numElements = 0;
             var subRegions = cqr.d.regionInfo[cqr.ohPath()[cqr.ohPath().length - 1]];
-            for (i in subRegions) {
+            for (var i in subRegions) {
                 numElements += subRegions[i].apxitems;
                 if (numElements > oscar.maxFetchItems) {
                     state.clustering = true;
@@ -1106,13 +1081,13 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                  }
                  */
             }
-        };
+        }
+
         function doCompletion() {
             if ($("#search_text").val() === state.queries.lastQuery) {
                 return;
             }
             state.sidebar.open("search");
-            //$("#search_container").css("display", "none");
 
             //query has changed, ddos the server! TODO: call off all ajax loads from earlier calls
             var myQuery = $("#search_text").val();
@@ -1140,7 +1115,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
 
             //push our query as history state
             window.history.pushState({"q": myQuery}, undefined, location.pathname + "?q=" + encodeURIComponent(myQuery));
-            //window.history.pushState({"q": myQuery}, undefined, "" + "?q=" + encodeURIComponent(myQuery));
 
             //lift-off
             callFunc(myQuery,
@@ -1160,19 +1134,22 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                     endLoadingSpinner();
                     alert("Failed to retrieve completion results. textstatus=" + textStatus + "; errorThrown=" + errorThrown);
                 });
-        };
+        }
+
         function instantCompletion() {
             if (state.timers.query !== undefined) {
                 clearTimeout(state.timers.query);
             }
             doCompletion();
-        };
+        }
+
         function delayedCompletion() {
             if (state.timers.query !== undefined) {
                 clearTimeout(state.timers.query);
             }
             state.timers.query = setTimeout(instantCompletion, myConfig.timeouts.query);
-        };
+        }
+
         //https://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
         function getParameterByName(name) {
             name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
@@ -1242,6 +1219,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
             $('#toggle_right_menu_button').click(function () {
                 $('#options_menu_parent').toggleClass('hidden');
             });
+
             $('#items_parent').bind('scroll', function () {
                 if ($(this).scrollTop() + $(this).innerHeight() >= $(this)[0].scrollHeight - 20) {
                     loadMoreIntoResultList();
@@ -1250,8 +1228,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
 
             //setup right menu
             $('#right_menu_parent, #options_menu_parent').resizable();
-
-            //setup options menu
 
             //setup config panel
             state.items.listview.visualizeall = $('#visualize_all_results_checkbox').is(':checked');
@@ -1266,10 +1242,12 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                     }
                 }
             );
+
             $('#show_help_checkbox').bind('change',
                 function () {
                     var helpOn = $('#show_help_checkbox').is(':checked');
                     var relativesOn = $('#show_item_relatives_checkbox').is(':checked');
+
                     if (helpOn) {
                         $('#help_parent').removeClass('hidden');
                     }
@@ -1284,6 +1262,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                     }
                 }
             );
+
             $('#show_item_relatives_checkbox').bind('change',
                 function () {
                     var helpOn = $('#show_help_checkbox').is(':checked');
@@ -1291,7 +1270,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                     if (relativesOn) {
                         $('#relatives_parent').removeClass('hidden');
                         //fetch parents of currently selected item
-                        for (i in state.items.shapes.highlighted) {
+                        for (var i in state.items.shapes.highlighted) {
                             showItemRelatives(i);
                             break;
                         }
@@ -1308,6 +1287,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                     }
                 }
             );
+
             $('#itemload_accept_button').click(function (e) {
                 var st = parseInt($('#itemload_spinner').val());
                 if (st > 0) {
@@ -1315,6 +1295,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                     loadMoreIntoResultList();
                 }
             });
+
             $('#geoquery_selectbutton').click(function () {
                 if (state.geoquery.active) {
                     clearGeoQuerySelect();
@@ -1323,6 +1304,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                     startGeoQuerySelect();
                 }
             });
+
             $('#geoquery_acceptbutton').click(function () {
                 //first fetch the coordinates
                 var minlat = parseFloat($('#geoquery_minlat').val());
@@ -1333,6 +1315,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                 //end the geoquery
                 clearGeoQuerySelect();
 
+                var tmp;
                 if (minlat > maxlat) {
                     tmp = maxlat;
                     maxlat = minlat;
@@ -1349,6 +1332,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                 st.change();
                 clearGeoQueryMapShape();
             });
+
             $('#geoquery_minlat, #geoquery_maxlat, #geoquery_minlon, #geoquery_maxlon').change(function (e) {
                 updateGeoQueryMapShape();
             });
@@ -1364,6 +1348,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                     resetPathQuery();
                 }
             });
+
             $('#pathquery_acceptbutton').click(function () {
                 endPathQuery();
                 if (state.pathquery.mapshape !== undefined) {
@@ -1371,7 +1356,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                     if (latLngs.length) {
                         var qStr = "$path:" + $('#pathquery_radius').val();
 
-                        for (i in latLngs) {
+                        for (var i in latLngs) {
                             qStr += "," + latLngs[i].lat + "," + latLngs[i].lng;
                         }
 
@@ -1405,7 +1390,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
 
             //check if there's a query in our location string
             queryFromSearchLocation();
-
             endLoadingSpinner();
         });
     });

@@ -93,7 +93,7 @@ body {
     min-width: 20%;
     max-width: 30%;
     height: 60%;
-    padding-top: 0px;
+    padding-top: 0;
 }
 
 #options_menu_parent {
@@ -112,7 +112,7 @@ body {
 #config_parent {
     height: 100%;
     width: 100%;
-    padding: 0px 0px 0px 0px;
+    padding: 0 0 0 0;
     background-color: #FFFFFF;
     overflow-y: auto;
 }
@@ -125,7 +125,7 @@ body {
 #right_menu_scroll_area {
     width: 100%;
     height: calc(100% - 10px);
-    padding: 0px 0px 0px 0px;
+    padding: 0 0 0 0;
     background-color: #FFFFFF;
     overflow-y: scroll;
 }
@@ -133,7 +133,7 @@ body {
 #help_parent {
     height: fit-content;
     width: 100%;
-    padding: 0px 0px 0px 0px;
+    padding: 0 0 0 0;
     background-color: #FFFFFF;
     overflow-y: hidden;
 }
@@ -141,7 +141,7 @@ body {
 #relatives_parent {
     height: fit-content;
     width: 100%;
-    padding: 0px 0px 0px 0px;
+    padding: 0 0 0 0;
     background-color: #FFFFFF;
     overflow-y: hidden;
 }
@@ -160,7 +160,7 @@ body {
 #items_parent {
     max-height: 60%;
     width: 95%;
-    padding: 0px 0px 0px 0px;
+    padding: 0 0 0 0;
     overflow-y: auto;
     overflow-x: auto;
 }
@@ -168,7 +168,7 @@ body {
 #fuelux_tree_parent {
     height: 100%;
     width: 100%;
-    padding: 0px 0px 0px 0px;
+    padding: 0 0 0 0;
     overflow-x: hidden;
     overflow-y: hidden;
 }
@@ -223,8 +223,8 @@ body {
 }
 
 .panel-heading h4 {
-    padding : 0px 0px 0px 0px;
-    margin: 0px 0px 0px 0px;
+    padding : 0 0 0 0;
+    margin: 0 0 0 0;
 }
 
 .transparent-menu {

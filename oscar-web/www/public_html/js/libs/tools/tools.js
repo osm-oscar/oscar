@@ -31,7 +31,7 @@ function SimpleHash() {
             m_values = {};
         }
     };
-};
+}
 
 TreeNode = function (id, parent) {
     this.id = id;
