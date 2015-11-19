@@ -32,3 +32,28 @@ function SimpleHash() {
         }
     };
 };
+
+TreeNode = function (id, parent) {
+    this.id = id;
+    this.parent = parent;
+    this.children = [];
+    return this;
+};
+
+TreeNode.prototype.addChild = function (id) {
+    var node = new TreeNode(id, this);
+    this.children.push(node);
+    return node;
+};
+
+TreeNode.prototype.isDagPathInOhPath = function (ohPath) {
+    var tmp = this;
+    while (tmp !== undefined) {
+        if ($.inArray(tmp.id, ohPath) != -1) {
+            return true;
+        } else {
+            tmp = tmp.parent;
+        }
+    }
+    return false;
+};

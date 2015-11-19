@@ -207,8 +207,10 @@
             function (oscar, L, jQuery, bootstrap, fuelux, jbinary, mustache, jqueryui, leafletCluster, spinner, sidebar, mustacheLoader) {
                 //main entry point
                 var osmAttr = '&copy; <a target="_blank" href="http://www.openstreetmap.org">OpenStreetMap</a>';
+                var clustering = true;
                 var state = {
                     map: {},
+                    DAG : SimpleHash(),
                     markers: L.markerClusterGroup(),
                     sidebar: undefined,
                     regions: {
@@ -231,6 +233,9 @@
                             visualizeall: false,
                             loadtarget: 0,
                             selectedRegionId: undefined
+                        },
+                        clusters: {
+                            drawn: SimpleHash(),//id -> marker
                         }
                     },
                     relatives: {
@@ -611,6 +616,10 @@
                         state.map.removeLayer(state.relatives.shapes.drawn.at(i));
                         state.relatives.shapes.drawn.erase(i);
                     }
+                    for (i in state.items.clusters.drawn.values()) {
+                        state.map.removeLayer(state.items.clusters.drawn.at(i));
+                        state.items.clusters.drawn.erase(i);
+                    }
                     $('#MyTree').tree('destroy');
                     $('<ul>', {'id': "MyTree", 'class': "tree", 'role': "tree"}).appendTo('#fuelux_tree_parent');
                     //$('#MyTree').append($('#tree_template').html());
@@ -638,6 +647,10 @@
                             state.map.removeLayer(state.items.shapes.drawn.at(i));
                         }
                     }
+                    for (i in state.items.clusters.drawn.values()) {
+                        state.map.removeLayer(state.items.clusters.drawn.at(i));
+                    }
+                    state.items.clusters.drawn.clear();
                     state.items.shapes.drawn.clear();
                 };
                 function visualizeResultListItems() {
@@ -1016,12 +1029,8 @@
                         }
                         oscar.getItems(childIds,
                                 function (items) {
-                                    //var skip = false;
                                     var res = {data: []};
                                     if (options.dataAttributes !== undefined) {
-                                        /*if(cqr.d.ohPath[cqr.d.ohPath.length-1] == options.rid){
-                                            skip = true;
-                                        }*/
                                         res.data.push({
                                             name: options.name,
                                             type: 'item',
@@ -1030,50 +1039,115 @@
                                     }
                                     else {//add a World item
                                         res.data.push({
-                                            name: "Everything [~" + cqr.rootRegionApxItemCount()  +"]",
+                                            name: "Everything [~" + cqr.rootRegionApxItemCount() + "]",
                                             type: 'item',
                                             dataAttributes: {rid: 0xFFFFFFFF, 'data-rid': 0xFFFFFFFF}
                                         });
+                                    }
+
+                                    var parentRid = options.dataAttributes !== undefined ? options.dataAttributes.rid : undefined;
+
+                                    if (!items.length) {
+                                        var resultListOffset = state.items.listview.drawn.size() + state.items.listview.promised.size();
+                                        var selectedRegionId = state.items.listview.selectedRegionId;
+                                        state.items.listview.selectedRegionId = options.rid;
+                                        state.cqr.regionItemIds(state.items.listview.selectedRegionId,
+                                                function (itemIds) {
+                                                    for (i in itemIds) {
+                                                        var itemId = itemIds[i];
+                                                        state.items.listview.promised.insert(itemId, itemId);
+                                                    }
+                                                    endLoadingSpinner();
+                                                    var mySelectedRegionId = selectedRegionId;
+                                                    startLoadingSpinner();
+                                                    oscar.getItems(itemIds,
+                                                            function (items) {
+                                                                endLoadingSpinner();
+                                                                state.items.listview.hasmore = items.length > 0 && items.length >= oscar.maxFetchItems;
+                                                                state.items.listview.loadsmore = false;
+                                                                if (state.items.listview.loadtarget > resultListOffset + items.length && state.items.listview.hasmore && mySelectedRegionId === state.items.listview.selectedRegionId) {
+                                                                    loadMoreIntoResultList();
+                                                                }
+                                                                for (i in items) {
+                                                                    var item = items[i];
+                                                                    var itemId = item.id();
+                                                                    if (state.items.listview.promised.count(itemId)) {
+                                                                        appendItemToListView(item, "items");
+                                                                        state.items.listview.promised.erase(itemId);
+                                                                    }
+                                                                }
+                                                                if (state.items.listview.visualizeall) {
+                                                                    visualizeResultListItems();
+                                                                }
+                                                                if (state.items.listview.drawn.size() === 1) {
+                                                                    for (i in state.items.listview.drawn.values()) {
+                                                                        $('#itemsNameLink' + i).click();
+                                                                        break;
+                                                                    }
+                                                                }
+                                                            },
+                                                            defErrorCB
+                                                    );
+                                                },
+                                                defErrorCB,
+                                                resultListOffset
+                                        );
+                                    }else{
+                                        if(state.items.clusters.drawn.at(parentRid)) {
+                                            // children available, remove parent cluster
+                                            state.markers.removeLayer(state.items.clusters.drawn.at(parentRid));
+                                            state.items.clusters.drawn.erase(parentRid);
+                                        }
                                     }
                                     for (i in items) {
                                         var item = items[i];
                                         var itemId = item.id();
                                         var apxItems = regionChildrenApxItemsMap[itemId];
+                                        var parentNode = state.DAG.at(parentRid);
+                                        state.DAG.insert(itemId, parentNode !== undefined ? parentNode.addChild(itemId) : new TreeNode(itemId, undefined));
+
                                         res.data.push({
-                                            name: item.name() + ( apxItems > 0 ? " [~" + apxItems+ ":"+itemId + "]" : ""),
+                                            name: item.name() + ( apxItems > 0 ? " [~" + apxItems + ":" + itemId + "]" : ""),
                                             type: 'folder',
-                                            bbox : item.bbox(),
+                                            bbox: item.bbox(),
                                             //attr : {
                                             //            id : 'treefolder'+itemId
                                             //            rid2 : itemId
                                             //},
-                                            dataAttributes: {rid: itemId, 'data-rid': itemId}
+                                            dataAttributes: {rid: itemId, 'data-rid': itemId, "cnt": apxItems}
                                         });
                                         //state.items.shapes.regular[itemId] = itemId;
                                         //state["items"].shapes.drawn.insert(itemId, itemShape);
                                         /* is a path available?
                                          yes => don't create a clusterelement, go deeper into the tree
                                          no => show clusterlement for the whole subtree */
-                                        if (!cqr.d.ohPath.length) {
+                                        if (((!cqr.d.ohPath.length || state.DAG.at(itemId).isDagPathInOhPath(cqr.d.ohPath) ) || state.clustering) && items.length > 1) {
                                             var marker = L.marker(item.centerPoint());
                                             marker.count = apxItems;
                                             marker.rid = itemId;
-                                            if (apxItems > 1) {
-                                                marker.on("click", function (e) {
-                                                    // get that button ...
-                                                    $($("li[class='tree-branch'][rid='" + e.target.rid + "']").children()[0]).children()[0].click();
-                                                    state.markers.removeLayer(e.target);
-                                                });
+                                            marker.children = apxItems !== undefined;
+                                            //if (apxItems > 1) {
+                                            marker.on("click", function (e) {
+                                                state.items.clusters.drawn.erase(e.target.rid);
+                                                state.markers.removeLayer(e.target);
+                                                $($("li[class='tree-branch'][rid='" + e.target.rid + "']").children()[0]).children()[0].click();
+                                                /*if(!$("li[class='tree-branch tree-open'][rid='" + e.target.rid + "']").find("ul").children().length) {
+                                                 $($("li[class='tree-item'][rid='" + e.target.rid + "']").children()[0]).click();
+                                                 }*/
+                                            });
+                                            //}
+                                            if (!state.items.clusters.drawn.count(itemId)) {
+                                                state.items.clusters.drawn.insert(itemId, marker);
+                                                state.markers.addLayer(marker);
                                             }
-                                            state.markers.addLayer(marker);
                                         }
                                     }
                                     state.map.addLayer(state.markers);
-                                    if (!cqr.d.ohPath.length) {
-                                        if(options.bbox){
+                                    if (!cqr.d.ohPath.length || state.clustering) {
+                                        if (options.bbox) {
                                             state.map.fitBounds(options.bbox);
-                                        }else{
-                                            state.map.fitBounds(items[0].bbox());
+                                        } else {
+                                            state.map.fitWorld();
                                         }
                                     }
                                     callback(res);
@@ -1101,6 +1175,8 @@
                 };
                 function displayCqrAsTree(cqr) {
                     clearViews();
+                    state.clustering = true;
+
                     if (!cqr.hasResults()) {
                         searchResultsCounter = $('#search_results_counter');
                         searchResultsCounter.empty();
@@ -1145,8 +1221,22 @@
                     $('#MyTree').on('closed.fu.tree', function (e, node) {
                         updateMapRegions(getOpenRegionsInTree());
                     });
+
+                    var numElements = 0;
+                    var subRegions = cqr.d.regionInfo[cqr.ohPath()[cqr.ohPath().length - 1]];
+                    for (i in subRegions) {
+                        numElements += subRegions[i].apxitems;
+                        if (numElements > oscar.maxFetchItems) {
+                            state.clustering = true;
+                            break;
+                        }
+                    }
+                    if(numElements <= oscar.maxFetchItems){
+                        state.clustering = false;
+                    }
+
                     //open the tree if cqr.ohPath is available
-                    if (cqr.ohPath().length) {
+                    if (cqr.ohPath().length) {//&& numElements <= oscar.maxFetchItems) {
                         var myCqr = cqr;
                         var ohPath = myCqr.ohPath();
                         var ohPathPos = 0;
@@ -1159,7 +1249,7 @@
                             if (ohPathPos >= ohPath.length) {
                                 //FullCQR currently has no opening hints, no need to check for that;
                                 var mySelectNode = $("[class*='tree\\-item']" + '[rid=' + ohPath[ohPathPos - 1] + "]", myTree);
-                                if (mySelectNode.length) {
+                                if (mySelectNode.length && mySelectNode.attr("cnt") <= oscar.maxFetchItems) {
                                     var mySearchNode = $('[data-rid=' + ohPath[ohPathPos - 1] + '] .tree\\-branch\\-header', myTree);
                                     myTree.off('loaded.fu.tree', evHandler);
                                     var scrollPos = mySearchNode.offset().top - myTree.offset().top + myTree.scrollTop();
@@ -1227,8 +1317,8 @@
                     startLoadingSpinner();
 
                     //push our query as history state
-                    //window.history.pushState({"q" : myQuery}, undefined, location.pathname + "?q="+encodeURIComponent(myQuery));
-                    window.history.pushState({"q": myQuery}, undefined, "" + "?q=" + encodeURIComponent(myQuery));
+                    window.history.pushState({"q": myQuery}, undefined, location.pathname + "?q=" + encodeURIComponent(myQuery));
+                    //window.history.pushState({"q": myQuery}, undefined, "" + "?q=" + encodeURIComponent(myQuery));
 
                     //lift-off
                     callFunc(myQuery,
