@@ -585,6 +585,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                     }
                 }
             );
+
             function itemDetailQuery(e) {
                 var me = $(this);
                 var myKey = me.attr('data-query-key');
@@ -602,10 +603,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
 
             $('#' + shapeSrcType + 'Details' + itemId + " .item-detail-key", inserted).click(itemDetailQuery);
             $('#' + shapeSrcType + 'Details' + itemId + " .item-detail-value", inserted).click(itemDetailQuery);
-            searchResultsCounter = $('#' + shapeSrcType + 'List_counter');
-            searchResultsCounter.empty();
-            searchResultsCounter.append("(" + state[shapeSrcType].listview.drawn.size() + ")");
-            return;
+            $('#' + shapeSrcType + 'List_counter').empty().append("(" + state[shapeSrcType].listview.drawn.size() + ")");
         }
 
         function showItemRelatives(itemId) {
@@ -1165,65 +1163,13 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
         }
 
         $(document).ready(function () {
-
-            //setup menus
-            $('#left_menu_parent').hover(function () {
-                var selector;
-                if ($('#help_parent').hasClass('hidden') && $('#relatives_parent').hasClass('hidden')) {
-                    selector = '#left_menu_parent';
-                }
-                else {
-                    selector = '#left_menu_parent, #right_menu_parent';
-                }
-                $(selector).stop().fadeTo(200, 1.0);
-            }, function () {
-                var selector;
-                if ($('#help_parent').hasClass('hidden') && $('#relatives_parent').hasClass('hidden')) {
-                    selector = '#left_menu_parent';
-                }
-                else {
-                    selector = '#left_menu_parent, #right_menu_parent';
-                }
-                $(selector).fadeTo(2000, myConfig.styles.menu.fadeopacity);
-            });
-
-            $('#right_menu_parent').hover(function () {
-                var selector;
-                if ($('#help_parent').hasClass('hidden')) {
-                    selector = '#right_menu_parent';
-                }
-                else {
-                    selector = '#left_menu_parent, #right_menu_parent, #options_menu_parent';
-                }
-                $(selector).stop().fadeTo(200, 1.0);
-            }, function () {
-                var selector;
-                if ($('#help_parent').hasClass('hidden')) {
-                    selector = '#right_menu_parent';
-                }
-                else {
-                    selector = '#left_menu_parent, #right_menu_parent, #options_menu_parent';
-                }
-                $(selector).fadeTo(2000, myConfig.styles.menu.fadeopacity);
-            });
-
-            $('#options_menu_parent').hover(function () {
-                $('#options_menu_parent').stop().fadeTo(200, 1.0);
-            }, function () {
-                $('#options_menu_parent').fadeTo(2000, myConfig.styles.menu.fadeopacity);
-            });
-
-            //setup left menu
-            $('#toggle_right_menu_button').click(function () {
-                $('#options_menu_parent').toggleClass('hidden');
-            });
-
+            // TODO: fix this
             $('#items_parent').bind('scroll', function () {
                 if ($(this).scrollTop() + $(this).innerHeight() >= $(this)[0].scrollHeight - 20) {
                     loadMoreIntoResultList();
                 }
             });
-            
+
             //setup config panel
             state.items.listview.visualizeall = $('#visualize_all_results_checkbox').is(':checked');
             $('#visualize_all_results_checkbox').bind('change',
