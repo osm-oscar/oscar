@@ -84,27 +84,21 @@ body {
 }
 
 #right_menu_parent {
-    position: fixed;
-    bottom: auto;
     left: auto;
     right: 5%;
     top: 30%;
     width: auto;
-    min-width: 20%;
-    max-width: 30%;
     height: 60%;
     padding-top: 0;
 }
 
 #options_menu_parent {
-    position: fixed;
-    bottom: auto;
+    /*position: fixed;
+    bottom: auto;*/
     left: auto;
     right: 5%;
     top: 10%;
     width: auto;
-    min-width: 20%;
-    max-width: 30%;
     height: 17%;
     min-height: 200px;
 }

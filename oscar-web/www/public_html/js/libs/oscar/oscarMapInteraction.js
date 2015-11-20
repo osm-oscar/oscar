@@ -1223,10 +1223,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                     loadMoreIntoResultList();
                 }
             });
-
-            //setup right menu
-            $('#right_menu_parent, #options_menu_parent').resizable();
-
+            
             //setup config panel
             state.items.listview.visualizeall = $('#visualize_all_results_checkbox').is(':checked');
             $('#visualize_all_results_checkbox').bind('change',
@@ -1237,26 +1234,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                     }
                     else {
                         visualizeResultListItems();
-                    }
-                }
-            );
-
-            $('#show_help_checkbox').bind('change',
-                function () {
-                    var helpOn = $('#show_help_checkbox').is(':checked');
-                    var relativesOn = $('#show_item_relatives_checkbox').is(':checked');
-
-                    if (helpOn) {
-                        $('#help_parent').removeClass('hidden');
-                    }
-                    else {
-                        $('#help_parent').addClass('hidden');
-                    }
-                    if (helpOn || relativesOn) {
-                        $('#right_menu_parent').removeClass('hidden');
-                    }
-                    else {
-                        $('#right_menu_parent').addClass('hidden');
                     }
                 }
             );

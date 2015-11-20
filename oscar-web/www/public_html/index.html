@@ -78,98 +78,91 @@
                 <h1 class="sidebar-header">Options
                     <div class="sidebar-close"><i class="fa fa-caret-left"></i></div>
                 </h1>
-                <div id='options_parent' class='text-center'>
-                    <button type="button" class="btn btn-default" id="toggle_right_menu_button">Toggle options
-                        menu
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <div id="map"></div>
-
-    <div id='options_menu_parent' class='menu_parent hidden'>
-        <div id='config_parent'>
-            <div class='form-group-sm'>
-                <label for='show_help_checkbox'>
-                    <input type="checkbox" class="checkbox" id="show_help_checkbox">Show Help
-                </label>
-                <label for='show_item_relatives_checkbox'>
-                    <input type="checkbox" class="checkbox" id="show_item_relatives_checkbox">Show item's parents
-                </label>
-                <span class="glyphicon glyphicon-move" aria-hidden="true" id='config_menu_movehandle'></span>
-            </div>
-            <div class='form-group'>
-                <div class="input-group" id='itemload_group'>
-                    <span class="input-group-addon">Load additional</span>
-                    <input class='form-control' type="number" value='500' min='0' max='5000' id='itemload_spinner'
-                           step="100"/>
+                <div id='options_menu_parent' class='menu_parent'>
+                    <div id='config_parent'>
+                        <div class='form-group-sm'>
+                            <label for='show_item_relatives_checkbox'>
+                                <input type="checkbox" class="checkbox" id="show_item_relatives_checkbox">Show item's parents
+                            </label>
+                            <span class="glyphicon glyphicon-move" aria-hidden="true" id='config_menu_movehandle'></span>
+                        </div>
+                        <div class='form-group'>
+                            <div class="input-group" id='itemload_group'>
+                                <span class="input-group-addon">Load additional</span>
+                                <input class='form-control' type="number" value='500' min='0' max='5000' id='itemload_spinner'
+                                       step="100"/>
                             <span class="input-group-btn" id='itemload_accept_button_span'>
                                 <button type="button" class="btn btn-default" id="itemload_accept_button">results!
                                 </button>
                             </span>
-                </div>
-            </div>
-            <div class='form-group'>
-                <button type="button" class="btn btn-default" id="pathquery_selectbutton">Select path</button>
+                            </div>
+                        </div>
+                        <div class='form-group'>
+                            <button type="button" class="btn btn-default" id="pathquery_selectbutton">Select path</button>
                         <span>
                             Radius:
                             <input id="pathquery_radius" type="number" value="100" min="50" max="20000" step="50"/>
                         </span>
-                <button type="button" class="btn btn-default" id="pathquery_acceptbutton">Accept path</button>
-            </div>
-            <div class='form-group'>
-                <button type="button" class="btn btn-default" id="geoquery_selectbutton">Select rectangle:</button>
+                            <button type="button" class="btn btn-default" id="pathquery_acceptbutton">Accept path</button>
+                        </div>
+                        <div class='form-group'>
+                            <button type="button" class="btn btn-default" id="geoquery_selectbutton">Select rectangle:</button>
                         <span data-class="geoquery_min_coord">
                             (<input id="geoquery_minlat" data-class="geoquery_min_coord" type="number" value="0"
                                     min="-90" max="90" step="1"/>,
                             <input id="geoquery_minlon" data-class="geoquery_min_coord" type="number" value="0"
                                    min="-180" max="180" step="1"/>)
                         </span>
-                X
+                            X
                         <span data-class="geoquery_max_coord">
                             (<input id="geoquery_maxlat" data-class="geoquery_max_coord" type="number" value="0"
                                     min="-90" max="90" step="1"/>,
                             <input id="geoquery_maxlon" data-class="geoquery_max_coord" type="number" value="0"
                                    min="-180" max="180" step="1"/>)
                         </span>
-                <button type="button" class="btn btn-default" id="geoquery_acceptbutton">Accept</button>
-            </div>
-            <div class='form-group'>
-                <label for="visualize_all_results_checkbox">
-                    <input type="checkbox" class="checkbox" id="visualize_all_results_checkbox" checked>Visualize
-                    results
-                </label>
-                <label for='subset_type_checkbox'>
-                    <input type="checkbox" class="checkbox" id="subset_type_checkbox">Full CQR
-                </label>
-                <label for='oht_checkbox'>
-                    <input type="checkbox" class="checkbox" id="oht_checkbox" checked>Global unfold ratio
-                </label>
+                            <button type="button" class="btn btn-default" id="geoquery_acceptbutton">Accept</button>
+                        </div>
+                        <div class='form-group'>
+                            <label for="visualize_all_results_checkbox">
+                                <input type="checkbox" class="checkbox" id="visualize_all_results_checkbox" checked>Visualize
+                                results
+                            </label>
+                            <label for='subset_type_checkbox'>
+                                <input type="checkbox" class="checkbox" id="subset_type_checkbox">Full CQR
+                            </label>
+                            <label for='oht_checkbox'>
+                                <input type="checkbox" class="checkbox" id="oht_checkbox" checked>Global unfold ratio
+                            </label>
 
-                <div class="input-group" id='ohf_spinner_group'>
-                    <span class="input-group-addon">unfold ratio</span>
-                    <input class='form-control' type="number" value='95' min='0' max='100' id='ohf_spinner' step="1"/>
+                            <div class="input-group" id='ohf_spinner_group'>
+                                <span class="input-group-addon">unfold ratio</span>
+                                <input class='form-control' type="number" value='95' min='0' max='100' id='ohf_spinner' step="1"/>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
+                <div id="right_menu_parent" class="menu_parent hidden">
+                    <div id='right_menu_movehandle'></div>
+                    <div id='right_menu_scroll_area'>
+                        <div id="help_parent" class='hidden'>
+                        </div>
+                        <div id="relatives_parent" class='hidden'>
+                            <h2>Item <span id="relativesList_itemId"></span> has inherited tags from the following <span
+                                    id="relativesList_counter"></span> regions:
+                            </h2>
+
+                            <div class="panel-group" id="relativesList" role="tablist"></div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
 
-    <div id="right_menu_parent" class="menu_parent hidden">
-        <div id='right_menu_movehandle'></div>
-        <div id='right_menu_scroll_area'>
-            <div id="help_parent" class='hidden'>
-            </div>
-            <div id="relatives_parent" class='hidden'>
-                <h2>Item <span id="relativesList_itemId"></span> has inherited tags from the following <span
-                        id="relativesList_counter"></span> regions:
-                </h2>
-
-                <div class="panel-group" id="relativesList" role="tablist"></div>
-            </div>
-        </div>
-    </div>
+    <div id="map"></div>
 
 </div>
 <script type="text/javascript" src="js/libs/require.js/require.js"></script>
