@@ -34,7 +34,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
         //main entry point
         var osmAttr = '&copy; <a target="_blank" href="http://www.openstreetmap.org">OpenStreetMap</a>';
         var state = {
-            clustering : true, // gets set either when oscar.maxFetchItems is smaller than the final cell in ohPath or ohPath isn't even set in cqr
+            clustering: true, // gets set either when oscar.maxFetchItems is smaller than the final cell in ohPath or ohPath isn't even set in cqr
             map: {},
             DAG: SimpleHash(), // represents the hierarchie-tree for a query
             markers: L.markerClusterGroup(),
@@ -862,7 +862,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                             state.DAG.insert(itemId, parentNode !== undefined ? parentNode.addChild(itemId) : new TreeNode(itemId, undefined));
 
                             res.data.push({
-                                name: item.name() + ( apxItems > 0 ? " [~" + apxItems + ":" + itemId + "]" : ""),
+                                name: item.name() + ( apxItems > 0 ? " [~" + apxItems +  "]" : ""),
                                 type: 'folder',
                                 bbox: item.bbox(),
                                 //attr : {
@@ -871,13 +871,12 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                                 //},
                                 dataAttributes: {rid: itemId, 'data-rid': itemId, "cnt": apxItems}
                             });
-                            //state.items.shapes.regular[itemId] = itemId;
-                            //state["items"].shapes.drawn.insert(itemId, itemShape);
-                            /* is a path available?
-                             yes => don't create a clusterelement, go deeper into the tree
-                             no => show clusterlement for the whole subtree */
+
+                            // is a path available?
+                            // yes => don't create a clusterelement, go deeper into the tree
+                            // no => show clusterlement for the whole subtree
                             if ((!cqr.d.ohPath.length || state.clustering) && items.length > 1) {
-                                if (state.DAG.at(itemId).isDagPathInOhPath(cqr.d.ohPath) || !cqr.d.ohPath.length) {
+                                if (state.DAG.at(itemId).hasParentWithId(cqr.d.ohPath[cqr.d.ohPath.length-1]) || !cqr.d.ohPath.length) {
                                     var marker = L.marker(item.centerPoint());
                                     marker.count = apxItems;
                                     marker.rid = itemId;
@@ -889,8 +888,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
 
                                     });
 
-                                    if
-                                    (!state.items.clusters.drawn.count(itemId)) {
+                                    if (!state.items.clusters.drawn.count(itemId)) {
                                         state.items.clusters.drawn.insert(itemId, marker);
                                         state.markers.addLayer(marker);
                                     }

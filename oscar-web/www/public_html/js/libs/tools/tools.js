@@ -46,14 +46,9 @@ TreeNode.prototype.addChild = function (id) {
     return node;
 };
 
-TreeNode.prototype.isDagPathInOhPath = function (ohPath) {
-    var tmp = this;
-    while (tmp !== undefined) {
-        if ($.inArray(tmp.id, ohPath) != -1) {
-            return true;
-        } else {
-            tmp = tmp.parent;
-        }
+TreeNode.prototype.hasParentWithId = function(id){
+    if(this.parent !== undefined && this.parent.id == id){
+        return true;
     }
     return false;
 };
