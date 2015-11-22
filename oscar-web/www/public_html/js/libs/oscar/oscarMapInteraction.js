@@ -123,12 +123,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
         state.map = L.map('map').setView([48.74568, 9.1047], 17);
         state.sidebar = L.control.sidebar('sidebar').addTo(map);
         L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: osmAttr}).addTo(state.map);
-        /*var a = new L.DivIcon({ html: '<div><span>' + 1 + '</span></div>', className: 'marker-cluster marker-cluster-small', iconSize: new L.Point(40, 40) });
-         L.marker([47.2701, 5.86632], {icon: a}).addTo(state.map);
-         a = new L.DivIcon({ html: '<div><span>' + 1 + '</span></div>', className: 'marker-cluster marker-cluster-small', iconSize: new L.Point(40, 40) });
-         L.marker([55.0992, 15.0419], {icon: a}).addTo(state.map);
-         a = new L.DivIcon({ html: '<div><span>' + 1 + '</span></div>', className: 'marker-cluster marker-cluster-small', iconSize: new L.Point(40, 40) });
-         L.marker(oscar.centerPoint(), {icon: a}).addTo(state.map);*/
+
         var defErrorCB = function (textStatus, errorThrown) {
             console.log("xmlhttprequest error textstatus=" + textStatus + "; errorThrown=" + errorThrown);
             if (confirm("Error occured. Refresh automatically?")) {
@@ -504,6 +499,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                         delete state.items.shapes.promised[itemId];
                         continue;
                     }
+
                     delete state.items.shapes.promised[itemId];
                     var itemShape = oscar.leafletItemFromShape(shapes[itemId]);
                     itemShape.setStyle(myConfig.styles.shapes.items.normal);
@@ -852,6 +848,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                                 state.items.clusters.drawn.erase(parentRid);
                             }
                         }
+
                         for (var i in items) {
                             var item = items[i];
                             var itemId = item.id();
@@ -860,7 +857,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                             state.DAG.insert(itemId, parentNode !== undefined ? parentNode.addChild(itemId) : new TreeNode(itemId, undefined));
 
                             res.data.push({
-                                name: item.name() + ( apxItems > 0 ? " [~" + apxItems +  "]" : ""),
+                                name: item.name() + ( apxItems > 0 ? " [~" + apxItems + ":" + itemId + "]" : ""),
                                 type: 'folder',
                                 bbox: item.bbox(),
                                 //attr : {
@@ -971,10 +968,10 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
 
         function displayCqrAsTree(cqr) {
             clearViews();
-            state.clustering = true;
             $("#left_menu_parent").css("display", "block");
-
+            var myTree = $('#MyTree');
             var myDataSource;
+
             if (cqr.isFull()) {
                 myDataSource = fullSubSetTreeDataSource(cqr);
             }
@@ -982,7 +979,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                 myDataSource = flatCqrTreeDataSource(cqr);
             }
 
-            var myTree = $('#MyTree');
             myTree.tree({
                 dataSource: myDataSource,
                 multiSelect: false,
@@ -1007,7 +1003,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                 }
             });
 
-            myTree.on('opened.fu.tree', function (e, node) {
+            myTree.on('disclosedFolder.fu.tree', function (e, node) {
                 updateMapRegions(getOpenRegionsInTree());
             });
 
@@ -1015,25 +1011,13 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                 updateMapRegions(getOpenRegionsInTree());
             });
 
-            var numElements = 0;
-            var subRegions = cqr.d.regionInfo[cqr.ohPath()[cqr.ohPath().length - 1]];
-            for (var i in subRegions) {
-                numElements += subRegions[i].apxitems;
-                if (numElements > oscar.maxFetchItems) {
-                    state.clustering = true;
-                    break;
-                }
-            }
-            if (numElements <= oscar.maxFetchItems) {
-                state.clustering = false;
-            }
-
             //open the tree if cqr.ohPath is available
-            if (cqr.ohPath().length) {//&& numElements <= oscar.maxFetchItems) {
+            if (cqr.ohPath().length) {
+                // decide whether clustering is necessary
+                state.clustering = (cqr.d.regionInfo[cqr.ohPath()[cqr.ohPath().length - 1]][0].apxitems > oscar.maxFetchItems) ? true : false;
                 var myCqr = cqr;
                 var ohPath = myCqr.ohPath();
                 var ohPathPos = 0;
-                var myTree = $('#MyTree');
                 var evHandler = function (e, node) {
                     expand();
                 };
@@ -1060,22 +1044,17 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                 };
                 myTree.on('loaded.fu.tree', evHandler);
                 expand();
-                /*
-                 var myInitialLoadChecker = function(e, node) {
-                 var mySearchNode = jQuery('[data-rid=' + ohPath[ohPathPos] + ']', myTree);
-                 if (mySearchNode.length) {
-                 myTree.off('loaded.fu.tree', myInitialLoadChecker);
-                 myTree.on('loaded.fu.tree', evHandler);
-                 expand();
-                 }
-                 };
-                 if (jQuery('[data-rid=' + ohPath[ohPathPos] + ']', myTree).length) {
-                 expand();
-                 }
-                 else {
-                 myTree.on('loaded.fu.tree', myInitialLoadChecker);
-                 }
-                 */
+
+            }else{
+                // no path available -> cluster available regions
+                state.clustering = true;
+                myTree.on('loaded.fu.tree', function(e, node){
+                    var a = $($(node).children("[class=tree-branch-children]")).children("[class=tree-branch]");
+                    if(a.length == 1){
+                        myTree.tree('openFolder', a[0]);
+                    }
+
+                });
             }
         }
 
@@ -1116,7 +1095,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
             callFunc(myQuery,
                 function (cqr) {
                     //orbit reached, iniate coupling with user
-                    endLoadingSpinner();
                     if (state.queries.lastReturned < myQueryCounter) {
                         state.queries.lastReturned = myQueryCounter + 0;
                         state.queries.activeCqrId = cqr.sequenceId();
@@ -1124,11 +1102,12 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                         state.cqrRegExp = oscar.cqrRexExpFromQuery(cqr.query());
                         displayCqrAsTree(cqr);
                     }
+                    endLoadingSpinner();
                 },
                 function (jqXHR, textStatus, errorThrown) {
                     //BOOM!
-                    endLoadingSpinner();
                     alert("Failed to retrieve completion results. textstatus=" + textStatus + "; errorThrown=" + errorThrown);
+                    endLoadingSpinner();
                 });
         }
 

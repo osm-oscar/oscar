@@ -47,8 +47,5 @@ TreeNode.prototype.addChild = function (id) {
 };
 
 TreeNode.prototype.hasParentWithId = function(id){
-    if(this.parent !== undefined && this.parent.id == id){
-        return true;
-    }
-    return false;
+    return (this.parent !== undefined && this.parent.id == id);
 };
