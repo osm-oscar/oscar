@@ -1,0 +1,5 @@
+Licensed under the LGPLv2/v3
+
+This project uses code from at least the following pages/projects:
+
+CPPJSON: https://github.com/open-source-parsers/jsoncpp
