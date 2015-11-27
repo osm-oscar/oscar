@@ -4,12 +4,612 @@
 #include <sserialize/strings/stringfunctions.h>
 #include <liboscar/constants.h>
 #include "OsmKeyValueObjectStore.h"
+#include <json/json.h>
 
 namespace oscar_create {
 
+//Print functions----------------
 
+inline std::string repr(bool v) {
+	return (v ? "yes" : "no");
+}
+
+inline std::string repr(sserialize::ItemIndex::Types v) {
+	switch (v) {
+	case (sserialize::ItemIndex::T_WAH):
+		return "rle word aligned bit vector";
+	case (sserialize::ItemIndex::T_DE):
+		return "delta encoding";
+	case (sserialize::ItemIndex::T_REGLINE):
+		return "regression line";
+	case (sserialize::ItemIndex::T_RLE_DE):
+		return "delta+run-length encoding";
+	case (sserialize::ItemIndex::T_SIMPLE):
+		return "simple";
+	case (sserialize::ItemIndex::T_NATIVE):
+		return "native";
+	default:
+		return "invalid";
+	}
+}
+
+std::ostream& StatsConfig::operator<<(std::ostream& out) const {
+	out << "print memusage: " << repr(memUsage);
+	return out;
+}
+
+std::ostream& IndexStoreConfig::operator<<(std::ostream& out) const {
+	out << "input store: " << inputStore << "\n";
+	out << "type: " << repr(type) << "\n";
+	out << "check: " << repr(check) << "\n";
+	out << "deduplicate: " << repr(deduplicate);
+	return out;
+}
+
+std::ostream& GridConfig::operator<<(std::ostream& out) const {
+	out << "latCount: " << latCount << "\nlonCount: " << lonCount;
+	return out;
+}
+
+std::ostream& RTreeConfig::operator<<(std::ostream& out) const {
+	out << "latCount: " << latCount << "\nlonCount: " << lonCount;
+	return out;
+}
+
+std::ostream& TagStoreConfig::operator<<(std::ostream& out) const {
+	out << "key file: " << tagKeys << "\n";
+	out << "key-values file: " << tagKeyValues;
+	return out;
+}
+
+std::ostream& KVStoreConfig::operator<<(std::ostream& out) const {
+	out << "Number of threads: " << numThreads << "\n";
+	out << "Max node table entries: " << sserialize::toString(maxNodeHashTableSize) << "\n";
+	out << "Keys whose values are infalted: " << keysValuesToInflate << "\n";
+	out << "Node HashTable size: ";
+	if (autoMaxMinNodeId) {
+		out << "auto";
+	}
+	else {
+		out << minNodeId << "->" << maxNodeId;
+	}
+	out << "\n";
+	out << "ItemSaveDirector rule: ";
+	if (saveEverything) {
+		out << "everything" << "\n";
+	}
+	else if (!itemsIgnoredByKeyFn.empty()) {
+		out << "Ignore items with tags in" << itemsIgnoredByKeyFn << "\n";
+	}
+	else {
+		if (saveEveryTag) {
+			out << "every tag";
+		}
+		else {
+			out << "according to keys and key, values";
+		}
+		out << "\n";
+		out << "Key to store: " << keyToStoreFn << "\n";
+		out << "Key=Value to store: " << keyValuesToStoreFn << "\n";
+		out << "Items with key= to store: " << itemsSavedByKeyFn << "\n";
+		out << "Items with key=value to store: " << itemsSavedByKeyValueFn << "\n";
+	}
+	out << "Score config: " << scoreConfigFileName << "\n";
+	out << "Item sort order: ";
+	switch(itemSortOrder) {
+	case oscar_create::OsmKeyValueObjectStore::ISO_NONE:
+		out << "none";
+		break;
+	case oscar_create::OsmKeyValueObjectStore::ISO_SCORE:
+		out << "score";
+		break;
+	case oscar_create::OsmKeyValueObjectStore::ISO_SCORE_NAME:
+		out << "score, name";
+		break;
+	case oscar_create::OsmKeyValueObjectStore::ISO_SCORE_PRIO_STRINGS:
+		out << prioStringsFileName;
+		break;
+	default:
+		out << "invalid";
+		break;
+	}
+	out << "\n";
+	out << "Read boundaries: ";
+	if (readBoundaries) {
+		out << "initial=" << polyStoreLatCount << "x" << polyStoreLonCount;
+		out << ", max triangle per cell="<< polyStoreMaxTriangPerCell << ", max triangle centroid dist=" << triangMaxCentroidDist << "\n";
+	}
+	else {
+		out << "no" << std::endl;
+	}
+	out << "Keys defining regions=" << keysDefiningRegions << "\n";
+	out << "Key:Values defining regions=" << keyValuesDefiningRegions << "\n";
+	out << " FullRegionIndex: " << (fullRegionIndex ? "yes" : "no" );
+	return out;
+}
+
+std::ostream& TextSearchConfig::SearchCapabilities::operator<<(std::ostream& out) const {
+	out << "caseSensitive: " << (caseSensitive ? "yes" : "no") << "\n";
+	out << "diacritcInSensitive: " << (diacritcInSensitive ? "yes" : "no") << "\n";
+	out << "tagFile: " << tagFile << "\n";
+	out << "valueFile: " << valueFile;
+	return out;
+}
+
+std::ostream& TextSearchConfig::operator<<(std::ostream& out) const {
+	std::array<std::string, 2> itemTypeNames{"items", "regions"};
+	std::array<std::string, 2> queryTypeNames{"prefix", "suffix"};
+	
+	for(uint32_t itemType(0); itemType < 2; ++itemType) {
+		for(uint32_t queryType(0); queryType < 2; ++queryType) {
+			if (searchCapabilites[itemType][queryType].enabled) {
+				out << itemTypeNames[itemType] << "::" << queryTypeNames[queryType] << ":\n";
+				out << searchCapabilites[itemType][queryType] << "\n";
+			}
+		}
+	}
+	this->print(out);
+	return out;
+}
+
+void ItemSearchConfig::print(std::ostream& out) const {
+	if (suffixDelimeters.size()) {
+		out << "\tSuffix delimeters: " << sserialize::stringFromUnicodePoints(suffixDelimeters.cbegin(), suffixDelimeters.cend()) << "\n";
+	}
+	if (levelsWithoutIndex.size()) {
+		out << "\tLevels without a full index: ";
+		for(std::set<uint8_t>::iterator it = levelsWithoutIndex.cbegin(); it != levelsWithoutIndex.cend(); it++) {
+			out << static_cast<int>(*it) << ", ";
+		}
+		out << "\n";
+	}
+	out << "\tMaximum merge count for no full prefix index:" << maxPrefixIndexMergeCount << std::endl;
+	out << "\tMaximum merge count for no full suffix index:" << maxSuffixIndexMergeCount << std::endl;
+	out << "\tNodeType: " << oscar_create::Config::toString(nodeType) << std::endl;
+	out << "\tAggressive memory usage: " <<  sserialize::toString(aggressiveMem) << std::endl;
+	out << "\tMemory storage type: ";
+	switch (mmType) {
+	case sserialize::MM_FILEBASED:
+		out << "file-based";
+		break;
+	case sserialize::MM_PROGRAM_MEMORY:
+		out << "program memory";
+		break;
+	case sserialize::MM_SHARED_MEMORY:
+		out << "shared memory";
+		break;
+	default:
+		out << "invalid";
+		break;
+	}
+	out << "\n";
+	out << "\tMerge Index: " << sserialize::toString(mergeIndex) <<  std::endl;
+	out << "\tTrie-Type: ";
+	if (trieType == TrieType::FULL_INDEX_TRIE) {
+		out << "full-index-trie";
+	}
+	else if (trieType == TrieType::TRIE) {
+		out << "trie";
+	}
+	else if (trieType == TrieType::FLAT_GST) {
+		out << "fgst";
+	}
+	else if (trieType == TrieType::FLAT_TRIE) {
+		out << "flattrie";
+	}
+	out << "\n";
+	out << "\tExtensive Checking: " << sserialize::toString(extensiveChecking) <<  "\n";
+	out << "\tThread count: " << threadCount;
+}
+
+void GeoHierarchySearchConfig::print(std::ostream& out) const {}
+
+void GeoCellConfig::print(std::ostream& out) const {
+	if (suffixDelimeters.size()) {
+		out << "\tSuffix delimeters: " << sserialize::stringFromUnicodePoints(suffixDelimeters.cbegin(), suffixDelimeters.cend()) << "\n";
+	}
+}
+
+void OOMGeoCellConfig::print(std::ostream& out) const {
+	out << "Thread count: " << threadCount;
+}
+
+std::ostream& Config::operator<<(std::ostream& out) const {
+	out << indexStoreConfig;
+	out << statsConfig;
+	if (kvStoreConfig) {
+		out << "KVStoreConfig:\n"; 
+		out << *kvStoreConfig;
+	}
+	if (gridConfig) {
+		out << "GridConfig:\n";
+		out << *gridConfig;
+	}
+	if (rTreeConfig) {
+		out << "RTreeConfig:\n";
+		out << *rTreeConfig;
+	}
+	if (tagStoreConfig) {
+		out << "TagStoreConfig:\n";
+		out << *tagStoreConfig;
+	}
+	for(auto x : textSearchConfig) {
+		if (!x.second) {
+			continue;
+		}
+		out << "TextSearchConfig[";
+		switch (x.first) {
+		case liboscar::TextSearch::ITEMS:
+			out << "items";
+			break;
+		case liboscar::TextSearch::GEOCELL:
+			out << "geocell";
+			break;
+		case liboscar::TextSearch::GEOHIERARCHY:
+			out << "geohierarchy";
+			break;
+		default:
+			out << "invalid";
+			break;
+		}
+		out << "]:\n" << *x.second;
+	}
+}
+
+std::string Config::help() {
+	return std::string("-i <input.osm.pbf|input dir> -o <output dir> -c <config.json>");
+}
+
+Config::Config() :
+kvStoreConfig(0),
+gridConfig(0),
+rTreeConfig(0),
+tagStoreConfig(0)
+{}
+
+//parse functions
+StatsConfig::StatsConfig(const Json::Value & cfg) : StatsConfig() {
+	Json::Value v = cfg["print-memory-usage"];
+	if (v.isBool()) {
+		memUsage = v.asBool();
+	}
+}
+
+IndexStoreConfig::IndexStoreConfig(const Json::Value & cfg) :
+type(sserialize::ItemIndex::sserialize::ItemIndex::T_NULL),
+check(false),
+deduplicate(true)
+{
+	Json::Value v = cfg["type"];
+	if (v.isString()) {
+		std::string t = v.asString();
+		if (t == "rline") {
+			type = sserialize::ItemIndex::T_REGLINE;
+		}
+		else if (t == "simple") {
+			type = sserialize::ItemIndex::T_SIMPLE;
+		}
+		else if (t == "wah") {
+			type = sserialize::ItemIndex::T_WAH;
+		}
+		else if (t == "de") {
+			type = sserialize::ItemIndex::T_DE;
+		}
+		else if (t == "rlede") {
+			type = sserialize::ItemIndex::T_RLE_DE;
+		}
+		else if (t == "native") {
+			type = sserialize::ItemIndex::T_NATIVE;
+		}
+		else {
+			throw sserialize::ConfigurationException("IndexStoreConfig: invalid index type");
+		}
+	}
+	
+	v = cfg["check"];
+	if (v.isBool()) {
+		check = v.asBool();
+	}
+	
+	v = cfg["deduplicate"];
+	if (v.isBool()) {
+		deduplicate = v.asBool();
+	}
+}
+
+GridConfig::GridConfig(const Json::Value& cfg) :
+latCount(0),
+lonCount(0)
+{
+	Json::Value v = cfg["latcount"];
+	if (v.isNumeric()) {
+		latCount = v.asUInt();
+	}
+	
+	v = cfg["loncount"];
+	if (v.isNumeric()) {
+		lonCount = v.asUInt();
+	}
+}
+
+RTreeConfig::RTreeConfig(const Json::Value& cfg) :
+latCount(0),
+lonCount(0)
+{
+	Json::Value v = cfg["latcount"];
+	if (v.isNumeric()) {
+		latCount = v.asUInt();
+	}
+	
+	v = cfg["loncount"];
+	if (v.isNumeric()) {
+		lonCount = v.asUInt();
+	}
+}
+
+TagStoreConfig::TagStoreConfig(const Json::Value& cfg) :
+enabled(false)
+{
+	Json::Value v = cfg["enabled"];
+	if (v.isBool()) {
+		enabled = v.asBool();
+	}
+	
+	v = cfg["keys"];
+	if (v.isString()) {
+		tagKeys = v.asString();
+	}
+	
+	v = cfg["keyvalues"];
+	if (v.isString()) {
+		tagKeyValues = v.asString();
+	}
+}
+
+KVStoreConfig::KVStoreConfig(const Json::Value& cfg) :
+maxNodeHashTableSize(std::numeric_limits<uint32_t>::max()),
+saveEverything(false),
+saveEveryTag(false),
+minNodeId(0),
+maxNodeId(0),
+autoMaxMinNodeId(false),
+readBoundaries(false),
+fullRegionIndex(false),
+polyStoreLatCount(0),
+polyStoreLonCount(0),
+polyStoreMaxTriangPerCell(0),
+numThreads(0),
+itemSortOrder(OsmKeyValueObjectStore::ISO_NONE)
+{
+	Json::Value v = cfg["threadCount"];
+	if (v.isNumeric()) {
+		numThreads = v.asUInt();
+	}
+	
+	v = cfg["fullRegionIndex"];
+	if (v.isBool()) {
+		fullRegionIndex = v.asBool();
+	}
+	
+	v = cfg["addParentInfo"];
+	if (v.isBool()) {
+		addParentInfo = v.asBool();
+	}
+	
+	v = cfg["hashConfig"];
+	if (v.isObject()) {
+		Json::Value tmp = v["begin"];
+		if (tmp.isNumeric()) {
+			minNodeId = tmp.asUInt64();
+		}
+		tmp = v["end"];
+		if (tmp.isNumeric()) {
+			maxNodeId = tmp.asUInt64();
+		}
+	}
+	else if (v.isString() && v.asString() == "auto") {
+		autoMaxMinNodeId = true;
+	}
+	
+	v = cfg["nodeTableSize"];
+	if (v.isNumeric()) {
+		maxNodeHashTableSize = v.asUInt64();
+	}
+	
+	v = cfg["tagFilter"];
+	if (v.isObject()) {
+		Json::Value tmp = v["keys"];
+		if (tmp.isString()) {
+			keyToStoreFn = tmp.asString();
+		}
+		Json::Value tmp = v["keyValues"];
+		if (tmp.isString()) {
+			keyValuesToStoreFn = tmp.asString();
+		}
+	}
+	else if (v.isString() && v.asString() == "all") {
+		saveEveryTag = true;
+	}
+	
+	v = cfg["itemFilter"];
+	if (v.isObject()) {
+		Json::Value tmp = v["keys"];
+		if (tmp.isString()) {
+			itemsSavedByKeyFn = tmp.asString();
+		}
+		Json::Value tmp = v["keyValues"];
+		if (tmp.isString()) {
+			itemsSavedByKeyValueFn = tmp.asString();
+		}
+	}
+	else if (v.isString() && v.asString() == "all") {
+		saveEverything = true;
+	}
+	
+	v = cfg["regionFilter"];
+	if (v.isObject()) {
+		Json::Value tmp = v["keys"];
+		if (tmp.isString()) {
+			keysDefiningRegions = tmp.asString();
+		}
+		Json::Value tmp = v["keyValues"];
+		if (tmp.isString()) {
+			keyValuesDefiningRegions = tmp.asString();
+		}
+	}
+	
+	v = cfg["scoring"];
+	if (v.isObject()) {
+		Json::Value tmp = v["config"];
+		if (tmp.isString()) {
+			scoreConfigFileName = tmp.asString();
+		}
+	}
+	
+	v = cfg["sorting"];
+	if (v.isObject()) {
+		Json::Value tmp = v["order"];
+		if (tmp.isString()) {
+			std::string order = tmp.asString();
+			if (order == "score") {
+				itemSortOrder = OsmKeyValueObjectStore::ISO_SCORE;
+			}
+			else if (order == "name") {
+				itemSortOrder = OsmKeyValueObjectStore::ISO_SCORE_NAME;
+			}
+			if (order == "priority" && tmp["priority"].isString() &&
+				sserialize::MmappedFile::fileExists(tmp["priority"].asString()))
+			{
+				prioStringsFileName = tmp["priority"].asString();
+				itemSortOrder = OsmKeyValueObjectStore::ISO_SCORE_PRIO_STRINGS;
+			}
+		}
+	}
+}
+
+TextSearchConfig::TextSearchConfig(const Json::Value& v) {
+	
+}
+
+TextSearchConfig* TextSearchConfig::parseTyped(const Json::Value& cfg) {
+	Json::Value tv = cfg["type"];
+	Json::Value cv = cfg["config"];
+	if (tv.isString() && cv.isObject()) {
+		std::string t = tv.asString();
+		if (t == "items") {
+			return new ItemSearchConfig(cv);
+		}
+		else if (t == "geoh") {
+			return new GeoHierarchySearchConfig(cv);
+		}
+		else if (t == "geocell") {
+			return new GeoCellConfig(cv);
+		}
+		else if (t == "oomgeocell") {
+			return new OOMGeoCellConfig(cv);
+		}
+	}
+	std::cerr << "Invalid text search type" << std::endl;
+	return new TextSearchConfig();
+}
+
+
+Config::ReturnValues Config::fromCmdLineArgs(int argc, char** argv) {
+	std::string inputString, outputString, configString;
+
+	for(int i=1; i < argc; i++) {
+		std::string token(argv[i]);
+		if (token == "-i" && i+1 < argc) {
+			inputString = std::string(argv[i+1]);
+			++i;
+		}
+		else if (token == "-o" && i+1 < argc) {
+			outputString = std::string(argv[i+1]);
+			++i;
+		}
+		else if (token == "-c" && i+1 < argc) {
+			configString = std::string(argv[i+1]);
+			++i;
+		}
+	}
+	
+	std::ifstream inFileStream;
+	inFileStream.open(configString);
+	
+	if (!inFileStream.is_open()) {
+		std::cerr << "could not open config file " << configString << std::endl;
+		return RV_FAILED;
+	}
+	
+	Json::Value root;
+	inFileStream >> root;
+	
+	Json::Value tmp;
+	
+	tmp = root["stats"];
+	if (!tmp.isNull()) {
+		statsConfig = StatsConfig(tmp);
+	}
+	
+	tmp = root["tempdir"];
+	if (!root["tempdir"].isNull()) {
+		Json::Value tmp2 = tmp["fast"];
+		if (!tmp2.isNull() && tmp2.isString()) {
+			sserialize::UByteArrayAdapter::setFastTempFilePrefix(tmp2.asString());
+		}
+		
+		tmp2 = tmp["slow"];
+		if (!tmp2.isNull() && tmp2.isString()) {
+			sserialize::UByteArrayAdapter::setTempFilePrefix(tmp2.asString());
+		}
+	}
+	
+	tmp = root["index"];
+	if (!tmp.isNull()) {
+		indexStoreConfig = IndexStoreConfig(tmp);
+	}
+	
+	tmp = root["store"];
+	if (!tmp.isNull()) {
+		kvStoreConfig = new KVStoreConfig(tmp);
+	}
+	
+	tmp = root["grid"];
+	if (!tmp.isNull()) {
+		gridConfig = new GridConfig(tmp);
+	}
+	
+	tmp = root["rtree"];
+	if (!tmp.isNull()) {
+		rTreeConfig = new RTreeConfig(tmp);
+	}
+	
+	tmp = root["tagstore"];
+	if (!tmp.isNull()) {
+		tagStoreConfig = new TagStoreConfig(tmp);
+	}
+	
+	tmp = root["textsearch"];
+	if (!tmp.isNull()) {
+		if (tmp.isArray()) {
+			for(const Json::Value & x : tmp) {
+				textSearchConfig.push_back(TextSearchConfig::parseTextSearchConfig(x));
+			}
+		}
+		else if (tmp.isObject()) {
+			textSearchConfig.push_back(TextSearchConfig::parseTextSearchConfig(tmp));
+		}
+		else {
+			std::cerr << "Invalid entry for textsearch" << std::endl;
+		}
+	}
+	
+	return RV_OK;
+}
+
+
+/*
 TextSearchConfig::TextSearchConfig(const std::string& str) :
-caseSensitive(false), diacritcInSensitive(false), suffixes(false),
 aggressiveMem(false), mmType(sserialize::MM_FILEBASED), mergeIndex(false), extensiveChecking(false),
 nodeType(sserialize::Static::TrieNode::T_LARGE_COMPACT),
 maxPrefixIndexMergeCount(-1), maxSuffixIndexMergeCount(-1),
@@ -500,21 +1100,7 @@ Config::ReturnValues Config::fromCmdLineArgs(int argc, char** argv) {
 }
 
 std::string Config::help() {
-	return std::string("Config: \n \
--i path\tinput index store \n \
--it rline|simple|wah|de|rlede|native\tset the index type. rline=regression line, wah=rle word aligned bit vector, de=delta encoded, rlede=delta+run-length encoded\n \
--ci\tcheck every index for correct serialization \n \
---no-index-dedup\tdisable deduplicaton for index store \n \
---create-kv fri,p=LatxLonxTriangPerCellxTriangSize,pa,hs=[auto|begin:end],nts=num,sk=path,skv=path,sik=path,sikv=path,se,st,kvi=path,kdr=path,kvdr=path,tc=num,sc=path,iso=(score|name|path) \n \
--tempdir string\t sets the temp directory \n \
--fasttempdir string\t sets the fast temp directory \n \
---create-grid lat lon\tAlso create a GeoGrid with lat*lon buckets for GeoCompletion \n \
---create-rtree-grid lat lon\tAlso create a grid-based Rtree with lat*lon buckets for GeoCompletion \n \
---create-tagstore k=<path>,kv=<path>\tCreate tagstore \n \
---create-textsearch (items|geoh|geocell) c,d,s,a,mi,ec,mmt=(prg|shm|file),sd=<string>,lwi=int,lwir=int-int,n=(simple|compact|large),mpm=int,msm=int,t=(trie|fitrie|fgst|flattrie),kf=<path>,st=<path>,tc \n \
---print-memory-usage \n \
--o\tout file name \n \
--oa\tappend config to filename");
+	return std::string("-i <input.osm.pbf|input dir> -o <output dir> -c <config.json>");
 }
 
 
@@ -578,7 +1164,9 @@ std::string Config::toString(sserialize::Static::TrieNode::Types nodeType) {
 		return "unsupported";
 	}
 }
+*/
 
+/*
 std::ostream& operator<<(std::ostream& out, const Config & opts) {
 	if (opts.createKVStore) {
 		std::cout << "Creating KeyValueStore at " << opts.getOutFileName(liboscar::FC_KV_STORE) << std::endl;
@@ -762,5 +1350,5 @@ std::ostream& operator<<(std::ostream& out, const Config & opts) {
 	out << "out-file-name: " << opts.getOutFileDir() << std::endl;
 	return out;
 }
-
+*/
 }//end namespace oscar_create

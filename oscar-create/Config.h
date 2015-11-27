@@ -4,81 +4,53 @@
 #include <sserialize/containers/GeneralizedTrie.h>
 #include <liboscar/TextSearch.h>
 #include <liboscar/constants.h>
+#include <json/json.h>
 #include <unordered_map>
 #include <list>
 #include <ostream>
 
 namespace oscar_create {
 
-struct TextSearchConfig {
-	enum class Type { TRIE, FULL_INDEX_TRIE, FLAT_GST, FLAT_TRIE};
-	std::string keyFile;
-	std::string storeTagsPrefixFile;
-	std::string storeTagsSuffixFile;
-	std::string storeRegionTagsFile;
-	bool caseSensitive;
-	bool diacritcInSensitive;
-	bool suffixes;
-	bool aggressiveMem;
-	sserialize::MmappedMemoryType mmType;
-	bool mergeIndex;
-	bool extensiveChecking;
+struct StatsConfig {
+	StatsConfig() : memUsage(false) {}
+	StatsConfig(const Json::Value & cfg);
+	bool memUsage;
+	std::ostream & operator<<(std::ostream & out) const;
+};
 
-	std::unordered_set<uint32_t> suffixDelimeters;
-	std::set<uint8_t> levelsWithoutIndex;
-	sserialize::Static::TrieNode::Types nodeType;
-	int maxPrefixIndexMergeCount;
-	int maxSuffixIndexMergeCount;
-	Type type;
-	uint32_t threadCount;
-	TextSearchConfig() :
-	caseSensitive(false), diacritcInSensitive(false), suffixes(false),
-	aggressiveMem(false), mmType(sserialize::MM_FILEBASED), mergeIndex(false), extensiveChecking(false),
-	nodeType(sserialize::Static::TrieNode::T_LARGE_COMPACT),
-	maxPrefixIndexMergeCount(-1), maxSuffixIndexMergeCount(-1),
-	type(Type::TRIE), threadCount(1)
-	{}
-	/**config text as key=value pairs, or just keys seperated by , and escaped by \ 
-		*
-		* caseSensitive = c, diacritcInSensitive = d, suffixes = s, aggressiveMem = a
-		* inMemoryIndex = imi, mergeIndex = mi, extensiveChecking = ec
-		* suffixDelimeters = sd=<string>, levelsWithoutIndex = lwi=int
-		* nodeType = n=(simple|compact|large)
-		* maxPrefixIndexMergeCount = mpm=int, maxSuffixIndexMergeCount msm=int
-		* type = t=(trie|fitrie|fgst),
-		* keyFile = kf=/path/to/keyfile
-	*/
-	TextSearchConfig(const std::string & str);
+struct IndexStoreConfig {
+	IndexStoreConfig(const Json::Value & cfg);
+	std::string inputStore;
+	sserialize::ItemIndex::Types type;
+	bool check;
+	bool deduplicate;
+	std::ostream & operator<<(std::ostream & out) const;
+};
+
+struct GridConfig {
+	GridConfig(const Json::Value & cfg);
+	uint32_t latCount;
+	uint32_t lonCount;
+	std::ostream & operator<<(std::ostream & out) const;
+};
+
+struct RTreeConfig {
+	RTreeConfig(const Json::Value & cfg);
+	uint32_t latCount;
+	uint32_t lonCount;
+	std::ostream & operator<<(std::ostream & out) const;
 };
 
 struct TagStoreConfig {
-	TagStoreConfig() : create(false) {}
-	TagStoreConfig(const std::string & str);
-	bool create;
+	TagStoreConfig(const Json::Value & cfg);
+	bool enabled;
 	std::string tagKeys;
 	std::string tagKeyValues;
+	std::ostream & operator<<(std::ostream & out) const;
 };
 
-/** Config has the following syntax:
-	*
-	* inc=<num>: incrementalKvCreation
-	* pa: add boundary info to items
-	* p=latXlonXlatrfXlonrfXminDiag: polygonstore options
-	* hs=(min:max|auto): nodeid hash table options
-	* kvi=file: keys values to inflate
-	* sk=file: keys to save
-	* skv=file: key values to save
-	* sik=file: keys selecting items to save
-	* sikv=file: key:values selecting items to save
-	* kdr=file: keys defining regions
-	* kvdr=file: key:values defining regions
-	* se: save everything
-	* st: save every tag
-	* 
-	*/
 struct KVStoreConfig {
-	KVStoreConfig();
-	KVStoreConfig(const std::string & str);
+	KVStoreConfig(const Json::Value & cfg);
 	uint32_t maxNodeHashTableSize; 
 	std::string keyToStoreFn;
 	std::string keyValuesToStoreFn;
@@ -96,6 +68,7 @@ struct KVStoreConfig {
 	bool autoMaxMinNodeId;
 	bool readBoundaries;
 	bool fullRegionIndex;
+	bool addParentInfo;
 	uint32_t polyStoreLatCount;
 	uint32_t polyStoreLonCount;
 	uint32_t polyStoreMaxTriangPerCell;
@@ -103,6 +76,82 @@ struct KVStoreConfig {
 	uint32_t numThreads;
 	int itemSortOrder;//as defined by OsmKeyValueObjectStore::ItemSortOrder
 	std::string prioStringsFileName;
+	std::ostream & operator<<(std::ostream & out) const;
+};
+
+class TextSearchConfig {
+public:
+	enum class ItemType : int { ITEM=0, REGION=1 };
+	enum class QueryType : int { PREFIX=0, SUBSTRING=1 };
+	struct SearchCapabilities {
+		bool enabled;
+		bool caseSensitive;
+		bool diacritcInSensitive;
+		std::string tagFile;
+		std::string valueFile;
+		SingleConfig() : enabled(false), caseSensitive(false), diacritcInSensitive(false) {}
+		std::ostream & operator<<(std::ostream & out) const;
+	};
+public:
+	TextSearchConfig() : enabled(false), type(liboscar::TextSearch::NONE) {}
+	TextSearchConfig(const Json::Value & v);
+	std::ostream & operator<<(std::ostream & out) const;
+	virtual void print(std::ostream & out) const = 0;
+	static TextSearchConfig * parseTyped(const Json::Value& cfg);
+public:
+	bool enabled;
+	liboscar::TextSearch::Type type;
+	//[ItemType][QueryType] -> SearchCapabilites
+	SearchCapabilities searchCapabilites[2][2];
+};
+
+class ItemSearchConfig: public TextSearchConfig {
+public:
+	enum class TrieType { TRIE, FULL_INDEX_TRIE, FLAT_GST, FLAT_TRIE};
+public:
+	ItemSearchConfig(const Json::Value & cfg);
+	virtual void print(std::ostream & out) const override;
+public:
+	std::unordered_set<uint32_t> suffixDelimeters;
+
+	bool mergeIndex;
+
+	bool aggressiveMem;
+	sserialize::MmappedMemoryType mmType;
+
+	//Trie options
+	TrieType trieType;
+	sserialize::Static::TrieNode::Types nodeType;
+	
+	std::set<uint8_t> levelsWithoutIndex;
+	int maxPrefixIndexMergeCount;
+	int maxSuffixIndexMergeCount;
+
+	bool extensiveChecking;
+	uint32_t threadCount;
+};
+
+class GeoHierarchySearchConfig: public ItemSearchConfig {
+public:
+	GeoHierarchySearchConfig(const Json::Value & cfg);
+	virtual void print(std::ostream & out) const override;
+};
+
+class GeoCellConfig: public TextSearchConfig {
+public:
+	GeoCellConfig(const Json::Value & cfg);
+	virtual void print(std::ostream & out) const override;
+public:
+	uint32_t threadCount;
+	std::unordered_set<uint32_t> suffixDelimeters;
+};
+
+class OOMGeoCellConfig: public TextSearchConfig {
+public:
+	GeoCellConfig(const Json::Value & cfg);
+	virtual void print(std::ostream & out) const override;
+public:
+	uint32_t threadCount;
 };
 
 class Config {
@@ -124,34 +173,28 @@ public:
 	static std::string help();
 	static std::string toString(sserialize::Static::TrieNode::Types nodeType);
 
-
+	std::ostream & operator<<(std::ostream & out) const;
+	
 	//Variables
 	std::list<std::string> inFileNames;
 
-	//Initial processing
-	bool createKVStore;
-
-	//index options
-	std::string inputIndexStore;
-	sserialize::ItemIndex::Types indexType;
-	bool checkIndex;
-	bool indexDedup;
-
-	//Grid info
-	uint32_t gridLatCount;
-	uint32_t gridLonCount;
+	IndexStoreConfig * indexStoreConfig;
 	
-	//Grid-RTree info
-	uint32_t gridRTreeLatCount;
-	uint32_t gridRTreeLonCount;
-	
+	//store creation
+	KVStoreConfig * kvStoreConfig;
+
 	//text search
-	std::vector< std::pair<liboscar::TextSearch::Type, TextSearchConfig> > textSearchConfig;
-	TagStoreConfig tagStoreConfig;
-	KVStoreConfig kvStoreConfig;
+	std::vector<TextSearchConfig*> textSearchConfig;
 	
-	//debug info
-	bool memUsage;
+	//spatial search
+	GridConfig * gridConfig;
+	RTreeConfig * rTreeConfig;
+	
+	//special search
+	TagStoreConfig * tagStoreConfig;
+	
+	//stats
+	StatsConfig statsConfig;
 	
 	//serialization structures
 	sserialize::UByteArrayAdapter indexFile;

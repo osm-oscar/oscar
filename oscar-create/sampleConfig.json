@@ -1,0 +1,104 @@
+{
+	"stats" : {
+		"print-memory-usage" : false
+	},
+	"tempdir" : {
+		"fast" : "/dev/shm/",
+		"slow" : "./"
+	},
+	"index" : {
+		"type" : "(rline|simple|wah|de|rlede|native)",
+		"check" : true,
+		"deduplicate" : true,
+	},
+	"store" : {
+		"threadCount" : 0,
+		"fullRegionIndex" : false,
+		"addParentInfo" : false,
+		"hashConfig" : {
+			"begin" : 0,
+			"end" : 100
+		},
+		"hashConfig" : "auto",
+		"nodeTableSize" : 100000,
+		"tagFilter" : {
+			"keys" : "store keys defined in file",
+			"keyValues" : "store key:values defined in file"
+		},
+		"tagFilter" : "all",
+		"itemFilter" : {
+			"keys" : "store items with keys in file",
+			"keyValues" : "store items with keyValues in file"
+		},
+		"itemFilter" : "all",
+		"regionFilter" : {
+			"keys" : "file with keys defining regions",
+			"keyValues" : "file with key:values defining regions"
+		},
+		"scoring" : {
+			"config" : "scores of keys and key:values"
+		},
+		"sorting" : {
+			"order" : "score|name|priority",
+			"priority" : "file with priorities"
+		}
+	},
+	"grid" : {
+		"enabled" : false,
+		"latcount" : 100,
+		"loncount" : 100
+	},
+	"rtree" : {
+		"enabled" : false,
+		"type" : "gridbased",
+		"config" : {
+			"latcount" : 100,
+			"loncount" : 100
+		}
+	},
+	"tagstore" : {
+		"enabled" : false,
+		"keys" : "path-to-file",
+		"keyvalues" : "path-to-file"
+	},
+	"textsearch" : {
+		"enabled" : false,
+		"type" : "items|geoh|geocell|oomgeocell",
+		"config" : {
+			"_comment" : "items config",
+			"caseSensitive" : false,
+			"diacriticSensitive" : false,
+			"aggressivMemory" : false,
+			"check" : false,
+			"mergeIndex" : false,
+			"mmt" : "prg|shm|file",
+			"suffixDelimeters" : "",
+			"levelsWithoutIndex" : [0,1,2],
+			"nodeType" : "simple|compact|large",
+			"trieType" : "trie|fitrie|fgst|flattrie",
+			"keys" : "file with keys to store",
+			"tags" : "file with tags to store"
+		},
+		"config" : {
+			"_comment" : "geocell config",
+			"items|regions" : {
+				"values" : {
+					"suffix|prefix" : {
+						"keys" : "file with keys defining keys whose values are stored",
+						"caseSensitive" : false,
+						"diacriticSensitive" : false
+					}
+				},
+				"tags" : {
+					"suffix|prefix" : {
+						"keys" : "file with keys",
+						"keyValues" : "file with key:values",
+						"caseSensitive" : false,
+						"diacriticSensitive" : false
+					}
+				},
+			},
+			
+		}
+	}
+}
