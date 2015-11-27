@@ -62,10 +62,30 @@
 		"keyvalues" : "path-to-file"
 	},
 	"textsearch" : {
-		"enabled" : false,
 		"type" : "items|geoh|geocell|oomgeocell",
 		"config" : {
-			"_comment" : "items config",
+			"enabled" : false,
+			"_comment" : "base config part, all configs need to have this",
+			"items|regions" : {
+				"values" : {
+					"substring|prefix" : {
+						"keys" : "file with keys defining keys whose values are stored",
+						"caseSensitive" : false,
+						"diacriticSensitive" : false
+					}
+				},
+				"tags" : {
+					"substring|prefix" : {
+						"keys" : "file with keys",
+						"keyValues" : "file with key:values",
+						"caseSensitive" : false,
+						"diacriticSensitive" : false
+					}
+				}
+			}
+		},
+		"config" : {
+			"_comment" : "items/geoh config",
 			"caseSensitive" : false,
 			"diacriticSensitive" : false,
 			"aggressivMemory" : false,
@@ -75,30 +95,17 @@
 			"suffixDelimeters" : "",
 			"levelsWithoutIndex" : [0,1,2],
 			"nodeType" : "simple|compact|large",
-			"trieType" : "trie|fitrie|fgst|flattrie",
-			"keys" : "file with keys to store",
-			"tags" : "file with tags to store"
+			"trieType" : "trie|fitrie|fgst|flattrie"
 		},
 		"config" : {
 			"_comment" : "geocell config",
-			"items|regions" : {
-				"values" : {
-					"suffix|prefix" : {
-						"keys" : "file with keys defining keys whose values are stored",
-						"caseSensitive" : false,
-						"diacriticSensitive" : false
-					}
-				},
-				"tags" : {
-					"suffix|prefix" : {
-						"keys" : "file with keys",
-						"keyValues" : "file with key:values",
-						"caseSensitive" : false,
-						"diacriticSensitive" : false
-					}
-				},
-			},
-			
+			"suffixDelimeters" : "",
+			"threadCount" : 0
+		},
+		"config" : {
+			"_comment"  : "oomgeocell config",
+			"threadCount" : 0,
+			"maxMemoryUsage _in_Mebibytes_" : 16
 		}
 	}
 }

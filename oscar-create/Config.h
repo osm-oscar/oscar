@@ -16,6 +16,7 @@ struct StatsConfig {
 	StatsConfig(const Json::Value & cfg);
 	bool memUsage;
 	std::ostream & operator<<(std::ostream & out) const;
+	bool valid() const;
 };
 
 struct IndexStoreConfig {
@@ -25,6 +26,7 @@ struct IndexStoreConfig {
 	bool check;
 	bool deduplicate;
 	std::ostream & operator<<(std::ostream & out) const;
+	bool valid() const;
 };
 
 struct GridConfig {
@@ -32,6 +34,7 @@ struct GridConfig {
 	uint32_t latCount;
 	uint32_t lonCount;
 	std::ostream & operator<<(std::ostream & out) const;
+	bool valid() const;
 };
 
 struct RTreeConfig {
@@ -39,6 +42,7 @@ struct RTreeConfig {
 	uint32_t latCount;
 	uint32_t lonCount;
 	std::ostream & operator<<(std::ostream & out) const;
+	bool valid() const;
 };
 
 struct TagStoreConfig {
@@ -47,6 +51,7 @@ struct TagStoreConfig {
 	std::string tagKeys;
 	std::string tagKeyValues;
 	std::ostream & operator<<(std::ostream & out) const;
+	bool valid() const;
 };
 
 struct KVStoreConfig {
@@ -77,18 +82,20 @@ struct KVStoreConfig {
 	int itemSortOrder;//as defined by OsmKeyValueObjectStore::ItemSortOrder
 	std::string prioStringsFileName;
 	std::ostream & operator<<(std::ostream & out) const;
+	bool valid() const;
 };
 
 class TextSearchConfig {
 public:
 	enum class ItemType : int { ITEM=0, REGION=1 };
 	enum class QueryType : int { PREFIX=0, SUBSTRING=1 };
+	enum class TagType : int { VALUES, TAGS};
 	struct SearchCapabilities {
 		bool enabled;
 		bool caseSensitive;
 		bool diacritcInSensitive;
-		std::string tagFile;
-		std::string valueFile;
+		std::string keysFn;
+		std::string keyValuesFn;
 		SingleConfig() : enabled(false), caseSensitive(false), diacritcInSensitive(false) {}
 		std::ostream & operator<<(std::ostream & out) const;
 	};
@@ -98,11 +105,16 @@ public:
 	std::ostream & operator<<(std::ostream & out) const;
 	virtual void print(std::ostream & out) const = 0;
 	static TextSearchConfig * parseTyped(const Json::Value& cfg);
+	virtual bool valid() const;
+private:
+	void parseTagTypeObject(const Json::Value & cfg, ItemType itemType);
+	void parseQueryTypeObject(const Json::Value & cfg, ItemType itemType, TagType tagType);
+	void parseKvConfig(const Json::Value & cfg, ItemType itemType, TagType tagType, QueryType qt);
 public:
 	bool enabled;
 	liboscar::TextSearch::Type type;
-	//[ItemType][QueryType] -> SearchCapabilites
-	SearchCapabilities searchCapabilites[2][2];
+	//[ItemType][TagType][QueryType] -> SearchCapabilites
+	SearchCapabilities searchCapabilites[2][2][2];
 };
 
 class ItemSearchConfig: public TextSearchConfig {
@@ -111,6 +123,7 @@ public:
 public:
 	ItemSearchConfig(const Json::Value & cfg);
 	virtual void print(std::ostream & out) const override;
+	virtual bool valid() const override;
 public:
 	std::unordered_set<uint32_t> suffixDelimeters;
 
@@ -127,7 +140,7 @@ public:
 	int maxPrefixIndexMergeCount;
 	int maxSuffixIndexMergeCount;
 
-	bool extensiveChecking;
+	bool check;
 	uint32_t threadCount;
 };
 
@@ -135,12 +148,15 @@ class GeoHierarchySearchConfig: public ItemSearchConfig {
 public:
 	GeoHierarchySearchConfig(const Json::Value & cfg);
 	virtual void print(std::ostream & out) const override;
+	virtual bool valid() const override;
+	
 };
 
 class GeoCellConfig: public TextSearchConfig {
 public:
 	GeoCellConfig(const Json::Value & cfg);
 	virtual void print(std::ostream & out) const override;
+	virtual bool valid() const override;
 public:
 	uint32_t threadCount;
 	std::unordered_set<uint32_t> suffixDelimeters;
@@ -150,13 +166,16 @@ class OOMGeoCellConfig: public TextSearchConfig {
 public:
 	GeoCellConfig(const Json::Value & cfg);
 	virtual void print(std::ostream & out) const override;
+	virtual bool valid() const override;
 public:
 	uint32_t threadCount;
+	sserialize::OffsetType maxMemoryUsage;
 };
 
 class Config {
 public:
 	enum ReturnValues { RV_OK, RV_FAILED, RV_HELP};
+	enum ValidationReturnValues { VRV_OK, VRV_BROKEN };
 private:
 	std::string m_outFileName;
 	bool m_appendConfigToOutFileName;
@@ -164,6 +183,7 @@ public:
 	Config();
 	~Config() {}
 	ReturnValues fromCmdLineArgs(int argc, char** argv);
+	ValidationReturnValues validate();
 	sserialize::GeneralizedTrie::GeneralizedTrieCreatorConfig toTrieConfig(const TextSearchConfig & cfg);
 	std::string getOutFileDir() const;
 	///out file name with full path
