@@ -871,7 +871,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                             // yes => don't create a clusterelement, go deeper into the tree
                             // no => show clusterlement for the whole subtree
                             if ((!cqr.d.ohPath.length || state.clustering) && items.length > 1) {
-                                if (state.DAG.at(itemId).hasParentWithId(cqr.d.ohPath[cqr.d.ohPath.length-1]) || !cqr.d.ohPath.length) {
+                                if (state.DAG.at(itemId).hasParentWithId(cqr.d.ohPath[cqr.d.ohPath.length - 1]) || !cqr.d.ohPath.length) {
                                     var marker = L.marker(item.centerPoint());
                                     marker.count = apxItems;
                                     marker.rid = itemId;
@@ -1014,7 +1014,23 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
             //open the tree if cqr.ohPath is available
             if (cqr.ohPath().length) {
                 // decide whether clustering is necessary
-                state.clustering = (cqr.d.regionInfo[cqr.ohPath()[cqr.ohPath().length - 1]][0].apxitems > oscar.maxFetchItems) ? true : false;
+                state.clustering = false;
+                outer:
+                    for (var i in cqr.d.regionInfo) {
+                        if (cqr.d.regionInfo == cqr.ohPath()[cqr.ohPath().length - 1]) {
+                            continue;
+                        } else {
+                            for (var j in cqr.d.regionInfo[i]) {
+                                if (cqr.d.regionInfo[i][j].id == cqr.ohPath()[cqr.ohPath().length - 1]) {
+                                    if (cqr.d.regionInfo[i][j].apxitems > oscar.maxFetchItems) {
+                                        state.clustering = true;
+                                    }
+                                    break outer;
+                                }
+                            }
+                        }
+                    }
+
                 var myCqr = cqr;
                 var ohPath = myCqr.ohPath();
                 var ohPathPos = 0;
@@ -1045,12 +1061,12 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                 myTree.on('loaded.fu.tree', evHandler);
                 expand();
 
-            }else{
+            } else {
                 // no path available -> cluster available regions
                 state.clustering = true;
-                myTree.on('loaded.fu.tree', function(e, node){
+                myTree.on('loaded.fu.tree', function (e, node) {
                     var a = $($(node).children("[class=tree-branch-children]")).children("[class=tree-branch]");
-                    if(a.length == 1){
+                    if (a.length == 1) {
                         myTree.tree('openFolder', a[0]);
                     }
 

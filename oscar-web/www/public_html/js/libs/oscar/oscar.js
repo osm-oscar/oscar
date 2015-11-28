@@ -74,9 +74,9 @@ define(['jquery', 'sserialize', 'leaflet', 'module'], function (jQuery, sseriali
     return {
 
         completerBaseUrl: module.config().url,
-        maxFetchItems: 1000,
-        maxFetchShapes: 1000,
-        maxFetchIdx: 1000,
+        maxFetchItems: 500,
+        maxFetchShapes: 500,
+        maxFetchIdx: 500,
         cqrCounter: 0,
         itemCache: {},
         shapeCache: {},
