@@ -17,7 +17,7 @@ m_filter( std::make_shared< std::unordered_set<uint32_t> >() ),
 m_tagPrefixSearchFilter( std::make_shared< std::unordered_map<uint32_t, std::string> >() ),
 m_tagSuffixSearchFilter( std::make_shared< std::unordered_map<uint32_t, std::string> >() ),
 m_largestId(0),
-m_suffix(tsc.suffixes)
+m_suffix(tsc.hasEnabled(TextSearchConfig::QueryType::SUBSTRING))
 {
 	std::ifstream file;
 	auto keyStringTable = store.keyStringTable();

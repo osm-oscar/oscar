@@ -106,6 +106,9 @@ public:
 	virtual void print(std::ostream & out) const = 0;
 	static TextSearchConfig * parseTyped(const Json::Value& cfg);
 	virtual bool valid() const;
+	bool hasEnabled(QueryType qt) const;
+	bool hasCaseSensitive() const;
+	bool hasDiacriticInSensitive() const;
 private:
 	void parseTagTypeObject(const Json::Value & cfg, ItemType itemType);
 	void parseQueryTypeObject(const Json::Value & cfg, ItemType itemType, TagType tagType);
@@ -154,12 +157,17 @@ public:
 
 class GeoCellConfig: public TextSearchConfig {
 public:
+	enum class TrieType { TRIE, FLAT_TRIE };
+public:
 	GeoCellConfig(const Json::Value & cfg);
 	virtual void print(std::ostream & out) const override;
 	virtual bool valid() const override;
 public:
 	uint32_t threadCount;
 	std::unordered_set<uint32_t> suffixDelimeters;
+	TrieType trieType;
+	sserialize::MmappedMemoryType mmType;
+	bool check;
 };
 
 class OOMGeoCellConfig: public TextSearchConfig {

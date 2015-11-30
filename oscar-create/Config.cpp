@@ -10,11 +10,24 @@ namespace oscar_create {
 
 //Print functions----------------
 
-inline std::string repr(bool v) {
+inline std::string toString(bool v) {
 	return (v ? "yes" : "no");
 }
 
-inline std::string repr(sserialize::ItemIndex::Types v) {
+inline std::string toString(sserialize::MmappedMemoryType mmt) {
+	switch (mmt) {
+	case sserialize::MM_FILEBASED:
+		return "file-based";
+	case sserialize::MM_PROGRAM_MEMORY:
+		return "program memory";
+	case sserialize::MM_SHARED_MEMORY:
+		return "shared memory";
+	default:
+		return "invalid";
+	}
+}
+
+inline std::string toString(sserialize::ItemIndex::Types v) {
 	switch (v) {
 	case (sserialize::ItemIndex::T_WAH):
 		return "rle word aligned bit vector";
@@ -33,16 +46,33 @@ inline std::string repr(sserialize::ItemIndex::Types v) {
 	}
 }
 
+inline sserialize::MmappedMemoryType parseMMT(const std::string str) {
+	sserialize::MmappedMemoryType mmType = sserialize::MM_INVALID;
+	if (str == "prg") {
+		mmType = sserialize::MM_PROGRAM_MEMORY;
+	}
+	else if (str == "shm") {
+		mmType = sserialize::MM_SHARED_MEMORY;
+	}
+	else if (str == "slowfile") {
+		mmType = sserialize::MM_SLOW_FILEBASED;
+	}
+	else if (str == "fastfile") {
+		mmType = sserialize::MM_FAST_FILEBASED;
+	}
+	return mmType;
+}
+
 std::ostream& StatsConfig::operator<<(std::ostream& out) const {
-	out << "print memusage: " << repr(memUsage);
+	out << "print memusage: " << toString(memUsage);
 	return out;
 }
 
 std::ostream& IndexStoreConfig::operator<<(std::ostream& out) const {
 	out << "input store: " << inputStore << "\n";
-	out << "type: " << repr(type) << "\n";
-	out << "check: " << repr(check) << "\n";
-	out << "deduplicate: " << repr(deduplicate);
+	out << "type: " << toString(type) << "\n";
+	out << "check: " << toString(check) << "\n";
+	out << "deduplicate: " << toString(deduplicate);
 	return out;
 }
 
@@ -131,20 +161,23 @@ std::ostream& KVStoreConfig::operator<<(std::ostream& out) const {
 std::ostream& TextSearchConfig::SearchCapabilities::operator<<(std::ostream& out) const {
 	out << "caseSensitive: " << (caseSensitive ? "yes" : "no") << "\n";
 	out << "diacritcInSensitive: " << (diacritcInSensitive ? "yes" : "no") << "\n";
-	out << "tagFile: " << tagFile << "\n";
-	out << "valueFile: " << valueFile;
+	out << "tagFile: " << keysFn << "\n";
+	out << "valueFile: " << keyValuesFn;
 	return out;
 }
 
 std::ostream& TextSearchConfig::operator<<(std::ostream& out) const {
-	std::array<std::string, 2> itemTypeNames{"items", "regions"};
-	std::array<std::string, 2> queryTypeNames{"prefix", "suffix"};
+	std::array<std::string, 2> itemTypeNames{{"items", "regions"}};
+	std::array<std::string, 2> tagTypeNames{{"value's keys", "key-values"}};
+	std::array<std::string, 2> queryTypeNames{{"prefix", "suffix"}};
 	
 	for(uint32_t itemType(0); itemType < 2; ++itemType) {
-		for(uint32_t queryType(0); queryType < 2; ++queryType) {
-			if (searchCapabilites[itemType][queryType].enabled) {
-				out << itemTypeNames[itemType] << "::" << queryTypeNames[queryType] << ":\n";
-				out << searchCapabilites[itemType][queryType] << "\n";
+		for(uint32_t tagType(0); tagType < 2; ++tagType) {
+			for(uint32_t queryType(0); queryType < 2; ++queryType) {
+				if (searchCapabilites[itemType][tagType][queryType].enabled) {
+					out << itemTypeNames[itemType] << "::" << tagTypeNames[tagType] << "::" << queryTypeNames[queryType] << ":\n";
+					searchCapabilites[itemType][tagType][queryType].operator<<(out) << "\n";
+				}
 			}
 		}
 	}
@@ -167,22 +200,7 @@ void ItemSearchConfig::print(std::ostream& out) const {
 	out << "\tMaximum merge count for no full suffix index:" << maxSuffixIndexMergeCount << std::endl;
 	out << "\tNodeType: " << oscar_create::Config::toString(nodeType) << std::endl;
 	out << "\tAggressive memory usage: " <<  sserialize::toString(aggressiveMem) << std::endl;
-	out << "\tMemory storage type: ";
-	switch (mmType) {
-	case sserialize::MM_FILEBASED:
-		out << "file-based";
-		break;
-	case sserialize::MM_PROGRAM_MEMORY:
-		out << "program memory";
-		break;
-	case sserialize::MM_SHARED_MEMORY:
-		out << "shared memory";
-		break;
-	default:
-		out << "invalid";
-		break;
-	}
-	out << "\n";
+	out << "\tMemory storage type: " << toString(mmType) << "\n";
 	out << "\tMerge Index: " << sserialize::toString(mergeIndex) <<  std::endl;
 	out << "\tTrie-Type: ";
 	if (trieType == TrieType::FULL_INDEX_TRIE) {
@@ -198,16 +216,28 @@ void ItemSearchConfig::print(std::ostream& out) const {
 		out << "flattrie";
 	}
 	out << "\n";
-	out << "\tExtensive Checking: " << sserialize::toString(extensiveChecking) <<  "\n";
+	out << "\tExtensive Checking: " << sserialize::toString(check) <<  "\n";
 	out << "\tThread count: " << threadCount;
 }
 
-void GeoHierarchySearchConfig::print(std::ostream& out) const {}
+void GeoHierarchySearchConfig::print(std::ostream& out) const {
+	ItemSearchConfig::print(out);
+}
 
 void GeoCellConfig::print(std::ostream& out) const {
 	if (suffixDelimeters.size()) {
 		out << "\tSuffix delimeters: " << sserialize::stringFromUnicodePoints(suffixDelimeters.cbegin(), suffixDelimeters.cend()) << "\n";
 	}
+	out << "Thread count: " << threadCount << "\n";
+	out << "Trie type: ";
+	if (trieType == TrieType::TRIE) {
+		out << "trie";
+	}
+	else if (trieType == TrieType::FLAT_TRIE) {
+		out << "flattrie";
+	}
+	out << "\nmmt: " << toString(mmType);
+	out << "\ncheck: " << toString(check);
 }
 
 void OOMGeoCellConfig::print(std::ostream& out) const {
@@ -215,7 +245,7 @@ void OOMGeoCellConfig::print(std::ostream& out) const {
 }
 
 std::ostream& Config::operator<<(std::ostream& out) const {
-	out << statsConfig;
+	statsConfig.operator<<(out);
 	if (indexStoreConfig) {
 		indexStoreConfig->operator<<(out);
 	}
@@ -257,6 +287,7 @@ std::ostream& Config::operator<<(std::ostream& out) const {
 		out << "]:\n";
 		x->operator<<(out);
 	}
+	return out;
 }
 
 //validation functions
@@ -282,6 +313,7 @@ bool TagStoreConfig::valid() const {
 		return sserialize::MmappedFile::fileExists(tagKeys) &&
 				sserialize::MmappedFile::fileExists(tagKeyValues);
 	}
+	return true;
 }
 
 bool KVStoreConfig::valid() const {
@@ -307,6 +339,10 @@ bool ItemSearchConfig::valid() const {
 		nodeType != sserialize::Static::TrieNode::T_EMPTY;
 }
 
+bool GeoCellConfig::valid() const {
+	return mmType != sserialize::MM_INVALID;
+}
+
 //parse functions
 StatsConfig::StatsConfig(const Json::Value & cfg) : StatsConfig() {
 	Json::Value v = cfg["print-memory-usage"];
@@ -316,7 +352,7 @@ StatsConfig::StatsConfig(const Json::Value & cfg) : StatsConfig() {
 }
 
 IndexStoreConfig::IndexStoreConfig(const Json::Value & cfg) :
-type(sserialize::ItemIndex::sserialize::ItemIndex::T_NULL),
+type(sserialize::ItemIndex::T_NULL),
 check(false),
 deduplicate(true)
 {
@@ -342,7 +378,7 @@ deduplicate(true)
 			type = sserialize::ItemIndex::T_NATIVE;
 		}
 		else {
-			throw sserialize::ConfigurationException("IndexStoreConfig: invalid index type");
+			throw sserialize::ConfigurationException("IndexStoreConfig", "invalid index type");
 		}
 	}
 	
@@ -462,7 +498,7 @@ itemSortOrder(OsmKeyValueObjectStore::ISO_NONE)
 		if (tmp.isString()) {
 			keyToStoreFn = tmp.asString();
 		}
-		Json::Value tmp = v["keyValues"];
+		tmp = v["keyValues"];
 		if (tmp.isString()) {
 			keyValuesToStoreFn = tmp.asString();
 		}
@@ -477,7 +513,7 @@ itemSortOrder(OsmKeyValueObjectStore::ISO_NONE)
 		if (tmp.isString()) {
 			itemsSavedByKeyFn = tmp.asString();
 		}
-		Json::Value tmp = v["keyValues"];
+		tmp = v["keyValues"];
 		if (tmp.isString()) {
 			itemsSavedByKeyValueFn = tmp.asString();
 		}
@@ -492,7 +528,7 @@ itemSortOrder(OsmKeyValueObjectStore::ISO_NONE)
 		if (tmp.isString()) {
 			keysDefiningRegions = tmp.asString();
 		}
-		Json::Value tmp = v["keyValues"];
+		tmp = v["keyValues"];
 		if (tmp.isString()) {
 			keyValuesDefiningRegions = tmp.asString();
 		}
@@ -642,22 +678,7 @@ TextSearchConfig(cfg)
 	
 	v = cfg["mmt"];
 	if (v.isString()) {
-		std::string str = v.asString();
-		if (str == "prg") {
-			mmType = sserialize::MM_PROGRAM_MEMORY;
-		}
-		else if (str == "shm") {
-			mmType = sserialize::MM_SHARED_MEMORY;
-		}
-		else if (str == "slowfile") {
-			mmType = sserialize::MM_SLOW_FILEBASED;
-		}
-		else if (str == "fastfile") {
-			mmType = sserialize::MM_FAST_FILEBASED;
-		}
-		else {
-			std::cerr << "Invalid mmt\n";
-		}
+		mmType = parseMMT(v.asString());
 	}
 	
 	v = cfg["trieType"];
@@ -745,6 +766,30 @@ TextSearchConfig(cfg)
 		for(std::string::const_iterator it(str.begin()), end(str.end()); it != end; ) {
 			suffixDelimeters.insert( utf8::next(it, end) );
 		}
+	}
+	
+	v = cfg["trieType"];
+	if (v.isString()) {
+		std::string str = v.asString();
+		if (str == "trie") {
+			trieType = TrieType::TRIE;
+		}
+		else if (str == "flattrie") {
+			trieType = TrieType::FLAT_TRIE;
+		}
+		else {
+			std::cout << "Unrecognized trie type: " << str << std::endl;
+		}
+	}
+	
+	v = cfg["mmt"];
+	if (v.isString()) {
+		mmType = parseMMT(v.asString());
+	}
+	
+	v = cfg["check"];
+	if (v.isBool()) {
+		check = v.asBool();
 	}
 }
 
@@ -859,5 +904,46 @@ Config::ReturnValues Config::fromCmdLineArgs(int argc, char** argv) {
 	
 	return RV_OK;
 }
+
+//other stuff
+
+bool TextSearchConfig::hasEnabled(TextSearchConfig::QueryType qt) const {
+	for(uint32_t i(0); i < 2; ++i) {
+		for(uint32_t j(0); j < 2; ++j) {
+			if (searchCapabilites[i][j][(int)qt].enabled) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+
+bool TextSearchConfig::hasCaseSensitive() const {
+	for(uint32_t i(0); i < 2; ++i) {
+		for(uint32_t j(0); j < 2; ++j) {
+			for(uint32_t k(0); k < 2; ++k) {
+				if (searchCapabilites[i][j][k].caseSensitive) {
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
+bool TextSearchConfig::hasDiacriticInSensitive() const {
+	for(uint32_t i(0); i < 2; ++i) {
+		for(uint32_t j(0); j < 2; ++j) {
+			for(uint32_t k(0); k < 2; ++k) {
+				if (searchCapabilites[i][j][k].diacritcInSensitive) {
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
 
 }//end namespace oscar_create

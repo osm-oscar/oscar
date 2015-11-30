@@ -48,7 +48,7 @@ public:
 					++out;
 				}
 				if (state->m_tagSSFilter.count(keyId)) {
-					*out = std::string("@") + state->m_tagSSFilter.at(keyId) + ":" + item.valid(i);
+					*out = std::string("@") + state->m_tagSSFilter.at(keyId) + ":" + item.value(i);
 					++out;
 				}
 			}

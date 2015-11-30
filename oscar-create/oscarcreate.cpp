@@ -62,10 +62,11 @@ int main(int argc, char ** argv) {
 		
 		sserialize::Static::ItemIndexStore idxStore;;
 		try {
-			idxStore = sserialize::Static::ItemIndexStore( sserialize::UByteArrayAdapter::openRo(idxStoreFileName) );
+			idxStore = sserialize::Static::ItemIndexStore( sserialize::UByteArrayAdapter::openRo(idxStoreFileName, false) );
 		}
 		catch (sserialize::Exception & e) {
-			throw std::runtime_error("Failed to initial index at " + opts. + std::string(" with error message: ") + e.what());
+			std::cerr << "Failed to initial index at " << idxStoreFileName << " with error message: " << e.what();
+			return -1;
 		}
 		//switch deduplication off in case the initial store was build without it
 		state.indexFactory.setDeduplication(false);
@@ -74,7 +75,7 @@ int main(int argc, char ** argv) {
 			if (i != tmp[i])  {
 				std::cout << "ItemIndexFactory::insert is broken" << std::endl;
 				std::cout << tmp << std::endl;
-				return;
+				return -1;
 			}
 		}
 		state.indexFactory.setDeduplication(opts.indexStoreConfig->deduplicate);
@@ -90,6 +91,8 @@ int main(int argc, char ** argv) {
 	
 	//from store, 
 	if (sserialize::MmappedFile::isDirectory(opts.inFileName) && sserialize::MmappedFile::fileExists(opts.inFileName + "/" + liboscar::toString(liboscar::FC_KV_STORE))) {
+		//BUG:index store needs to be serialized!
+		
 		oscar_create::handleSearchCreation(opts, state);
 	}
 	
@@ -114,8 +117,11 @@ int main(int argc, char ** argv) {
 		return -1;
 	}
 	if (writeSymlink) {
-		std::string sourceStoreFileName = sserialize::MmappedFile::realPath(opts.inFileName + "/" + );
-		sserialize::MmappedFile::createSymlink( , opts.getOutFileDir() + "/kvstore");
+		std::string sourceStoreFileName = sserialize::MmappedFile::realPath(opts.inFileName + "/" + liboscar::toString(liboscar::FC_KV_STORE));
+		std::string targetStoreFileName = opts.getOutFileDir() + "/" + liboscar::toString(liboscar::FC_KV_STORE);
+		if (!sserialize::MmappedFile::createSymlink(sourceStoreFileName, targetStoreFileName)) {
+			std::cerr << "Could not create symlink" << std::endl;
+		}
 	}
 	
 	
