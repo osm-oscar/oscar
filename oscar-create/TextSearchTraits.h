@@ -29,7 +29,7 @@ public:
 					++out;
 				}
 				if (state->m_tagPSFilter.count(keyId)) {
-					*out = std::string("@") + state->m_tagPSFilter.at(keyId) + ":" + item.valid(i);
+					*out = std::string("@") + state->m_tagPSFilter.at(keyId) + ":" + item.value(i);
 					++out;
 				}
 			}
@@ -101,13 +101,11 @@ class CellTextCompleterDerfer: public OsmKeyValueObjectStoreDerfer {
 public:
 	typedef detail::CellTextCompleter::SampleItemStringsContainer StringsContainer;
 public:
-	CellTextCompleterDerfer(const TextSearchConfig & tsc, const liboscar::Static::OsmKeyValueObjectStore & store) ;
+	CellTextCompleterDerfer(const GeoCellConfig & tsc, const liboscar::Static::OsmKeyValueObjectStore & store) ;
 	void operator()(const liboscar::Static::OsmKeyValueObjectStore::Item & item, StringsContainer & itemStrings, bool insertsAsItem) const;
 private:
-	bool m_inSensitive;
-	bool m_diacriticInSensitive;
 	sserialize::DiacriticRemover m_dr;
-	std::unordered_set<uint32_t> m_seps;
+	GeoCellConfig m_cfg;
 };
 
 }//end namespace oscar_create

@@ -215,30 +215,32 @@ void OOMGeoCellConfig::print(std::ostream& out) const {
 }
 
 std::ostream& Config::operator<<(std::ostream& out) const {
-	out << indexStoreConfig;
 	out << statsConfig;
+	if (indexStoreConfig) {
+		indexStoreConfig->operator<<(out);
+	}
 	if (kvStoreConfig) {
 		out << "KVStoreConfig:\n"; 
-		out << *kvStoreConfig;
+		kvStoreConfig->operator<<(out);
 	}
 	if (gridConfig) {
 		out << "GridConfig:\n";
-		out << *gridConfig;
+		gridConfig->operator<<(out);
 	}
 	if (rTreeConfig) {
 		out << "RTreeConfig:\n";
-		out << *rTreeConfig;
+		rTreeConfig->operator<<(out);
 	}
 	if (tagStoreConfig) {
 		out << "TagStoreConfig:\n";
-		out << *tagStoreConfig;
+		tagStoreConfig->operator<<(out);
 	}
-	for(auto x : textSearchConfig) {
-		if (!x.second) {
+	for(TextSearchConfig * x : textSearchConfig) {
+		if (!x) {
 			continue;
 		}
 		out << "TextSearchConfig[";
-		switch (x.first) {
+		switch (x->type) {
 		case liboscar::TextSearch::ITEMS:
 			out << "items";
 			break;
@@ -252,7 +254,8 @@ std::ostream& Config::operator<<(std::ostream& out) const {
 			out << "invalid";
 			break;
 		}
-		out << "]:\n" << *x.second;
+		out << "]:\n";
+		x->operator<<(out);
 	}
 }
 
@@ -566,19 +569,19 @@ void TextSearchConfig::parseQueryTypeObject(const Json::Value& cfg, TextSearchCo
 }
 
 void TextSearchConfig::parseKvConfig(const Json::Value& cfg, TextSearchConfig::ItemType itemType, TextSearchConfig::TagType tagType, TextSearchConfig::QueryType qt) {
-	SearchCapabilities & cap = searchCapabilites[itemType][tagType][qt];
+	SearchCapabilities & cap = searchCapabilites[(int)itemType][(int)tagType][(int)qt];
 	
 	Json::Value v = cfg["enabled"];
 	if(v.isBool()) {
 		cap.enabled = v.asBool();
 	}
 	
-	Json::Value v = cfg["caseSensitive"];
+	v = cfg["caseSensitive"];
 	if(v.isBool()) {
 		cap.caseSensitive = v.asBool();
 	}
 	
-	Json::Value v = cfg["diacriticSensitive"];
+	v = cfg["diacriticSensitive"];
 	if(v.isBool()) {
 		cap.diacritcInSensitive = !v.asBool();
 	}
@@ -613,7 +616,7 @@ TextSearchConfig* TextSearchConfig::parseTyped(const Json::Value& cfg) {
 		}
 	}
 	std::cerr << "Invalid text search type" << std::endl;
-	return new TextSearchConfig();
+	return 0;
 }
 
 ItemSearchConfig::ItemSearchConfig(const Json::Value& cfg) :
@@ -661,16 +664,16 @@ TextSearchConfig(cfg)
 	if (v.isString()) {
 		std::string str = v.asString();
 		if (str == "trie") {
-			type = TrieType::TRIE;
+			trieType = TrieType::TRIE;
 		}
 		else if (str == "fgst") {
-			type = TrieType::FLAT_GST;
+			trieType = TrieType::FLAT_GST;
 		}
 		else if (str == "flattrie") {
-			type = TrieType::FLAT_TRIE;
+			trieType = TrieType::FLAT_TRIE;
 		}
 		else if (str == "fitrie") {
-			type = TrieType::FULL_INDEX_TRIE;
+			trieType = TrieType::FULL_INDEX_TRIE;
 		}
 		else {
 			std::cout << "Unrecognized trie type: " << str << std::endl;
@@ -745,7 +748,7 @@ TextSearchConfig(cfg)
 	}
 }
 
-OOMGeoCellConfig::GeoCellConfig(const Json::Value& cfg) {
+OOMGeoCellConfig::OOMGeoCellConfig(const Json::Value& cfg) {
 	Json::Value v = cfg["threadCount"];
 	if (v.isNumeric()) {
 		threadCount = v.asUInt();
@@ -816,7 +819,7 @@ Config::ReturnValues Config::fromCmdLineArgs(int argc, char** argv) {
 	
 	tmp = root["index"];
 	if (!tmp.isNull()) {
-		indexStoreConfig = IndexStoreConfig(tmp);
+		indexStoreConfig = new IndexStoreConfig(tmp);
 	}
 	
 	tmp = root["store"];

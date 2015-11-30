@@ -136,11 +136,9 @@ void OsmKeyValueObjectStoreDerfer::operator()(
 	}
 }
 
-CellTextCompleterDerfer::CellTextCompleterDerfer(const TextSearchConfig & tsc, const liboscar::Static::OsmKeyValueObjectStore & store) :
+CellTextCompleterDerfer::CellTextCompleterDerfer(const GeoCellConfig & tsc, const liboscar::Static::OsmKeyValueObjectStore & store) :
 OsmKeyValueObjectStoreDerfer(tsc, store),
-m_inSensitive(!tsc.caseSensitive),
-m_diacriticInSensitive(tsc.diacritcInSensitive),
-m_seps(tsc.suffixDelimeters)
+m_cfg(tsc)
 {
 	m_dr.init();
 }
@@ -151,29 +149,27 @@ void CellTextCompleterDerfer::operator()(
 	bool insertsAsItem
 ) const
 {
-	if (item.osmId() == 2922269) {
-		item.print(std::cout, false);
-	}
+	TextSearchConfig::ItemType itemType = (insertsAsItem ? TextSearchConfig::ItemType::ITEM : TextSearchConfig::ItemType::REGION);
 	for(uint32_t i = 0, s = item.size(); i < s; ++i) {
-// 			std::string value = item.value(i);
-// 			std::string key = item.key(i);
-// 			std::cout << "key=" << key << "; value=" << value << std::endl;
 		uint32_t keyId = item.keyId(i);
+		const TextSearchConfig::SearchCapabilities & caps = m_cfg.searchCapabilites[(int)itemType][(int)TextSearchConfig::TagType::VALUES][(int)TextSearchConfig::QueryType::PREFIX];
 		if (m_filter->count(keyId) > 0) {
+			
 			std::string valueString = item.value(i);
-			if (m_inSensitive) {
+			
+			if (!caps.caseSensitive) {
 				valueString = sserialize::unicode_to_lower(valueString);
 			}
 			if (m_suffix) {
-				itemStrings.subString.push_back(valueString, m_seps);
+				itemStrings.subString.push_back(valueString, m_cfg.suffixDelimeters);
 			}
 			else {
 				itemStrings.prefixOnly.push_back(valueString);
 			}
-			if (m_diacriticInSensitive) {
+			if (caps.diacritcInSensitive) {
 				m_dr.transliterate(valueString);
 				if (m_suffix) {
-					itemStrings.subString.push_back(valueString, m_seps);
+					itemStrings.subString.push_back(valueString, m_cfg.suffixDelimeters);
 				}
 				else {
 					itemStrings.prefixOnly.push_back(valueString);
@@ -182,26 +178,21 @@ void CellTextCompleterDerfer::operator()(
 		}
 		if (insertsAsItem && m_tagPrefixSearchFilter->count(keyId) > 0) {
 			std::string tmp = "@" + m_tagPrefixSearchFilter->at(keyId) + ":" + item.value(i);
-			if (m_inSensitive) {
+			if (!caps.caseSensitive) {
 				tmp = sserialize::unicode_to_lower(tmp);
 			}
 			itemStrings.prefixOnly.emplace_back(std::move(tmp));
 		}
 		else if (insertsAsItem && m_tagSuffixSearchFilter->count(keyId) > 0) {
 			std::string tmp = "@" + m_tagSuffixSearchFilter->at(keyId) + ":" + item.value(i);
-			if (m_inSensitive) {
+			if (!caps.caseSensitive) {
 				tmp = sserialize::unicode_to_lower(tmp);
 			}
-			itemStrings.subString.push_back(tmp, m_seps);
+			itemStrings.subString.push_back(tmp, m_cfg.suffixDelimeters);
 		}
 		else if (m_largestId <= keyId) {
 			break;
 		}
-	}
-	if (item.osmId() == 2922269) {
-		std::cout << std::endl;
-		std::cout << "Inserting the following strings as prefix tags" << std::endl;
-		std::cout << itemStrings.prefixOnly << std::endl;
 	}
 }
 

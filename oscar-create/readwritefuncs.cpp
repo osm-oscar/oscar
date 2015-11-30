@@ -33,13 +33,14 @@ struct ItemBoundaryGenerator {
 };
 
 bool createAndWriteGrid(const oscar_create::Config& opts, liboscar::Static::OsmKeyValueObjectStore & db, sserialize::ItemIndexFactory& indexFactory, sserialize::UByteArrayAdapter & dest) {
-	if (opts.gridLatCount == 0 || opts.gridLonCount == 0)
+	if (!opts.gridConfig || opts.gridConfig->latCount == 0 || opts.gridConfig->lonCount == 0) {
 		return false;
+	}
 	std::cout << "Finding grid dimensions..." << std::flush;
 	sserialize::spatial::GeoRect rect( db.boundary() );
 // 	std::cout << rect;
 // 	std::cout << std::endl;
-	sserialize::spatial::ItemGeoGrid grid(rect, opts.gridLatCount, opts.gridLonCount);
+	sserialize::spatial::ItemGeoGrid grid(rect, opts.gridConfig->latCount, opts.gridConfig->lonCount);
 	std::cout << "Creating Grid" << std::endl;
 	sserialize::ProgressInfo info;
 	info.begin(db.size());
@@ -51,7 +52,7 @@ bool createAndWriteGrid(const oscar_create::Config& opts, liboscar::Static::OsmK
 	info.end("Done Creating grid");
 	std::cout <<  "Serializing Grid" << std::endl;
 	std::vector<uint8_t> dataStorage;
-	dataStorage.resize(opts.gridLatCount*opts.gridLonCount*4);
+	dataStorage.resize(opts.gridConfig->latCount*opts.gridConfig->lonCount*4);
 	sserialize::UByteArrayAdapter dataAdap(&dataStorage);
 	
 	grid.serialize(dataAdap, indexFactory);
@@ -61,12 +62,12 @@ bool createAndWriteGrid(const oscar_create::Config& opts, liboscar::Static::OsmK
 }
 
 bool createAndWriteGridRTree(const oscar_create::Config& opts, liboscar::Static::OsmKeyValueObjectStore & db, sserialize::ItemIndexFactory& indexFactory, sserialize::UByteArrayAdapter & dest) {
-	if (opts.gridRTreeLatCount == 0 || opts.gridRTreeLonCount == 0) {
+	if (opts.rTreeConfig || opts.rTreeConfig->latCount == 0 || opts.rTreeConfig->lonCount == 0) {
 		return false;
 	}
 	std::cout << "Finding grid dimensions..." << std::flush;
 	sserialize::spatial::GeoRect rect( db.boundary() );
-	sserialize::spatial::GridRTree grid(rect, opts.gridRTreeLatCount, opts.gridRTreeLonCount);
+	sserialize::spatial::GridRTree grid(rect, opts.rTreeConfig->latCount, opts.rTreeConfig->lonCount);
 	ItemBoundaryGenerator generator(&db);
 	grid.bulkLoad(generator);
 	std::cout << "Creating GridRTree" << std::endl;
@@ -77,29 +78,6 @@ bool createAndWriteGridRTree(const oscar_create::Config& opts, liboscar::Static:
 	grid.serialize(dataAdap, indexFactory);
 	std::cout << "GridRTree serialized" << std::endl;
 	dest.putData(dataStorage);
-	return true;
-}
-
-bool writeItemIndexFactory(sserialize::ItemIndexFactory & indexFactory) {
-	
-	std::cout << "Serializing index" << std::endl;
-	sserialize::OffsetType indexFlushedLength = indexFactory.flush();
-	std::cout << "Index size: " << indexFlushedLength << std::endl;
-	if (indexFlushedLength) {
-		if (indexFlushedLength < 1024*1024 || indexFlushedLength < indexFactory.getFlushedData().size()) {
-			sserialize::UByteArrayAdapter indexStorage = indexFactory.getFlushedData();
-			indexFactory = sserialize::ItemIndexFactory();
-			if (!indexStorage.shrinkStorage(indexStorage.size() - indexFlushedLength) || indexStorage.size() != indexFlushedLength) {
-				std::cout << "Failed to shrink index to correct size. Should=" << indexFlushedLength << " is " << indexStorage.size() << std::endl;
-			}
-			else {
-				std::cout << "Shrinking index to correct size succeeded" << std::endl;
-			}
-		}
-	}
-	else {
-		std::cout <<  "Failed to serialize index" << std::endl;
-	}
 	return true;
 }
 
@@ -363,7 +341,7 @@ Config & opts, sserialize::ItemIndexFactory & indexFactory, const sserialize::St
 	tsCreator.flush();
 }
 
-void handleGeoSearch(liboscar::Static::OsmKeyValueObjectStore & store, Config & opts, sserialize::ItemIndexFactory & indexFactory) {
+void handleGeoSearch(Config & opts, State & state) {
 	std::string fn = liboscar::fileNameFromFileConfig(opts.getOutFileDir(), liboscar::FC_GEO_SEARCH, false);
 	sserialize::UByteArrayAdapter dest( sserialize::UByteArrayAdapter::createFile(1, fn) );
 	if (dest.size() != 1) {
@@ -371,27 +349,31 @@ void handleGeoSearch(liboscar::Static::OsmKeyValueObjectStore & store, Config & 
 		return;
 	}
 	liboscar::GeoSearchCreator gsCreator(dest);
-	if (opts.gridLatCount != 0 && opts.gridLonCount != 0) {
+	if (opts.gridConfig) {
 		gsCreator.beginRawPut(liboscar::GeoSearch::ITEMS);
-		if (createAndWriteGrid(opts, store, indexFactory, gsCreator.rawPut()))
+		if (createAndWriteGrid(opts, store, indexFactory, gsCreator.rawPut())) {
 			std::cout << "Created grid" << std::endl;
-		else
+		}
+		else {
 			std::cout << "Failed to create grid" << std::endl;
+		}
 		gsCreator.endRawPut();
 	}
 	
-	if (opts.gridRTreeLatCount != 0 && opts.gridRTreeLonCount != 0) {
+	if (opts.rTreeConfig) {
 		gsCreator.beginRawPut(liboscar::GeoSearch::ITEMS);
-		if (createAndWriteGridRTree(opts, store, indexFactory, gsCreator.rawPut()))
+		if (createAndWriteGridRTree(opts, store, indexFactory, gsCreator.rawPut())) {
 			std::cout << "Created grid" << std::endl;
-		else
+		}
+		else {
 			std::cout << "Failed to create grid" << std::endl;
+		}
 		gsCreator.endRawPut();
 	}
 	gsCreator.flush();
 }
 
-void handleKVCreation(oscar_create::Config & opts) {
+void handleKVCreation(oscar_create::Config & opts, State & state) {
 	sserialize::TimeMeasurer dbTime; dbTime.begin();
 	oscar_create::OsmKeyValueObjectStore store;
 
@@ -406,44 +388,41 @@ void handleKVCreation(oscar_create::Config & opts) {
 		itemSaveDirectorPtr = new oscar_create::OsmKeyValueObjectStore::SaveAllItemsIgnoring(opts.kvStoreConfig.itemsIgnoredByKeyFn);
 	}
 	else {
-		itemSaveDirectorPtr = new oscar_create::OsmKeyValueObjectStore::SingleTagSaveDirector(opts.kvStoreConfig.keyToStoreFn, opts.kvStoreConfig.keyValuesToStoreFn, opts.kvStoreConfig.itemsSavedByKeyFn, opts.kvStoreConfig.itemsSavedByKeyValueFn);
+		itemSaveDirectorPtr = new oscar_create::OsmKeyValueObjectStore::SingleTagSaveDirector(opts.kvStoreConfig->keyToStoreFn, opts.kvStoreConfig->keyValuesToStoreFn, opts.kvStoreConfig->itemsSavedByKeyFn, opts.kvStoreConfig->itemsSavedByKeyValueFn);
 	}
 	std::shared_ptr<oscar_create::OsmKeyValueObjectStore::SaveDirector> itemSaveDirector(itemSaveDirectorPtr);
 
-	if (opts.inFileNames.size() > 1) {
-		std::cout << "Currently only the first file be used to create the kvstore" << std::endl;
-	}
-	else if (opts.inFileNames.size()) {
-		const std::string & inFileName = opts.inFileNames.front();
-		if (opts.kvStoreConfig.autoMaxMinNodeId) {
-			if (!oscar_create::findNodeIdBounds(inFileName, opts.kvStoreConfig.minNodeId, opts.kvStoreConfig.maxNodeId)) {
+	if (opts.inFileName.size()) {
+		const std::string & inFileName = opts.inFileName;
+		if (opts.kvStoreConfig->autoMaxMinNodeId) {
+			if (!oscar_create::findNodeIdBounds(inFileName, opts.kvStoreConfig->minNodeId, opts.kvStoreConfig->maxNodeId)) {
 				throw sserialize::CreationException("Finding min/max node id failed for " + inFileName + "! skipping input file...");
 			}
-			std::cout << "min=" << opts.kvStoreConfig.minNodeId << ", max=" << opts.kvStoreConfig.maxNodeId << std::endl;
+			std::cout << "min=" << opts.kvStoreConfig->minNodeId << ", max=" << opts.kvStoreConfig->maxNodeId << std::endl;
 		}
 		
-		if (opts.memUsage) {
+		if (opts.statsConfig.memUsage) {
 			sserialize::MemUsage().print("Polygonstore", "Poylgonstore");
 		}
 		
 		oscar_create::OsmKeyValueObjectStore::CreationConfig cc;
 		cc.fileName = inFileName;
 		cc.itemSaveDirector = itemSaveDirector;
-		cc.maxNodeCoordTableSize = opts.kvStoreConfig.maxNodeHashTableSize;
-		cc.maxNodeId = opts.kvStoreConfig.maxNodeId;
-		cc.minNodeId = opts.kvStoreConfig.minNodeId;
-		cc.numThreads = opts.kvStoreConfig.numThreads;
-		cc.rc.regionFilter = oscar_create::AreaExtractor::nameFilter(opts.kvStoreConfig.keysDefiningRegions, opts.kvStoreConfig.keyValuesDefiningRegions);
-		cc.rc.polyStoreLatCount = opts.kvStoreConfig.polyStoreLatCount;
-		cc.rc.polyStoreLonCount = opts.kvStoreConfig.polyStoreLonCount;
-		cc.rc.polyStoreMaxTriangPerCell = opts.kvStoreConfig.polyStoreMaxTriangPerCell;
-		cc.rc.triangMaxCentroidDist = opts.kvStoreConfig.triangMaxCentroidDist;
-		cc.sortOrder = (oscar_create::OsmKeyValueObjectStore::ItemSortOrder) opts.kvStoreConfig.itemSortOrder;
-		cc.prioStringsFn = opts.kvStoreConfig.prioStringsFileName;
-		cc.scoreConfigFileName = opts.kvStoreConfig.scoreConfigFileName;
+		cc.maxNodeCoordTableSize = opts.kvStoreConfig->maxNodeHashTableSize;
+		cc.maxNodeId = opts.kvStoreConfig->maxNodeId;
+		cc.minNodeId = opts.kvStoreConfig->minNodeId;
+		cc.numThreads = opts.kvStoreConfig->numThreads;
+		cc.rc.regionFilter = oscar_create::AreaExtractor::nameFilter(opts.kvStoreConfig->keysDefiningRegions, opts.kvStoreConfig->keyValuesDefiningRegions);
+		cc.rc.polyStoreLatCount = opts.kvStoreConfig->polyStoreLatCount;
+		cc.rc.polyStoreLonCount = opts.kvStoreConfig->polyStoreLonCount;
+		cc.rc.polyStoreMaxTriangPerCell = opts.kvStoreConfig->polyStoreMaxTriangPerCell;
+		cc.rc.triangMaxCentroidDist = opts.kvStoreConfig->triangMaxCentroidDist;
+		cc.sortOrder = (oscar_create::OsmKeyValueObjectStore::ItemSortOrder) opts.kvStoreConfig->itemSortOrder;
+		cc.prioStringsFn = opts.kvStoreConfig->prioStringsFileName;
+		cc.scoreConfigFileName = opts.kvStoreConfig->scoreConfigFileName;
 		
-		if (!opts.kvStoreConfig.keysValuesToInflate.empty()) {
-			oscar_create::readKeysFromFile(opts.kvStoreConfig.keysValuesToInflate, std::inserter(cc.inflateValues, cc.inflateValues.end()));
+		if (!opts.kvStoreConfig->keysValuesToInflate.empty()) {
+			oscar_create::readKeysFromFile(opts.kvStoreConfig->keysValuesToInflate, std::inserter(cc.inflateValues, cc.inflateValues.end()));
 		}
 
 		bool parseOK = store.populate(cc);
@@ -458,96 +437,36 @@ void handleKVCreation(oscar_create::Config & opts) {
 
 	std::cout << "Serializing KeyValueStore" << std::endl;
 	sserialize::UByteArrayAdapter dataBaseListAdapter(sserialize::UByteArrayAdapter::createFile(1024*1024, opts.getOutFileName(liboscar::FC_KV_STORE)) );
-	sserialize::UByteArrayAdapter idxFactoryData(sserialize::UByteArrayAdapter::createFile(1024*1024, opts.getOutFileName(liboscar::FC_INDEX)) );
-	sserialize::ItemIndexFactory idxFactory;
-	idxFactory.setType(opts.indexType);
-	idxFactory.setIndexFile(idxFactoryData);
-	idxFactory.setDeduplication(opts.indexDedup);
-	sserialize::UByteArrayAdapter::OffsetType outSize = store.serialize(dataBaseListAdapter, idxFactory, opts.kvStoreConfig.fullRegionIndex);
+	sserialize::UByteArrayAdapter::OffsetType outSize = store.serialize(dataBaseListAdapter, state.indexFactory, opts.kvStoreConfig->fullRegionIndex);
 	if (outSize < dataBaseListAdapter.size()) {
 		dataBaseListAdapter.shrinkStorage(dataBaseListAdapter.size() - outSize);
 	}
 	std::cout << "KeyValueStore serialized  with a length of " << sserialize::prettyFormatSize(outSize) << std::endl;
-	
-	outSize = idxFactory.flush();
-	if (outSize < idxFactory.getFlushedData().size()) {
-		idxFactory.getFlushedData().shrinkStorage( idxFactory.getFlushedData().size() - outSize );
-	}
-	std::cout << "Index serialized  with a length of " << sserialize::prettyFormatSize(outSize) << std::endl;
 }
 
-void handleSearchCreation(Config & opts) {
-	std::cout << "Trying to create index file...";
-	opts.indexFile = sserialize::UByteArrayAdapter::createFile(1024*1024, opts.getOutFileName(liboscar::FC_INDEX));
-	if (opts.indexFile.size() < 1024*1024) {
-		throw sserialize::CreationException("Failed to create index file");
-	}
-	else {
-		std::cout << "OK" << std::endl;
-	}
-
+void handleSearchCreation(Config & opts, State & state) {
 	sserialize::TimeMeasurer totalTime; totalTime.begin();
-	liboscar::Static::OsmKeyValueObjectStore store;
-	
-	try {
-		store = liboscar::Static::OsmKeyValueObjectStore(sserialize::UByteArrayAdapter::openRo(opts.inFileNames.front(), false));
-	}
-	catch (sserialize::Exception & e) {
-		throw std::runtime_error("Failed to open store file at " + opts.inFileNames.front() + std::string(" with error message: ") + e.what());
-	}
-	
-	sserialize::ItemIndexFactory indexFactory;
-	indexFactory.setCheckIndex(opts.checkIndex);;
-	indexFactory.setType(opts.indexType);
-	indexFactory.setIndexFile( opts.indexFile );
-	if (opts.inputIndexStore.empty()) {
-		std::cout << "No ItemIndexStore given containing gh data given" << std::endl;
-		return;
-	}
-	sserialize::Static::ItemIndexStore inputIndexStore;
-	{
-		std::cout << "Using index at " << opts.inputIndexStore << " as base for ItemIndexFactory" << std::endl;
-		inputIndexStore = sserialize::Static::ItemIndexStore(sserialize::UByteArrayAdapter::openRo(opts.inputIndexStore, false));
-		std::vector<uint32_t> tmp = indexFactory.insert(inputIndexStore);
-		for(uint32_t i = 0, s = tmp.size(); i < s; ++i) {
-			if (i != tmp[i])  {
-				std::cout << "ItemIndexFactory::insert is broken" << std::endl;
-				std::cout << tmp << std::endl;
-				return;
-			}
-		}
-	}
-	//disable deduplication after inserting index as otherwise index ids change since the null index is always part of an store
-	indexFactory.setDeduplication(opts.indexDedup);
-
-	if (opts.memUsage) {
+	if (opts.statsConfig.memUsage) {
 		sserialize::MemUsage().print();
 	}
 	
-	if (opts.tagStoreConfig.create)  {
-		createTagStore(store, opts, indexFactory);
+	if (opts.tagStoreConfig)  {
+		createTagStore(state.store, opts, state.indexFactory);
 	}
 	
-	if ((opts.gridLatCount != 0 && opts.gridLonCount != 0) || (opts.gridRTreeLatCount != 0 && opts.gridRTreeLonCount != 0)) {
-		handleGeoSearch(store, opts, indexFactory);
-	}
+	handleGeoSearch(opts, state);
 
-	if (opts.memUsage) {
+	if (opts.statsConfig.memUsage) {
 		sserialize::MemUsage().print();
 	}
 	
 	if (opts.textSearchConfig.size()) {
-		handleTextSearch(store, opts, indexFactory, inputIndexStore);
+		handleTextSearch(opts, state);
 	}
 	
-	writeItemIndexFactory(indexFactory);
-	
-	if (opts.memUsage) {
+	if (opts.statsConfig.memUsage) {
 		sserialize::MemUsage().print();
 	}
-
-	sserialize::MmappedFile::createSymlink( sserialize::MmappedFile::realPath(opts.inFileNames.front()), opts.getOutFileDir() + "/kvstore");
-	
 	totalTime.end();
 	std::cout << "Total time spent to handle KVS: " << totalTime << std::endl;
 }

@@ -96,7 +96,7 @@ public:
 		bool diacritcInSensitive;
 		std::string keysFn;
 		std::string keyValuesFn;
-		SingleConfig() : enabled(false), caseSensitive(false), diacritcInSensitive(false) {}
+		SearchCapabilities() : enabled(false), caseSensitive(false), diacritcInSensitive(false) {}
 		std::ostream & operator<<(std::ostream & out) const;
 	};
 public:
@@ -164,7 +164,7 @@ public:
 
 class OOMGeoCellConfig: public TextSearchConfig {
 public:
-	GeoCellConfig(const Json::Value & cfg);
+	OOMGeoCellConfig(const Json::Value & cfg);
 	virtual void print(std::ostream & out) const override;
 	virtual bool valid() const override;
 public:
@@ -196,7 +196,7 @@ public:
 	std::ostream & operator<<(std::ostream & out) const;
 	
 	//Variables
-	std::list<std::string> inFileNames;
+	std::string inFileName;
 
 	IndexStoreConfig * indexStoreConfig;
 	
@@ -215,9 +215,6 @@ public:
 	
 	//stats
 	StatsConfig statsConfig;
-	
-	//serialization structures
-	sserialize::UByteArrayAdapter indexFile;
 };
 
 
