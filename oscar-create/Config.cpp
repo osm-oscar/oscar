@@ -46,6 +46,19 @@ inline std::string toString(sserialize::ItemIndex::Types v) {
 	}
 }
 
+inline std::string toString(sserialize::Static::TrieNode::Types nodeType) {
+	switch (nodeType) {
+	case sserialize::Static::TrieNode::T_COMPACT:
+		return "compact";
+	case sserialize::Static::TrieNode::T_LARGE_COMPACT:
+		return "large_compact";
+	case sserialize::Static::TrieNode::T_SIMPLE:
+		return "simple";
+	default:
+		return "invalid";
+	};
+}
+
 inline sserialize::MmappedMemoryType parseMMT(const std::string str) {
 	sserialize::MmappedMemoryType mmType = sserialize::MM_INVALID;
 	if (str == "prg") {
@@ -63,12 +76,12 @@ inline sserialize::MmappedMemoryType parseMMT(const std::string str) {
 	return mmType;
 }
 
-std::ostream& StatsConfig::operator<<(std::ostream& out) const {
+std::ostream& StatsConfig::print(std::ostream& out) const {
 	out << "print memusage: " << toString(memUsage);
 	return out;
 }
 
-std::ostream& IndexStoreConfig::operator<<(std::ostream& out) const {
+std::ostream& IndexStoreConfig::print(std::ostream& out) const {
 	out << "input store: " << inputStore << "\n";
 	out << "type: " << toString(type) << "\n";
 	out << "check: " << toString(check) << "\n";
@@ -76,23 +89,23 @@ std::ostream& IndexStoreConfig::operator<<(std::ostream& out) const {
 	return out;
 }
 
-std::ostream& GridConfig::operator<<(std::ostream& out) const {
+std::ostream& GridConfig::print(std::ostream& out) const {
 	out << "latCount: " << latCount << "\nlonCount: " << lonCount;
 	return out;
 }
 
-std::ostream& RTreeConfig::operator<<(std::ostream& out) const {
+std::ostream& RTreeConfig::print(std::ostream& out) const {
 	out << "latCount: " << latCount << "\nlonCount: " << lonCount;
 	return out;
 }
 
-std::ostream& TagStoreConfig::operator<<(std::ostream& out) const {
+std::ostream& TagStoreConfig::print(std::ostream& out) const {
 	out << "key file: " << tagKeys << "\n";
 	out << "key-values file: " << tagKeyValues;
 	return out;
 }
 
-std::ostream& KVStoreConfig::operator<<(std::ostream& out) const {
+std::ostream& KVStoreConfig::print(std::ostream& out) const {
 	out << "Number of threads: " << numThreads << "\n";
 	out << "Max node table entries: " << sserialize::toString(maxNodeHashTableSize) << "\n";
 	out << "Keys whose values are infalted: " << keysValuesToInflate << "\n";
@@ -158,14 +171,14 @@ std::ostream& KVStoreConfig::operator<<(std::ostream& out) const {
 	return out;
 }
 
-std::ostream& TextSearchConfig::SearchCapabilities::operator<<(std::ostream& out) const {
+std::ostream& TextSearchConfig::SearchCapabilities::print(std::ostream& out) const {
 	out << "caseSensitive: " << (caseSensitive ? "yes" : "no") << "\n";
 	out << "diacritcInSensitive: " << (diacritcInSensitive ? "yes" : "no") << "\n";
 	out << "file: " << fileName << "\n";
 	return out;
 }
 
-std::ostream& TextSearchConfig::operator<<(std::ostream& out) const {
+std::ostream& TextSearchConfig::print(std::ostream& out) const {
 	std::array<std::string, 2> itemTypeNames{{"items", "regions"}};
 	std::array<std::string, 2> tagTypeNames{{"value's keys", "key-values"}};
 	std::array<std::string, 2> queryTypeNames{{"prefix", "suffix"}};
@@ -175,16 +188,16 @@ std::ostream& TextSearchConfig::operator<<(std::ostream& out) const {
 			for(uint32_t queryType(0); queryType < 2; ++queryType) {
 				if (searchCapabilites[itemType][tagType][queryType].enabled) {
 					out << itemTypeNames[itemType] << "::" << tagTypeNames[tagType] << "::" << queryTypeNames[queryType] << ":\n";
-					searchCapabilites[itemType][tagType][queryType].operator<<(out) << "\n";
+					out << searchCapabilites[itemType][tagType][queryType] << "\n";
 				}
 			}
 		}
 	}
-	this->print(out);
 	return out;
 }
 
-void ItemSearchConfig::print(std::ostream& out) const {
+std::ostream & ItemSearchConfig::print(std::ostream& out) const {
+	TextSearchConfig::print(out);
 	if (suffixDelimeters.size()) {
 		out << "\tSuffix delimeters: " << sserialize::stringFromUnicodePoints(suffixDelimeters.cbegin(), suffixDelimeters.cend()) << "\n";
 	}
@@ -197,7 +210,7 @@ void ItemSearchConfig::print(std::ostream& out) const {
 	}
 	out << "\tMaximum merge count for no full prefix index:" << maxPrefixIndexMergeCount << std::endl;
 	out << "\tMaximum merge count for no full suffix index:" << maxSuffixIndexMergeCount << std::endl;
-	out << "\tNodeType: " << oscar_create::Config::toString(nodeType) << std::endl;
+	out << "\tNodeType: " << toString(nodeType) << std::endl;
 	out << "\tAggressive memory usage: " <<  sserialize::toString(aggressiveMem) << std::endl;
 	out << "\tMemory storage type: " << toString(mmType) << "\n";
 	out << "\tMerge Index: " << sserialize::toString(mergeIndex) <<  std::endl;
@@ -217,13 +230,15 @@ void ItemSearchConfig::print(std::ostream& out) const {
 	out << "\n";
 	out << "\tExtensive Checking: " << sserialize::toString(check) <<  "\n";
 	out << "\tThread count: " << threadCount;
+	return out;
 }
 
-void GeoHierarchySearchConfig::print(std::ostream& out) const {
-	ItemSearchConfig::print(out);
+std::ostream & GeoHierarchySearchConfig::print(std::ostream& out) const {
+	return ItemSearchConfig::print(out);
 }
 
-void GeoCellConfig::print(std::ostream& out) const {
+std::ostream & GeoCellConfig::print(std::ostream& out) const {
+	TextSearchConfig::print(out);
 	if (suffixDelimeters.size()) {
 		out << "\tSuffix delimeters: " << sserialize::stringFromUnicodePoints(suffixDelimeters.cbegin(), suffixDelimeters.cend()) << "\n";
 	}
@@ -237,32 +252,35 @@ void GeoCellConfig::print(std::ostream& out) const {
 	}
 	out << "\nmmt: " << toString(mmType);
 	out << "\ncheck: " << toString(check);
+	return out;
 }
 
-void OOMGeoCellConfig::print(std::ostream& out) const {
+std::ostream & OOMGeoCellConfig::print(std::ostream& out) const {
+	TextSearchConfig::print(out);
 	out << "Thread count: " << threadCount;
+	return out;
 }
 
-std::ostream& Config::operator<<(std::ostream& out) const {
-	statsConfig.operator<<(out);
+std::ostream& Config::print(std::ostream& out) const {
+	out << statsConfig;
 	if (indexStoreConfig) {
-		indexStoreConfig->operator<<(out);
+		out << *indexStoreConfig;
 	}
 	if (kvStoreConfig) {
 		out << "KVStoreConfig:\n"; 
-		kvStoreConfig->operator<<(out);
+		out << *kvStoreConfig;
 	}
 	if (gridConfig) {
 		out << "GridConfig:\n";
-		gridConfig->operator<<(out);
+		out << *gridConfig;
 	}
 	if (rTreeConfig) {
 		out << "RTreeConfig:\n";
-		rTreeConfig->operator<<(out);
+		out << *rTreeConfig;
 	}
 	if (tagStoreConfig) {
 		out << "TagStoreConfig:\n";
-		tagStoreConfig->operator<<(out);
+		out << *tagStoreConfig;
 	}
 	for(TextSearchConfig * x : textSearchConfig) {
 		if (!x) {
@@ -284,7 +302,7 @@ std::ostream& Config::operator<<(std::ostream& out) const {
 			break;
 		}
 		out << "]:\n";
-		x->operator<<(out);
+		out << *x;
 	}
 	return out;
 }
@@ -334,13 +352,22 @@ bool TextSearchConfig::valid() const {
 }
 
 bool ItemSearchConfig::valid() const {
-	return mmType != sserialize::MM_INVALID &&
+	return oscar_create::TextSearchConfig::valid() && mmType != sserialize::MM_INVALID &&
 		nodeType != sserialize::Static::TrieNode::T_EMPTY;
 }
 
-bool GeoCellConfig::valid() const {
-	return mmType != sserialize::MM_INVALID;
+bool GeoHierarchySearchConfig::valid() const {
+    return oscar_create::ItemSearchConfig::valid();
 }
+
+bool GeoCellConfig::valid() const {
+	return oscar_create::TextSearchConfig::valid() && mmType != sserialize::MM_INVALID;
+}
+
+bool OOMGeoCellConfig::valid() const {
+    return oscar_create::TextSearchConfig::valid();
+}
+
 
 //parse functions
 StatsConfig::StatsConfig(const Json::Value & cfg) : StatsConfig() {
@@ -805,6 +832,14 @@ gridConfig(0),
 rTreeConfig(0),
 tagStoreConfig(0)
 {}
+
+std::string Config::getOutFileDir() const {
+	return m_outFileName;
+}
+
+std::string Config::getOutFileName(liboscar::FileConfig fc) const {
+	return getOutFileDir() + "/" + liboscar::toString(fc);
+}
 
 Config::ReturnValues Config::fromCmdLineArgs(int argc, char** argv) {
 	std::string inputString, outputString, configString;

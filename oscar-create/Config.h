@@ -15,7 +15,7 @@ struct StatsConfig {
 	StatsConfig() : memUsage(false) {}
 	StatsConfig(const Json::Value & cfg);
 	bool memUsage;
-	std::ostream & operator<<(std::ostream & out) const;
+	std::ostream & print(std::ostream & out) const;
 	bool valid() const;
 };
 
@@ -25,7 +25,7 @@ struct IndexStoreConfig {
 	sserialize::ItemIndex::Types type;
 	bool check;
 	bool deduplicate;
-	std::ostream & operator<<(std::ostream & out) const;
+	std::ostream & print(std::ostream & out) const;
 	bool valid() const;
 };
 
@@ -33,7 +33,7 @@ struct GridConfig {
 	GridConfig(const Json::Value & cfg);
 	uint32_t latCount;
 	uint32_t lonCount;
-	std::ostream & operator<<(std::ostream & out) const;
+	std::ostream & print(std::ostream & out) const;
 	bool valid() const;
 };
 
@@ -41,7 +41,7 @@ struct RTreeConfig {
 	RTreeConfig(const Json::Value & cfg);
 	uint32_t latCount;
 	uint32_t lonCount;
-	std::ostream & operator<<(std::ostream & out) const;
+	std::ostream & print(std::ostream & out) const;
 	bool valid() const;
 };
 
@@ -50,7 +50,7 @@ struct TagStoreConfig {
 	bool enabled;
 	std::string tagKeys;
 	std::string tagKeyValues;
-	std::ostream & operator<<(std::ostream & out) const;
+	std::ostream & print(std::ostream & out) const;
 	bool valid() const;
 };
 
@@ -81,7 +81,7 @@ struct KVStoreConfig {
 	uint32_t numThreads;
 	int itemSortOrder;//as defined by OsmKeyValueObjectStore::ItemSortOrder
 	std::string prioStringsFileName;
-	std::ostream & operator<<(std::ostream & out) const;
+	std::ostream & print(std::ostream & out) const;
 	bool valid() const;
 };
 
@@ -96,13 +96,12 @@ public:
 		bool diacritcInSensitive;
 		std::string fileName;
 		SearchCapabilities() : enabled(false), caseSensitive(false), diacritcInSensitive(false) {}
-		std::ostream & operator<<(std::ostream & out) const;
+		std::ostream & print(std::ostream & out) const;
 	};
 public:
 	TextSearchConfig() : enabled(false), type(liboscar::TextSearch::NONE) {}
 	TextSearchConfig(const Json::Value & v);
-	std::ostream & operator<<(std::ostream & out) const;
-	virtual void print(std::ostream & /*out*/) const {}
+	virtual std::ostream & print(std::ostream & out) const;
 	static TextSearchConfig * parseTyped(const Json::Value& cfg);
 	virtual bool valid() const;
 	bool hasEnabled(QueryType qt) const;
@@ -124,7 +123,7 @@ public:
 	enum class TrieType { TRIE, FULL_INDEX_TRIE, FLAT_GST, FLAT_TRIE};
 public:
 	ItemSearchConfig(const Json::Value & cfg);
-	virtual void print(std::ostream & out) const override;
+	std::ostream & print(std::ostream& out) const override;
 	virtual bool valid() const override;
 public:
 	std::unordered_set<uint32_t> suffixDelimeters;
@@ -149,7 +148,7 @@ public:
 class GeoHierarchySearchConfig: public ItemSearchConfig {
 public:
 	GeoHierarchySearchConfig(const Json::Value & cfg);
-	virtual void print(std::ostream & out) const override;
+	virtual std::ostream & print(std::ostream & out) const override;
 	virtual bool valid() const override;
 	
 };
@@ -159,7 +158,7 @@ public:
 	enum class TrieType { TRIE, FLAT_TRIE };
 public:
 	GeoCellConfig(const Json::Value & cfg);
-	virtual void print(std::ostream & out) const override;
+	virtual std::ostream & print(std::ostream & out) const override;
 	virtual bool valid() const override;
 public:
 	uint32_t threadCount;
@@ -172,7 +171,7 @@ public:
 class OOMGeoCellConfig: public TextSearchConfig {
 public:
 	OOMGeoCellConfig(const Json::Value & cfg);
-	virtual void print(std::ostream & out) const override;
+	virtual std::ostream & print(std::ostream & out) const override;
 	virtual bool valid() const override;
 public:
 	uint32_t threadCount;
@@ -195,13 +194,12 @@ public:
 	std::string getOutFileDir() const;
 	///out file name with full path
 	std::string getOutFileName(liboscar::FileConfig fc) const;
-	sserialize::UByteArrayAdapter ubaFromFC(liboscar::FileConfig fc) const;
+// 	sserialize::UByteArrayAdapter ubaFromFC(liboscar::FileConfig fc) const;
 
-	static std::string help();
-	static std::string toString(sserialize::Static::TrieNode::Types nodeType);
-
-	std::ostream & operator<<(std::ostream & out) const;
+	std::ostream & print(std::ostream & out) const;
 	
+	static std::string help();
+
 	//Variables
 	std::string inFileName;
 
@@ -224,8 +222,23 @@ public:
 	StatsConfig statsConfig;
 };
 
+#define SOBP(__TYPE) inline std::ostream & operator<<(std::ostream & out, const __TYPE & src) { return src.print(out); }
 
-std::ostream& operator<<(std::ostream & out, const Config & opts);
+SOBP(Config)
+SOBP(IndexStoreConfig)
+SOBP(KVStoreConfig)
+SOBP(TextSearchConfig)
+SOBP(TextSearchConfig::SearchCapabilities)
+SOBP(ItemSearchConfig)
+SOBP(GeoCellConfig)
+SOBP(GeoHierarchySearchConfig)
+SOBP(OOMGeoCellConfig)
+SOBP(GridConfig)
+SOBP(RTreeConfig)
+SOBP(TagStoreConfig)
+SOBP(StatsConfig)
+
+#undef SOBP
 
 }//end namespace oscar_create
 
