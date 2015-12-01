@@ -657,6 +657,8 @@ struct SampleSuffixStringsContainer {
 
 template<typename TSuffixStringsContainer, typename TPrefixStringsContainer>
 struct ItemStringsContainer {
+	typedef TSuffixStringsContainer SubStringsContainer;
+	typedef TPrefixStringsContainer PrefixStringsContainer;
 	TSuffixStringsContainer subString;
 	TPrefixStringsContainer prefixOnly;
 	void clear() { 
