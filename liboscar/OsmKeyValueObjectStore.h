@@ -77,8 +77,9 @@ class OsmKeyValueObjectStore: public sserialize::RCWrapper<OsmKeyValueObjectStor
 public:
 	typedef sserialize::RCWrapper<OsmKeyValueObjectStorePrivate> MyBaseClass;
 	typedef OsmKeyValueObjectStoreItem Item;
-	typedef sserialize::Static::KeyValueObjectStore::ValueStringTable ValueStringTable;
-	typedef sserialize::Static::KeyValueObjectStore::KeyStringTable KeyStringTable;
+	typedef sserialize::Static::KeyValueObjectStore KeyValueObjectStore;
+	typedef KeyValueObjectStore::ValueStringTable ValueStringTable;
+	typedef KeyValueObjectStore::KeyStringTable KeyStringTable;
 	typedef sserialize::ReadOnlyAtStlIterator<OsmKeyValueObjectStore, OsmKeyValueObjectStore::Item> const_iterator;
 public:
 	static constexpr uint32_t npos = 0xFFFFFFFF;
@@ -91,6 +92,7 @@ public:
 	virtual ~OsmKeyValueObjectStore();
 	OsmKeyValueObjectStore & operator=(const OsmKeyValueObjectStore & other);
 	uint32_t size() const;
+	const KeyValueObjectStore & kvStore() const;
 	const KeyStringTable & keyStringTable() const;
 	const ValueStringTable & valueStringTable() const;
 	const sserialize::Static::spatial::GeoHierarchy & geoHierarchy() const;
@@ -204,10 +206,11 @@ class OsmKeyValueObjectStorePrivate: public  sserialize::RefCountObject {
 public:
 	typedef sserialize::Static::KeyValueObjectStore::ValueStringTable ValueStringTable;
 	typedef sserialize::Static::KeyValueObjectStore::KeyStringTable KeyStringTable;
+	typedef sserialize::Static::KeyValueObjectStore KeyValueObjectStore;
 private:
 	sserialize::Static::Array<OsmKeyValueObjectStorePayload> m_payload;
 	sserialize::BoundedCompactUintArray m_idToInternalId;
-	sserialize::Static::KeyValueObjectStore m_kv; //objects are ordered according to their internalId
+	KeyValueObjectStore m_kv; //objects are ordered according to their internalId
 	sserialize::Static::spatial::GeoHierarchy m_gh; //storeId is the remapped id, not the internalId
 	sserialize::Static::spatial::TriangulationGeoHierarchyArrangement m_ra;
 	sserialize::Static::spatial::TracGraph m_cg;
@@ -219,7 +222,7 @@ public:
 	uint32_t size() const;
 	sserialize::UByteArrayAdapter::OffsetType getSizeInBytes() const;
 	inline uint32_t toInternalId(uint32_t pos) const { return m_idToInternalId.at(pos); }
-	
+	inline const KeyValueObjectStore & kvStore() const { return m_kv; }
 	inline const KeyStringTable & keyStringTable() const { return m_kv.keyStringTable(); }
 	inline const ValueStringTable & valueStringTable() const { return m_kv.valueStringTable(); }
 	inline const sserialize::Static::spatial::GeoHierarchy & geoHierarchy() const { return m_gh; }

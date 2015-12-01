@@ -33,6 +33,10 @@ uint32_t OsmKeyValueObjectStore::size() const {
 	return priv()->size();
 }
 
+const OsmKeyValueObjectStore::KeyValueObjectStore& OsmKeyValueObjectStore::kvStore() const {
+	return priv()->kvStore();
+}
+
 const OsmKeyValueObjectStore::KeyStringTable &OsmKeyValueObjectStore::keyStringTable() const {
 	return priv()->keyStringTable();
 }
