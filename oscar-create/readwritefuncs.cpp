@@ -249,7 +249,7 @@ void createTagStore(Config & opts, State & state) {
 }
 
 void handleSimpleTextSearch(ItemSearchConfig & cfg, State & state, sserialize::UByteArrayAdapter & dest) {
-	OsmKeyValueObjectStoreDerfer itemsDerefer(cfg, state.store);
+	SimpleSearchTraits itemsDerefer(cfg, state.store);
 	uint32_t itemsBegin = 0;
 	uint32_t itemsEnd = 0;
 	if (cfg.type == liboscar::TextSearch::GEOHIERARCHY) {
@@ -278,7 +278,7 @@ void handleSimpleTextSearch(ItemSearchConfig & cfg, State & state, sserialize::U
 		tree->setCaseSensitivity(false);
 		tree->setAddTransliteratedDiacritics(false);
 
-		tree->fromStringsFactory<OsmKeyValueObjectStoreDerfer>(itemsDerefer, itemsBegin, itemsEnd, cfg.mmType);
+		tree->fromStringsFactory<decltype(itemsDerefer)>(itemsDerefer, itemsBegin, itemsEnd, cfg.mmType);
 		tree->createStaticTrie(trieCfg);
 
 		delete tree;
@@ -294,7 +294,7 @@ void
 handleCellTextSearchBase(GeoCellConfig & cfg, State & state, sserialize::UByteArrayAdapter & dest) {
 	TCT ct(cfg.mmType);
 	sserialize::Static::ItemIndexStore idxStore( new sserialize::detail::ItemIndexStoreFromFactory(&(state.indexFactory)) );
-	ct.create(state.store, idxStore, CellTextCompleterDerfer(cfg, state.store));
+	ct.create(state.store, idxStore, InMemoryCTCSearchTraits(cfg, state.store));
 	sserialize::UByteArrayAdapter::OffsetType bO = dest.tellPutPtr();
 	uint32_t sq = (cfg.hasEnabled(TextSearchConfig::QueryType::SUBSTRING) ? sserialize::StringCompleter::SQ_EPSP : sserialize::StringCompleter::SQ_EP);
 	sq |= (cfg.hasCaseSensitive() ? sserialize::StringCompleter::SQ_CASE_SENSITIVE: sserialize::StringCompleter::SQ_CASE_INSENSITIVE);

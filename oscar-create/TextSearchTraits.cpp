@@ -1,200 +1,134 @@
 #include "TextSearchTraits.h"
+#include "helpers.h"
 #include <regex>
+#include <unordered_set>
 
 namespace oscar_create {
 
-OOM_SA_CTC_Traits::OOM_SA_CTC_Traits(const TextSearchConfig& tsc, const liboscar::Static::OsmKeyValueObjectStore& store) :
-m_state(new State())
-{
 
-}
+FilterState::SingleFilter::SingleFilter(const TextSearchConfig::SearchCapabilities & src, const sserialize::Static::KeyValueObjectStore & kv) {
+	if (!src.enabled || !sserialize::MmappedFile::fileExists(src.fileName)) {
+		return;
+	}
+	std::unordered_set<std::string> keysToStore;
 
+	readKeysFromFile(src.fileName, std::inserter(keysToStore, keysToStore.end()));
+	
+	if (!keysToStore.size()) {
+		return;
+	}
 
-
-OsmKeyValueObjectStoreDerfer::OsmKeyValueObjectStoreDerfer(const TextSearchConfig & tsc, const liboscar::Static::OsmKeyValueObjectStore & store) :
-m_store(store),
-m_filter( std::make_shared< std::unordered_set<uint32_t> >() ),
-m_tagPrefixSearchFilter( std::make_shared< std::unordered_map<uint32_t, std::string> >() ),
-m_tagSuffixSearchFilter( std::make_shared< std::unordered_map<uint32_t, std::string> >() ),
-m_largestId(0),
-m_suffix(tsc.hasEnabled(TextSearchConfig::QueryType::SUBSTRING))
-{
-	std::ifstream file;
-	auto keyStringTable = store.keyStringTable();
-
-	auto keyFun = [&file,&keyStringTable](const std::string & fn, std::unordered_set<std::string> & dest) {
-		file.open(fn);
-		if (file.is_open()) {
-			while (!file.eof()) {
-				std::string key;
-				std::getline(file, key);
-				if (key.size()) {
-					dest.insert(key);
-				}
-			}
-			file.close();
-		}
-		else {
-			std::cerr << "OsmKeyValueObjectStoreDerfer: Failed to open " << fn << std::endl;
-		}
-	};
+	auto keyStringTable = kv.keyStringTable();
+	
+	std::regex keysToStoreRegex;
 	{
-		std::unordered_set<std::string> keysToStore;
-		if (!tsc.keyFile.empty()) {
-			std::regex keysToStoreRegex;
-			{
-				keyFun(tsc.keyFile, keysToStore);
-				std::string regexString("(");
-				for(const std::string & x : keysToStore) {
-					regexString += x + "|";
-				}
-				regexString.back() = ')';
-				keysToStore.clear();
-				
-				keysToStoreRegex = std::regex(regexString);
-			}
-			
-			for(uint32_t i = 0, s = keyStringTable.size(); i < s; ++i) {
-				std::string t = keyStringTable.at(i);
-				if (std::regex_match(t, keysToStoreRegex)) {
-					m_filter->insert(i);
-					m_largestId = std::max(m_largestId, i);
-				}
-			}
+		std::string regexString("(");
+		for(const std::string & x : keysToStore) {
+			regexString += x + "|";
 		}
-		if (!tsc.storeTagsPrefixFile.empty()) {
-			if (tsc.storeTagsPrefixFile == "all") {
-				m_tagPrefixSearchFilter->reserve(keyStringTable.size());
-				m_largestId = std::max(m_largestId, keyStringTable.size());
-				for(uint32_t i = 0, s = keyStringTable.size(); i < s; ++i) {
-					(*m_tagPrefixSearchFilter)[i] = keyStringTable.at(i);
-				}
-			}
-			else {
-				std::unordered_set<std::string> tagsToStore;
-				keyFun(tsc.storeTagsPrefixFile, tagsToStore);
-				for(uint32_t i = 0, s = keyStringTable.size(); i < s; ++i) {
-					std::string t = keyStringTable.at(i);
-					if (tagsToStore.count(t)) {
-						(*m_tagPrefixSearchFilter)[i] = t;
-						m_largestId = std::max(m_largestId, i);
-					}
-				}
-			}
-		}
-		if (!tsc.storeTagsSuffixFile.empty()) {
-			if (tsc.storeTagsSuffixFile == "all") {
-				m_tagSuffixSearchFilter->reserve(keyStringTable.size());
-				m_largestId = std::max(m_largestId, keyStringTable.size());
-				for(uint32_t i = 0, s = keyStringTable.size(); i < s; ++i) {
-					(*m_tagSuffixSearchFilter)[i] = keyStringTable.at(i);
-				}
-			}
-			else {
-				std::unordered_set<std::string> tagsToStore;
-				keyFun(tsc.storeTagsSuffixFile, tagsToStore);
-				for(uint32_t i = 0, s = keyStringTable.size(); i < s; ++i) {
-					std::string t = keyStringTable.at(i);
-					if (tagsToStore.count(t)) {
-						(*m_tagSuffixSearchFilter)[i] = t;
-						m_largestId = std::max(m_largestId, i);
-					}
-				}
-			}
+		regexString.back() = ')';
+		keysToStore.clear();
+		
+		keysToStoreRegex = std::regex(regexString);
+	}
+	
+	for(uint32_t i = 0, s = keyStringTable.size(); i < s; ++i) {
+		std::string t = keyStringTable.at(i);
+		if (std::regex_match(t, keysToStoreRegex)) {
+			this->keys.insert(i);
 		}
 	}
 }
 
-void OsmKeyValueObjectStoreDerfer::operator()(
+FilterState::FilterState(const sserialize::Static::KeyValueObjectStore& kv, const TextSearchConfig& cfg) {
+	for(uint32_t itemType(0); itemType < (int) TextSearchConfig::ItemType::ITEM_TYPE_COUNT; ++itemType) {
+		for(uint32_t tagType(0); tagType < (int) TextSearchConfig::TagType::TAG_TYPE_COUNT; ++tagType) {
+			for(uint32_t queryType(0); queryType < (int) TextSearchConfig::QueryType::QUERY_TYPE_COUNT; ++queryType) {
+				filterInfo[itemType][tagType][queryType] = SingleFilter(cfg.searchCapabilites[itemType][tagType][queryType], kv);
+			}
+		}
+	}
+	for(uint32_t itemType(0); itemType < (int) TextSearchConfig::ItemType::ITEM_TYPE_COUNT; ++itemType) {
+		for(uint32_t queryType(0); queryType < (int) TextSearchConfig::QueryType::QUERY_TYPE_COUNT; ++queryType) {
+			const SingleFilter & sf = filterInfo[itemType][(int)TextSearchConfig::TagType::TAGS][queryType];
+			for(uint32_t x : sf.keys) {
+				keyId2Str[x];
+			}
+		}
+	}
+	for(auto & x : keyId2Str) {
+		x.second = kv.keyStringTable().at(x.first);
+	}
+}
+
+
+
+SimpleSearchBaseTraits::SimpleSearchBaseTraits(const TextSearchConfig & tsc, const liboscar::Static::OsmKeyValueObjectStore & store) : 
+m_state(new BaseSearchTraitsState(store.kvStore(), tsc)),
+m_ies(ItemSearchTraits(m_state).exactStrings()),
+m_iss(ItemSearchTraits(m_state).suffixStrings()),
+m_res(RegionSearchTraits(m_state).exactStrings()),
+m_rss(RegionSearchTraits(m_state).suffixStrings())
+{}
+
+SimpleSearchTraits::SimpleSearchTraits(const TextSearchConfig & tsc, const liboscar::Static::OsmKeyValueObjectStore & store) :
+SimpleSearchBaseTraits(tsc, store),
+m_store(store)
+{}
+
+void SimpleSearchTraits::operator()(
 	uint32_t itemId,
-	sserialize::GeneralizedTrie::SinglePassTrie::StringsContainer & prefixStrings,
+	sserialize::GeneralizedTrie::SinglePassTrie::StringsContainer & exactStrings,
 	sserialize::GeneralizedTrie::SinglePassTrie::StringsContainer & suffixStrings
 ) const
 {
-	throw sserialize::UnimplementedFunctionException("correct derefing not possible since inhertied strings are not correctly handled since addBoundaryInfo to region is gone");
-	auto item = m_store.at(itemId);
-	for(uint32_t i = 0, s = item.size(); i < s; ++i) {
-		uint32_t keyId = item.keyId(i);
-		if (m_filter->count(keyId) > 0) {
-			std::string valueString = item.value(i);
-			if (m_suffix) {
-				suffixStrings.insert(valueString);
-			}
-			prefixStrings.insert(valueString);
-		}
-		if (m_tagPrefixSearchFilter->count(keyId) > 0) {
-			std::string tmp = "@" + m_tagPrefixSearchFilter->at(keyId) + ":" + item.value(i);
-			prefixStrings.insert(tmp);
-		}
-		if (m_tagSuffixSearchFilter->count(keyId) > 0) {
-			std::string tmp = "@" + m_tagSuffixSearchFilter->at(keyId) + ":" + item.value(i);
-			suffixStrings.insert(tmp);
-		}
-		if (m_largestId <= keyId) {
-			break;
+	std::insert_iterator< sserialize::GeneralizedTrie::SinglePassTrie::StringsContainer > eIt(exactStrings, exactStrings.end());
+	std::insert_iterator< sserialize::GeneralizedTrie::SinglePassTrie::StringsContainer > sIt(suffixStrings, suffixStrings.end());
+
+	auto gh = m_store.geoHierarchy();
+	//first insert the item strings, then the strings inherited from regions
+	item_type item = m_store.at(itemId);
+	m_ies(item, eIt);
+	m_iss(item, sIt);
+	for(uint32_t cellId : item.cells()) {
+		auto cell = gh.cell(cellId);
+		for(uint32_t i(0), s(cell.parentsSize()); i < s; ++i) {
+			uint32_t parentGhId = cell.parent(i);
+			uint32_t parentStoreId = gh.ghIdToStoreId(parentGhId);
+			item_type parentItem = m_store.at(parentStoreId);
+			m_res(parentItem, eIt);
+			m_rss(parentItem, sIt);
 		}
 	}
 }
 
-CellTextCompleterDerfer::CellTextCompleterDerfer(const GeoCellConfig & tsc, const liboscar::Static::OsmKeyValueObjectStore & store) :
-OsmKeyValueObjectStoreDerfer(tsc, store),
-m_cfg(tsc)
-{
-	m_dr.init();
-}
 
-void CellTextCompleterDerfer::operator()(
-	const liboscar::Static::OsmKeyValueObjectStore::Item & item,
-	StringsContainer & itemStrings,
-	bool insertsAsItem
-) const
-{
-	TextSearchConfig::ItemType itemType = (insertsAsItem ? TextSearchConfig::ItemType::ITEM : TextSearchConfig::ItemType::REGION);
-	for(uint32_t i = 0, s = item.size(); i < s; ++i) {
-		uint32_t keyId = item.keyId(i);
-		const TextSearchConfig::SearchCapabilities & caps = m_cfg.searchCapabilites[(int)itemType][(int)TextSearchConfig::TagType::VALUES][(int)TextSearchConfig::QueryType::PREFIX];
-		if (m_filter->count(keyId) > 0) {
-			
-			std::string valueString = item.value(i);
-			
-			if (!caps.caseSensitive) {
-				valueString = sserialize::unicode_to_lower(valueString);
-			}
-			if (m_suffix) {
-				itemStrings.subString.push_back(valueString, m_cfg.suffixDelimeters);
-			}
-			else {
-				itemStrings.prefixOnly.push_back(valueString);
-			}
-			if (caps.diacritcInSensitive) {
-				m_dr.transliterate(valueString);
-				if (m_suffix) {
-					itemStrings.subString.push_back(valueString, m_cfg.suffixDelimeters);
-				}
-				else {
-					itemStrings.prefixOnly.push_back(valueString);
-				}
-			}
+InMemoryCTCSearchTraits::InMemoryCTCSearchTraits(const GeoCellConfig & tsc, const liboscar::Static::OsmKeyValueObjectStore & store) :
+SimpleSearchBaseTraits(tsc, store),
+m_suffixDelimeters(tsc.suffixDelimeters)
+{}
+
+void InMemoryCTCSearchTraits::operator()(const item_type & item, StringsContainer & itemStrings, bool insertsAsItem) const {
+	std::unordered_set<std::string> strs;
+	std::insert_iterator< std::unordered_set<std::string> > inserter(strs, strs.end());
+	if (insertsAsItem) {
+		m_ies(item, inserter);
+		itemStrings.prefixOnly.assign(strs.begin(), strs.end());
+		strs.clear();
+		m_iss(item, inserter);
+		for(const std::string & str : strs) {
+			itemStrings.subString.push_back(str, m_suffixDelimeters);
 		}
-		if (insertsAsItem && m_tagPrefixSearchFilter->count(keyId) > 0) {
-			std::string tmp = "@" + m_tagPrefixSearchFilter->at(keyId) + ":" + item.value(i);
-			if (!caps.caseSensitive) {
-				tmp = sserialize::unicode_to_lower(tmp);
-			}
-			itemStrings.prefixOnly.emplace_back(std::move(tmp));
-		}
-		else if (insertsAsItem && m_tagSuffixSearchFilter->count(keyId) > 0) {
-			std::string tmp = "@" + m_tagSuffixSearchFilter->at(keyId) + ":" + item.value(i);
-			if (!caps.caseSensitive) {
-				tmp = sserialize::unicode_to_lower(tmp);
-			}
-			itemStrings.subString.push_back(tmp, m_cfg.suffixDelimeters);
-		}
-		else if (m_largestId <= keyId) {
-			break;
+	}
+	else {
+		m_res(item, inserter);
+		itemStrings.prefixOnly.assign(strs.begin(), strs.end());
+		strs.clear();
+		m_rss(item, inserter);
+		for(const std::string & str : strs) {
+			itemStrings.subString.push_back(str, m_suffixDelimeters);
 		}
 	}
 }
-
 
 }//end namespace oscar_create

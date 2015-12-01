@@ -161,8 +161,7 @@ std::ostream& KVStoreConfig::operator<<(std::ostream& out) const {
 std::ostream& TextSearchConfig::SearchCapabilities::operator<<(std::ostream& out) const {
 	out << "caseSensitive: " << (caseSensitive ? "yes" : "no") << "\n";
 	out << "diacritcInSensitive: " << (diacritcInSensitive ? "yes" : "no") << "\n";
-	out << "tagFile: " << keysFn << "\n";
-	out << "valueFile: " << keyValuesFn;
+	out << "file: " << fileName << "\n";
 	return out;
 }
 
@@ -325,7 +324,7 @@ bool TextSearchConfig::valid() const {
 		for(uint32_t tagType(0); tagType < 2; ++tagType) {
 			for(uint32_t queryType(0); queryType < 2; ++queryType) {
 				const SearchCapabilities & cap = searchCapabilites[itemType][tagType][queryType];
-				if (cap.enabled & (!sserialize::MmappedFile::fileExists(cap.keysFn) || !sserialize::MmappedFile::fileExists(cap.keyValuesFn))) {
+				if (cap.enabled && !sserialize::MmappedFile::fileExists(cap.fileName)) {
 					return false;
 				}
 			}
@@ -622,14 +621,9 @@ void TextSearchConfig::parseKvConfig(const Json::Value& cfg, TextSearchConfig::I
 		cap.diacritcInSensitive = !v.asBool();
 	}
 	
-	v = cfg["keys"];
+	v = cfg["file"];
 	if (v.isString()) {
-		cap.keysFn = v.asString();
-	}
-	
-	v = cfg["keyValues"];
-	if (v.isString()) {
-		cap.keyValuesFn = v.asString();
+		cap.fileName = v.asString();
 	}
 }
 

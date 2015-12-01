@@ -87,15 +87,14 @@ struct KVStoreConfig {
 
 class TextSearchConfig {
 public:
-	enum class ItemType : int { ITEM=0, REGION=1 };
-	enum class QueryType : int { PREFIX=0, SUBSTRING=1 };
-	enum class TagType : int { VALUES, TAGS};
+	enum class ItemType : int { ITEM=0, REGION=1, ITEM_TYPE_COUNT=2};
+	enum class QueryType : int { PREFIX=0, SUBSTRING=1, QUERY_TYPE_COUNT=2};
+	enum class TagType : int { VALUES=0, TAGS=1, TAG_TYPE_COUNT=2};
 	struct SearchCapabilities {
 		bool enabled;
 		bool caseSensitive;
 		bool diacritcInSensitive;
-		std::string keysFn;
-		std::string keyValuesFn;
+		std::string fileName;
 		SearchCapabilities() : enabled(false), caseSensitive(false), diacritcInSensitive(false) {}
 		std::ostream & operator<<(std::ostream & out) const;
 	};
@@ -103,7 +102,7 @@ public:
 	TextSearchConfig() : enabled(false), type(liboscar::TextSearch::NONE) {}
 	TextSearchConfig(const Json::Value & v);
 	std::ostream & operator<<(std::ostream & out) const;
-	virtual void print(std::ostream & out) const = 0;
+	virtual void print(std::ostream & /*out*/) const {}
 	static TextSearchConfig * parseTyped(const Json::Value& cfg);
 	virtual bool valid() const;
 	bool hasEnabled(QueryType qt) const;
