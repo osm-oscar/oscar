@@ -159,12 +159,15 @@ std::ostream& KVStoreConfig::print(std::ostream& out) const {
 	out << "\n";
 	out << "Read boundaries: ";
 	if (readBoundaries) {
-		out << "initial=" << polyStoreLatCount << "x" << polyStoreLonCount;
-		out << ", max triangle per cell="<< polyStoreMaxTriangPerCell << ", max triangle centroid dist=" << triangMaxCentroidDist << "\n";
+		out << "\n";
+		out << "\tinitial=" << latCount << "x" << lonCount << "\n";
+		out << "\tmax triangle per cell="<< maxTriangPerCell << "\n";
+		out << "\tmax triangle centroid dist=" << maxTriangCentroidDist;
 	}
 	else {
-		out << "no" << std::endl;
+		out << "no";
 	}
+	out << "\n";
 	out << "Keys defining regions=" << keysDefiningRegions << "\n";
 	out << "Key:Values defining regions=" << keyValuesDefiningRegions << "\n";
 	out << " FullRegionIndex: " << (fullRegionIndex ? "yes" : "no" );
@@ -172,9 +175,9 @@ std::ostream& KVStoreConfig::print(std::ostream& out) const {
 }
 
 std::ostream& TextSearchConfig::SearchCapabilities::print(std::ostream& out) const {
-	out << "caseSensitive: " << (caseSensitive ? "yes" : "no") << "\n";
-	out << "diacritcInSensitive: " << (diacritcInSensitive ? "yes" : "no") << "\n";
-	out << "file: " << fileName << "\n";
+	out << "\tcaseSensitive: " << (caseSensitive ? "yes" : "no") << "\n";
+	out << "\tdiacritcInSensitive: " << (diacritcInSensitive ? "yes" : "no") << "\n";
+	out << "\tfile: " << fileName;
 	return out;
 }
 
@@ -233,9 +236,14 @@ std::ostream & ItemSearchConfig::print(std::ostream& out) const {
 	return out;
 }
 
+std::ostream& GeoHierarchyItemsSearchConfig::print(std::ostream& out) const {
+    return oscar_create::ItemSearchConfig::print(out);
+}
+
 std::ostream & GeoHierarchySearchConfig::print(std::ostream& out) const {
 	return ItemSearchConfig::print(out);
 }
+
 
 std::ostream & GeoCellConfig::print(std::ostream& out) const {
 	TextSearchConfig::print(out);
@@ -257,30 +265,33 @@ std::ostream & GeoCellConfig::print(std::ostream& out) const {
 
 std::ostream & OOMGeoCellConfig::print(std::ostream& out) const {
 	TextSearchConfig::print(out);
-	out << "Thread count: " << threadCount;
+	out << "Thread count: " << threadCount << "\n";
+	out << "Max memory usage: " << sserialize::prettyFormatSize(maxMemoryUsage);
 	return out;
 }
 
 std::ostream& Config::print(std::ostream& out) const {
-	out << statsConfig;
+	out << "Stats config:\n";
+	out << statsConfig << "\n";
 	if (indexStoreConfig) {
-		out << *indexStoreConfig;
+		out << "IndexStoreConfig: \n";
+		out << *indexStoreConfig << "\n";
 	}
 	if (kvStoreConfig) {
 		out << "KVStoreConfig:\n"; 
-		out << *kvStoreConfig;
+		out << *kvStoreConfig << "\n";
 	}
 	if (gridConfig) {
 		out << "GridConfig:\n";
-		out << *gridConfig;
+		out << *gridConfig << "\n";
 	}
 	if (rTreeConfig) {
 		out << "RTreeConfig:\n";
-		out << *rTreeConfig;
+		out << *rTreeConfig << "\n";
 	}
 	if (tagStoreConfig) {
 		out << "TagStoreConfig:\n";
-		out << *tagStoreConfig;
+		out << *tagStoreConfig << "\n";
 	}
 	for(TextSearchConfig * x : textSearchConfig) {
 		if (!x) {
@@ -294,6 +305,9 @@ std::ostream& Config::print(std::ostream& out) const {
 		case liboscar::TextSearch::GEOCELL:
 			out << "geocell";
 			break;
+		case liboscar::TextSearch::OOMGEOCELL:
+			out << "oomgeocell";
+			break;
 		case liboscar::TextSearch::GEOHIERARCHY:
 			out << "geohierarchy";
 			break;
@@ -302,7 +316,7 @@ std::ostream& Config::print(std::ostream& out) const {
 			break;
 		}
 		out << "]:\n";
-		out << *x;
+		out << *x << "\n";
 	}
 	return out;
 }
@@ -348,12 +362,16 @@ bool TextSearchConfig::valid() const {
 			}
 		}
 	}
-	return false;
+	return true;
 }
 
 bool ItemSearchConfig::valid() const {
 	return oscar_create::TextSearchConfig::valid() && mmType != sserialize::MM_INVALID &&
 		nodeType != sserialize::Static::TrieNode::T_EMPTY;
+}
+
+bool GeoHierarchyItemsSearchConfig::valid() const {
+    return oscar_create::ItemSearchConfig::valid();
 }
 
 bool GeoHierarchySearchConfig::valid() const {
@@ -420,10 +438,16 @@ deduplicate(true)
 }
 
 GridConfig::GridConfig(const Json::Value& cfg) :
+enabled(false),
 latCount(0),
 lonCount(0)
 {
-	Json::Value v = cfg["latcount"];
+	Json::Value v = cfg["enabled"];
+	if (v.isBool()) {
+		enabled = v.asBool();
+	}
+	
+	v = cfg["latcount"];
 	if (v.isNumeric()) {
 		latCount = v.asUInt();
 	}
@@ -435,10 +459,16 @@ lonCount(0)
 }
 
 RTreeConfig::RTreeConfig(const Json::Value& cfg) :
+enabled(false),
 latCount(0),
 lonCount(0)
 {
-	Json::Value v = cfg["latcount"];
+	Json::Value v = cfg["enabled"];
+	if (v.isBool()) {
+		enabled = v.asBool();
+	}
+	
+	v = cfg["latcount"];
 	if (v.isNumeric()) {
 		latCount = v.asUInt();
 	}
@@ -469,6 +499,7 @@ enabled(false)
 }
 
 KVStoreConfig::KVStoreConfig(const Json::Value& cfg) :
+enabled(false),
 maxNodeHashTableSize(std::numeric_limits<uint32_t>::max()),
 saveEverything(false),
 saveEveryTag(false),
@@ -477,13 +508,19 @@ maxNodeId(0),
 autoMaxMinNodeId(false),
 readBoundaries(false),
 fullRegionIndex(false),
-polyStoreLatCount(0),
-polyStoreLonCount(0),
-polyStoreMaxTriangPerCell(0),
+latCount(0),
+lonCount(0),
+maxTriangPerCell(std::numeric_limits<uint32_t>::max()),
+maxTriangCentroidDist(std::numeric_limits<double>::max()),
 numThreads(0),
 itemSortOrder(OsmKeyValueObjectStore::ISO_NONE)
 {
-	Json::Value v = cfg["threadCount"];
+	Json::Value v = cfg["enabled"];
+	if (v.isBool()) {
+		enabled = v.asBool();
+	}
+	
+	v = cfg["threadCount"];
 	if (v.isNumeric()) {
 		numThreads = v.asUInt();
 	}
@@ -491,6 +528,31 @@ itemSortOrder(OsmKeyValueObjectStore::ISO_NONE)
 	v = cfg["fullRegionIndex"];
 	if (v.isBool()) {
 		fullRegionIndex = v.asBool();
+	}
+	
+	v = cfg["latCount"];
+	if (v.isNumeric()) {
+		latCount = v.asUInt();
+	}
+	
+	v = cfg["lonCount"];
+	if (v.isNumeric()) {
+		lonCount = v.asUInt();
+	}
+	
+	v = cfg["readBoundaries"];
+	if (latCount && lonCount && v.isBool()) {
+		readBoundaries = v.asBool();
+	}
+	
+	v = cfg["maxTriangPerCell"];
+	if (v.isNumeric()) {
+		maxTriangPerCell = v.asUInt64();
+	}
+	
+	v = cfg["maxTriangCentroidDist"];
+	if (v.isNumeric()) {
+		maxTriangCentroidDist = v.asDouble();
 	}
 	
 	v = cfg["addParentInfo"];
@@ -560,6 +622,11 @@ itemSortOrder(OsmKeyValueObjectStore::ISO_NONE)
 		}
 	}
 	
+	v = cfg["splitValues"];
+	if (v.isString()) {
+		keysValuesToInflate = v.asString();
+	}
+	
 	v = cfg["scoring"];
 	if (v.isObject()) {
 		Json::Value tmp = v["config"];
@@ -579,17 +646,20 @@ itemSortOrder(OsmKeyValueObjectStore::ISO_NONE)
 			else if (order == "name") {
 				itemSortOrder = OsmKeyValueObjectStore::ISO_SCORE_NAME;
 			}
-			if (order == "priority" && tmp["priority"].isString() &&
-				sserialize::MmappedFile::fileExists(tmp["priority"].asString()))
+			if (order == "priority" && v["priority"].isString() &&
+				sserialize::MmappedFile::fileExists(v["priority"].asString()))
 			{
-				prioStringsFileName = tmp["priority"].asString();
+				prioStringsFileName = v["priority"].asString();
 				itemSortOrder = OsmKeyValueObjectStore::ISO_SCORE_PRIO_STRINGS;
 			}
 		}
 	}
 }
 
-TextSearchConfig::TextSearchConfig(const Json::Value& cfg) {
+TextSearchConfig::TextSearchConfig(const Json::Value& cfg) :
+enabled(false),
+type(liboscar::TextSearch::INVALID)
+{
 	Json::Value v = cfg["enabled"];
 	if (v.isBool()) {
 		enabled = v.asBool();
@@ -657,27 +727,50 @@ void TextSearchConfig::parseKvConfig(const Json::Value& cfg, TextSearchConfig::I
 TextSearchConfig* TextSearchConfig::parseTyped(const Json::Value& cfg) {
 	Json::Value tv = cfg["type"];
 	Json::Value cv = cfg["config"];
+	TextSearchConfig * result = 0;
 	if (tv.isString() && cv.isObject()) {
 		std::string t = tv.asString();
 		if (t == "items") {
-			return new ItemSearchConfig(cv);
+			result = new ItemSearchConfig(cv);
+			result->type = liboscar::TextSearch::ITEMS;
 		}
-		else if (t == "geoh") {
-			return new GeoHierarchySearchConfig(cv);
+		else if (t == "regions") {
+			result = new GeoHierarchySearchConfig(cv);
+			result->type = liboscar::TextSearch::GEOHIERARCHY;
+		}
+		else if (t == "geoitems") {
+			result = new GeoHierarchyItemsSearchConfig(cv);
+			result->type = liboscar::TextSearch::GEOHIERARCHY;
 		}
 		else if (t == "geocell") {
-			return new GeoCellConfig(cv);
+			result = new GeoCellConfig(cv);
+			result->type = liboscar::TextSearch::GEOCELL;
 		}
 		else if (t == "oomgeocell") {
-			return new OOMGeoCellConfig(cv);
+			result = new OOMGeoCellConfig(cv);
+			result->type = liboscar::TextSearch::OOMGEOCELL;
+		}
+		else {
+			std::cerr << "Invalid text search type" << std::endl;
 		}
 	}
-	std::cerr << "Invalid text search type" << std::endl;
-	return 0;
+	else {
+		std::cerr << "Invalid text search config" << std::endl;
+	}
+	return result;
 }
 
 ItemSearchConfig::ItemSearchConfig(const Json::Value& cfg) :
-TextSearchConfig(cfg)
+TextSearchConfig(cfg),
+mergeIndex(false),
+aggressiveMem(false),
+mmType(sserialize::MM_SHARED_MEMORY),
+trieType(TrieType::FULL_INDEX_TRIE),
+nodeType(sserialize::Static::TrieNode::T_LARGE_COMPACT),
+maxPrefixIndexMergeCount(0),
+maxSuffixIndexMergeCount(0),
+check(false),
+threadCount(0)
 {
 	Json::Value v = cfg["suffixDelimeters"];
 	if (v.isString()) {
@@ -692,7 +785,7 @@ TextSearchConfig(cfg)
 		mergeIndex = v.asBool();
 	}
 	
-	v = cfg["aggressivMemory"];
+	v = cfg["aggressiveMemory"];
 	if (v.isBool()) {
 		aggressiveMem = v.asBool();
 	}
@@ -769,12 +862,20 @@ TextSearchConfig(cfg)
 	}
 }
 
+GeoHierarchyItemsSearchConfig::GeoHierarchyItemsSearchConfig(const Json::Value& cfg) :
+ItemSearchConfig(cfg)
+{}
+
 GeoHierarchySearchConfig::GeoHierarchySearchConfig(const Json::Value& cfg) :
 ItemSearchConfig(cfg)
 {}
 
 GeoCellConfig::GeoCellConfig(const Json::Value & cfg) :
-TextSearchConfig(cfg)
+TextSearchConfig(cfg),
+threadCount(0),
+trieType(TrieType::FLAT_TRIE),
+mmType(sserialize::MM_SHARED_MEMORY),
+check(false)
 {
 	Json::Value v = cfg["threadCount"];
 	if (v.isNumeric()) {
@@ -814,18 +915,28 @@ TextSearchConfig(cfg)
 	}
 }
 
-OOMGeoCellConfig::OOMGeoCellConfig(const Json::Value& cfg) {
+OOMGeoCellConfig::OOMGeoCellConfig(const Json::Value& cfg) :
+TextSearchConfig(cfg),
+threadCount(0),
+maxMemoryUsage(0xFFFFFFFF)
+{
 	Json::Value v = cfg["threadCount"];
 	if (v.isNumeric()) {
 		threadCount = v.asUInt();
 	}
+	
+	v = cfg["maxMemoryUsage"];
+	if (v.isNumeric()) {
+		maxMemoryUsage = v.asUInt64()*(static_cast<uint32_t>(1) << 20);
+	}
 }
 
 std::string Config::help() {
-	return std::string("-i <input.osm.pbf|input dir> -o <output dir> -c <config.json>");
+	return std::string("[-a] -i <input.osm.pbf|input dir> -o <output dir> -c <config.json>");
 }
 
 Config::Config() :
+ask(false),
 indexStoreConfig(0),
 kvStoreConfig(0),
 gridConfig(0),
@@ -841,22 +952,51 @@ std::string Config::getOutFileName(liboscar::FileConfig fc) const {
 	return getOutFileDir() + "/" + liboscar::toString(fc);
 }
 
-Config::ReturnValues Config::fromCmdLineArgs(int argc, char** argv) {
-	std::string inputString, outputString, configString;
+Config::ValidationReturnValues Config::validate() {
+	int tmp = VRV_OK;
+	if (tagStoreConfig && tagStoreConfig->enabled && !tagStoreConfig->valid()) {
+		tmp |= VRV_BROKEN_TAG_STORE;
+	}
+	if (kvStoreConfig && kvStoreConfig->enabled && !kvStoreConfig->valid()) {
+		tmp |= VRV_BROKEN_KV_STORE;
+	}
+	if (gridConfig && gridConfig->enabled && !gridConfig->valid()) {
+		tmp |= VRV_BROKEN_GRID;
+	}
+	if (!indexStoreConfig || !indexStoreConfig->valid()) {
+		tmp |= VRV_BROKEN_INDEX_STORE;
+	}
+	if (rTreeConfig && rTreeConfig->enabled && !rTreeConfig->valid()) {
+		tmp |= VRV_BROKEN_RTREE;
+	}
+	for(TextSearchConfig * t : textSearchConfig) {
+		if (t && t->enabled && !t->valid()) {
+			tmp |= VRV_BROKEN_TEXT_SEARCH;
+		}
+	}
+	return (ValidationReturnValues) tmp;
+}
 
-	for(int i=1; i < argc; i++) {
+
+Config::ReturnValues Config::fromCmdLineArgs(int argc, char** argv) {
+	std::string configString;
+
+	for(int i=1; i < argc; ++i) {
 		std::string token(argv[i]);
 		if (token == "-i" && i+1 < argc) {
-			inputString = std::string(argv[i+1]);
+			inFileName = std::string(argv[i+1]);
 			++i;
 		}
 		else if (token == "-o" && i+1 < argc) {
-			outputString = std::string(argv[i+1]);
+			m_outFileName = std::string(argv[i+1]);
 			++i;
 		}
 		else if (token == "-c" && i+1 < argc) {
 			configString = std::string(argv[i+1]);
 			++i;
+		}
+		else if (token == "-a") {
+			ask = true;
 		}
 	}
 	

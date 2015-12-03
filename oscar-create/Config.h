@@ -31,6 +31,7 @@ struct IndexStoreConfig {
 
 struct GridConfig {
 	GridConfig(const Json::Value & cfg);
+	bool enabled;
 	uint32_t latCount;
 	uint32_t lonCount;
 	std::ostream & print(std::ostream & out) const;
@@ -39,6 +40,7 @@ struct GridConfig {
 
 struct RTreeConfig {
 	RTreeConfig(const Json::Value & cfg);
+	bool enabled;
 	uint32_t latCount;
 	uint32_t lonCount;
 	std::ostream & print(std::ostream & out) const;
@@ -56,6 +58,7 @@ struct TagStoreConfig {
 
 struct KVStoreConfig {
 	KVStoreConfig(const Json::Value & cfg);
+	bool enabled;
 	uint32_t maxNodeHashTableSize; 
 	std::string keyToStoreFn;
 	std::string keyValuesToStoreFn;
@@ -74,10 +77,10 @@ struct KVStoreConfig {
 	bool readBoundaries;
 	bool fullRegionIndex;
 	bool addParentInfo;
-	uint32_t polyStoreLatCount;
-	uint32_t polyStoreLonCount;
-	uint32_t polyStoreMaxTriangPerCell;
-	double triangMaxCentroidDist;
+	uint32_t latCount;
+	uint32_t lonCount;
+	uint32_t maxTriangPerCell;
+	double maxTriangCentroidDist;
 	uint32_t numThreads;
 	int itemSortOrder;//as defined by OsmKeyValueObjectStore::ItemSortOrder
 	std::string prioStringsFileName;
@@ -100,7 +103,7 @@ public:
 	};
 public:
 	TextSearchConfig() : enabled(false), type(liboscar::TextSearch::NONE) {}
-	TextSearchConfig(const Json::Value & v);
+	TextSearchConfig(const Json::Value& cfg);
 	virtual std::ostream & print(std::ostream & out) const;
 	static TextSearchConfig * parseTyped(const Json::Value& cfg);
 	virtual bool valid() const;
@@ -145,12 +148,18 @@ public:
 	uint32_t threadCount;
 };
 
+class GeoHierarchyItemsSearchConfig: public ItemSearchConfig {
+public:
+	GeoHierarchyItemsSearchConfig(const Json::Value & cfg);
+	virtual std::ostream & print(std::ostream & out) const override;
+	virtual bool valid() const override;
+};
+
 class GeoHierarchySearchConfig: public ItemSearchConfig {
 public:
 	GeoHierarchySearchConfig(const Json::Value & cfg);
 	virtual std::ostream & print(std::ostream & out) const override;
 	virtual bool valid() const override;
-	
 };
 
 class GeoCellConfig: public TextSearchConfig {
@@ -181,16 +190,17 @@ public:
 class Config {
 public:
 	enum ReturnValues { RV_OK, RV_FAILED, RV_HELP};
-	enum ValidationReturnValues { VRV_OK, VRV_BROKEN };
+	enum ValidationReturnValues {
+		VRV_OK = 0,
+		VRV_BROKEN=0x1, VRV_BROKEN_TAG_STORE=0x2, VRV_BROKEN_INDEX_STORE=0x4, VRV_BROKEN_TEXT_SEARCH=0x8,
+		VRV_BROKEN_GRID=0x10, VRV_BROKEN_RTREE=0x20, VRV_BROKEN_KV_STORE=0x80};
 private:
 	std::string m_outFileName;
-	bool m_appendConfigToOutFileName;
 public:
 	Config();
 	~Config() {}
 	ReturnValues fromCmdLineArgs(int argc, char** argv);
 	ValidationReturnValues validate();
-	sserialize::GeneralizedTrie::GeneralizedTrieCreatorConfig toTrieConfig(const TextSearchConfig & cfg);
 	std::string getOutFileDir() const;
 	///out file name with full path
 	std::string getOutFileName(liboscar::FileConfig fc) const;
@@ -202,6 +212,9 @@ public:
 
 	//Variables
 	std::string inFileName;
+	
+	//interaction
+	bool ask;
 
 	IndexStoreConfig * indexStoreConfig;
 	
