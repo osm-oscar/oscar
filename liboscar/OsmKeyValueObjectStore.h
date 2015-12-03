@@ -80,7 +80,7 @@ public:
 	typedef sserialize::Static::KeyValueObjectStore KeyValueObjectStore;
 	typedef KeyValueObjectStore::ValueStringTable ValueStringTable;
 	typedef KeyValueObjectStore::KeyStringTable KeyStringTable;
-	typedef sserialize::ReadOnlyAtStlIterator<OsmKeyValueObjectStore, OsmKeyValueObjectStore::Item> const_iterator;
+	typedef sserialize::ReadOnlyAtStlIterator<const OsmKeyValueObjectStore*, OsmKeyValueObjectStore::Item> const_iterator;
 public:
 	static constexpr uint32_t npos = 0xFFFFFFFF;
 private:

@@ -62,19 +62,19 @@ sserialize::UByteArrayAdapter::OffsetType OsmKeyValueObjectStore::getSizeInBytes
 }
 
 OsmKeyValueObjectStore::const_iterator OsmKeyValueObjectStore::begin() const {
-	return const_iterator(0, *this);
+	return const_iterator(0, this);
 }
 
 OsmKeyValueObjectStore::const_iterator OsmKeyValueObjectStore::cbegin() const {
-	return const_iterator(0, *this);
+	return const_iterator(0, this);
 }
 
 OsmKeyValueObjectStore::const_iterator OsmKeyValueObjectStore::end() const {
-	return const_iterator(size(), *this);
+	return const_iterator(size(), this);
 }
 
 OsmKeyValueObjectStore::const_iterator OsmKeyValueObjectStore::cend() const {
-	return const_iterator(size(), *this);
+	return const_iterator(size(), this);
 }
 
 uint32_t OsmKeyValueObjectStore::toInternalId(uint32_t itemId) const {
