@@ -3,8 +3,8 @@
 		"print-memory-usage" : false
 	},
 	"tempdir" : {
-		"fast" : "/dev/shm/",
-		"slow" : "./"
+		"fast" : "/dev/shm/osmc",
+		"slow" : "./tempdir/osmc"
 	},
 	"index" : {
 		"type" : "(rline|simple|wah|de|rlede|native)",
@@ -12,6 +12,7 @@
 		"deduplicate" : true,
 	},
 	"store" : {
+		"enabled" : false,
 		"threadCount" : 0,
 		"fullRegionIndex" : false,
 		"addParentInfo" : false,
@@ -35,6 +36,7 @@
 			"keys" : "file with keys defining regions",
 			"keyValues" : "file with key:values defining regions"
 		},
+		"splitValues" : "file with keys whose values are split",
 		"scoring" : {
 			"config" : "scores of keys and key:values"
 		},
@@ -62,7 +64,7 @@
 		"keyvalues" : "path-to-file"
 	},
 	"textsearch" : {
-		"type" : "items|geoh|geocell|oomgeocell",
+		"type" : "items|regions|geoitems|geocell|oomgeocell",
 		"config" : {
 			"enabled" : false,
 			"_comment" : "base config part, all configs need to have this",
@@ -88,19 +90,25 @@
 			"_comment" : "items/geoh config",
 			"caseSensitive" : false,
 			"diacriticSensitive" : false,
-			"aggressivMemory" : false,
+			"aggressiveMemory" : false,
 			"check" : false,
 			"mergeIndex" : false,
 			"mmt" : "prg|shm|file",
 			"suffixDelimeters" : "",
 			"levelsWithoutIndex" : [0,1,2],
 			"nodeType" : "simple|compact|large",
-			"trieType" : "trie|fitrie|fgst|flattrie"
+			"trieType" : "trie|fitrie|fgst|flattrie",
+			"maxPrefixIndexMergeCount" : 0,
+			"maxSuffixIndexMergeCount" : 0,
+			"threadCount" : 0
 		},
 		"config" : {
 			"_comment" : "geocell config",
 			"suffixDelimeters" : "",
-			"threadCount" : 0
+			"threadCount" : 0,
+			"trieType" : "trie|flattrie",
+			"mmt" : "prg|shm|file",
+			"check" : false
 		},
 		"config" : {
 			"_comment"  : "oomgeocell config",
