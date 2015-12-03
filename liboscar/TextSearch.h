@@ -26,7 +26,9 @@ namespace liboscar {
 class TextSearch {
 public:
 	enum Type {NONE=0, BEGIN_STRING_COMPLETERS=1, ITEMS=1, GEOHIERARCHY=2, END_STRING_COMPLETERS=3,
-						BEGIN_CELL_TEXT_COMPLETERS=3, GEOCELL=3, END_CELL_TEXT_COMPLETERS=4, GEOHIERARCHY_AND_ITEMS=5, END_ALL_COMPLETERS=5, INVALID=0xFF};
+						BEGIN_CELL_TEXT_COMPLETERS=3, GEOCELL=3, OOMGEOCELL=4, END_CELL_TEXT_COMPLETERS=5,
+						GEOHIERARCHY_AND_ITEMS=6,
+						END_ALL_COMPLETERS=7, INVALID=0xFF};
 
 	typedef sserialize::RCPtrWrapper<sserialize::RefCountObject> CompleterBasePtr;
 	///Traits class to calculate the result of getAuto()
