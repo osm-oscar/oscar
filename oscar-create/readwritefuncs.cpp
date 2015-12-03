@@ -87,7 +87,7 @@ void handleGeoSearch(Config & opts, State & state) {
 		return;
 	}
 	liboscar::GeoSearchCreator gsCreator(dest);
-	if (opts.gridConfig) {
+	if (opts.gridConfig && opts.gridConfig->enabled) {
 		gsCreator.beginRawPut(liboscar::GeoSearch::ITEMS);
 		if (createAndWriteGrid(opts, state, gsCreator.rawPut())) {
 			std::cout << "Created grid" << std::endl;
@@ -98,7 +98,7 @@ void handleGeoSearch(Config & opts, State & state) {
 		gsCreator.endRawPut();
 	}
 	
-	if (opts.rTreeConfig) {
+	if (opts.rTreeConfig && opts.rTreeConfig->enabled) {
 		gsCreator.beginRawPut(liboscar::GeoSearch::ITEMS);
 		if (createAndWriteGridRTree(opts, state, gsCreator.rawPut())) {
 			std::cout << "Created rtree" << std::endl;
@@ -328,7 +328,54 @@ handleCellTextSearch(GeoCellConfig & cfg, State & state, sserialize::UByteArrayA
 	}
 }
 
+void handleOOMCellTextSearch(OOMGeoCellConfig & cfg, State & state, sserialize::UByteArrayAdapter & dest) {
+	std::shared_ptr<BaseSearchTraitsState> searchState(new BaseSearchTraitsState(state.store.kvStore(), cfg));
+	OOM_SA_CTC_Traits<TextSearchConfig::ItemType::ITEM> itemTraits(cfg, state.store);
+	OOM_SA_CTC_Traits<TextSearchConfig::ItemType::REGION> regionTraits(cfg, state.store);
+	
+	int sq = sserialize::StringCompleter::SQ_NONE;
+	if (cfg.hasEnabled(TextSearchConfig::QueryType::PREFIX)) {
+		sq |= sserialize::StringCompleter::SQ_EP;
+	}
+	if (cfg.hasEnabled(TextSearchConfig::QueryType::SUBSTRING)) {
+		sq |= sserialize::StringCompleter::SQ_SSP;
+	}
+	if(cfg.hasCaseSensitive()) {
+		sq |= sserialize::StringCompleter::SQ_CASE_SENSITIVE;
+	}
+	else {
+		sq |= sserialize::StringCompleter::SQ_CASE_INSENSITIVE;
+	}
+	
+	
+	sserialize::appendSACTC(
+		state.store.begin(), state.store.end(),
+		state.store.begin(), state.store.begin()+state.store.geoHierarchy().regionSize(),
+		itemTraits, regionTraits,
+		cfg.maxMemoryUsage,
+		(sserialize::StringCompleter::SupportedQuerries)sq,
+		state.indexFactory,
+		dest
+	);
+}
+
 void handleTextSearch(Config & opts, State & state) {
+	if (!opts.textSearchConfig.size()) {
+		return;
+	}
+	else {
+		bool enabled = false;
+		for(TextSearchConfig * x  : opts.textSearchConfig) {
+			if (x && x->enabled) {
+				enabled = true;
+				break;
+			}
+		}
+		if (!enabled) {
+			return;
+		}
+	}
+
 	std::string fn = liboscar::fileNameFromFileConfig(opts.getOutFileDir(), liboscar::FC_TEXT_SEARCH, false);
 	sserialize::UByteArrayAdapter dest( sserialize::UByteArrayAdapter::createFile(1, fn) );
 	if (dest.size() != 1) {
@@ -344,6 +391,9 @@ void handleTextSearch(Config & opts, State & state) {
 		tsCreator.beginRawPut(x->type);
 		if (x->type == liboscar::TextSearch::GEOCELL) {
 			handleCellTextSearch(dynamic_cast<GeoCellConfig&>(*x), state, tsCreator.rawPut());
+		}
+		else if (x->type == liboscar::TextSearch::OOMGEOCELL) {
+			handleOOMCellTextSearch(dynamic_cast<OOMGeoCellConfig&>(*x), state, tsCreator.rawPut());
 		}
 		else if (x->type == liboscar::TextSearch::GEOHIERARCHY_AND_ITEMS) {
 			ItemSearchConfig & scfg = dynamic_cast<ItemSearchConfig&>(*x);
@@ -396,6 +446,11 @@ void handleSearchCreation(Config & opts, State & state) {
 }
 
 void handleKVCreation(oscar_create::Config & opts, State & state) {
+	if (!opts.kvStoreConfig || !opts.kvStoreConfig->enabled) {
+		throw sserialize::ConfigurationException("KvStoreConfig", "not enabled");
+		return;
+	}
+	
 	sserialize::TimeMeasurer dbTime; dbTime.begin();
 	oscar_create::OsmKeyValueObjectStore store;
 
@@ -435,10 +490,10 @@ void handleKVCreation(oscar_create::Config & opts, State & state) {
 		cc.minNodeId = opts.kvStoreConfig->minNodeId;
 		cc.numThreads = opts.kvStoreConfig->numThreads;
 		cc.rc.regionFilter = oscar_create::AreaExtractor::nameFilter(opts.kvStoreConfig->keysDefiningRegions, opts.kvStoreConfig->keyValuesDefiningRegions);
-		cc.rc.polyStoreLatCount = opts.kvStoreConfig->polyStoreLatCount;
-		cc.rc.polyStoreLonCount = opts.kvStoreConfig->polyStoreLonCount;
-		cc.rc.polyStoreMaxTriangPerCell = opts.kvStoreConfig->polyStoreMaxTriangPerCell;
-		cc.rc.triangMaxCentroidDist = opts.kvStoreConfig->triangMaxCentroidDist;
+		cc.rc.polyStoreLatCount = opts.kvStoreConfig->latCount;
+		cc.rc.polyStoreLonCount = opts.kvStoreConfig->lonCount;
+		cc.rc.polyStoreMaxTriangPerCell = opts.kvStoreConfig->maxTriangPerCell;
+		cc.rc.triangMaxCentroidDist = opts.kvStoreConfig->maxTriangCentroidDist;
 		cc.sortOrder = (oscar_create::OsmKeyValueObjectStore::ItemSortOrder) opts.kvStoreConfig->itemSortOrder;
 		cc.prioStringsFn = opts.kvStoreConfig->prioStringsFileName;
 		cc.scoreConfigFileName = opts.kvStoreConfig->scoreConfigFileName;

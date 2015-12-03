@@ -14,6 +14,9 @@ void printHelp() {
 }
 
 int main(int argc, char ** argv) {
+	sserialize::TimeMeasurer tm;
+	tm.begin();
+
 	{ //init rand
 		timeval t1;
 		gettimeofday(&t1, NULL);
@@ -28,10 +31,23 @@ int main(int argc, char ** argv) {
 	int ret = opts.fromCmdLineArgs(argc, argv);
 	if (ret != oscar_create::Config::RV_OK) {
 		printHelp();
-		return 1;
+		return -1;
+	}
+	if (opts.validate() != oscar_create::Config::VRV_OK) {
+		std::cout << "Congig is invalid with errorcode: " << opts.validate() << std::endl;
+		return -1;
 	}
 	std::cout << "Selected Options:" << std::endl;
 	std::cout << opts << std::endl;
+	if (opts.ask) {
+		std::string tmp;
+		std::cout << "Everything ok? (yes/NO)" << std::endl;
+		std::cin >> tmp;
+		if (!tmp.size() || !(tmp.at(0) == 'y' || tmp.at(0) == 'Y')) {
+			std::cout << "Exiting" << std::endl;
+			return 0;
+		}
+	}
 
 	if (!sserialize::MmappedFile::isDirectory( opts.getOutFileDir() ) && ! sserialize::MmappedFile::createDirectory(opts.getOutFileDir())) {
 		std::cout << "Failed to create destination directory" << std::endl;
@@ -51,14 +67,18 @@ int main(int argc, char ** argv) {
 		state.indexFactory.setIndexFile( state.indexFile );
 		state.indexFactory.setDeduplication(opts.indexStoreConfig->deduplicate);
 	}
+
+	std::string storeFileName = opts.inFileName + "/" + liboscar::toString(liboscar::FC_KV_STORE);
+
 	
 	//from pbf, first create the kvstore
 	if (sserialize::MmappedFile::fileExists(opts.inFileName) && !sserialize::MmappedFile::isDirectory(opts.inFileName)) {
 		oscar_create::handleKVCreation(opts, state);
+		storeFileName = opts.getOutFileName(liboscar::FC_KV_STORE);
 	}
 	else {//get the input index and insert it into our index and open the store
 		std::string idxStoreFileName = opts.inFileName + "/" + liboscar::toString(liboscar::FC_INDEX);
-		std::string storeFileName = opts.inFileName + "/" + liboscar::toString(liboscar::FC_KV_STORE);
+		storeFileName = opts.inFileName + "/" + liboscar::toString(liboscar::FC_KV_STORE);
 		
 		sserialize::Static::ItemIndexStore idxStore;;
 		try {
@@ -79,22 +99,19 @@ int main(int argc, char ** argv) {
 			}
 		}
 		state.indexFactory.setDeduplication(opts.indexStoreConfig->deduplicate);
-		
-		//open the store
-		try {
-			state.store = liboscar::Static::OsmKeyValueObjectStore(sserialize::UByteArrayAdapter::openRo(storeFileName, false));
-		}
-		catch (sserialize::Exception & e) {
-			std::cerr << "Failed to open store file at " << storeFileName << " with error message: "<< e.what();
-		}
 	}
+
+	//open the store
+	try {
+		state.store = liboscar::Static::OsmKeyValueObjectStore(sserialize::UByteArrayAdapter::openRo(storeFileName, false));
+	}
+	catch (sserialize::Exception & e) {
+		std::cerr << "Failed to open store file at " << storeFileName << " with error message: "<< e.what();
+	}
+	assert(state.store.size());
 	
-	//from store, 
-	if (sserialize::MmappedFile::isDirectory(opts.inFileName) && sserialize::MmappedFile::fileExists(opts.inFileName + "/" + liboscar::toString(liboscar::FC_KV_STORE))) {
-		//BUG:index store needs to be serialized!
-		
-		oscar_create::handleSearchCreation(opts, state);
-	}
+	//create searches if need be
+	oscar_create::handleSearchCreation(opts, state);
 	
 	//finalize the index factory
 	std::cout << "Serializing index" << std::endl;
@@ -128,5 +145,8 @@ int main(int argc, char ** argv) {
 	if (opts.statsConfig.memUsage) {
 		sserialize::MemUsage().print();
 	}
+	
+	tm.end();
+	std::cout << "Total time: " << tm << std::endl;
 	return 0;
 }
