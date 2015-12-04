@@ -3,8 +3,8 @@
 		"print-memory-usage" : false
 	},
 	"tempdir" : {
-		"fast" : "/dev/shm/osmc",
-		"slow" : "./tempdir/osmc"
+		"fast" : "./tempdir/fast_osmc",
+		"slow" : "./tempdir/slow_osmc"
 	},
 	"index" : {
 		"type" : "rlede",
@@ -13,7 +13,7 @@
 	},
 	"store" : {
 		"enabled" : true,
-		"threadCount" : 0,
+		"threadCount" : 8,
 		"fullRegionIndex" : false,
 		"addParentInfo" : false,
 		"nodeTableSize" : 100000,
@@ -89,7 +89,7 @@
 				}
 			},
 			"threadCount" : 1,
-			"maxMemoryUsage" : 8192
+			"maxMemoryUsage" : 4096
 		}
 	}]
 }
