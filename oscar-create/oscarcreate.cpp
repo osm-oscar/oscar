@@ -14,8 +14,8 @@ void printHelp() {
 }
 
 int main(int argc, char ** argv) {
-	sserialize::TimeMeasurer tm;
-	tm.begin();
+	sserialize::TimeMeasurer totalTime, kvTime, searchTime;
+	totalTime.begin();
 
 	{ //init rand
 		timeval t1;
@@ -72,6 +72,7 @@ int main(int argc, char ** argv) {
 
 	
 	//from pbf, first create the kvstore
+	kvTime.begin();
 	if (sserialize::MmappedFile::fileExists(opts.inFileName) && !sserialize::MmappedFile::isDirectory(opts.inFileName)) {
 		oscar_create::handleKVCreation(opts, state);
 		storeFileName = opts.getOutFileName(liboscar::FC_KV_STORE);
@@ -100,6 +101,7 @@ int main(int argc, char ** argv) {
 		}
 		state.indexFactory.setDeduplication(opts.indexStoreConfig->deduplicate);
 	}
+	kvTime.end();
 
 	//open the store
 	try {
@@ -111,7 +113,9 @@ int main(int argc, char ** argv) {
 	assert(state.store.size());
 	
 	//create searches if need be
+	searchTime.begin();
 	oscar_create::handleSearchCreation(opts, state);
+	searchTime.end();
 	
 	//finalize the index factory
 	std::cout << "Serializing index" << std::endl;
@@ -146,7 +150,9 @@ int main(int argc, char ** argv) {
 		sserialize::MemUsage().print();
 	}
 	
-	tm.end();
-	std::cout << "Total time: " << tm << std::endl;
+	totalTime.end();
+	std::cout << "KV-Store creation took " << kvTime << "\n";
+	std::cout << "Search data structure creation took " << searchTime << "\n";
+	std::cout << "Total time: " << totalTime << std::endl;
 	return 0;
 }
