@@ -88,7 +88,7 @@
 					}
 				}
 			},
-			"threadCount" : 1,
+			"threadCount" : 8,
 			"maxMemoryUsage" : 4096
 		}
 	}]

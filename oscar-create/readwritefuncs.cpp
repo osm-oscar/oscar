@@ -352,7 +352,7 @@ void handleOOMCellTextSearch(OOMGeoCellConfig & cfg, State & state, sserialize::
 		state.store.begin(), state.store.end(),
 		state.store.begin(), state.store.begin()+state.store.geoHierarchy().regionSize(),
 		itemTraits, regionTraits,
-		cfg.maxMemoryUsage,
+		cfg.maxMemoryUsage, cfg.threadCount,
 		(sserialize::StringCompleter::SupportedQuerries)sq,
 		state.indexFactory,
 		dest
