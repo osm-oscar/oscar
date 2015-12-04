@@ -309,6 +309,13 @@ SimpleCellQueryResult : function(data, parent, sqId) {
 		rootRegionApxItemCount : function() {
 			return this.d.rootRegionApxItemCount;
 		},
+	   //returns [regionIds] in successCB
+		getMaximumIndependetSet: function(regionId, successCB, errorCB) {
+			if (regionId === undefined) {
+				regionId = 0xFFFFFFFF;
+			}
+			simpleCqrMaxIndependentChildren(this.d.query, successCB, errorCB, regionId);
+		},
 		//returning an array in successCB with objects={id : int, apxitems : int}
 		//returns rootRegionChildrenInfo if regionId is undefined
 		regionChildrenInfo : function(regionId, successCB, errorCB) {
@@ -843,6 +850,26 @@ simpleCqrChildren : function(query, successCB, errorCB, selectedRegion) {
 											return b['apxitems'] - a['apxitems'];
 										});
 				res[selectedRegion] = childrenInfo;
+				successCB(res);
+			},
+			error: function(jqXHR, textStatus, errorThrown) {errorCB(textStatus, errorThrown);}
+	});
+},
+simpleCqrMaxIndependentChildren : function(query, successCB, errorCB, selectedRegion) {
+	var params = {};
+	params['q'] = query;
+	if (selectedRegion !== undefined) {
+		params['r'] = selectedRegion;
+	}
+	var qpath = this.completerBaseUrl + "/cqr/clustered/michildren";
+	jQuery.ajax({
+			type: "GET",
+			url: qpath,
+			data: params,
+			dataType : 'arraybuffer',
+			mimeType: 'application/octet-stream',
+			success: function( raw ) {
+				res = sserialize.asU32Array(raw);
 				successCB(res);
 			},
 			error: function(jqXHR, textStatus, errorThrown) {errorCB(textStatus, errorThrown);}
