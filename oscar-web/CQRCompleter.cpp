@@ -25,6 +25,7 @@ m_cqrSerializer(dataPtr->completer->indexStore().indexType())
 	dispatcher().assign("/clustered/full", &CQRCompleter::fullCQR, this);
 	dispatcher().assign("/clustered/simple", &CQRCompleter::simpleCQR, this);
 	dispatcher().assign("/clustered/children", &CQRCompleter::children, this);
+	dispatcher().assign("/clustered/michildren", &CQRCompleter::maximumIndependentChildren, this);
 	dispatcher().assign("/clustered/items", &CQRCompleter::items, this);
 	mapper().assign("clustered","/clustered");
 }
@@ -286,8 +287,118 @@ void CQRCompleter::children() {
 	ttm.end();
 	std::cout << "oscar_web::CQRCompleter::children: query=" << cqs << ", cqr.size=" << cqrSize  << " took " << ttm.elapsedMilliSeconds() << " ms" << std::endl;
 	writeLogStats(cqs, ttm, cqrSize, 0);
-	
 }
 
+void CQRCompleter::maximumIndependentChildren() {
+	typedef sserialize::Static::spatial::GeoHierarchy::SubSet::NodePtr SubSetNodePtr;
+	
+	sserialize::TimeMeasurer ttm;
+	ttm.begin();
+	const sserialize::Static::spatial::GeoHierarchy & gh = m_dataPtr->completer->store().geoHierarchy();
+
+	response().set_content_header("text/json");
+	
+	//params
+	std::string cqs = request().get("q");
+	uint32_t regionId = sserialize::Static::spatial::GeoHierarchy::npos;
+	uint32_t cqrSize = 0;
+
+	{
+		std::string tmpStr = request().get("r");
+		if (!tmpStr.empty()) {
+			regionId = atoi(tmpStr.c_str());
+		}
+	}
+	
+	if (regionId != sserialize::Static::spatial::GeoHierarchy::npos) {
+		cqs = sserialize::toString("$region:", regionId, " (", cqs, ")");
+	}
+
+	sserialize::Static::spatial::GeoHierarchy::SubSet subSet = m_dataPtr->completer->clusteredComplete(cqs, m_dataPtr->fullSubSetLimit, m_dataPtr->treedCQR);
+	sserialize::Static::spatial::GeoHierarchy::SubSet::NodePtr rPtr(regionId != sserialize::Static::spatial::GeoHierarchy::npos ? subSet.regionByStoreId(regionId) : subSet.root());
+	cqrSize = subSet.cqr().cellCount(); //for stats
+
+	//now write the data
+	std::ostream & out = response().out();
+	if (rPtr && rPtr->size()) {
+		char delim = '[';
+		std::vector<uint32_t> pickedRegions;
+		std::vector< std::pair<uint32_t, uint32_t> > count2Pos;
+		for(uint32_t i(0), s(rPtr->size()); i < s; ++i) {
+			count2Pos.emplace_back(rPtr->at(i)->maxItemsSize(), i);
+		}
+		std::sort(count2Pos.begin(), count2Pos.end());
+		std::unordered_set<uint32_t> pickedCellPositions;
+		if (subSet.sparse()) {
+			std::vector<uint32_t> currentChildCellPositions;
+			struct Calc {
+				std::unordered_set<uint32_t> * pickedCellPositions;
+				std::vector<uint32_t> * currentChildCellPositions;
+				bool operator()(const SubSetNodePtr & node) {
+					bool ok = true;
+					for(uint32_t x : node->cellPositions()) {
+						if (pickedCellPositions->count(x)) {
+							ok = false;
+							break;
+						}
+					}
+					if (ok) {
+						currentChildCellPositions->insert(currentChildCellPositions->end(), node->cellPositions().begin(), node->cellPositions().end());
+						for(const auto & c : *node) {
+							if (!this->operator()(c)) {
+								return false;
+							}
+						}
+						return true;
+					}
+					else {
+						return false;
+					}
+				}
+			} calc;
+			calc.currentChildCellPositions = &currentChildCellPositions;
+			calc.pickedCellPositions = &pickedCellPositions;
+			for(uint32_t i(0), s(rPtr->size()); i < s; ++i) {
+				currentChildCellPositions.clear();
+				pickedCellPositions.clear();
+				uint32_t rPos = count2Pos[i].second;
+				const auto & cPtr = rPtr->at(rPos);
+				if (calc(cPtr)) {
+					pickedCellPositions.insert(currentChildCellPositions.begin(), currentChildCellPositions.end());
+					out << delim << gh.ghIdToStoreId(cPtr->ghId());
+					delim = ',';
+				}
+			}
+		}
+		else {
+			for(uint32_t i(0), s(rPtr->size()); i < s; ++i) {
+				uint32_t rPos = count2Pos[i].second;
+				bool ok = true;
+				const auto & cPtr = rPtr->at(rPos);
+				const auto & cCp = cPtr->cellPositions();
+				for(uint32_t x : cCp) {
+					if (pickedCellPositions.count(x)) {
+						ok = false;
+						break;
+					}
+				}
+				if (ok) {
+					pickedCellPositions.insert(cCp.begin(), cCp.end());
+					out << delim << gh.ghIdToStoreId(cPtr->ghId());
+					delim = ',';
+				}
+			}
+		}
+		out << "]";
+	}
+	else {
+		out << "[]";
+	}
+
+	ttm.end();
+	std::cout << "oscar_web::CQRCompleter::maximumIndependentChildren: query=" << cqs << ", cqr.size=" << cqrSize  << " took " << ttm.elapsedMilliSeconds() << " ms" << std::endl;
+	writeLogStats(cqs, ttm, cqrSize, 0);
+	
+}
 
 }//end namespace

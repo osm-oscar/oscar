@@ -61,6 +61,13 @@ public:
 	  * array<(uint32_t, uint32_t)>: [(region children|region children maxitems)]
 	  */
 	void children();
+	/** return the maximum set of independet region children for the query q:
+	  * q=<searchstring>
+	  * r=<regionid>
+	  * Return:
+	  * array<uint32_t>: [regionId]
+	  */
+	void maximumIndependentChildren();
 };
 
 }//end namespace
