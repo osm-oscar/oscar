@@ -360,7 +360,6 @@ void CQRCompleter::maximumIndependentChildren() {
 			calc.pickedCellPositions = &pickedCellPositions;
 			for(uint32_t i(0), s(rPtr->size()); i < s; ++i) {
 				currentChildCellPositions.clear();
-				pickedCellPositions.clear();
 				uint32_t rPos = count2Pos[i].second;
 				const auto & cPtr = rPtr->at(rPos);
 				if (calc(cPtr)) {
