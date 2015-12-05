@@ -868,7 +868,7 @@ simpleCqrMaxIndependentChildren : function(query, successCB, errorCB, selectedRe
 			data: params,
 			mimeType: 'application/json',
 			success: function(jsondesc) {
-				successCB(JSON.parse(jsondesc));
+				successCB(jsondesc);
 			},
 			error: function(jqXHR, textStatus, errorThrown) {errorCB(textStatus, errorThrown);}
 	});
