@@ -866,11 +866,9 @@ simpleCqrMaxIndependentChildren : function(query, successCB, errorCB, selectedRe
 			type: "GET",
 			url: qpath,
 			data: params,
-			dataType : 'arraybuffer',
-			mimeType: 'application/octet-stream',
-			success: function( raw ) {
-				res = sserialize.asU32Array(raw);
-				successCB(res);
+			mimeType: 'application/json',
+			success: function(jsondesc) {
+				successCB(JSON.parse(jsondesc));
 			},
 			error: function(jqXHR, textStatus, errorThrown) {errorCB(textStatus, errorThrown);}
 	});
