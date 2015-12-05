@@ -327,7 +327,7 @@ void CQRCompleter::maximumIndependentChildren() {
 		for(uint32_t i(0), s(rPtr->size()); i < s; ++i) {
 			count2Pos.emplace_back(rPtr->at(i)->maxItemsSize(), i);
 		}
-		std::sort(count2Pos.begin(), count2Pos.end());
+		std::sort(count2Pos.begin(), count2Pos.end(), std::greater< std::pair<uint32_t, uint32_t> >());
 		std::unordered_set<uint32_t> pickedCellPositions;
 		if (subSet.sparse()) {
 			std::vector<uint32_t> currentChildCellPositions;
