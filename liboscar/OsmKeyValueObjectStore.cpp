@@ -33,6 +33,10 @@ uint32_t OsmKeyValueObjectStore::size() const {
 	return priv()->size();
 }
 
+const OsmKeyValueObjectStore::KeyValueObjectStore& OsmKeyValueObjectStore::kvStore() const {
+	return priv()->kvStore();
+}
+
 const OsmKeyValueObjectStore::KeyStringTable &OsmKeyValueObjectStore::keyStringTable() const {
 	return priv()->keyStringTable();
 }
@@ -58,19 +62,19 @@ sserialize::UByteArrayAdapter::OffsetType OsmKeyValueObjectStore::getSizeInBytes
 }
 
 OsmKeyValueObjectStore::const_iterator OsmKeyValueObjectStore::begin() const {
-	return const_iterator(0, *this);
+	return const_iterator(0, this);
 }
 
 OsmKeyValueObjectStore::const_iterator OsmKeyValueObjectStore::cbegin() const {
-	return const_iterator(0, *this);
+	return const_iterator(0, this);
 }
 
 OsmKeyValueObjectStore::const_iterator OsmKeyValueObjectStore::end() const {
-	return const_iterator(size(), *this);
+	return const_iterator(size(), this);
 }
 
 OsmKeyValueObjectStore::const_iterator OsmKeyValueObjectStore::cend() const {
-	return const_iterator(size(), *this);
+	return const_iterator(size(), this);
 }
 
 uint32_t OsmKeyValueObjectStore::toInternalId(uint32_t itemId) const {
@@ -196,7 +200,7 @@ sserialize::ItemIndex OsmKeyValueObjectStore::select(const sserialize::ItemIndex
 		if (match(i, strIds))
 			res.push_back(i);
 	}
-	return sserialize::ItemIndex::absorb(res);
+	return sserialize::ItemIndex(std::move(res));
 }
 
 

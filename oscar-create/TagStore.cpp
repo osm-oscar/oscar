@@ -274,7 +274,7 @@ bool TagStore::serialize(UByteArrayAdapter& destination, TagStore::Node * node, 
 	destination << static_cast<uint16_t>(idMap.at(node).posInParent); //posInParent
 	std::set<uint32_t> nodeIndex;
 	getFullItemIndex(node, nodeIndex);
-	bool ok;
+	bool ok = true;
 	uint32_t indexPtr = indexFactory.addIndex(nodeIndex);
 	destination << indexPtr;
 	nodeIndex.clear();

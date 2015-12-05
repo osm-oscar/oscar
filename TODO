@@ -1,4 +1,4 @@
-LONGTERM:
+LONGTERM: (WIP)
 Out of memory creation
 
 LONGTERM:
@@ -35,8 +35,14 @@ full support for relations
 LONGTERM:
 anderer zwischen-bla-blub query der die hierarchie nutzt.
 
-HIGH IMPORTANCE:
+HIGH IMPORTANCE: (done, unchecked)
 neighbor-pointers in GeoHierarchy
 
 HIGH IMPORTANCE:
+manually add an extra level to specify continents (do this with a config)
+
+HIGH IMPORTANCE:
 dynamic polygon simplification
+
+HIGH IMPORTANCE:
+use builtin overflow

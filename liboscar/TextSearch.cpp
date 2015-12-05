@@ -29,6 +29,7 @@ TextSearch::TextSearch(const sserialize::UByteArrayAdapter& d, const sserialize:
 			}
 			break;
 		case GEOCELL:
+		case OOMGEOCELL:
 			{
 				sserialize::RCPtrWrapper<sserialize::Static::detail::CellTextCompleter> cellTextCompleter(new sserialize::Static::detail::CellTextCompleter(td+1, indexStore, gh, ra));
 				m_completers[GEOCELL].emplace_back(cellTextCompleter.priv());

@@ -1,0 +1,95 @@
+{
+	"stats" : {
+		"print-memory-usage" : false
+	},
+	"tempdir" : {
+		"fast" : "./tempdir/fast_osmc",
+		"slow" : "./tempdir/slow_osmc"
+	},
+	"index" : {
+		"type" : "rlede",
+		"check" : false,
+		"deduplicate" : true
+	},
+	"store" : {
+		"enabled" : true,
+		"threadCount" : 8,
+		"fullRegionIndex" : false,
+		"addParentInfo" : false,
+		"nodeTableSize" : 100000,
+		"tagFilter" : "all",
+		"itemFilter" : "all",
+		"latCount" : 100,
+		"lonCount" : 100,
+		"readBoundaries" : true,
+		"maxTriangPerCell" : 10000000,
+		"maxTriangCentroidDist" : 1000000000.0,
+		"regionFilter" : {
+			"keys" : "lists/k_region_inherit_tags.txt",
+			"keyValues" : "lists/kv_region_inherit_tags.txt"
+		},
+		"splitValues" : "lists/splitValues.txt",
+		"scoring" : {
+			"config" : "lists/scores.cfg"
+		},
+		"sorting" : {
+			"order" : "name"
+		}
+	},
+	"textsearch" : [{
+		"type" : "oomgeocell",
+		"config" : {
+			"enabled" : true,
+			"items" : {
+				"values" : {
+					"prefix" : {
+						"enabled" : true,
+						"file" : "lists/k_values_prefix.txt",
+						"caseSensitive" : false,
+						"diacriticSensitive" : false
+					},
+					"substring" : {
+						"enabled" : true,
+						"file" : "lists/k_values_substring_prefix.txt",
+						"caseSensitive" : false,
+						"diacriticSensitive" : false
+					}
+				},
+				"tags" : {
+					"prefix" : {
+						"enabled" : true,
+						"file" : "lists/allkeys.txt",
+						"caseSensitive" : false,
+						"diacriticSensitive" : false
+					}
+				}
+			},
+			"regions" : {
+				"values" : {
+					"prefix" : {
+						"enabled" : true,
+						"file" : "lists/k_region_inherit_tags.txt",
+						"caseSensitive" : false,
+						"diacriticSensitive" : false
+					},
+					"substring" : {
+						"enabled" : true,
+						"file" : "lists/k_region_inherit_tags.txt",
+						"caseSensitive" : false,
+						"diacriticSensitive" : false
+					}
+				},
+				"tags" : {
+					"file" : {
+						"enabled" : true,
+						"keys" : "lists/kv_region_inherit_tags.txt",
+						"caseSensitive" : false,
+						"diacriticSensitive" : false
+					}
+				}
+			},
+			"threadCount" : 8,
+			"maxMemoryUsage" : 4096
+		}
+	}]
+}

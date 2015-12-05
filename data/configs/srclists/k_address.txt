@@ -1,10 +1,1 @@
-addr:country
-addr:state
-addr:province
-addr:district
-addr:subdistrict
-addr:city
-addr:suburb
-addr:hamlet
-addr:street
-addr:place
+addr:.*

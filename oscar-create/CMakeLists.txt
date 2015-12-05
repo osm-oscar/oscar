@@ -17,6 +17,7 @@ include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}
 	${CMAKE_SOURCE_DIR}
 	${CMAKE_SOURCE_DIR}/vendor/osmpbf
+	${CMAKE_SOURCE_DIR}/vendor/jsoncpp/include
 	${ICU_INCLUDE_DIRS}
 	${CGAL_INCLUDE_DIRS}
 	${CGAL_3RD_PARTY_INCLUDE_DIRS}
@@ -33,6 +34,8 @@ readwritefuncs.cpp
 ScoreCreator.cpp
 TagStore.cpp
 Config.cpp
+TextSearchTraits.cpp
+${CMAKE_SOURCE_DIR}/vendor/jsoncpp/src/jsoncpp.cpp
 )
 
 add_executable(${PROJECT_NAME} ${OSCAR_CREATE_SOURCES_CPP} ${LIBOSMTOOLS_SOURCES_CPP})
