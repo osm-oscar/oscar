@@ -833,7 +833,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
 
                         var parentRid = options.dataAttributes !== undefined ? options.dataAttributes.rid : undefined;
 
-                        if (!items.length) {
+                        if (!items.length || (options.dataAttributes && options.dataAttributes["cnt"] < oscar.maxFetchItems)) {
                             var resultListOffset = state.items.listview.drawn.size() + state.items.listview.promised.size();
                             state.items.listview.selectedRegionId = options.rid;
                             state.cqr.regionItemIds(state.items.listview.selectedRegionId,
@@ -841,6 +841,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                                 defErrorCB,
                                 resultListOffset
                             );
+                            return;
                         } else {
                             if (state.items.clusters.drawn.at(parentRid)) {
                                 // children available, remove parent cluster
@@ -880,7 +881,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                                         state.items.clusters.drawn.erase(e.target.rid);
                                         state.markers.removeLayer(e.target);
                                         $($("li[class='tree-branch'][rid='" + e.target.rid + "']").children()[0]).children()[0].click();
-
                                     });
 
                                     if (!state.items.clusters.drawn.count(itemId)) {
@@ -1009,6 +1009,9 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
 
             myTree.on('closed.fu.tree', function (e, node) {
                 updateMapRegions(getOpenRegionsInTree());
+            });
+            myTree.on('loaded.fu.tree', function (e, node) {
+                var i;
             });
 
             //open the tree if cqr.ohPath is available
