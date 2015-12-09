@@ -9,7 +9,7 @@
 	"index" : {
 		"type" : "(rline|simple|wah|de|rlede|native)",
 		"check" : true,
-		"deduplicate" : true,
+		"deduplicate" : true
 	},
 	"store" : {
 		"enabled" : false,

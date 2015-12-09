@@ -623,8 +623,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
 
         ///Try to fill result list with up to about count items
         function loadMoreIntoResultList() {
-            var resultListOffset = state.items.listview.drawn.size() + state.items.listview.promised.size();
-
             if (state.items.listview.selectedRegionId === undefined || !state.items.listview.hasmore ||
                 state.items.listview.loadsmore) {
                 return;
@@ -634,7 +632,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
             state.cqr.regionItemIds(state.items.listview.selectedRegionId,
                 getItemIds,
                 defErrorCB,
-                resultListOffset
+                0 // offset
             );
         }
 
@@ -816,6 +814,8 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                 oscar.getItems(childIds,
                     function (items) {
                         var res = {data: []};
+                        var itemMap = {};
+
                         if (options.dataAttributes !== undefined) {
                             res.data.push({
                                 name: options.name,
@@ -834,20 +834,14 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                         var parentRid = options.dataAttributes !== undefined ? options.dataAttributes.rid : undefined;
 
                         if (!items.length || (options.dataAttributes && options.dataAttributes["cnt"] < oscar.maxFetchItems)) {
-                            var resultListOffset = state.items.listview.drawn.size() + state.items.listview.promised.size();
                             state.items.listview.selectedRegionId = options.rid;
                             state.cqr.regionItemIds(state.items.listview.selectedRegionId,
                                 getItemIds,
                                 defErrorCB,
-                                resultListOffset
+                                0 // offset
                             );
+                            state.map.fitBounds(options.bbox);
                             return;
-                        } else {
-                            if (state.items.clusters.drawn.at(parentRid)) {
-                                // children available, remove parent cluster
-                                state.markers.removeLayer(state.items.clusters.drawn.at(parentRid));
-                                state.items.clusters.drawn.erase(parentRid);
-                            }
                         }
 
                         for (var i in items) {
@@ -855,27 +849,26 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                             var itemId = item.id();
                             var apxItems = regionChildrenApxItemsMap[itemId];
                             var parentNode = state.DAG.at(parentRid);
+                            itemMap[itemId] = item;
+
                             state.DAG.insert(itemId, parentNode !== undefined ? parentNode.addChild(itemId) : new TreeNode(itemId, undefined));
 
                             res.data.push({
                                 name: item.name() + ( apxItems > 0 ? " [~" + apxItems + ":" + itemId + "]" : ""),
                                 type: 'folder',
                                 bbox: item.bbox(),
-                                //attr : {
-                                //            id : 'treefolder'+itemId
-                                //            rid2 : itemId
-                                //},
                                 dataAttributes: {rid: itemId, 'data-rid': itemId, "cnt": apxItems}
                             });
+                        }
 
-                            // is a path available?
-                            // yes => don't create a clusterelement, go deeper into the tree
-                            // no => show clusterlement for the whole subtree
-                            if ((!cqr.d.ohPath.length || state.clustering) && items.length > 1) {
-                                if (state.DAG.at(itemId).hasParentWithId(cqr.d.ohPath[cqr.d.ohPath.length - 1]) || !cqr.d.ohPath.length) {
-                                    var marker = L.marker(item.centerPoint());
-                                    marker.count = apxItems;
-                                    marker.rid = itemId;
+                        if ((cqr.d.ohPath.length && parentRid !== undefined && (cqr.d.ohPath[cqr.d.ohPath.length - 1] == parentRid || state.DAG.at(parentRid).hasParentWithId(cqr.d.ohPath[cqr.d.ohPath.length - 1]))) || !cqr.d.ohPath.length) {
+                            cqr.getMaximumIndependetSet(parentRid, function (regions) {
+                                var j;
+                                for(var i in regions){
+                                    j = itemMap[regions[i]];
+                                    var marker = L.marker(j.centerPoint());
+                                    marker.count = regionChildrenApxItemsMap[j.id()];
+                                    marker.rid = j.id();
 
                                     marker.on("click", function (e) {
                                         state.items.clusters.drawn.erase(e.target.rid);
@@ -883,21 +876,24 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                                         $($("li[class='tree-branch'][rid='" + e.target.rid + "']").children()[0]).children()[0].click();
                                     });
 
-                                    if (!state.items.clusters.drawn.count(itemId)) {
-                                        state.items.clusters.drawn.insert(itemId, marker);
+                                    if (!state.items.clusters.drawn.count(j.id())) {
+                                        state.items.clusters.drawn.insert(j.id(), marker);
                                         state.markers.addLayer(marker);
                                     }
                                 }
-                            }
+
+                                state.map.addLayer(state.markers);
+                                if (!cqr.d.ohPath.length || state.clustering) {
+                                    if (options.bbox) {
+                                        state.map.fitBounds(options.bbox);
+                                    } else {
+                                        state.map.fitWorld();
+                                    }
+                                }
+
+                            }, defErrorCB);
                         }
-                        state.map.addLayer(state.markers);
-                        if (!cqr.d.ohPath.length || state.clustering) {
-                            if (options.bbox) {
-                                state.map.fitBounds(options.bbox);
-                            } else {
-                                state.map.fitWorld();
-                            }
-                        }
+
                         callback(res);
                     },
                     defErrorCB
@@ -924,8 +920,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
         }
 
         function getItemIds(itemIds) {
-            var resultListOffset = state.items.listview.drawn.size() + state.items.listview.promised.size();
-            var selectedRegionId = state.items.listview.selectedRegionId;
 
             for (var i in itemIds) {
                 var itemId = itemIds[i];
@@ -933,17 +927,11 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
             }
 
             endLoadingSpinner();
-            var mySelectedRegionId = selectedRegionId;
             startLoadingSpinner();
 
             oscar.getItems(itemIds,
                 function (items) {
                     endLoadingSpinner();
-                    state.items.listview.hasmore = items.length > 0 && items.length >= oscar.maxFetchItems;
-                    state.items.listview.loadsmore = false;
-                    if (state.items.listview.loadtarget > resultListOffset + items.length && state.items.listview.hasmore && mySelectedRegionId === state.items.listview.selectedRegionId) {
-                        loadMoreIntoResultList();
-                    }
                     for (var i in items) {
                         var item = items[i];
                         var itemId = item.id();
@@ -1009,9 +997,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
 
             myTree.on('closed.fu.tree', function (e, node) {
                 updateMapRegions(getOpenRegionsInTree());
-            });
-            myTree.on('loaded.fu.tree', function (e, node) {
-                var i;
             });
 
             //open the tree if cqr.ohPath is available

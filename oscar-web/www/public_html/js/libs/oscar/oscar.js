@@ -181,27 +181,31 @@ define(['jquery', 'sserialize', 'leaflet', 'module'], function (jQuery, sseriali
                     }
                     return message;
                 },
-                toRadians : function(p) { return p * Math.PI / 180; },
-                toDegrees : function(p) { return p * 180 / Math.PI; },
-                centerPoint : function() {
+                toRadians: function (p) {
+                    return p * Math.PI / 180;
+                },
+                toDegrees: function (p) {
+                    return p * 180 / Math.PI;
+                },
+                centerPoint: function () {
                     // see http://mathforum.org/library/drmath/view/51822.html for derivation
-                    var phi1 = this.toRadians(this.bbox()[0][1]), lambda1 = this.toRadians(this.bbox()[0][0]);
-                    var phi2 = this.toRadians(this.bbox()[1][1]);
-                    var deltalambda = this.toRadians((this.bbox()[1][0]-this.bbox()[0][0]));
+                    var phi1 = this.toRadians(this.bbox()[0][0]), lambda1 = this.toRadians(this.bbox()[0][1]);
+                    var phi2 = this.toRadians(this.bbox()[1][0]);
+                    var deltalambda = this.toRadians((this.bbox()[1][1] - this.bbox()[0][1]));
 
                     var Bx = Math.cos(phi2) * Math.cos(deltalambda);
                     var By = Math.cos(phi2) * Math.sin(deltalambda);
 
-                    var phi3 = Math.atan2(Math.sin(phi1)+Math.sin(phi2),
-                        Math.sqrt( (Math.cos(phi1)+Bx)*(Math.cos(phi1)+Bx) + By*By) );
+                    var phi3 = Math.atan2(Math.sin(phi1) + Math.sin(phi2),
+                        Math.sqrt((Math.cos(phi1) + Bx) * (Math.cos(phi1) + Bx) + By * By));
                     var lambda3 = lambda1 + Math.atan2(By, Math.cos(phi1) + Bx);
-                    lambda3 = (lambda3+3*Math.PI) % (2*Math.PI) - Math.PI; // normalise to -180..+180°
+                    lambda3 = (lambda3 + 3 * Math.PI) % (2 * Math.PI) - Math.PI; // normalise to -180..+180?
 
-                    return [this.toDegrees(lambda3), this.toDegrees(phi3)];
+                    return [this.toDegrees(phi3), this.toDegrees(lambda3)];
                 },
                 //[southWest, northEast]
-                bbox : function() {
-                    return [[this.data.bbox[0], this.data.bbox[2]],[this.data.bbox[1], this.data.bbox[3]]];
+                bbox: function () {
+                    return [[this.data.bbox[0], this.data.bbox[2]], [this.data.bbox[1], this.data.bbox[3]]];
                 }
             };
             /*end of item object*/
@@ -966,11 +970,9 @@ define(['jquery', 'sserialize', 'leaflet', 'module'], function (jQuery, sseriali
                 type: "GET",
                 url: qpath,
                 data: params,
-                dataType: 'arraybuffer',
-                mimeType: 'application/octet-stream',
-                success: function (raw) {
-                    res = sserialize.asU32Array(raw);
-                    successCB(res);
+                mimeType: 'application/json',
+                success: function (jsondesc) {
+                    successCB(jsondesc);
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
                     errorCB(textStatus, errorThrown);
