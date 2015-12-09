@@ -239,7 +239,7 @@ void OsmKeyValueObjectStore::Context::getNodes() {
 			std::unique_lock<std::mutex> lck(tmpDsLock);
 			tmpDs.push_back(tmp.begin(), tmp.end());
 			return tmpDs.size() < nodesToStore.size();
-		}, cc->numThreads
+		}, cc->numThreads, cc->blobFetchCount
 	);
 // 			std::cout << "Found " << tmpDs.size() << " out of " << nodesToStore.size() << " nodes" << std::endl;
 	assert(tmpDs.size() <= nodesToStore.size());
@@ -464,7 +464,7 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 				ct.nodesToStore.mark(x);
 			}
 			return ct.nodesToStore.size() < ct.cc->maxNodeCoordTableSize;
-		}, ct.cc->numThreads);
+		}, ct.cc->numThreads, ct.cc->blobFetchCount);
 		#ifndef NDEBUG
 		osmpbf::OffsetType afterFilePos = ct.inFile.dataPosition();
 		#endif
@@ -646,7 +646,7 @@ void OsmKeyValueObjectStore::addPolyStoreItems(Context & ctx) {
 	Worker w(ctx, wct);
 	ctx.progressInfo.begin(ctx.inFile.dataSize(), "Adding items from polystore");
 	ctx.inFile.reset();
-	osmpbf::parseFileCPPThreads<Worker*>(ctx.inFile, &w, ctx.cc->numThreads);
+	osmpbf::parseFileCPPThreads<Worker*>(ctx.inFile, &w, ctx.cc->numThreads, ctx.cc->blobFetchCount);
 	w.flush();
 	ctx.progressInfo.end();
 	
@@ -688,7 +688,8 @@ void OsmKeyValueObjectStore::insertItemStrings(OsmKeyValueObjectStore::Context& 
 			}
 		};
 		ct.inFile.reset();
-		osmpbf::parseFileCPPThreads(ct.inFile, wf, std::min<uint32_t>(( ct.cc->numThreads ? ct.cc->numThreads : (uint32_t) std::thread::hardware_concurrency()), 2));
+		uint32_t myNumThreads = std::min<uint32_t>(( ct.cc->numThreads ? ct.cc->numThreads : (uint32_t) std::thread::hardware_concurrency()), 2);
+		osmpbf::parseFileCPPThreads(ct.inFile, wf, myNumThreads, ct.cc->blobFetchCount);
 	}
 
 	ct.progressInfo.begin(ct.inFile.dataSize(), "Fetching strings");
@@ -751,7 +752,7 @@ void OsmKeyValueObjectStore::insertItemStrings(OsmKeyValueObjectStore::Context& 
 				}
 			}
 			
-		}, ct.cc->numThreads);
+		}, ct.cc->numThreads, ct.cc->blobFetchCount);
 	}
 	ct.progressInfo.end();
 }
@@ -826,14 +827,14 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 				swct.missingRelation.insert(tmp.begin(), tmp.end());
 			};
 			ct.inFile.reset();
-			osmpbf::parseFileCPPThreads(ct.inFile, wf, ct.cc->numThreads);
+			osmpbf::parseFileCPPThreads(ct.inFile, wf, ct.cc->numThreads, ct.cc->blobFetchCount);
 			do {
 				for(const liboscar::OsmIdType & x : swct.missingRelation) {
 					ct.relationItems[x] = std::numeric_limits<uint32_t>::max();
 				}
 				swct.missingRelation.clear();
 				ct.inFile.reset();
-				osmpbf::parseFileCPPThreads(ct.inFile, swf, ct.cc->numThreads);
+				osmpbf::parseFileCPPThreads(ct.inFile, swf, ct.cc->numThreads, ct.cc->blobFetchCount);
 			} while(swct.missingRelation.size());
 		}
 		
@@ -887,7 +888,7 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 				}
 			}
 			return ct.nodesToStore.size() < ct.cc->maxNodeCoordTableSize;
-		}, ct.cc->numThreads);
+		}, ct.cc->numThreads, ct.cc->blobFetchCount);
 		#ifndef NDEBUG
 		osmpbf::OffsetType afterFilePos = ct.inFile.dataPosition();
 		#endif
