@@ -399,7 +399,7 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 		};
 		
 		ct.inFile.reset();
-		osmpbf::parseFileCPPThreads(ct.inFile, MyProc(&polyStore, &ct, &wct), 0, 1, true);
+		osmpbf::parseFileCPPThreads(ct.inFile, MyProc(&polyStore, &ct, &wct), ct.cc->numThreads, 1, true);
 		for(uint32_t x : wct.activeResidentialRegions) {
 			ct.residentialRegions.insert(polyStore.values().at(x).osmIdType);
 		}
