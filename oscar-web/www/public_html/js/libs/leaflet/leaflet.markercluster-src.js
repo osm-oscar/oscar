@@ -29,8 +29,8 @@
                 }
 
                 /*if (count == 1) {
-                    return new L.Icon.Default();
-                }*/
+                 return new L.Icon.Default();
+                 }*/
 
                 var c = 'marker-cluster-';
                 if (count < 10) {
@@ -1153,6 +1153,17 @@
             if (b) {
                 this._addChild(b);
             }
+        },
+        getChildClustersNames: function () {
+            var names = [];
+            var allChildClusters = this.getAllChildMarkers();
+
+            for (var i in allChildClusters) {
+                if (allChildClusters[i].name != undefined) {
+                    names.push(allChildClusters[i].name);
+                }
+            }
+            return names;
         },
         setChildCnt: function (cnt) {
             this._childCount = cnt;

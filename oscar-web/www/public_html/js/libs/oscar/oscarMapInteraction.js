@@ -32,6 +32,7 @@ requirejs.config({
 requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "mustache", "jqueryui", "leafletCluster", "spin", "sidebar", "mustacheLoader"],
     function (oscar, L, jQuery, bootstrap, fuelux, jbinary, mustache, jqueryui, leafletCluster, spinner, sidebar, mustacheLoader) {
         //main entry point
+
         var osmAttr = '&copy; <a target="_blank" href="http://www.openstreetmap.org">OpenStreetMap</a>';
         var state = {
             clustering: true, // gets set either when oscar.maxFetchItems is smaller than the final cell in ohPath or ohPath isn't even set in cqr
@@ -101,6 +102,18 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
             },
             spinner: new spinner(myConfig.spinnerOpts)
         };
+
+        L.MarkerCluster.prototype.on("mouseover", function (e) {
+            var names = e.target.getChildClustersNames();
+            var text = "";
+            for (var i in names) {
+                text += names[i];
+                if (i < names.length - 1) {
+                    text += ", ";
+                }
+            }
+            L.popup().setLatLng(e.latlng).setContent(text).openOn(state.map);
+        });
 
         // mustache-template-loader needs this
         window.Mustache = mustache;
@@ -829,10 +842,10 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                                 0 // offset
                             );
                             state.map.fitBounds(options.bbox);
-                        }else if ((cqr.d.ohPath.length && parentRid !== undefined && (cqr.d.ohPath[cqr.d.ohPath.length - 1] == parentRid || state.DAG.at(parentRid).hasParentWithId(cqr.d.ohPath[cqr.d.ohPath.length - 1]))) || !cqr.d.ohPath.length) {
+                        } else if ((cqr.d.ohPath.length && parentRid !== undefined && (cqr.d.ohPath[cqr.d.ohPath.length - 1] == parentRid || state.DAG.at(parentRid).hasParentWithId(cqr.d.ohPath[cqr.d.ohPath.length - 1]))) || !cqr.d.ohPath.length) {
                             cqr.getMaximumIndependetSet(parentRid, function (regions) {
                                 var j;
-                                for(var i in regions){
+                                for (var i in regions) {
                                     j = itemMap[regions[i]];
                                     var marker = L.marker(j.centerPoint());
                                     marker.count = regionChildrenApxItemsMap[j.id()];
@@ -840,16 +853,16 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                                     marker.name = j.name();
 
                                     marker.on("click", function (e) {
+                                        $(".leaflet-popup-close-button")[0].click(); // close all opened popups
                                         state.items.clusters.drawn.erase(e.target.rid);
                                         state.markers.removeLayer(e.target);
                                         $($("li[class='tree-branch'][rid='" + e.target.rid + "']").children()[0]).children()[0].click();
                                     });
 
-                                    marker.on("mouseover", function(e){
-                                        var popup = L.popup()
+                                    marker.on("mouseover", function (e) {
+                                        L.popup()
                                             .setLatLng(e.latlng)
-                                            .setContent(e.target.name)
-                                            .openOn(state.map);
+                                            .setContent(e.target.name).openOn(state.map);
                                     });
 
                                     if (!state.items.clusters.drawn.count(j.id())) {
