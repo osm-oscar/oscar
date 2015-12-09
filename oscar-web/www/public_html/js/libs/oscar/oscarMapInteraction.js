@@ -53,10 +53,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                 listview: {
                     promised: SimpleHash(),//referenced by id
                     drawn: SimpleHash(),//referenced by id
-                    hasmore: false,
                     loadsmore: false, //currently loads more into the result list
-                    visualizeall: false,
-                    loadtarget: 0,
                     selectedRegionId: undefined
                 },
                 clusters: {
@@ -412,7 +409,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
             state.regions.promised = {};
             state.items.listview.drawn.clear();
             state.items.listview.promised.clear();
-            state.items.listview.hasmore = false;
             state.items.listview.selectedRegionId = undefined;
             state.items.shapes.highlighted = {};
             state.items.shapes.promised = {};
@@ -420,7 +416,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
             state.relatives.listview.promised.clear();
             state.relatives.shapes.highlighted = {};
             state.relatives.shapes.promised = {};
-            state.items.listview.loadtarget = 0;
             for (var i in state.regions.drawn.values()) {
                 state.map.removeLayer(state.regions.drawn.at(i));
                 state.regions.drawn.erase(i);
@@ -480,7 +475,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                     itemsToDraw.push(i);
                 }
             }
-            startLoadingSpinner();
+
             oscar.getShapes(itemsToDraw, function (shapes) {
                 endLoadingSpinner();
                 var marker;
@@ -703,7 +698,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
             $('#itemsList').empty();
             state.items.listview.drawn.clear();
             state.items.listview.promised.clear();
-            state.items.listview.hasmore = true;
         }
 
         ///returns the region ids of opened regions in dest
@@ -843,11 +837,19 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                                     var marker = L.marker(j.centerPoint());
                                     marker.count = regionChildrenApxItemsMap[j.id()];
                                     marker.rid = j.id();
+                                    marker.name = j.name();
 
                                     marker.on("click", function (e) {
                                         state.items.clusters.drawn.erase(e.target.rid);
                                         state.markers.removeLayer(e.target);
                                         $($("li[class='tree-branch'][rid='" + e.target.rid + "']").children()[0]).children()[0].click();
+                                    });
+
+                                    marker.on("mouseover", function(e){
+                                        var popup = L.popup()
+                                            .setLatLng(e.latlng)
+                                            .setContent(e.target.name)
+                                            .openOn(state.map);
                                     });
 
                                     if (!state.items.clusters.drawn.count(j.id())) {
@@ -885,7 +887,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                 startLoadingSpinner();
                 cqr.regionChildrenInfo(rid,
                     function (regionChildrenInfo) {
-                        endLoadingSpinner();
                         getItems(regionChildrenInfo, options, callback);
                     },
                     defErrorCB
@@ -900,9 +901,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                 state.items.listview.promised.insert(itemId, itemId);
             }
 
-            endLoadingSpinner();
-            startLoadingSpinner();
-
             oscar.getItems(itemIds,
                 function (items) {
                     endLoadingSpinner();
@@ -914,9 +912,9 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                             state.items.listview.promised.erase(itemId);
                         }
                     }
-                    if (state.items.listview.visualizeall) {
-                        visualizeResultListItems();
-                    }
+
+                    visualizeResultListItems();
+
                     if (state.items.listview.drawn.size() === 1) {
                         for (var i in state.items.listview.drawn.values()) {
                             $('#itemsNameLink' + i).click();
@@ -1063,6 +1061,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                     oscar.completeSimple(q, scb, ecb, ohf, globalOht);
                 };
             }
+
             //ignite loading feedback
             startLoadingSpinner();
 
@@ -1121,18 +1120,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
 
         $(document).ready(function () {
             //setup config panel
-            state.items.listview.visualizeall = $('#visualize_all_results_checkbox').is(':checked');
-            $('#visualize_all_results_checkbox').bind('change',
-                function () {
-                    state.items.listview.visualizeall = $('#visualize_all_results_checkbox').is(':checked');
-                    if (!state.items.listview.visualizeall) {
-                        clearVisualizedItems();
-                    }
-                    else {
-                        visualizeResultListItems();
-                    }
-                }
-            );
 
             $('#show_item_relatives_checkbox').bind('change',
                 function () {
