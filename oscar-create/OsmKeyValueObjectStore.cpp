@@ -243,7 +243,7 @@ void OsmKeyValueObjectStore::Context::getNodes() {
 	);
 // 			std::cout << "Found " << tmpDs.size() << " out of " << nodesToStore.size() << " nodes" << std::endl;
 	assert(tmpDs.size() <= nodesToStore.size());
-	std::sort(tmpDs.begin(), tmpDs.end());
+	sserialize::mt_sort(tmpDs.begin(), tmpDs.end(), std::less< std::pair<int64_t, RawGeoPoint> >(), cc->numThreads);
 	nodesToStore.clear();
 	for(const std::pair<int64_t, RawGeoPoint> & x : tmpDs) {
 		nodesToStore[x.first] = x.second;
