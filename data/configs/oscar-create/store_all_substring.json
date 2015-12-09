@@ -14,6 +14,7 @@
 	"store" : {
 		"enabled" : true,
 		"threadCount" : 8,
+		"blobFetchCount" : 10,
 		"fullRegionIndex" : false,
 		"addParentInfo" : false,
 		"nodeTableSize" : 100000,

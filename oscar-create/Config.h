@@ -82,6 +82,7 @@ struct KVStoreConfig {
 	uint32_t maxTriangPerCell;
 	double maxTriangCentroidDist;
 	uint32_t numThreads;
+	uint32_t blobFetchCount;
 	int itemSortOrder;//as defined by OsmKeyValueObjectStore::ItemSortOrder
 	std::string prioStringsFileName;
 	std::ostream & print(std::ostream & out) const;

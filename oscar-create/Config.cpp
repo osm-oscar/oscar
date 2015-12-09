@@ -107,6 +107,7 @@ std::ostream& TagStoreConfig::print(std::ostream& out) const {
 
 std::ostream& KVStoreConfig::print(std::ostream& out) const {
 	out << "Number of threads: " << numThreads << "\n";
+	out << "Number of blobs to fetch at once: " << blobFetchCount << "\n";
 	out << "Max node table entries: " << sserialize::toString(maxNodeHashTableSize) << "\n";
 	out << "Keys whose values are infalted: " << keysValuesToInflate << "\n";
 	out << "Node HashTable size: ";
@@ -513,11 +514,17 @@ lonCount(0),
 maxTriangPerCell(std::numeric_limits<uint32_t>::max()),
 maxTriangCentroidDist(std::numeric_limits<double>::max()),
 numThreads(0),
+blobFetchCount(1),
 itemSortOrder(OsmKeyValueObjectStore::ISO_NONE)
 {
 	Json::Value v = cfg["enabled"];
 	if (v.isBool()) {
 		enabled = v.asBool();
+	}
+	
+	v = cfg["blobFetchCount"];
+	if (v.isNumeric()) {
+		blobFetchCount = v.asUInt();
 	}
 	
 	v = cfg["threadCount"];
