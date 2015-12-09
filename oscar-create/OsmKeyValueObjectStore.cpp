@@ -872,6 +872,7 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 
 		//first get the node refs for our ways
 		uint32_t blobsRead = osmpbf::parseFileCPPThreads(ct.inFile, [&ct, &wct](osmpbf::PrimitiveBlockInputAdaptor & pbi) -> bool {
+			std::vector<int64_t> myNodesToStore;
 			for(osmpbf::IWayStream way = pbi.getWayStream(); !way.isNull(); way.next()) {
 				if (!way.refsSize() || !way.tagsSize()) {
 					continue;
@@ -881,11 +882,12 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 				
 				if (ct.cc->itemSaveDirector->process(rawItem)) {
 					ct.totalGeoPointCount += way.refsSize();
-					std::unique_lock<std::mutex> lck(wct.nodesToStoreLock);
-					for(osmpbf::IWayStream::RefIterator it(way.refBegin()), end(way.refEnd()); it != end; ++it) {
-						ct.nodesToStore.mark(*it);
-					}
+					myNodesToStore.insert(myNodesToStore.end(), way.refBegin(), way.refEnd());
 				}
+			}
+			std::unique_lock<std::mutex> lck(wct.nodesToStoreLock);
+			for(auto x : myNodesToStore) {
+				ct.nodesToStore.mark(x);
 			}
 			return ct.nodesToStore.size() < ct.cc->maxNodeCoordTableSize;
 		}, ct.cc->numThreads, ct.cc->blobFetchCount);
