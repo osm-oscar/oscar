@@ -105,11 +105,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
             spinner: new spinner(myConfig.spinnerOpts)
         };
 
-        // extend the type "Marker" with a leafletItem, which can be a circle, polygon, ... it is shown, when the Marker is clicked
-        L.Marker.include({
-            leafletItem: undefined
-        });
-
         // mustache-template-loader needs this
         window.Mustache = mustache;
 
@@ -513,13 +508,11 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                     } else {
                         marker = L.marker(itemShape.getLatLng());
                     }
-                    marker.leafletItem = itemShape;
-                    marker.on("click", function (e) {
-                        state.map.addLayer(e.target.leafletItem);
-                    });
+
                     state.markers.addLayer(marker);
-                    state["items"].shapes.drawn.insert(itemId, itemShape);
+                    state.items.shapes.drawn.insert(itemId, itemShape);
                     addShapeToMap(marker, itemId, "items");
+
                 }
                 state.map.addLayer(state.markers);
             }, defErrorCB);
@@ -621,21 +614,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
             }, defErrorCB);
         }
 
-        ///Try to fill result list with up to about count items
-        function loadMoreIntoResultList() {
-            if (state.items.listview.selectedRegionId === undefined || !state.items.listview.hasmore ||
-                state.items.listview.loadsmore) {
-                return;
-            }
-            state.items.listview.loadsmore = true;
-            startLoadingSpinner();
-            state.cqr.regionItemIds(state.items.listview.selectedRegionId,
-                getItemIds,
-                defErrorCB,
-                0 // offset
-            );
-        }
-
         function regionLayersToFront() {
             for (var i in state.regions.drawn.values()) {
                 state.regions.drawn.values()[i].bringToFront();
@@ -726,7 +704,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
             state.items.listview.drawn.clear();
             state.items.listview.promised.clear();
             state.items.listview.hasmore = true;
-            loadMoreIntoResultList();
         }
 
         ///returns the region ids of opened regions in dest
@@ -833,17 +810,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
 
                         var parentRid = options.dataAttributes !== undefined ? options.dataAttributes.rid : undefined;
 
-                        if (!items.length || (options.dataAttributes && options.dataAttributes["cnt"] < oscar.maxFetchItems)) {
-                            state.items.listview.selectedRegionId = options.rid;
-                            state.cqr.regionItemIds(state.items.listview.selectedRegionId,
-                                getItemIds,
-                                defErrorCB,
-                                0 // offset
-                            );
-                            state.map.fitBounds(options.bbox);
-                            return;
-                        }
-
                         for (var i in items) {
                             var item = items[i];
                             var itemId = item.id();
@@ -861,7 +827,15 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                             });
                         }
 
-                        if ((cqr.d.ohPath.length && parentRid !== undefined && (cqr.d.ohPath[cqr.d.ohPath.length - 1] == parentRid || state.DAG.at(parentRid).hasParentWithId(cqr.d.ohPath[cqr.d.ohPath.length - 1]))) || !cqr.d.ohPath.length) {
+                        if (!items.length || (options.dataAttributes && options.dataAttributes["cnt"] < oscar.maxFetchItems)) {
+                            state.items.listview.selectedRegionId = options.rid;
+                            state.cqr.regionItemIds(state.items.listview.selectedRegionId,
+                                getItemIds,
+                                defErrorCB,
+                                0 // offset
+                            );
+                            state.map.fitBounds(options.bbox);
+                        }else if ((cqr.d.ohPath.length && parentRid !== undefined && (cqr.d.ohPath[cqr.d.ohPath.length - 1] == parentRid || state.DAG.at(parentRid).hasParentWithId(cqr.d.ohPath[cqr.d.ohPath.length - 1]))) || !cqr.d.ohPath.length) {
                             cqr.getMaximumIndependetSet(parentRid, function (regions) {
                                 var j;
                                 for(var i in regions){
@@ -1146,13 +1120,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
         }
 
         $(document).ready(function () {
-            // TODO: fix this
-            $('#items_parent').bind('scroll', function () {
-                if ($(this).scrollTop() + $(this).innerHeight() >= $(this)[0].scrollHeight - 20) {
-                    loadMoreIntoResultList();
-                }
-            });
-
             //setup config panel
             state.items.listview.visualizeall = $('#visualize_all_results_checkbox').is(':checked');
             $('#visualize_all_results_checkbox').bind('change',
@@ -1191,14 +1158,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                     }
                 }
             );
-
-            $('#itemload_accept_button').click(function (e) {
-                var st = parseInt($('#itemload_spinner').val());
-                if (st > 0) {
-                    state.items.listview.loadtarget = state.items.listview.promised.size() + state.items.listview.drawn.size() + st;
-                    loadMoreIntoResultList();
-                }
-            });
 
             $('#geoquery_selectbutton').click(function () {
                 if (state.geoquery.active) {
