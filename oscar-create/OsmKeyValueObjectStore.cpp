@@ -242,8 +242,6 @@ void OsmKeyValueObjectStore::Context::getNodes() {
 		}, cc->numThreads
 	);
 // 			std::cout << "Found " << tmpDs.size() << " out of " << nodesToStore.size() << " nodes" << std::endl;
-// 		sserialize::OutOfMemorySorter< std::pair<int64_t, RawGeoPoint> > ooms;
-// 		ooms.sort(tmpDs, std::less< std::pair<int64_t, RawGeoPoint> >());
 	assert(tmpDs.size() <= nodesToStore.size());
 	std::sort(tmpDs.begin(), tmpDs.end());
 	nodesToStore.clear();
