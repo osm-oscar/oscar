@@ -489,6 +489,7 @@ void handleKVCreation(oscar_create::Config & opts, State & state) {
 		cc.maxNodeId = opts.kvStoreConfig->maxNodeId;
 		cc.minNodeId = opts.kvStoreConfig->minNodeId;
 		cc.numThreads = opts.kvStoreConfig->numThreads;
+		cc.blobFetchCount = opts.kvStoreConfig->blobFetchCount;
 		cc.rc.regionFilter = oscar_create::AreaExtractor::nameFilter(opts.kvStoreConfig->keysDefiningRegions, opts.kvStoreConfig->keyValuesDefiningRegions);
 		cc.rc.polyStoreLatCount = opts.kvStoreConfig->latCount;
 		cc.rc.polyStoreLonCount = opts.kvStoreConfig->lonCount;

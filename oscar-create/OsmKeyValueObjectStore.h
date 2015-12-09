@@ -161,6 +161,7 @@ public:
 		uint64_t minNodeId; //min node id for the direct node hash
 		uint64_t maxNodeId; //max node id for the direct node hash
 		uint32_t numThreads;
+		uint32_t blobFetchCount;
 		std::unordered_set<std::string> inflateValues;
 		ItemSortOrder sortOrder;
 		std::string prioStringsFn;//needed if sortOrder == ISO_SCORE_PRIO_STRINGS
