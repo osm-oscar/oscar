@@ -103,16 +103,19 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
             spinner: new spinner(myConfig.spinnerOpts)
         };
 
+        // show names of subregions of a cluster in a popup
         L.MarkerCluster.prototype.on("mouseover", function (e) {
             var names = e.target.getChildClustersNames();
             var text = "";
-            for (var i in names) {
-                text += names[i];
-                if (i < names.length - 1) {
-                    text += ", ";
+            if (names.length > 1) {
+                for (var i in names) {
+                    text += names[i];
+                    if (i < names.length - 1) {
+                        text += ", ";
+                    }
                 }
+                L.popup().setLatLng(e.latlng).setContent(text).openOn(state.map);
             }
-            L.popup().setLatLng(e.latlng).setContent(text).openOn(state.map);
         });
 
         // mustache-template-loader needs this
