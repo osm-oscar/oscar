@@ -309,12 +309,13 @@ SimpleCellQueryResult : function(data, parent, sqId) {
 		rootRegionApxItemCount : function() {
 			return this.d.rootRegionApxItemCount;
 		},
-	   //returns [regionIds] in successCB
-		getMaximumIndependetSet: function(regionId, successCB, errorCB) {
+	   //returns [regionIds] in successCB,
+	   //maxOverlap in percent, prunes regions that overlap with more than maxOverlap percent cells of the currently selected set of children regions
+		getMaximumIndependetSet: function(regionId, maxOverlap, successCB, errorCB) {
 			if (regionId === undefined) {
 				regionId = 0xFFFFFFFF;
 			}
-			simpleCqrMaxIndependentChildren(this.d.query, successCB, errorCB, regionId);
+			simpleCqrMaxIndependentChildren(this.d.query, successCB, errorCB, regionId, maxOverlap);
 		},
 		//returning an array in successCB with objects={id : int, apxitems : int}
 		//returns rootRegionChildrenInfo if regionId is undefined
@@ -855,11 +856,14 @@ simpleCqrChildren : function(query, successCB, errorCB, selectedRegion) {
 			error: function(jqXHR, textStatus, errorThrown) {errorCB(textStatus, errorThrown);}
 	});
 },
-simpleCqrMaxIndependentChildren : function(query, successCB, errorCB, selectedRegion) {
+simpleCqrMaxIndependentChildren : function(query, successCB, errorCB, selectedRegion, maxOverlap) {
 	var params = {};
 	params['q'] = query;
 	if (selectedRegion !== undefined) {
 		params['r'] = selectedRegion;
+	}
+	if (maxOverlap !== undefined) {
+		params['o'] = maxOverlap;
 	}
 	var qpath = this.completerBaseUrl + "/cqr/clustered/michildren";
 	jQuery.ajax({
