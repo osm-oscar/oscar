@@ -23,8 +23,15 @@
 </head>
 
 <body>
-<div class="hidden" id="flickr"></div>
+
+<div id="flickr">
+    <img src="https://s.yimg.com/pw/images/goodies/white-small-chiclet.png" />
+    <hr />
+    <div id="flickr_images"></div>
+</div>
+
 <div id="loader"></div>
+
 <div id="content_container">
     <div id="sidebar" class="sidebar collapsed">
 
@@ -88,15 +95,18 @@
                             </label>
                         </div>
                         <div class='form-group'>
-                            <button type="button" class="btn btn-default" id="pathquery_selectbutton">Select path</button>
+                            <button type="button" class="btn btn-default" id="pathquery_selectbutton">Select path
+                            </button>
                         <span>
                             Radius:
                             <input id="pathquery_radius" type="number" value="100" min="50" max="20000" step="50"/>
                         </span>
-                            <button type="button" class="btn btn-default" id="pathquery_acceptbutton">Accept path</button>
+                            <button type="button" class="btn btn-default" id="pathquery_acceptbutton">Accept path
+                            </button>
                         </div>
                         <div class='form-group'>
-                            <button type="button" class="btn btn-default" id="geoquery_selectbutton">Select rectangle:</button>
+                            <button type="button" class="btn btn-default" id="geoquery_selectbutton">Select rectangle:
+                            </button>
                         <span data-class="geoquery_min_coord">
                             (<input id="geoquery_minlat" data-class="geoquery_min_coord" type="number" value="0"
                                     min="-90" max="90" step="1"/>,
@@ -126,7 +136,8 @@
 
                             <div class="input-group" id='ohf_spinner_group'>
                                 <span class="input-group-addon">unfold ratio</span>
-                                <input class='form-control' type="number" value='95' min='0' max='100' id='ohf_spinner' step="1"/>
+                                <input class='form-control' type="number" value='95' min='0' max='100' id='ohf_spinner'
+                                       step="1"/>
                             </div>
                         </div>
                     </div>

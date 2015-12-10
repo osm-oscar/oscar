@@ -237,10 +237,8 @@ body {
 #flickr{
     position: fixed;
     z-index: 200;
-    right: 5%;
-    top: 5%;
-    bottom: 5%;
-    height: 90%;
+    right: 10px;
+    top: 10px;
     width: 15%;
     padding: 10px 10px 10px 10px;
     opacity: 1.0;
@@ -248,8 +246,15 @@ body {
     border-radius: 10px;
     border-color: #FFFFFF;
     background-color: #FFFFFF;
+    display: none;
+    height: 95%;
 }
 
-#flickr a{
+#flickr img{
     padding: 5px 5px 5px 5px;
+}
+
+#flickr_images{
+    overflow-y: scroll;
+    height: 90%;
 }

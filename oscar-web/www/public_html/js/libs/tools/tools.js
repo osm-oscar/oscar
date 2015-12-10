@@ -54,10 +54,10 @@ TreeNode.prototype.hasParentWithId = function (id) {
     return (tmp !== undefined && tmp.id == id);
 };
 
-function showImagesForLocation(urls){
-    var flickr = $('#flickr').empty();
+function showImagesForLocation(urls) {
+    var flickr = $('#flickr_images').empty();
 
-    for(var i=0; i<10 && i< urls.length; i++){
+    for (var i = 0; i < 50 && i < urls.length; i++) {
         var url = urls[i];
         var bigimg = url.replace("_t.jpg", "_b.jpg");
         var link = $("<a />").attr("href", bigimg);
@@ -65,13 +65,15 @@ function showImagesForLocation(urls){
         link.appendTo(flickr);
     }
 
-    if(urls.length > 0){
-        flickr.removeClass("hidden");
+    if (urls.length > 0) {
+        $('#flickr').show();
+    } else {
+        $('#flickr').hide();
     }
 
 }
 
-function getImagesForLocation(name, geopos){
+function getImagesForLocation(name, geopos) {
     flickr.query(name, geopos, showImagesForLocation);
 }
 

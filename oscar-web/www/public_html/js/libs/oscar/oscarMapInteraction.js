@@ -462,7 +462,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
 
         function clearHighlightedShapes(shapeSrcType) {
             for (var i in state[shapeSrcType].shapes.highlighted) {
-                if (state[shapeSrcType].shapes.drawn[i] === undefined) {
+                if (state[shapeSrcType].shapes.drawn.at(i) === undefined) {
                     state.map.removeLayer(state[shapeSrcType].shapes.drawn.at(i));
                     state[shapeSrcType].shapes.drawn.erase(i);
                 }
@@ -604,7 +604,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                         geopos = itemShape.getLatLng();
                     }
 
-                    getImagesForLocation($.trim($(this).text()),geopos);
+                    getImagesForLocation($.trim($(this).text()), geopos);
                 }
             );
 
@@ -1087,6 +1087,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                 return;
             }
             state.sidebar.open("search");
+            $("#flickr").hide();
 
             //query has changed, ddos the server! TODO: call off all ajax loads from earlier calls
             var myQuery = $("#search_text").val();
