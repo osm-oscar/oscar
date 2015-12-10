@@ -71,7 +71,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                     drawn: SimpleHash()//referenced by id
                 }
             },
-            loadingtasks: 0, //number of tasks currently loading, initially 1 for this page
+            loadingtasks: 0,
             cqr: {},
             cqrRegExp: undefined,
             queries: {
@@ -113,12 +113,14 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                         text += ", ";
                     }
                 }
-                L.popup().setLatLng(e.latlng).setContent(text).openOn(state.map);
+                L.popup({offset: new L.Point(0, -10)}).setLatLng(e.latlng).setContent(text).openOn(state.map);
             }
         });
 
         L.MarkerCluster.prototype.on("mouseout", function (e) {
-            $(".leaflet-popup-close-button")[0].click();
+            if ($(".leaflet-popup-close-button")[0] !== undefined) {
+                $(".leaflet-popup-close-button")[0].click();
+            }
         });
 
         // mustache-template-loader needs this
@@ -136,6 +138,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
         L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: osmAttr}).addTo(state.map);
 
         var defErrorCB = function (textStatus, errorThrown) {
+            endLoadingSpinner();
             console.log("xmlhttprequest error textstatus=" + textStatus + "; errorThrown=" + errorThrown);
             if (confirm("Error occured. Refresh automatically?")) {
                 location.reload();
@@ -848,6 +851,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                         }
 
                         if (!items.length || (options.dataAttributes && options.dataAttributes["cnt"] < oscar.maxFetchItems)) {
+                            $("#left_menu_parent").css("display", "block");
                             state.items.listview.selectedRegionId = options.rid;
                             state.cqr.regionItemIds(state.items.listview.selectedRegionId,
                                 getItemIds,
@@ -873,13 +877,15 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                                     });
 
                                     marker.on("mouseover", function (e) {
-                                        L.popup()
+                                        L.popup({offset: new L.Point(0, -10)})
                                             .setLatLng(e.latlng)
                                             .setContent(e.target.name).openOn(state.map);
                                     });
 
                                     marker.on("mouseout", function (e) {
-                                        $(".leaflet-popup-close-button")[0].click();
+                                        if ($(".leaflet-popup-close-button")[0] !== undefined) {
+                                            $(".leaflet-popup-close-button")[0].click();
+                                        }
                                     });
 
                                     if (!state.items.clusters.drawn.count(j.id())) {
@@ -957,7 +963,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
 
         function displayCqrAsTree(cqr) {
             clearViews();
-            $("#left_menu_parent").css("display", "block");
             var myTree = $('#MyTree');
             var myDataSource;
 
@@ -1143,8 +1148,16 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
         }
 
         $(document).ready(function () {
-            //setup config panel
 
+            if (!$('#results_tree_parent').is(':checked')) {
+                $('#results_tree_parent').hide();
+            }
+
+            $('#show_tree').click(function () {
+                $('#results_tree_parent').toggle();
+            });
+
+            // TODO: parent area example
             $('#show_item_relatives_checkbox').bind('change',
                 function () {
                     var helpOn = $('#show_help_checkbox').is(':checked');
