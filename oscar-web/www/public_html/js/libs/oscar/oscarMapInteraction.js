@@ -591,6 +591,20 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                     if (shapeSrcType !== "relatives") {
                         showItemRelatives(itemId);
                     }
+
+                    var geopos;
+                    var itemShape = state.items.shapes.drawn.at(itemId);
+                    if (itemShape instanceof L.MultiPolygon) {
+                        geopos = itemShape.getLatLngs()[0][0];
+                    } else if (itemShape instanceof L.Polygon) {
+                        geopos = itemShape.getLatLngs()[0];
+                    } else if (itemShape instanceof L.Polyline) {
+                        geopos = itemShape.getLatLngs()[0];
+                    } else {
+                        geopos = itemShape.getLatLng();
+                    }
+
+                    getImagesForLocation($.trim($(this).text()),geopos);
                 }
             );
 
@@ -1256,10 +1270,8 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
             });
 
             //setup help
-            $('.example-query-string').bind('click', function () {
-                var st = $('#search_text');
-                st.val(this.firstChild.data);
-                st.change();
+            $('.example-query-string').on('click', function () {
+                $('#search_text').val(this.firstChild.data);
             });
 
             //setup search field

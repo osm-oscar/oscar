@@ -53,3 +53,45 @@ TreeNode.prototype.hasParentWithId = function (id) {
     }
     return (tmp !== undefined && tmp.id == id);
 };
+
+function showImagesForLocation(urls){
+    var flickr = $('#flickr').empty();
+
+    for(var i=0; i<10 && i< urls.length; i++){
+        var url = urls[i];
+        var bigimg = url.replace("_t.jpg", "_b.jpg");
+        var link = $("<a />").attr("href", bigimg);
+        $("<img/>").attr("src", url).appendTo(link);
+        link.appendTo(flickr);
+    }
+
+    if(urls.length > 0){
+        flickr.removeClass("hidden");
+    }
+
+}
+
+function getImagesForLocation(name, geopos){
+    flickr.query(name, geopos, showImagesForLocation);
+}
+
+var flickr = {
+    api_key: "46f7a6dce46471b81aa7c1592fcc9733",
+
+    query: function (text, geopos, callback) {
+        var urls = [];
+        var service = 'https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key='
+            + this.api_key + '&text=' + text + '&format=json&nojsoncallback=1&sort=relevance';
+
+        service += '&lat=' + geopos.lat + '&lon=' + geopos.lng;
+
+        $.getJSON(service, function (data) {
+            var photo;
+            for (var i in data.photos.photo) {
+                photo = data.photos.photo[i];
+                urls.push('https://farm' + photo.farm + '.staticflickr.com/' + photo.server + '/' + photo.id + '_' + photo.secret + '_t.jpg');
+            }
+            callback(urls);
+        });
+    }
+};
