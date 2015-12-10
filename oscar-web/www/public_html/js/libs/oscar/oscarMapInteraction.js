@@ -54,7 +54,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                 listview: {
                     promised: SimpleHash(),//referenced by id
                     drawn: SimpleHash(),//referenced by id
-                    loadsmore: false, //currently loads more into the result list
                     selectedRegionId: undefined
                 },
                 clusters: {
@@ -72,7 +71,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                     drawn: SimpleHash()//referenced by id
                 }
             },
-            loadingtasks: 1, //number of tasks currently loading, initially 1 for this page
+            loadingtasks: 0, //number of tasks currently loading, initially 1 for this page
             cqr: {},
             cqrRegExp: undefined,
             queries: {
@@ -116,6 +115,10 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                 }
                 L.popup().setLatLng(e.latlng).setContent(text).openOn(state.map);
             }
+        });
+
+        L.MarkerCluster.prototype.on("mouseout", function (e) {
+            $(".leaflet-popup-close-button")[0].click();
         });
 
         // mustache-template-loader needs this
@@ -492,8 +495,10 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                 }
             }
 
+            startLoadingSpinner();
             oscar.getShapes(itemsToDraw, function (shapes) {
                 endLoadingSpinner();
+
                 var marker;
                 for (var i in itemsToDraw) {
                     var itemId = itemsToDraw[i];
@@ -695,7 +700,10 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
             state.items.listview.selectedRegionId = rid;
             //don't fetch bbox of "world"
             if (rid !== 0xFFFFFFFF) {
+                startLoadingSpinner();
                 oscar.getItem(rid, function (item) {
+                    endLoadingSpinner();
+
                     state.map.fitBounds(item.bbox());
                     var mapRegion = state.regions.drawn.at(rid);
                     if (mapRegion !== undefined) {
@@ -756,8 +764,10 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                 }
 
                 //fetch the items
+                startLoadingSpinner();
                 oscar.getItems(regionChildren,
                     function (items) {
+                        endLoadingSpinner();
                         var res = {data: []};
                         if (options.dataAttributes !== undefined) {
                             res.data.push({
@@ -868,6 +878,10 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                                             .setContent(e.target.name).openOn(state.map);
                                     });
 
+                                    marker.on("mouseout", function (e) {
+                                        $(".leaflet-popup-close-button")[0].click();
+                                    });
+
                                     if (!state.items.clusters.drawn.count(j.id())) {
                                         state.items.clusters.drawn.insert(j.id(), marker);
                                         state.markers.addLayer(marker);
@@ -901,8 +915,8 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                     rid = undefined;
                 }
                 startLoadingSpinner();
-                cqr.regionChildrenInfo(rid,
-                    function (regionChildrenInfo) {
+                cqr.regionChildrenInfo(rid, function (regionChildrenInfo) {
+                        endLoadingSpinner()
                         getItems(regionChildrenInfo, options, callback);
                     },
                     defErrorCB
@@ -919,7 +933,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
 
             oscar.getItems(itemIds,
                 function (items) {
-                    endLoadingSpinner();
                     for (var i in items) {
                         var item = items[i];
                         var itemId = item.id();
@@ -1078,9 +1091,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                 };
             }
 
-            //ignite loading feedback
-            startLoadingSpinner();
-
             //push our query as history state
             window.history.pushState({"q": myQuery}, undefined, location.pathname + "?q=" + encodeURIComponent(myQuery));
 
@@ -1095,12 +1105,10 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                         state.cqrRegExp = oscar.cqrRexExpFromQuery(cqr.query());
                         displayCqrAsTree(cqr);
                     }
-                    endLoadingSpinner();
                 },
                 function (jqXHR, textStatus, errorThrown) {
                     //BOOM!
                     alert("Failed to retrieve completion results. textstatus=" + textStatus + "; errorThrown=" + errorThrown);
-                    endLoadingSpinner();
                 });
         }
 
@@ -1256,6 +1264,5 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
 
             //check if there's a query in our location string
             queryFromSearchLocation();
-            endLoadingSpinner();
         });
     });
