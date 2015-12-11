@@ -604,7 +604,10 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                         geopos = itemShape.getLatLng();
                     }
 
-                    getImagesForLocation($.trim($(this).text()), geopos);
+                    if($('#show_flickr').is(':checked')) {
+                        getImagesForLocation($.trim($(this).text()), geopos);
+                    }
+
                 }
             );
 
@@ -1170,6 +1173,15 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
 
             $('#show_tree').click(function () {
                 $('#results_tree_parent').toggle();
+            });
+
+            $('#show_flickr').click(function(){
+                var flickr = $("#flickr");
+                if(!$(this).is(':checked')){
+                    flickr.hide();
+                }else{
+                    flickr.show();
+                }
             });
 
             // TODO: parent area example

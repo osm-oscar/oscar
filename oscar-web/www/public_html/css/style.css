@@ -247,7 +247,7 @@ body {
     border-color: #FFFFFF;
     background-color: #FFFFFF;
     display: none;
-    height: 95%;
+    bottom: 10px;
 }
 
 #flickr img{
