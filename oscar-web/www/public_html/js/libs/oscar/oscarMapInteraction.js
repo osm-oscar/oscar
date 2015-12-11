@@ -18,19 +18,21 @@ requirejs.config({
         "moment": "moment/moment.min",
         "mustache": "mustache/mustache",
         "mustacheLoader": "mustache/jquery.mustache.loader",
-        "jqueryui": "jqueryui/jquery-ui"
+        "jqueryui": "jqueryui/jquery-ui",
+        "slimbox": "slimbox/js/slimbox2"
     },
     shim: {
         'bootstrap': {deps: ['jquery']},
         'leafletCluster': {deps: ['leaflet', 'jquery']},
         'sidebar': {deps: ['leaflet', 'jquery']},
-        'mustacheLoader': {deps: ['jquery']}
+        'mustacheLoader': {deps: ['jquery']},
+        'slimbox': {deps: ['jquery']}
     },
     waitSeconds: 10
 });
 
-requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "mustache", "jqueryui", "leafletCluster", "spin", "sidebar", "mustacheLoader"],
-    function (oscar, L, jQuery, bootstrap, fuelux, jbinary, mustache, jqueryui, leafletCluster, spinner, sidebar, mustacheLoader) {
+requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "mustache", "jqueryui", "leafletCluster", "spin", "sidebar", "mustacheLoader", "slimbox"],
+    function (oscar, L, jQuery, bootstrap, fuelux, jbinary, mustache, jqueryui, leafletCluster, spinner, sidebar, mustacheLoader, slimbox) {
         //main entry point
 
         var osmAttr = '&copy; <a target="_blank" href="http://www.openstreetmap.org">OpenStreetMap</a>';

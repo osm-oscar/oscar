@@ -60,13 +60,17 @@ function showImagesForLocation(urls) {
     for (var i = 0; i < 50 && i < urls.length; i++) {
         var url = urls[i];
         var bigimg = url.replace("_t.jpg", "_b.jpg");
-        var link = $("<a />").attr("href", bigimg);
+        var link = $("<a />").attr("href", bigimg).attr("rel", "lightbox");
         $("<img/>").attr("src", url).appendTo(link);
         link.appendTo(flickr);
     }
 
     if (urls.length > 0) {
         $('#flickr').show();
+        // slimbox fails with dynamic content => updated added images
+        $("a[rel^='lightbox']").slimbox({/* Put custom options here */}, null, function(el) {
+            return (this == el) || ((this.rel.length > 8) && (this.rel == el.rel));
+        });
     } else {
         $('#flickr').hide();
     }
