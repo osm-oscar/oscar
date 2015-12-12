@@ -1,4 +1,4 @@
-var myConfig = {
+define(myConfig = {
     styles: {
         shapes: {
             regions: {
@@ -73,4 +73,4 @@ var myConfig = {
         , hwaccel: false // Whether to use hardware acceleration
         , position: 'absolute' // Element positioning
     }
-};
+});

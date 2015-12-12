@@ -21,23 +21,19 @@ requirejs.config({
         "jqueryui": "jquery-ui/jquery-ui",
         "slimbox": "slimbox/js/slimbox2",
         "tools": "tools/tools",
-        "conf":"config/config"
+        "conf": "config/config",
+        "menu": "menu/menu",
+        "flickr": "flickr/flickr"
     },
     shim: {
         'bootstrap': {deps: ['jquery']},
-        'leafletCluster': {deps: ['leaflet', 'jquery']},
-        'sidebar': {deps: ['leaflet', 'jquery']},
-        'mustacheLoader': {deps: ['jquery']},
-        'slimbox': {deps: ['jquery']},
-        'jqueryui': {deps: ['jquery']},
-        'tools': {deps: ['jqueryui']},
-        'menu': {deps: ['jqueryui']}
+        'fuelux':{deps: ['jquery']}
     },
     waitSeconds: 10
 });
 
-requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "mustache", "jqueryui", "leafletCluster", "spin", "sidebar", "mustacheLoader", "slimbox", "tools", "conf"],
-    function (oscar, L, jQuery, bootstrap, fuelux, jbinary, mustache, jqueryui, leafletCluster, spinner, sidebar, mustacheLoader, slimbox, tools, config) {
+requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "mustache", "jqueryui", "leafletCluster", "spin", "sidebar", "mustacheLoader", "slimbox", "tools", "conf", "menu", "flickr"],
+    function (oscar, L, jQuery, bootstrap, fuelux, jbinary, mustache, jqueryui, leafletCluster, spinner, sidebar, mustacheLoader, slimbox, tools, config, menu, flickr) {
         //main entry point
 
         var osmAttr = '&copy; <a target="_blank" href="http://www.openstreetmap.org">OpenStreetMap</a>';
@@ -612,7 +608,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                     }
 
                     if ($('#show_flickr').is(':checked')) {
-                        getImagesForLocation($.trim($(this).text()), geopos);
+                        flickr.getImagesForLocation($.trim($(this).text()), geopos);
                     }
 
                 }
@@ -1097,7 +1093,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                 return;
             }
             state.sidebar.open("search");
-            $("#flickr").hide("slide", { direction: "right" }, myConfig.styles.slide.speed);
+            $("#flickr").hide("slide", {direction: "right"}, myConfig.styles.slide.speed);
 
             //query has changed, ddos the server! TODO: call off all ajax loads from earlier calls
             var myQuery = $("#search_text").val();

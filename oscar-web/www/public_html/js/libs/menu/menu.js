@@ -1,4 +1,4 @@
-var menu = {
+define(["jquery"], menu = {
     displayCategories: function () {
         var c = $("#categories");
         if (c.is(":empty")) {
@@ -101,4 +101,4 @@ var menu = {
             }
         }
     }
-};
+});

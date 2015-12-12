@@ -1,103 +1,57 @@
-function SimpleHash() {
-    var m_size = 0;
-    var m_values = {};
-    return {
-        values: function () {
-            return m_values;
-        },
-        size: function () {
-            return m_size;
-        },
-        insert: function (key, value) {
-            if (m_values[key] === undefined) {
-                m_size += 1;
+define(function () {
+    SimpleHash = function () {
+        return {
+            m_size: 0,
+            m_values: {},
+            values: function () {
+                return this.m_values;
+            },
+            size: function () {
+                return this.m_size;
+            },
+            insert: function (key, value) {
+                if (this.m_values[key] === undefined) {
+                    this.m_size += 1;
+                }
+                this.m_values[key] = value;
+            },
+            count: function (key) {
+                return this.m_values[key] !== undefined;
+            },
+            at: function (key) {
+                return this.m_values[key];
+            },
+            erase: function (key) {
+                if (this.m_values[key] !== undefined) {
+                    this.m_size -= 1;
+                    delete this.m_values[key];
+                }
+            },
+            clear: function () {
+                this.m_size = 0;
+                this.m_values = {};
             }
-            m_values[key] = value;
-        },
-        count: function (key) {
-            return m_values[key] !== undefined;
-        },
-        at: function (key) {
-            return m_values[key];
-        },
-        erase: function (key) {
-            if (m_values[key] !== undefined) {
-                m_size -= 1;
-                delete m_values[key];
-            }
-        },
-        clear: function () {
-            m_size = 0;
-            m_values = {};
-        }
+        };
     };
-}
 
-TreeNode = function (id, parent) {
-    this.id = id;
-    this.parent = parent;
-    this.children = [];
-    return this;
-};
-
-TreeNode.prototype.addChild = function (id) {
-    var node = new TreeNode(id, this);
-    this.children.push(node);
-    return node;
-};
-
-TreeNode.prototype.hasParentWithId = function (id) {
-    var tmp = this.parent;
-    while (tmp !== undefined && tmp.id != id) {
-        tmp = tmp.parent;
-    }
-    return (tmp !== undefined && tmp.id == id);
-};
-
-function showImagesForLocation(urls) {
-    var flickr = $('#flickr_images').empty();
-
-    for (var i = 0; i < 50 && i < urls.length; i++) {
-        var url = urls[i];
-        var bigimg = url.replace("_t.jpg", "_b.jpg");
-        var link = $("<a />").attr("href", bigimg).attr("rel", "lightbox");
-        $("<img/>").attr("src", url).appendTo(link);
-        link.appendTo(flickr);
-    }
-
-    if (urls.length > 0) {
-        $('#flickr').show("slide", { direction: "right" }, myConfig.styles.slide.speed);
-        // slimbox fails with dynamic content => updated added images
-        $("a[rel^='lightbox']").slimbox({/* Put custom options here */}, null, function(el) {
-            return (this == el) || ((this.rel.length > 8) && (this.rel == el.rel));
-        });
-    } else {
-        $('#flickr').hide("slide", { direction: "right" }, myConfig.styles.slide.speed);
-    }
-
-}
-
-function getImagesForLocation(name, geopos) {
-    flickr.query(name, geopos, showImagesForLocation);
-}
-
-var flickr = {
-    api_key: "46f7a6dce46471b81aa7c1592fcc9733",
-
-    query: function (text, geopos, callback) {
-        var urls = [];
-        var service = 'https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key='
-            + this.api_key + '&text=' + text + '&format=json&nojsoncallback=1&sort=relevance';
-
-        service += '&lat=' + geopos.lat + '&lon=' + geopos.lng;
-
-        $.getJSON(service, function (data) {
-            var photo;
-            for (var i in data.photos.photo) {
-                photo = data.photos.photo[i];
-                urls.push('https://farm' + photo.farm + '.staticflickr.com/' + photo.server + '/' + photo.id + '_' + photo.secret + '_t.jpg');
+    TreeNode = function (id, parent) {
+        return {
+            id: id,
+            parent: parent,
+            children: [],
+            addChild: function (id) {
+                var node = new TreeNode(id, this);
+                this.children.push(node);
+                return node;
+            },
+            hasParentWithId: function (id) {
+                var tmp = this.parent;
+                while (tmp !== undefined && tmp.id != id) {
+                    tmp = tmp.parent;
+                }
+                return (tmp !== undefined && tmp.id == id);
             }
-            callback(urls);
-        });
+        };
     }
-};
+});
+
