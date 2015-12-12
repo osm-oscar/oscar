@@ -18,21 +18,26 @@ requirejs.config({
         "moment": "moment/moment.min",
         "mustache": "mustache/mustache",
         "mustacheLoader": "mustache/jquery.mustache.loader",
-        "jqueryui": "jqueryui/jquery-ui",
-        "slimbox": "slimbox/js/slimbox2"
+        "jqueryui": "jquery-ui/jquery-ui",
+        "slimbox": "slimbox/js/slimbox2",
+        "tools": "tools/tools",
+        "conf":"config/config"
     },
     shim: {
         'bootstrap': {deps: ['jquery']},
         'leafletCluster': {deps: ['leaflet', 'jquery']},
         'sidebar': {deps: ['leaflet', 'jquery']},
         'mustacheLoader': {deps: ['jquery']},
-        'slimbox': {deps: ['jquery']}
+        'slimbox': {deps: ['jquery']},
+        'jqueryui': {deps: ['jquery']},
+        'tools': {deps: ['jqueryui']},
+        'menu': {deps: ['jqueryui']}
     },
     waitSeconds: 10
 });
 
-requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "mustache", "jqueryui", "leafletCluster", "spin", "sidebar", "mustacheLoader", "slimbox"],
-    function (oscar, L, jQuery, bootstrap, fuelux, jbinary, mustache, jqueryui, leafletCluster, spinner, sidebar, mustacheLoader, slimbox) {
+requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "mustache", "jqueryui", "leafletCluster", "spin", "sidebar", "mustacheLoader", "slimbox", "tools", "conf"],
+    function (oscar, L, jQuery, bootstrap, fuelux, jbinary, mustache, jqueryui, leafletCluster, spinner, sidebar, mustacheLoader, slimbox, tools, config) {
         //main entry point
 
         var osmAttr = '&copy; <a target="_blank" href="http://www.openstreetmap.org">OpenStreetMap</a>';
@@ -606,7 +611,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                         geopos = itemShape.getLatLng();
                     }
 
-                    if($('#show_flickr').is(':checked')) {
+                    if ($('#show_flickr').is(':checked')) {
                         getImagesForLocation($.trim($(this).text()), geopos);
                     }
 
@@ -1092,7 +1097,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                 return;
             }
             state.sidebar.open("search");
-            $("#flickr").hide();
+            $("#flickr").hide("slide", { direction: "right" }, myConfig.styles.slide.speed);
 
             //query has changed, ddos the server! TODO: call off all ajax loads from earlier calls
             var myQuery = $("#search_text").val();
@@ -1177,11 +1182,11 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                 $('#results_tree_parent').toggle();
             });
 
-            $('#show_flickr').click(function(){
+            $('#show_flickr').click(function () {
                 var flickr = $("#flickr");
-                if(!$(this).is(':checked')){
+                if (!$(this).is(':checked')) {
                     flickr.hide();
-                }else{
+                } else {
                     flickr.show();
                 }
             });

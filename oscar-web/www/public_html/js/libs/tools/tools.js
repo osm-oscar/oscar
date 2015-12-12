@@ -66,13 +66,13 @@ function showImagesForLocation(urls) {
     }
 
     if (urls.length > 0) {
-        $('#flickr').show();
+        $('#flickr').show("slide", { direction: "right" }, myConfig.styles.slide.speed);
         // slimbox fails with dynamic content => updated added images
         $("a[rel^='lightbox']").slimbox({/* Put custom options here */}, null, function(el) {
             return (this == el) || ((this.rel.length > 8) && (this.rel == el.rel));
         });
     } else {
-        $('#flickr').hide();
+        $('#flickr').hide("slide", { direction: "right" }, myConfig.styles.slide.speed);
     }
 
 }

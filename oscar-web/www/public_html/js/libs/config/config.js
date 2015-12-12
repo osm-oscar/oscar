@@ -24,6 +24,9 @@ var myConfig = {
         },
         menu: {
             fadeopacity: 0.9
+        },
+        slide: {
+            speed: 2000
         }
     },
     resultsview: {
