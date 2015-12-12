@@ -27,6 +27,10 @@ requirejs.config({
     },
     shim: {
         'bootstrap': {deps: ['jquery']},
+        'leafletCluster': {deps: ['leaflet', 'jquery']},
+        'sidebar': {deps: ['leaflet', 'jquery']},
+        'mustacheLoader': {deps: ['jquery']},
+        'slimbox': {deps: ['jquery']},
         'fuelux':{deps: ['jquery']}
     },
     waitSeconds: 10
