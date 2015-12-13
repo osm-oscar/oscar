@@ -23,7 +23,8 @@ requirejs.config({
         "tools": "tools/tools",
         "conf": "config/config",
         "menu": "menu/menu",
-        "flickr": "flickr/flickr"
+        "flickr": "flickr/flickr",
+        "manager": "connection/manager"
     },
     shim: {
         'bootstrap': {deps: ['jquery']},
@@ -36,8 +37,8 @@ requirejs.config({
     waitSeconds: 10
 });
 
-requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "mustache", "jqueryui", "leafletCluster", "spin", "sidebar", "mustacheLoader", "slimbox", "tools", "conf", "menu", "flickr"],
-    function (oscar, L, jQuery, bootstrap, fuelux, jbinary, mustache, jqueryui, leafletCluster, spinner, sidebar, mustacheLoader, slimbox, tools, config, menu, flickr) {
+requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "mustache", "jqueryui", "leafletCluster", "spin", "sidebar", "mustacheLoader", "slimbox", "tools", "conf", "menu", "flickr", "manager"],
+    function (oscar, L, jQuery, bootstrap, fuelux, jbinary, mustache, jqueryui, leafletCluster, spinner, sidebar, mustacheLoader, slimbox, tools, config, menu, flickr, manager) {
         //main entry point
 
         var osmAttr = '&copy; <a target="_blank" href="http://www.openstreetmap.org">OpenStreetMap</a>';
@@ -1099,7 +1100,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
             state.sidebar.open("search");
             $("#flickr").hide("slide", {direction: "right"}, myConfig.styles.slide.speed);
 
-            //query has changed, ddos the server! TODO: call off all ajax loads from earlier calls
+            //query has changed, ddos the server!
             var myQuery = $("#search_text").val();
             state.queries.lastQuery = myQuery + "";//make sure state hold a copy
 
