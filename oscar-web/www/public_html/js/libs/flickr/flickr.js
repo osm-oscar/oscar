@@ -1,13 +1,17 @@
 define(["jqueryui", "slimbox"], function () {
-    return {
-        api_key: "46f7a6dce46471b81aa7c1592fcc9733",
+    return flickr = {
+        _api_key: "46f7a6dce46471b81aa7c1592fcc9733",
 
-        query: function (text, geopos, callback) {
+        _query: function (text, geopos, callback) {
             var urls = [];
-            var service = 'https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key='
-                + this.api_key + '&text=' + text + '&format=json&nojsoncallback=1&sort=relevance';
-
-            service += '&lat=' + geopos.lat + '&lon=' + geopos.lng;
+            var service = 'https://api.flickr.com/services/rest/?method=flickr.photos.search'
+            service += '&api_key=' + this._api_key
+            service += '&text=' + text
+            service += '&format=json'
+            service += '&nojsoncallback=1'
+            service += '&sort=relevance';
+            service += '&lat=' + geopos.lat
+            service += '&lon=' + geopos.lng;
 
             $.getJSON(service, function (data) {
                 var photo;
@@ -15,7 +19,8 @@ define(["jqueryui", "slimbox"], function () {
                     photo = data.photos.photo[i];
                     urls.push({
                         url: 'https://farm' + photo.farm + '.staticflickr.com/' + photo.server + '/' + photo.id + '_' + photo.secret + '_t.jpg',
-                        title: photo.title
+                        title: photo.title,
+                        photo_id: photo.id
                     });
                 }
                 callback(urls);
@@ -23,18 +28,36 @@ define(["jqueryui", "slimbox"], function () {
         },
 
         getImagesForLocation: function (name, geopos) {
-            this.query(name, geopos, this._showImagesForLocation);
+            this._query(name, geopos, this._showImagesForLocation.bind(this));
+        },
+
+        _setPhotoUrl: function (photo_id, el) {
+            var service = "https://api.flickr.com/services/rest/?method=flickr.photos.getSizes"
+            service += "&format=json"
+            service += "&nojsoncallback=1"
+            service += "&api_key=" + this._api_key
+            service += "&photo_id=" + photo_id;
+
+            $.getJSON(service, function (data) {
+                var i = data.sizes.size.length - 1;
+
+                while(data.sizes.size[i].width > 1024){
+                    i--;
+                }
+
+                $(el).attr("href", data.sizes.size[i].source);
+            });
         },
 
         _showImagesForLocation: function (urls) {
-            var flickr = $('#flickr_images').empty();
+            var flickr_img = $('#flickr_images').empty();
 
             for (var i = 0; i < 50 && i < urls.length; i++) {
                 var obj = urls[i];
-                var bigimg = obj.url.replace("_t.jpg", "_b.jpg");
-                var link = $("<a />").attr("href", bigimg).attr("rel", "lightbox-group").attr("title", obj.title || "");
+                var link = $("<a />").attr("rel", "lightbox-group").attr("title", obj.title || "");
                 $("<img/>").attr("src", obj.url).appendTo(link);
-                link.appendTo(flickr);
+                this._setPhotoUrl(urls[i].photo_id, link);
+                link.appendTo(flickr_img);
             }
 
             if (urls.length > 0) {
