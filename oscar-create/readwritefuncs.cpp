@@ -80,6 +80,14 @@ bool createAndWriteGridRTree(const oscar_create::Config& opts, State & state, ss
 }
 
 void handleGeoSearch(Config & opts, State & state) {
+	if (!(
+		(opts.gridConfig && opts.gridConfig->enabled) ||
+		(opts.rTreeConfig && opts.rTreeConfig->enabled)
+	))
+	{
+		return;
+	}
+	
 	std::string fn = liboscar::fileNameFromFileConfig(opts.getOutFileDir(), liboscar::FC_GEO_SEARCH, false);
 	sserialize::UByteArrayAdapter dest( sserialize::UByteArrayAdapter::createFile(1, fn) );
 	if (dest.size() != 1) {
