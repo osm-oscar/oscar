@@ -81,7 +81,7 @@
 					}
 				},
 				"tags" : {
-					"file" : {
+					"prefix" : {
 						"enabled" : true,
 						"keys" : "lists/kv_region_inherit_tags.txt",
 						"caseSensitive" : false,
