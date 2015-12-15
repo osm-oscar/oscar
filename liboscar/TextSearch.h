@@ -124,6 +124,14 @@ struct TextSearch::CompleterType<liboscar::TextSearch::GEOCELL> {
 	}
 };
 
+template<>
+struct TextSearch::CompleterType<liboscar::TextSearch::OOMGEOCELL> {
+	typedef sserialize::Static::CellTextCompleter type;
+	static type get(sserialize::RefCountObject * base) {
+		return type( dynamic_cast<sserialize::Static::detail::CellTextCompleter*>(base) );
+	}
+};
+
 template<liboscar::TextSearch::Type TType>
 typename liboscar::TextSearch::CompleterType<TType>::type
 TextSearch::get(uint32_t pos) const {
