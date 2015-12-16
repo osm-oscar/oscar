@@ -942,6 +942,23 @@ std::string Config::help() {
 	return std::string("[-a] -i <input.osm.pbf|input dir> -o <output dir> -c <config.json>");
 }
 
+std::string Config::toString(Config::ValidationReturnValues v) {
+	if (v == VRV_OK) {
+		return "OK";
+	}
+	std::string ret;
+#define ERRA(__NAME) if (v & __NAME) { ret += #__NAME; ret += ',';}
+	ERRA(VRV_BROKEN)
+	ERRA(VRV_BROKEN_TAG_STORE)
+	ERRA(VRV_BROKEN_INDEX_STORE)
+	ERRA(VRV_BROKEN_TEXT_SEARCH)
+	ERRA(VRV_BROKEN_GRID)
+	ERRA(VRV_BROKEN_RTREE)
+	ERRA(VRV_BROKEN_KV_STORE)
+#undef ERRA
+}
+
+
 Config::Config() :
 ask(false),
 indexStoreConfig(0),

@@ -211,6 +211,9 @@ public:
 	
 	static std::string help();
 
+	static std::string toString(ValidationReturnValues v);
+	
+public:
 	//Variables
 	std::string inFileName;
 	
