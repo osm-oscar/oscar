@@ -956,8 +956,8 @@ std::string Config::toString(Config::ValidationReturnValues v) {
 	ERRA(VRV_BROKEN_RTREE)
 	ERRA(VRV_BROKEN_KV_STORE)
 #undef ERRA
+	return ret;
 }
-
 
 Config::Config() :
 ask(false),
