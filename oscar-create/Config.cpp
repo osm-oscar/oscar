@@ -278,24 +278,24 @@ std::ostream& Config::print(std::ostream& out) const {
 		out << "IndexStoreConfig: \n";
 		out << *indexStoreConfig << "\n";
 	}
-	if (kvStoreConfig) {
+	if (kvStoreConfig && kvStoreConfig->enabled) {
 		out << "KVStoreConfig:\n"; 
 		out << *kvStoreConfig << "\n";
 	}
-	if (gridConfig) {
+	if (gridConfig && gridConfig->enabled) {
 		out << "GridConfig:\n";
 		out << *gridConfig << "\n";
 	}
-	if (rTreeConfig) {
+	if (rTreeConfig && rTreeConfig->enabled) {
 		out << "RTreeConfig:\n";
 		out << *rTreeConfig << "\n";
 	}
-	if (tagStoreConfig) {
+	if (tagStoreConfig && tagStoreConfig->enabled) {
 		out << "TagStoreConfig:\n";
 		out << *tagStoreConfig << "\n";
 	}
 	for(TextSearchConfig * x : textSearchConfig) {
-		if (!x) {
+		if (!x || !(x->enabled)) {
 			continue;
 		}
 		out << "TextSearchConfig[";
