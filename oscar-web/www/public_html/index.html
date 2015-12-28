@@ -70,34 +70,6 @@
                                 <tr>
                             </thead>                       
                             <tbody>
-                            {{#wikilink}}
-                                <tr>
-                                    <td>
-                                        <span title='Add key to query'>
-                                            <a href='#{{{shapeSrcType}}}Details{{{itemId}}}' class='item-detail-key' data-query-key='wikipedia'>wikipedia</a>
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span title='Open in new window'>
-                                            <a href='http://en.wikipedia.org/wiki/{{wikilink}}' target="_blank">{{wikilink}}</a>
-                                        </span>
-                                    </td>
-                                </tr>
-                            {{/wikilink}}
-                            {{#urlkvs}}
-                                <tr>
-                                    <td>
-                                        <span title='Add key to query'>
-                                            <a href='#{{{shapeSrcType}}}Details{{{itemId}}}' class='item-detail-key {{kc}}' data-query-key='{{k}}'>{{k}}</a>
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span title='Open in new window'>
-                                            <a href='{{v}}' target="_blank" class='{{vc}}'>{{v}}</a>
-                                        </span>
-                                    </td>
-                                </tr>
-                            {{/urlkvs}}
                             {{#kv}}
                                 <tr>
                                     <td>
@@ -106,9 +78,16 @@
                                         </span>
                                     </td>
                                     <td>
+                                    {{#link}}
+                                        <span title='Open in new window'>
+                                            <a href='{{link}}' target="_blank" class='{{vc}}'>{{v}}</a>
+                                        </span>
+                                    {{/link}}
+                                    {{^link}}
                                         <span title='Add key:value to query'>
                                             <a href='#{{{shapeSrcType}}}Details{{{itemId}}}' class='item-detail-value {{vc}}' data-query-key='{{k}}' data-query-value='{{v}}'>{{v}}</a>
                                         </span>
+                                    {{/link}}
                                     </td>
                                 </tr>
                             {{/kv}}
@@ -406,6 +385,31 @@
 	</div>
         <script type="text/javascript" src="js/libs/require.js/require.js"></script>
         <script type="text/javascript">
+			var protoRegExp = /^.*:\/\//;
+			var uriParsers = {
+				"id" : function(x) {
+					return x;
+				},
+				"http" : function(x) {
+					return (protoRegExp.test(x) ? x : "http://" + x);
+				},
+				"wikipedia" : function(x) {
+					if (protoRegExp.test(x)) {
+						return x;
+					}
+					else {
+						return "http://en.wikipedia.org/wiki/" + x;
+					}
+				},
+				"wikicommons" : function(x) {
+					if (protoRegExp.test(x)) {
+						return x;
+					}
+					else {
+						return "http://en.wikipedia.org/wiki/commons:" + x;
+					}
+				}
+			};
             var myConfig = {
                 styles : {
                             shapes : {
@@ -435,7 +439,15 @@
                             }
                         },
                 resultsview : {
-                            urltags : {"url" : 1, "website" : 1, "link" : 1, "contact:website" : 1}
+                            urltags : {
+								"url" : uriParsers["http"],
+								"website" : uriParsers["http"],
+								"link" : uriParsers["http"],
+								"contact:website" : uriParsers["http"],
+								"wikipedia" : uriParsers["wikipedia"],
+								"wikimedia_commons" : uriParsers["wikicommons"],
+								"image" : uriParsers["wikicommons"]
+								},
                 },
                 geoquery : {
                     samplecount : 10
@@ -596,36 +608,20 @@
                 };
                 function resultListTemplateDataFromItem(item, shapeSrcType) {
                     itemKv = [];
-                    itemUrls = [];
-                    wikilink = undefined;
                     var hasMatchingTag = false;
-                    var protoRegExp = /^.*:\/\//;
                     for(i=0; i < item.size(); ++i) {
                         var itemKey = item.key(i);
                         var itemValue = item.value(i);
-                        if (itemKey === "wikipedia") {
-                            if (protoRegExp.test(itemValue)) {
-                                itemUrls.push({"k" : itemKey, "v" : itemValue});
-                            }
-                            else {
-                                wikilink = itemValue;
-                            }
+                        var entry = {"k" : itemKey, "v" : itemValue}
+						if (isMatchedTag(itemKey, itemValue)) {
+							entry["kc"] = "matched-key-color";
+							entry["vc"] = "matched-value-color";
+							hasMatchingTag = true;
+						}
+                        if (myConfig.resultsview.urltags[itemKey] !== undefined) {
+							entry["link"] = myConfig.resultsview.urltags[itemKey](itemValue);
                         }
-                        else if (myConfig.resultsview.urltags[itemKey] !== undefined) {
-                            if (!protoRegExp.test(itemValue)) {
-                                itemValue = "http://" + itemValue;
-                            }
-                            itemUrls.push({"k" : itemKey, "v" : itemValue});
-                        }
-                        else {
-                            var tmp = {"k" : itemKey, "v" : itemValue};
-                            if (isMatchedTag(itemKey, itemValue)) {
-                                tmp["kc"] = "matched-key-color";
-                                tmp["vc"] = "matched-value-color";
-                                hasMatchingTag = true;
-                            }
-                            itemKv.push(tmp);
-                        }
+						itemKv.push(entry);
                     }
                     return {
                         "shapeSrcType" : shapeSrcType,
@@ -635,9 +631,7 @@
                         "osmType" : item.type(),
                         "itemName" : item.name(),
                         "matchingTagClass" : (hasMatchingTag ? "name-has-matched-tag" : false),
-                        "wikilink" : wikilink,
-                        "urlkvs" : itemUrls,
-                        "kv" : itemKv //{k,v, kc, vc}
+                        "kv" : itemKv //{k,v, link, kc, vc}
                     };
                 };
                 function displayLoadingSpinner() {
