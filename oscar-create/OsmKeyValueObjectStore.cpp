@@ -1139,7 +1139,7 @@ void OsmKeyValueObjectStore::applySort(oscar_create::OsmKeyValueObjectStore::Con
 	}
 	sserialize::TimeMeasurer tm;
 	tm.begin();
-	std::cout << "Sorting items..." << std::flush;
+	std::cout << "Sorting items..." << std::endl;
 	switch(ctx.cc->sortOrder) {
 	case ISO_NONE:
 		break;
@@ -1187,7 +1187,7 @@ void OsmKeyValueObjectStore::applySort(oscar_create::OsmKeyValueObjectStore::Con
 		break;
 	}
 	tm.end();
-	std::cout << "took " << tm << std::endl;
+	std::cout << "Sorting items took " << tm << std::endl;
 }
 
 bool OsmKeyValueObjectStore::processCellMap(Context & ctx) {
