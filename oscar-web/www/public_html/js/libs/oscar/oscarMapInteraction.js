@@ -32,7 +32,7 @@ requirejs.config({
         'sidebar': {deps: ['leaflet', 'jquery']},
         'mustacheLoader': {deps: ['jquery']},
         'slimbox': {deps: ['jquery']},
-        'fuelux':{deps: ['jquery']}
+        'fuelux': {deps: ['jquery']}
     },
     waitSeconds: 10
 });
@@ -80,7 +80,9 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                 }
             },
             loadingtasks: 0,
+            oldZoomLevel: undefined,
             cqr: {},
+            regionHandler: undefined,
             cqrRegExp: undefined,
             queries: {
                 activeCqrId: -1,
@@ -539,7 +541,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                     state.markers.addLayer(marker);
                     state.items.shapes.drawn.insert(itemId, itemShape);
                     addShapeToMap(marker, itemId, "items");
-
                 }
                 state.map.addLayer(state.markers);
             }, defErrorCB);
@@ -664,227 +665,165 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
             }
         }
 
-        function updateMapRegions(regions) {
-            state.regions.promised = {};
-            var availableMapRegions = {};
-            var fetchMapRegions = [];
-            for (var rid in regions) {
-                if (state.regions.drawn.count(rid)) {
-                    availableMapRegions[rid] = state.regions.drawn.at(rid);
-                    state.regions.drawn.erase(rid);
-                }
-                else {
-                    fetchMapRegions.push(rid);
-                }
-            }
-            //remove unused regions from map
-            for (var rid in state.regions.drawn.values()) {
-                state.map.removeLayer(state.regions.drawn.at(rid));
-                state.regions.drawn.erase(rid);
-            }
-            //replace old state.regions.drawn with new one
-            state.regions.drawn.clear();
-            for (var i in availableMapRegions) {
-                state.regions.drawn.insert(i, availableMapRegions[i]);
-            }
-            //fetch missing shapes
-            if (fetchMapRegions.length) {
-                for (var i in fetchMapRegions) {
-                    state.regions.promised[fetchMapRegions[i]] = fetchMapRegions[i];
-                }
-                startLoadingSpinner();
-                oscar.getShapes(fetchMapRegions,
-                    function (shapes) {
-                        endLoadingSpinner();
-                        for (var shapeId in shapes) {
-                            if (state.regions.promised[shapeId] !== undefined && !state.regions.drawn.count(shapeId)) {
-                                delete state.regions.promised[shapeId];
-                                var shape = shapes[shapeId];
-                                var leafletItem = oscar.leafletItemFromShape(shape);
-                                leafletItem.setStyle(myConfig.styles.shapes['regions']['normal']);
-                                state.regions.drawn.insert(shapeId, leafletItem);
-                                state.markers.addLayer(leafletItem);
-                            }
-                        }
-                        state.map.addLayer(state.markers);
-                        regionLayersToFront();
-                    },
-                    defErrorCB
-                );
-            }
-            else {
-                regionLayersToFront();
-            }
-        }
+        /*function updateMapRegions(regions) {
+         if ($('#load_region_boundaries').is(':checked')) {
+         state.regions.promised = {};
+         var availableMapRegions = {};
+         var fetchMapRegions = [];
+         for (var rid in regions) {
+         if (state.regions.drawn.count(rid)) {
+         availableMapRegions[rid] = state.regions.drawn.at(rid);
+         state.regions.drawn.erase(rid);
+         }
+         else {
+         fetchMapRegions.push(rid);
+         }
+         }
+         //remove unused regions from map
+         for (var rid in state.regions.drawn.values()) {
+         state.map.removeLayer(state.regions.drawn.at(rid));
+         state.regions.drawn.erase(rid);
+         }
+         //replace old state.regions.drawn with new one
+         state.regions.drawn.clear();
+         for (var i in availableMapRegions) {
+         state.regions.drawn.insert(i, availableMapRegions[i]);
+         }
+         //fetch missing shapes
+         if (fetchMapRegions.length) {
+         for (var i in fetchMapRegions) {
+         state.regions.promised[fetchMapRegions[i]] = fetchMapRegions[i];
+         }
+         startLoadingSpinner();
+         oscar.getShapes(fetchMapRegions,
+         function (shapes) {
+         endLoadingSpinner();
+         for (var shapeId in shapes) {
+         if (state.regions.promised[shapeId] !== undefined && !state.regions.drawn.count(shapeId)) {
+         delete state.regions.promised[shapeId];
+         var shape = shapes[shapeId];
+         var leafletItem = oscar.leafletItemFromShape(shape);
+         leafletItem.setStyle(myConfig.styles.shapes['regions']['normal']);
+         state.regions.drawn.insert(shapeId, leafletItem);
+         state.markers.addLayer(leafletItem);
+         }
+         }
+         state.map.addLayer(state.markers);
+         regionLayersToFront();
+         },
+         defErrorCB
+         );
+         }
+         else {
+         regionLayersToFront();
+         }
+         }
+         }*/
 
-        function displayRegionsItem() {
-            var cqr = state.cqr;
-            var rid = state.items.listview.selectedRegionId;
-            if (cqr === undefined || rid === undefined) {
-                return;
-            }
-            clearHighlightedShapes("items");
-            clearVisualizedItems();
-            state.items.listview.selectedRegionId = rid;
-            //don't fetch bbox of "world"
-            if (rid !== 0xFFFFFFFF) {
-                startLoadingSpinner();
-                oscar.getItem(rid, function (item) {
-                    endLoadingSpinner();
+        /*function displayRegionsItem() {
+         var cqr = state.cqr;
+         var rid = state.items.listview.selectedRegionId;
+         if (cqr === undefined || rid === undefined) {
+         return;
+         }
+         clearHighlightedShapes("items");
+         clearVisualizedItems();
+         state.items.listview.selectedRegionId = rid;
+         //don't fetch bbox of "world"
+         if (rid !== 0xFFFFFFFF) {
+         startLoadingSpinner();
+         oscar.getItem(rid, function (item) {
+         endLoadingSpinner();
 
-                    state.map.fitBounds(item.bbox());
-                    var mapRegion = state.regions.drawn.at(rid);
-                    if (mapRegion !== undefined) {
-                        for (var i in state.regions.highlighted) {
-                            state.regions.highlighted[i].setStyle(myConfig.styles.shapes.regions.normal);
-                            delete state.regions.highlighted[i];
-                        }
-                        state.regions.highlighted[rid] = mapRegion;
-                        mapRegion.setStyle(myConfig.styles.shapes.regions.highlight);
-                    }
-                }, defErrorCB);
-            }
-            else {
-                state.map.fitWorld();
-            }
-            $('#itemsList').empty();
-            state.items.listview.drawn.clear();
-            state.items.listview.promised.clear();
-        }
+         state.map.fitBounds(item.bbox());
+         var mapRegion = state.regions.drawn.at(rid);
+         if (mapRegion !== undefined) {
+         for (var i in state.regions.highlighted) {
+         state.regions.highlighted[i].setStyle(myConfig.styles.shapes.regions.normal);
+         delete state.regions.highlighted[i];
+         }
+         state.regions.highlighted[rid] = mapRegion;
+         mapRegion.setStyle(myConfig.styles.shapes.regions.highlight);
+         }
+         }, defErrorCB);
+         }
+         else {
+         state.map.fitWorld();
+         }
+         $('#itemsList').empty();
+         state.items.listview.drawn.clear();
+         state.items.listview.promised.clear();
+         }*/
 
         ///returns the region ids of opened regions in dest
         ///This only takes care of regions with children (inner nodes)
-        function getOpenRegions(node, dest) {
-            $(node).children('.tree\\-branch\\-children').not('.hidden').children('.tree\\-branch.tree\\-open').each(function () {
-                var rid = $(this).attr('rid');
-                dest[rid] = rid;
-                getOpenRegions(this, dest);
-            });
-        }
+        /*function getOpenRegions(node, dest) {
+         $(node).children('.tree\\-branch\\-children').not('.hidden').children('.tree\\-branch.tree\\-open').each(function () {
+         var rid = $(this).attr('rid');
+         dest[rid] = rid;
+         getOpenRegions(this, dest);
+         });
+         }
 
-        function getOpenRegionsInTree() {
-            var dest = {};
-            $('#MyTree').children('.tree\\-branch.tree\\-open').each(function () {
-                var rid = $(this).attr('rid');
-                dest[rid] = rid;
-                getOpenRegions(this, dest);
-            });
-            //and get the selected regions
-            var selectedRegions = $('#MyTree').tree('selectedItems');
-            for (var i in selectedRegions) {
-                var rid = selectedRegions[i].dataAttributes.rid;
-                if (rid !== 0xFFFFFFFF) { //filter root
-                    dest[rid] = rid;
-                }
-            }
-            return dest;
-        }
-
-        function fullSubSetTreeDataSource(cqr) {
-            return function (options, callback) {
-                var subSet = cqr.subSet();
-                var regionChildren = [];
-                if (options.dataAttributes !== undefined) {
-                    regionChildren = subSet.regions[options.dataAttributes.rid].children;
-                }
-                else {
-                    regionChildren = subSet.rootchildren;
-                }
-
-                //fetch the items
-                startLoadingSpinner();
-                oscar.getItems(regionChildren,
-                    function (items) {
-                        endLoadingSpinner();
-                        var res = {data: []};
-                        if (options.dataAttributes !== undefined) {
-                            res.data.push({
-                                name: options.name,
-                                type: 'item',
-                                dataAttributes: options.dataAttributes
-                            });
-                        }
-                        for (var i in items) {
-                            var item = items[i];
-                            var itemId = item.id();
-                            var regionInSubSet = subSet.regions[itemId];
-                            res.data.push({
-                                name: item.name() + ( regionInSubSet.apxitems > 0 ? " [~" + regionInSubSet.apxitems + "]" : ""),
-                                type: ((regionInSubSet.children !== undefined && regionInSubSet.children.length) ? 'folder' : 'item'),
-                                dataAttributes: {rid: itemId}
-                            });
-                        }
-                        res.data.sort(function (a, b) {
-                            var aSize = subSet.regions[a.dataAttributes.rid].apxitems;
-                            var bSize = subSet.regions[b.dataAttributes.rid].apxitems;
-                            return bSize - aSize;
-                        });
-                        callback(res);
-                    },
-                    defErrorCB
-                );
-            };
-        }
+         function getOpenRegionsInTree() {
+         var dest = {};
+         $('#MyTree').children('.tree\\-branch.tree\\-open').each(function () {
+         var rid = $(this).attr('rid');
+         dest[rid] = rid;
+         getOpenRegions(this, dest);
+         });
+         //and get the selected regions
+         var selectedRegions = $('#MyTree').tree('selectedItems');
+         for (var i in selectedRegions) {
+         var rid = selectedRegions[i].dataAttributes.rid;
+         if (rid !== 0xFFFFFFFF) { //filter root
+         dest[rid] = rid;
+         }
+         }
+         return dest;
+         }*/
 
         function flatCqrTreeDataSource(cqr) {
-            function getItems(regionChildrenInfo, options, callback) {
+            function getItems(regionChildrenInfo, context) {
                 //fetch the items
                 var regionChildrenApxItemsMap = {};
                 var childIds = [];
+                var parentRid = context.rid;
+                var parentNode = state.DAG.at(parentRid);
+                var parentCount = parentNode.count;
+
                 for (var i in regionChildrenInfo) {
                     var ci = regionChildrenInfo[i];
                     regionChildrenApxItemsMap[ci['id']] = ci['apxitems'];
                     childIds.push(ci['id']);
                 }
+
                 oscar.getItems(childIds,
                     function (items) {
-                        var res = {data: []};
                         var itemMap = {};
 
-                        if (options.dataAttributes !== undefined) {
-                            res.data.push({
-                                name: options.name,
-                                type: 'item',
-                                dataAttributes: options.dataAttributes
-                            });
-                        }
-                        else {//add a World item
-                            res.data.push({
-                                name: "Everything [~" + cqr.rootRegionApxItemCount() + "]",
-                                type: 'item',
-                                dataAttributes: {rid: 0xFFFFFFFF, 'data-rid': 0xFFFFFFFF}
-                            });
-                        }
-
-                        var parentRid = options.dataAttributes !== undefined ? options.dataAttributes.rid : undefined;
-
+                        // modify DAG
                         for (var i in items) {
                             var item = items[i];
                             var itemId = item.id();
-                            var apxItems = regionChildrenApxItemsMap[itemId];
-                            var parentNode = state.DAG.at(parentRid);
                             itemMap[itemId] = item;
-
-                            state.DAG.insert(itemId, parentNode !== undefined ? parentNode.addChild(itemId) : new TreeNode(itemId, undefined));
-
-                            res.data.push({
-                                name: item.name() + ( apxItems > 0 ? " [~" + apxItems + ":" + itemId + "]" : ""),
-                                type: 'folder',
-                                bbox: item.bbox(),
-                                dataAttributes: {rid: itemId, 'data-rid': itemId, "cnt": apxItems}
-                            });
+                            var node = parentNode.addChild(itemId);
+                            node.count = regionChildrenApxItemsMap[itemId];
+                            node.bbox = item.bbox();
+                            state.DAG.insert(itemId, node);
                         }
 
-                        if (!items.length || (options.dataAttributes && options.dataAttributes["cnt"] < oscar.maxFetchItems)) {
+                        // download locations, if end of hierarchy is reached or the region counts less than maxFetchItems
+                        if (!items.length || (parentCount < oscar.maxFetchItems)) {
                             $("#left_menu_parent").css("display", "block");
-                            state.items.listview.selectedRegionId = options.rid;
+                            state.items.listview.selectedRegionId = context.rid;
                             state.cqr.regionItemIds(state.items.listview.selectedRegionId,
                                 getItemIds,
                                 defErrorCB,
                                 0 // offset
                             );
-                            state.map.fitBounds(options.bbox);
-                        } else if ((cqr.d.ohPath.length && parentRid !== undefined && (cqr.d.ohPath[cqr.d.ohPath.length - 1] == parentRid || state.DAG.at(parentRid).hasParentWithId(cqr.d.ohPath[cqr.d.ohPath.length - 1]))) || !cqr.d.ohPath.length) {
+                            //state.map.fitBounds(context.bbox);
+                        } else if (context.draw) {
                             cqr.getMaximumIndependetSet(parentRid, function (regions) {
                                 var j;
                                 for (var i in regions) {
@@ -893,12 +832,13 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                                     marker.count = regionChildrenApxItemsMap[j.id()];
                                     marker.rid = j.id();
                                     marker.name = j.name();
+                                    marker.bbox = j.bbox();
 
                                     marker.on("click", function (e) {
                                         $(".leaflet-popup-close-button")[0].click(); // close all opened popups
                                         state.items.clusters.drawn.erase(e.target.rid);
                                         state.markers.removeLayer(e.target);
-                                        $($("li[class='tree-branch'][rid='" + e.target.rid + "']").children()[0]).children()[0].click();
+                                        state.regionHandler({rid: e.target.rid, draw: true, bbox: state.DAG.at(e.target.rid).bbox});
                                     });
 
                                     marker.on("mouseover", function (e) {
@@ -920,35 +860,31 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                                 }
 
                                 state.map.addLayer(state.markers);
-                                if (!cqr.d.ohPath.length || state.clustering) {
+                                /*if (!cqr.d.ohPath.length || state.clustering) {
                                     if (options.bbox) {
                                         state.map.fitBounds(options.bbox);
                                     } else {
                                         state.map.fitWorld();
                                     }
-                                }
+                                }*/
 
                             }, defErrorCB);
                         }
 
-                        callback(res);
+                        if(context.pathProcessor){
+                            context.pathProcessor.process();
+                        }
+                        //callback(res);
                     },
                     defErrorCB
                 );
             }
 
-            return function (options, callback) {
-                var rid;
-                if (options.dataAttributes !== undefined) {
-                    rid = options.dataAttributes.rid;
-                }
-                else {
-                    rid = undefined;
-                }
+            return function (context) {
                 startLoadingSpinner();
-                cqr.regionChildrenInfo(rid, function (regionChildrenInfo) {
+                cqr.regionChildrenInfo(context.rid, function (regionChildrenInfo) {
                         endLoadingSpinner()
-                        getItems(regionChildrenInfo, options, callback);
+                        getItems(regionChildrenInfo, context);
                     },
                     defErrorCB
                 );
@@ -986,111 +922,232 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
             );
         }
 
-        function displayCqrAsTree(cqr) {
-            clearViews();
-            var myTree = $('#MyTree');
-            var myDataSource;
-
-            if (cqr.isFull()) {
-                myDataSource = fullSubSetTreeDataSource(cqr);
-            }
-            else {
-                myDataSource = flatCqrTreeDataSource(cqr);
-            }
-
-            myTree.tree({
-                dataSource: myDataSource,
-                multiSelect: false,
-                cacheItems: true,
-                folderSelect: false
-            });
-
-            myTree.on('selected.fu.tree', function (e, node) {
-                if (node !== undefined && node.selected !== undefined) {
-                    for (var i in node.selected) {
-                        state.items.listview.selectedRegionId = node.selected[i].dataAttributes.rid;
-                        displayRegionsItem();
-                        break;
+        /*function needsClustering(cqr) {
+            for (var i in cqr.d.regionInfo) {
+                if (cqr.d.regionInfo == cqr.ohPath()[cqr.ohPath().length - 1]) {
+                    continue;
+                } else {
+                    for (var j in cqr.d.regionInfo[i]) {
+                        if (cqr.d.regionInfo[i][j].id == cqr.ohPath()[cqr.ohPath().length - 1]) {
+                            return cqr.d.regionInfo[i][j].apxitems > oscar.maxFetchItems;
+                        }
                     }
-                    updateMapRegions(getOpenRegionsInTree());
                 }
-            });
+            }
+        }*/
 
-            myTree.on('deselected.fu.tree', function (e, node) {
-                if (node !== undefined && node.selected !== undefined) {
-                    updateMapRegions(getOpenRegionsInTree());
+        /*function buildInitialDAG(cqr) {
+            function insertRegionAndSubRegions(root, subRegions) {
+                var subId;
+                state.DAG.insert(root.id, root);
+                for (var i in subRegions) {
+                    subId = subRegions[i];
+                    state.DAG.insert(subId, region.addChild(subId));
                 }
-            });
+            }
 
-            myTree.on('disclosedFolder.fu.tree', function (e, node) {
-                updateMapRegions(getOpenRegionsInTree());
-            });
-
-            myTree.on('closed.fu.tree', function (e, node) {
-                updateMapRegions(getOpenRegionsInTree());
-            });
-
-            //open the tree if cqr.ohPath is available
+            var id, region;
             if (cqr.ohPath().length) {
-                // decide whether clustering is necessary
-                state.clustering = false;
-                outer:
-                    for (var i in cqr.d.regionInfo) {
-                        if (cqr.d.regionInfo == cqr.ohPath()[cqr.ohPath().length - 1]) {
-                            continue;
+                for (var i in cqr.d.ohPath) {
+                    id = cqr.d.ohPath[i];
+                    region = new TreeNode(id, i > 0 ? state.DAG.at(cqr.d.ohPath[i - 1]) : undefined); // get parent if i>0
+                    insertRegionAndSubRegions(region, cqr.d.regionInfo[id]);
+                }
+            } else {
+                id = Object.keys(cqr.d.regionInfo)[0];
+                region = new TreeNode(id, undefined);
+                insertRegionAndSubRegions(region, cqr.d.regionInfo[id]);
+            }
+        }*/
+
+        function displayCqr(cqr) {
+
+            var pathProcessor = {
+                path : cqr.ohPath(),
+                i : 0,
+                process: function(){
+                    var draw;
+                    if(this.i < this.path.length) {
+                        if (this.i != this.path.length - 1) {
+                            draw: false;
                         } else {
-                            for (var j in cqr.d.regionInfo[i]) {
-                                if (cqr.d.regionInfo[i][j].id == cqr.ohPath()[cqr.ohPath().length - 1]) {
-                                    if (cqr.d.regionInfo[i][j].apxitems > oscar.maxFetchItems) {
-                                        state.clustering = true;
-                                    }
-                                    break outer;
+                            draw = true;
+                        }
+                        this.i++;
+                        state.regionHandler({rid: this.path[this.i-1], draw: draw, pathProcessor: this});
+                    }else{
+                        // fit the viewport to the target region
+                        state.map.fitBounds(state.DAG.at(this.path[this.path.length-1]).bbox);
+                    }
+                }
+            };
+
+            clearViews();
+            state.regionHandler = flatCqrTreeDataSource(cqr);
+
+            var root = new TreeNode(0xFFFFFFFF, undefined);
+            root.count = cqr.rootRegionApxItemCount();
+            state.DAG.insert(0xFFFFFFFF, root);
+            state.regionHandler({rid: 0xFFFFFFFF, draw: false, pathProcessor: pathProcessor});
+
+            state.map.on("zoomend", function(){
+                $("#zoom").html("zoom-level: " + state.map.getZoom());
+                // zoom-in
+                if(state.oldZoomLevel < state.map.getZoom()) {
+                    state.markers.eachLayer(function (marker) {
+                        // first step: get all markers currently shown in the viewport
+                        var bounds = state.map.getBounds();
+                        if (marker.rid && bounds.contains(marker.getLatLng())) {
+                            // second step: we iterate only "leaf"-markers, so there could be a merged cluster viewed -> check whether the
+                            // marker has a cluster-parent for the current zoom-level
+                            var parent = marker.__parent;
+                            while(parent && parent._zoom >= state.map.getZoom()){
+                                // found a locally present cluster -> skip loading additional data
+                                if(parent._zoom == state.map.getZoom()){
+                                    return;
                                 }
+                                parent = parent.__parent;
+                            }
+                            // third step: check whether the zoom-level is deep enough to query new data
+                            var node = state.DAG.at(marker.rid);
+                            if (!(marker instanceof L.MarkerCluster) && node.count > myConfig.zoomLevelClusterSize[state.map.getZoom()]) {
+                                state.markers.removeLayer(marker);
+                                state.regionHandler({rid: marker.rid, draw: true, bbox: node.bbox});
                             }
                         }
-                    }
+                    });
+                }
+            });
 
-                var myCqr = cqr;
-                var ohPath = myCqr.ohPath();
-                var ohPathPos = 0;
-                var evHandler = function (e, node) {
-                    expand();
-                };
+            state.map.on("zoomstart", function(){
+               state.oldZoomLevel = state.map.getZoom();
+            });
 
-                function expand() {
-                    if (ohPathPos >= ohPath.length) {
-                        //FullCQR currently has no opening hints, no need to check for that;
-                        var mySelectNode = $("[class*='tree\\-item']" + '[rid=' + ohPath[ohPathPos - 1] + "]", myTree);
-                        if (mySelectNode.length && mySelectNode.attr("cnt") <= oscar.maxFetchItems) {
-                            var mySearchNode = $('[data-rid=' + ohPath[ohPathPos - 1] + '] .tree\\-branch\\-header', myTree);
-                            myTree.off('loaded.fu.tree', evHandler);
-                            var scrollPos = mySearchNode.offset().top - myTree.offset().top + myTree.scrollTop();
-                            myTree.animate({scrollTop: scrollPos});
-                            myTree.tree('selectItem', mySelectNode);
-                        }
+            //if (path.length) {
+                /*var draw;
+                for (var i in path) {
+                    if (i != path.length - 1) {
+                        draw: false;
+                    } else {
+                        draw = true;
                     }
-                    else {
-                        var mySearchNode = $('[data-rid=' + ohPath[ohPathPos] + '] .tree\\-branch\\-header', myTree);
-                        if (mySearchNode.length) {
-                            ++ohPathPos;
-                            myTree.tree('discloseFolder', mySearchNode);
-                        }
-                    }
-                };
-                myTree.on('loaded.fu.tree', evHandler);
-                expand();
+                    state.dataSource({rid: path[i], draw: draw});
+                }*/
+                // draw conditional!
+            //    state.dataSource({rid: path[0], draw: false, pathProcessor: pathProcessor});
+            //}
 
-            } else {
-                // no path available -> cluster available regions
-                state.clustering = true;
-                myTree.on('loaded.fu.tree', function (e, node) {
-                    var a = $($(node).children("[class=tree-branch-children]")).children("[class=tree-branch]");
-                    if (a.length == 1) {
-                        myTree.tree('openFolder', a[0]);
-                    }
+            /*var myTree = $('#MyTree');
+             var myDataSource;
 
-                });
-            }
+             if (cqr.isFull()) {
+             myDataSource = fullSubSetTreeDataSource(cqr);
+             }
+             else {
+             myDataSource = flatCqrTreeDataSource(cqr);
+             }
+
+             myTree.tree({
+             dataSource: myDataSource,
+             multiSelect: false,
+             cacheItems: true,
+             folderSelect: false
+             });
+
+             myTree.on('selected.fu.tree', function (e, node) {
+             if (node !== undefined && node.selected !== undefined) {
+             for (var i in node.selected) {
+             state.items.listview.selectedRegionId = node.selected[i].dataAttributes.rid;
+             displayRegionsItem();
+             break;
+             }
+             updateMapRegions(getOpenRegionsInTree());
+             }
+             });
+
+             myTree.on('deselected.fu.tree', function (e, node) {
+             if (node !== undefined && node.selected !== undefined) {
+             updateMapRegions(getOpenRegionsInTree());
+             }
+             });
+
+             myTree.on('disclosedFolder.fu.tree', function (e, node) {
+             updateMapRegions(getOpenRegionsInTree());
+             });
+
+             myTree.on('closed.fu.tree', function (e, node) {
+             updateMapRegions(getOpenRegionsInTree());
+             });*/
+
+            //open the tree if cqr.ohPath is available
+            /*if (cqr.ohPath().length) {
+             // decide whether clustering is necessary
+             state.clustering = false;
+             outer:
+             for (var i in cqr.d.regionInfo) {
+             if (cqr.d.regionInfo == cqr.ohPath()[cqr.ohPath().length - 1]) {
+             continue;
+             } else {
+             for (var j in cqr.d.regionInfo[i]) {
+             if (cqr.d.regionInfo[i][j].id == cqr.ohPath()[cqr.ohPath().length - 1]) {
+             if (cqr.d.regionInfo[i][j].apxitems > oscar.maxFetchItems) {
+             state.clustering = true;
+             }
+             break outer;
+             }
+             }
+             }
+             }
+
+             var myCqr = cqr;
+             var ohPath = myCqr.ohPath();
+             var ohPathPos = 0;
+             var evHandler = function (e, node) {
+             expand();
+             };
+
+             function expand() {
+             if (ohPathPos >= ohPath.length) {
+             //FullCQR currently has no opening hints, no need to check for that;
+             var mySelectNode = $("[class*='tree\\-item']" + '[rid=' + ohPath[ohPathPos - 1] + "]", myTree);
+             if (mySelectNode.length && mySelectNode.attr("cnt") <= oscar.maxFetchItems) {
+             var mySearchNode = $('[data-rid=' + ohPath[ohPathPos - 1] + '] .tree\\-branch\\-header', myTree);
+             myTree.off('loaded.fu.tree', evHandler);
+             var scrollPos = mySearchNode.offset().top - myTree.offset().top + myTree.scrollTop();
+             myTree.animate({scrollTop: scrollPos});
+             myTree.tree('selectItem', mySelectNode);
+             }
+             }
+             else {
+             var mySearchNode = $('[data-rid=' + ohPath[ohPathPos] + '] .tree\\-branch\\-header', myTree);
+             if (mySearchNode.length) {
+             ++ohPathPos;
+             myTree.tree('discloseFolder', mySearchNode);
+             }
+             }
+             };
+             myTree.on('loaded.fu.tree', evHandler);
+             expand();
+
+             } else {
+             // no path available -> cluster available regions
+             state.clustering = true;
+             myTree.on('loaded.fu.tree', function (e, node) {
+             var a = $($(node).children("[class=tree-branch-children]")).children("[class=tree-branch]");
+             if (a.length == 1) {
+             myTree.tree('openFolder', a[0]);
+             }
+
+             });
+             }*/
+
+            /* TODO:
+             mapping of zoomlevel => clustersize for resolution
+             general managment: use TreeNode to build the DAG, reference the marker at every TreeNode
+             zoom-in => determine viewed markers, if markersize is > mapping of zoomlevel, load subhierarchie, (what about parent regions?)
+             zoom-out =>
+             dragging =>
+             */
         }
 
         function doCompletion() {
@@ -1134,7 +1191,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                         state.queries.activeCqrId = cqr.sequenceId();
                         state.cqr = cqr;
                         state.cqrRegExp = oscar.cqrRexExpFromQuery(cqr.query());
-                        displayCqrAsTree(cqr);
+                        displayCqr(cqr);
                     }
                 },
                 function (jqXHR, textStatus, errorThrown) {

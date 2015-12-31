@@ -258,3 +258,11 @@ body {
     overflow-y: scroll;
     height: 90%;
 }
+#zoom{
+    position: fixed;
+    z-index: 1000;
+    top: 5px;
+    right: 5px;
+    color: red;
+    background-color: black;
+}
