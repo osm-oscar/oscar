@@ -14,7 +14,6 @@ requirejs.config({
         "sserialize": "sserialize/sserialize",
         "bootstrap": "twitter-bootstrap/js/bootstrap",
         "oscar": "oscar/oscar",
-        "fuelux": "fuelux/js/fuelux",
         "moment": "moment/moment.min",
         "mustache": "mustache/mustache",
         "mustacheLoader": "mustache/jquery.mustache.loader",
@@ -32,18 +31,16 @@ requirejs.config({
         'sidebar': {deps: ['leaflet', 'jquery']},
         'mustacheLoader': {deps: ['jquery']},
         'slimbox': {deps: ['jquery']},
-        'fuelux': {deps: ['jquery']}
     },
     waitSeconds: 10
 });
 
-requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "mustache", "jqueryui", "leafletCluster", "spin", "sidebar", "mustacheLoader", "slimbox", "tools", "conf", "menu", "flickr", "manager"],
-    function (oscar, L, jQuery, bootstrap, fuelux, jbinary, mustache, jqueryui, leafletCluster, spinner, sidebar, mustacheLoader, slimbox, tools, config, menu, flickr, manager) {
+requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jqueryui", "leafletCluster", "spin", "sidebar", "mustacheLoader", "slimbox", "tools", "conf", "menu", "flickr", "manager"],
+    function (oscar, L, jQuery, bootstrap, jbinary, mustache, jqueryui, leafletCluster, spinner, sidebar, mustacheLoader, slimbox, tools, config, menu, flickr, manager) {
         //main entry point
 
         var osmAttr = '&copy; <a target="_blank" href="http://www.openstreetmap.org">OpenStreetMap</a>';
         var state = {
-            clustering: true, // gets set either when oscar.maxFetchItems is smaller than the final cell in ohPath or ohPath isn't even set in cqr
             map: {},
             DAG: SimpleHash(), // represents the hierarchie-tree for a query
             markers: L.markerClusterGroup(),
@@ -464,7 +461,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                 state.map.removeLayer(state.items.clusters.drawn.at(i));
                 state.items.clusters.drawn.erase(i);
             }
-            $('#MyTree').tree('destroy');
+            //$('#MyTree').tree('destroy');
             $('<ul>', {'id': "MyTree", 'class': "tree", 'role': "tree"}).appendTo('#fuelux_tree_parent');
             $('#MyTree').append($.Mustache.render('tree_template', null));
             $('#search_results_counter').empty();
@@ -838,7 +835,11 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                                         $(".leaflet-popup-close-button")[0].click(); // close all opened popups
                                         state.items.clusters.drawn.erase(e.target.rid);
                                         state.markers.removeLayer(e.target);
-                                        state.regionHandler({rid: e.target.rid, draw: true, bbox: state.DAG.at(e.target.rid).bbox});
+                                        state.regionHandler({
+                                            rid: e.target.rid,
+                                            draw: true,
+                                            bbox: state.DAG.at(e.target.rid).bbox
+                                        });
                                     });
 
                                     marker.on("mouseover", function (e) {
@@ -861,17 +862,17 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
 
                                 state.map.addLayer(state.markers);
                                 /*if (!cqr.d.ohPath.length || state.clustering) {
-                                    if (options.bbox) {
-                                        state.map.fitBounds(options.bbox);
-                                    } else {
-                                        state.map.fitWorld();
-                                    }
-                                }*/
+                                 if (options.bbox) {
+                                 state.map.fitBounds(options.bbox);
+                                 } else {
+                                 state.map.fitWorld();
+                                 }
+                                 }*/
 
                             }, defErrorCB);
                         }
 
-                        if(context.pathProcessor){
+                        if (context.pathProcessor) {
                             context.pathProcessor.process();
                         }
                         //callback(res);
@@ -923,61 +924,65 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
         }
 
         /*function needsClustering(cqr) {
-            for (var i in cqr.d.regionInfo) {
-                if (cqr.d.regionInfo == cqr.ohPath()[cqr.ohPath().length - 1]) {
-                    continue;
-                } else {
-                    for (var j in cqr.d.regionInfo[i]) {
-                        if (cqr.d.regionInfo[i][j].id == cqr.ohPath()[cqr.ohPath().length - 1]) {
-                            return cqr.d.regionInfo[i][j].apxitems > oscar.maxFetchItems;
-                        }
-                    }
-                }
-            }
-        }*/
+         for (var i in cqr.d.regionInfo) {
+         if (cqr.d.regionInfo == cqr.ohPath()[cqr.ohPath().length - 1]) {
+         continue;
+         } else {
+         for (var j in cqr.d.regionInfo[i]) {
+         if (cqr.d.regionInfo[i][j].id == cqr.ohPath()[cqr.ohPath().length - 1]) {
+         return cqr.d.regionInfo[i][j].apxitems > oscar.maxFetchItems;
+         }
+         }
+         }
+         }
+         }*/
 
         /*function buildInitialDAG(cqr) {
-            function insertRegionAndSubRegions(root, subRegions) {
-                var subId;
-                state.DAG.insert(root.id, root);
-                for (var i in subRegions) {
-                    subId = subRegions[i];
-                    state.DAG.insert(subId, region.addChild(subId));
-                }
-            }
+         function insertRegionAndSubRegions(root, subRegions) {
+         var subId;
+         state.DAG.insert(root.id, root);
+         for (var i in subRegions) {
+         subId = subRegions[i];
+         state.DAG.insert(subId, region.addChild(subId));
+         }
+         }
 
-            var id, region;
-            if (cqr.ohPath().length) {
-                for (var i in cqr.d.ohPath) {
-                    id = cqr.d.ohPath[i];
-                    region = new TreeNode(id, i > 0 ? state.DAG.at(cqr.d.ohPath[i - 1]) : undefined); // get parent if i>0
-                    insertRegionAndSubRegions(region, cqr.d.regionInfo[id]);
-                }
-            } else {
-                id = Object.keys(cqr.d.regionInfo)[0];
-                region = new TreeNode(id, undefined);
-                insertRegionAndSubRegions(region, cqr.d.regionInfo[id]);
-            }
-        }*/
+         var id, region;
+         if (cqr.ohPath().length) {
+         for (var i in cqr.d.ohPath) {
+         id = cqr.d.ohPath[i];
+         region = new TreeNode(id, i > 0 ? state.DAG.at(cqr.d.ohPath[i - 1]) : undefined); // get parent if i>0
+         insertRegionAndSubRegions(region, cqr.d.regionInfo[id]);
+         }
+         } else {
+         id = Object.keys(cqr.d.regionInfo)[0];
+         region = new TreeNode(id, undefined);
+         insertRegionAndSubRegions(region, cqr.d.regionInfo[id]);
+         }
+         }*/
 
         function displayCqr(cqr) {
 
             var pathProcessor = {
-                path : cqr.ohPath(),
-                i : 0,
-                process: function(){
+                path: cqr.ohPath(),
+                i: 0,
+                process: function () {
                     var draw;
-                    if(this.i < this.path.length) {
+                    if (this.i < this.path.length) {
                         if (this.i != this.path.length - 1) {
                             draw: false;
                         } else {
                             draw = true;
                         }
                         this.i++;
-                        state.regionHandler({rid: this.path[this.i-1], draw: draw, pathProcessor: this});
-                    }else{
+                        state.regionHandler({rid: this.path[this.i - 1], draw: draw, pathProcessor: this});
+                    } else {
                         // fit the viewport to the target region
-                        state.map.fitBounds(state.DAG.at(this.path[this.path.length-1]).bbox);
+                        if (this.path.length) {
+                            state.map.fitBounds(state.DAG.at(this.path[this.path.length - 1]).bbox);
+                        } else {
+                            state.map.fitWorld();
+                        }
                     }
                 }
             };
@@ -988,12 +993,16 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
             var root = new TreeNode(0xFFFFFFFF, undefined);
             root.count = cqr.rootRegionApxItemCount();
             state.DAG.insert(0xFFFFFFFF, root);
-            state.regionHandler({rid: 0xFFFFFFFF, draw: false, pathProcessor: pathProcessor});
+            if(cqr.ohPath().length) {
+                state.regionHandler({rid: 0xFFFFFFFF, draw: false, pathProcessor: pathProcessor});
+            }else{
+                state.regionHandler({rid: 0xFFFFFFFF, draw: true, pathProcessor: pathProcessor});
+            }
 
-            state.map.on("zoomend", function(){
+            state.map.on("zoomend", function () {
                 $("#zoom").html("zoom-level: " + state.map.getZoom());
                 // zoom-in
-                if(state.oldZoomLevel < state.map.getZoom()) {
+                if (state.oldZoomLevel < state.map.getZoom()) {
                     state.markers.eachLayer(function (marker) {
                         // first step: get all markers currently shown in the viewport
                         var bounds = state.map.getBounds();
@@ -1001,9 +1010,9 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                             // second step: we iterate only "leaf"-markers, so there could be a merged cluster viewed -> check whether the
                             // marker has a cluster-parent for the current zoom-level
                             var parent = marker.__parent;
-                            while(parent && parent._zoom >= state.map.getZoom()){
+                            while (parent && parent._zoom >= state.map.getZoom()) {
                                 // found a locally present cluster -> skip loading additional data
-                                if(parent._zoom == state.map.getZoom()){
+                                if (parent._zoom == state.map.getZoom()) {
                                     return;
                                 }
                                 parent = parent.__parent;
@@ -1019,21 +1028,21 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
                 }
             });
 
-            state.map.on("zoomstart", function(){
-               state.oldZoomLevel = state.map.getZoom();
+            state.map.on("zoomstart", function () {
+                state.oldZoomLevel = state.map.getZoom();
             });
 
             //if (path.length) {
-                /*var draw;
-                for (var i in path) {
-                    if (i != path.length - 1) {
-                        draw: false;
-                    } else {
-                        draw = true;
-                    }
-                    state.dataSource({rid: path[i], draw: draw});
-                }*/
-                // draw conditional!
+            /*var draw;
+             for (var i in path) {
+             if (i != path.length - 1) {
+             draw: false;
+             } else {
+             draw = true;
+             }
+             state.dataSource({rid: path[i], draw: draw});
+             }*/
+            // draw conditional!
             //    state.dataSource({rid: path[0], draw: false, pathProcessor: pathProcessor});
             //}
 
@@ -1166,18 +1175,12 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "fuelux", "jbinary", "must
             //ready for lift-off
             var myQueryCounter = state.queries.lastSubmited + 0;
             state.queries.lastSubmited += 1;
+
             var callFunc;
-            //call sequence starts
-            if ($("#subset_type_checkbox").is(':checked')) {
-                callFunc = function (q, scb, ecb) {
-                    oscar.completeFull(q, scb, ecb);
-                };
-            }
-            else {
-                callFunc = function (q, scb, ecb) {
-                    oscar.completeSimple(q, scb, ecb, ohf, globalOht);
-                };
-            }
+            callFunc = function (q, scb, ecb) {
+                oscar.completeSimple(q, scb, ecb, ohf, globalOht);
+            };
+
 
             //push our query as history state
             window.history.pushState({"q": myQuery}, undefined, location.pathname + "?q=" + encodeURIComponent(myQuery));
