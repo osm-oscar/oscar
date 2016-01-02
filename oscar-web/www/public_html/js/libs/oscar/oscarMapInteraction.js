@@ -1019,8 +1019,8 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                             }
                             // third step: check whether the zoom-level is deep enough to query new data
                             var node = state.DAG.at(marker.rid);
-                            //var percent = percentOfOverlap(state.map, state.map.getBounds(), node.bbox);
-                            if (!(marker instanceof L.MarkerCluster) && node.count > myConfig.zoomLevelClusterSize[state.map.getZoom()]) {
+                            var percent = percentOfOverlap(state.map, state.map.getBounds(), node.bbox);
+                            if (!(marker instanceof L.MarkerCluster) && percent >= myConfig.overlap) {
                                 state.markers.removeLayer(marker);
                                 state.regionHandler({rid: marker.rid, draw: true, bbox: node.bbox});
                             }
