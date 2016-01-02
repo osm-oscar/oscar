@@ -351,7 +351,7 @@ define(['jquery', 'sserialize', 'leaflet', 'module'], function (jQuery, sseriali
                 regionItemIds: function (regionId, successCB, errorCB, resultListOffset) {
                     this.p.simpleCqrItems(this.d.query,
                         function (itemIds) {
-                            successCB(itemIds);
+                            successCB(regionId, itemIds);
                         },
                         errorCB,
                         this.p.maxFetchItems, regionId, resultListOffset);

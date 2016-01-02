@@ -125,9 +125,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
         });
 
         L.MarkerCluster.prototype.on("mouseout", function (e) {
-            if ($(".leaflet-popup-close-button")[0] !== undefined) {
-                $(".leaflet-popup-close-button")[0].click();
-            }
+            closePopups();
         });
 
         // mustache-template-loader needs this
@@ -414,12 +412,15 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
 
         function clearListAndShapes(shapeSrcType) {
             $('#' + shapeSrcType + 'List').empty();
+            state.map.removeLayer(state.markers);
             for (var i in state[shapeSrcType].shapes.drawn.values()) {
-                state.map.removeLayer(state[shapeSrcType].shapes.drawn.at(i));
+                state.markers.removeLayer(state[shapeSrcType].shapes.drawn.at(i));
+                //state.markers.removeLayer(state.items.shapes.drawn.at(i));
                 state[shapeSrcType].shapes.drawn.erase(i);
             }
+            state.map.addLayer(state.markers);
             state[shapeSrcType].listview.drawn.clear();
-            state[shapeSrcType].listview.promised.clear();
+            //state[shapeSrcType].listview.promised.clear();
             state[shapeSrcType].shapes.highlighted = {};
             state[shapeSrcType].shapes.promised = {};
 
@@ -434,6 +435,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             state.map.removeLayer(state.markers);
             delete state.markers;
             state.markers = L.markerClusterGroup();
+            state.map.addLayer(state.markers);
             state.regions.highlighted = {};
             state.regions.promised = {};
             state.items.listview.drawn.clear();
@@ -445,6 +447,8 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             state.relatives.listview.promised.clear();
             state.relatives.shapes.highlighted = {};
             state.relatives.shapes.promised = {};
+            state.DAG = SimpleHash(); // TODO: kill whole Tree?
+
             for (var i in state.regions.drawn.values()) {
                 state.map.removeLayer(state.regions.drawn.at(i));
                 state.regions.drawn.erase(i);
@@ -537,9 +541,10 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
 
                     state.markers.addLayer(marker);
                     state.items.shapes.drawn.insert(itemId, itemShape);
+                    state.DAG.at(itemId).marker = marker;
                     addShapeToMap(marker, itemId, "items");
                 }
-                state.map.addLayer(state.markers);
+                //state.map.addLayer(state.markers);
             }, defErrorCB);
         }
 
@@ -780,6 +785,12 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
          return dest;
          }*/
 
+        function closePopups() {
+            if ($(".leaflet-popup-close-button")[0] !== undefined) {
+                $(".leaflet-popup-close-button")[0].click();
+            }
+        }
+
         function flatCqrTreeDataSource(cqr) {
             function getItems(regionChildrenInfo, context) {
                 //fetch the items
@@ -819,9 +830,10 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                                 defErrorCB,
                                 0 // offset
                             );
-                            //state.map.fitBounds(context.bbox);
                         } else if (context.draw) {
                             cqr.getMaximumIndependetSet(parentRid, function (regions) {
+                                state.items.clusters.drawn.erase(parentRid);
+
                                 var j;
                                 for (var i in regions) {
                                     j = itemMap[regions[i]];
@@ -832,7 +844,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                                     marker.bbox = j.bbox();
 
                                     marker.on("click", function (e) {
-                                        $(".leaflet-popup-close-button")[0].click(); // close all opened popups
+                                        closePopups();
                                         state.items.clusters.drawn.erase(e.target.rid);
                                         state.markers.removeLayer(e.target);
                                         state.regionHandler({
@@ -849,25 +861,16 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                                     });
 
                                     marker.on("mouseout", function (e) {
-                                        if ($(".leaflet-popup-close-button")[0] !== undefined) {
-                                            $(".leaflet-popup-close-button")[0].click();
-                                        }
+                                        closePopups();
                                     });
 
                                     if (!state.items.clusters.drawn.count(j.id())) {
                                         state.items.clusters.drawn.insert(j.id(), marker);
                                         state.markers.addLayer(marker);
+                                        state.DAG.at(marker.rid).marker = marker;
                                     }
                                 }
-
-                                state.map.addLayer(state.markers);
-                                /*if (!cqr.d.ohPath.length || state.clustering) {
-                                 if (options.bbox) {
-                                 state.map.fitBounds(options.bbox);
-                                 } else {
-                                 state.map.fitWorld();
-                                 }
-                                 }*/
+                                //state.map.addLayer(state.markers);
 
                             }, defErrorCB);
                         }
@@ -875,7 +878,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                         if (context.pathProcessor) {
                             context.pathProcessor.process();
                         }
-                        //callback(res);
                     },
                     defErrorCB
                 );
@@ -892,8 +894,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             };
         }
 
-        function getItemIds(itemIds) {
-
+        function getItemIds(regionId, itemIds) {
             for (var i in itemIds) {
                 var itemId = itemIds[i];
                 state.items.listview.promised.insert(itemId, itemId);
@@ -901,10 +902,28 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
 
             oscar.getItems(itemIds,
                 function (items) {
+                    state.items.clusters.drawn.erase(regionId);
+                    // manage items -> kill old items if there are too many of them and show clsuters again
+                    if (state.items.listview.drawn.size() + items.length > oscar.maxFetchItems) {
+                        for (var i in state.items.listview.drawn.values()) {
+                            for(var parent in state.DAG.at(i).parents){
+                                if(!state.items.clusters.drawn.count(state.DAG.at(i).parents[parent].id)){
+                                    state.markers.addLayer(state.DAG.at(i).parents[parent].marker);
+                                    state.items.clusters.drawn.insert(state.DAG.at(i).parents[parent].id);
+                                }
+                            }
+                            state.markers.removeLayer(state.DAG.at(i).marker);
+                            state.DAG.at(i).kill();
+                        }
+                        //clearListAndShapes("items");
+                        state.items.listview.drawn.clear();
+                    }
+
                     for (var i in items) {
                         var item = items[i];
                         var itemId = item.id();
                         if (state.items.listview.promised.count(itemId)) {
+                            state.DAG.insert(itemId, state.DAG.at(regionId).addChild(itemId));
                             appendItemToListView(item, "items");
                             state.items.listview.promised.erase(itemId);
                         }
@@ -922,44 +941,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 defErrorCB
             );
         }
-
-        /*function needsClustering(cqr) {
-         for (var i in cqr.d.regionInfo) {
-         if (cqr.d.regionInfo == cqr.ohPath()[cqr.ohPath().length - 1]) {
-         continue;
-         } else {
-         for (var j in cqr.d.regionInfo[i]) {
-         if (cqr.d.regionInfo[i][j].id == cqr.ohPath()[cqr.ohPath().length - 1]) {
-         return cqr.d.regionInfo[i][j].apxitems > oscar.maxFetchItems;
-         }
-         }
-         }
-         }
-         }*/
-
-        /*function buildInitialDAG(cqr) {
-         function insertRegionAndSubRegions(root, subRegions) {
-         var subId;
-         state.DAG.insert(root.id, root);
-         for (var i in subRegions) {
-         subId = subRegions[i];
-         state.DAG.insert(subId, region.addChild(subId));
-         }
-         }
-
-         var id, region;
-         if (cqr.ohPath().length) {
-         for (var i in cqr.d.ohPath) {
-         id = cqr.d.ohPath[i];
-         region = new TreeNode(id, i > 0 ? state.DAG.at(cqr.d.ohPath[i - 1]) : undefined); // get parent if i>0
-         insertRegionAndSubRegions(region, cqr.d.regionInfo[id]);
-         }
-         } else {
-         id = Object.keys(cqr.d.regionInfo)[0];
-         region = new TreeNode(id, undefined);
-         insertRegionAndSubRegions(region, cqr.d.regionInfo[id]);
-         }
-         }*/
 
         function displayCqr(cqr) {
 
@@ -993,16 +974,20 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             var root = new TreeNode(0xFFFFFFFF, undefined);
             root.count = cqr.rootRegionApxItemCount();
             state.DAG.insert(0xFFFFFFFF, root);
-            if(cqr.ohPath().length) {
+            if (cqr.ohPath().length) {
                 state.regionHandler({rid: 0xFFFFFFFF, draw: false, pathProcessor: pathProcessor});
-            }else{
+            } else {
                 state.regionHandler({rid: 0xFFFFFFFF, draw: true, pathProcessor: pathProcessor});
             }
+
+            state.map.on("zoomstart", function () {
+                state.oldZoomLevel = state.map.getZoom();
+            });
 
             state.map.on("zoomend dragend", function () {
                 $("#zoom").html("zoom-level: " + state.map.getZoom());
                 // zoom-in or dragging
-                if (state.oldZoomLevel <= state.map.getZoom()) {
+                //if (state.oldZoomLevel <= state.map.getZoom()) {
                     state.markers.eachLayer(function (marker) {
                         // first step: get all markers currently shown in the viewport
                         var bounds = state.map.getBounds();
@@ -1017,7 +1002,8 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                                 }
                                 parent = parent.__parent;
                             }
-                            // third step: check whether the zoom-level is deep enough to query new data
+                            // third step: calculate the overlap of the bbox and the viewport. If it is bigger
+                            // than the config-value -> load additional data
                             var node = state.DAG.at(marker.rid);
                             var percent = percentOfOverlap(state.map, state.map.getBounds(), node.bbox);
                             if (!(marker instanceof L.MarkerCluster) && percent >= myConfig.overlap) {
@@ -1026,11 +1012,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                             }
                         }
                     });
-                }
-            });
-
-            state.map.on("zoomstart", function () {
-                state.oldZoomLevel = state.map.getZoom();
+                //}
             });
 
             //if (path.length) {
@@ -1181,7 +1163,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             callFunc = function (q, scb, ecb) {
                 oscar.completeSimple(q, scb, ecb, ohf, globalOht);
             };
-
 
             //push our query as history state
             window.history.pushState({"q": myQuery}, undefined, location.pathname + "?q=" + encodeURIComponent(myQuery));
