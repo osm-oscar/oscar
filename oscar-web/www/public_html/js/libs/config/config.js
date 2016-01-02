@@ -51,7 +51,6 @@ define(myConfig = {
             select: 10000
         }
     },
-    zoomLevelClusterSize: [100000, 50000, 40000, 10000, 5000, 1000, 500 , 400, 300, 100, 75, 30,10,5,1,0,0,0,0,0],
     overlap: 0.15,
     spinnerOpts: {
         lines: 13 // The number of lines to draw

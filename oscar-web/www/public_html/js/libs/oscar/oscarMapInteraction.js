@@ -999,10 +999,10 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 state.regionHandler({rid: 0xFFFFFFFF, draw: true, pathProcessor: pathProcessor});
             }
 
-            state.map.on("zoomend", function () {
+            state.map.on("zoomend dragend", function () {
                 $("#zoom").html("zoom-level: " + state.map.getZoom());
-                // zoom-in
-                if (state.oldZoomLevel < state.map.getZoom()) {
+                // zoom-in or dragging
+                if (state.oldZoomLevel <= state.map.getZoom()) {
                     state.markers.eachLayer(function (marker) {
                         // first step: get all markers currently shown in the viewport
                         var bounds = state.map.getBounds();
