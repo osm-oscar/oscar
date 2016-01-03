@@ -84,7 +84,7 @@ define(function () {
             y22 = d1.y + h1,
 
             xOverlap = Math.max(0, Math.min(x12, x22) - Math.max(x11, x21)),
-            yOverlap = Math.max(0, Math.min(y12, y22) - Math.max(y11, y21)),
+            yOverlap = Math.max(0, Math.max(y12, y22) - Math.min(y11, y21)),
             totalOverlap = xOverlap * yOverlap;
 
         return totalOverlap / (w0 * h0); // compare the overlap to the size of the viewport
