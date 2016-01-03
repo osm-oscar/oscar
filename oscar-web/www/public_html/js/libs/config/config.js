@@ -51,7 +51,8 @@ define(myConfig = {
             select: 10000
         }
     },
-    overlap: 0.35,
+    overlap: 0.45,
+    maxBufferedItems: 250,
     spinnerOpts: {
         lines: 13 // The number of lines to draw
         , length: 5 // The length of each line

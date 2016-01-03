@@ -543,7 +543,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                     state.DAG.at(itemId).marker = marker;
                     addShapeToMap(marker, itemId, "items");
                 }
-                //state.map.addLayer(state.markers);
             }, defErrorCB);
         }
 
@@ -878,7 +877,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 function (items) {
                     state.items.clusters.drawn.erase(regionId);
                     // manage items -> kill old items if there are too many of them and show clsuters again
-                    if (state.items.listview.drawn.size() + items.length > oscar.maxFetchItems) {
+                    if (state.items.listview.drawn.size() + items.length > myConfig.maxBufferedItems) {
                         for (var i in state.items.listview.drawn.values()) {
                             for (var parent in state.DAG.at(i).parents) {
                                 if (!state.items.clusters.drawn.count(state.DAG.at(i).parents[parent].id)) {
@@ -986,13 +985,21 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                         var node = state.DAG.at(marker.rid);
                         var percent = percentOfOverlap(state.map, state.map.getBounds(), node.bbox);
                         if (!(marker instanceof L.MarkerCluster) && percent >= myConfig.overlap) {
-                            state.markers.removeLayer(marker);
+                            removeMarker(marker);
                             state.regionHandler({rid: marker.rid, draw: true, bbox: node.bbox});
                         }
                     }
                 });
                 //}
             });
+        }
+
+        function removeMarker(marker){
+            if(marker.rec) {
+                state.map.removeLayer(marker.rec);
+            }
+            state.markers.removeLayer(marker);
+            closePopups();
         }
 
         function doCompletion() {
