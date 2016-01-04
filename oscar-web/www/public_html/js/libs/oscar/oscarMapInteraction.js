@@ -24,7 +24,7 @@ requirejs.config({
         "menu": "menu/menu",
         "flickr": "flickr/flickr",
         "manager": "connection/manager",
-        "switch": "switch-button/jQuery.switchbutton"
+        "switch": "switch-button/jquery.switchbutton"
     },
     shim: {
         'bootstrap': {deps: ['jquery']},
