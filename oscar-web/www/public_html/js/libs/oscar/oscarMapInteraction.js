@@ -23,7 +23,8 @@ requirejs.config({
         "conf": "config/config",
         "menu": "menu/menu",
         "flickr": "flickr/flickr",
-        "manager": "connection/manager"
+        "manager": "connection/manager",
+        "switch": "switch-button/jQuery.switchbutton"
     },
     shim: {
         'bootstrap': {deps: ['jquery']},
@@ -31,12 +32,13 @@ requirejs.config({
         'sidebar': {deps: ['leaflet', 'jquery']},
         'mustacheLoader': {deps: ['jquery']},
         'slimbox': {deps: ['jquery']},
+        'switch': {deps: ['jquery']}
     },
     waitSeconds: 10
 });
 
-requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jqueryui", "leafletCluster", "spin", "sidebar", "mustacheLoader", "slimbox", "tools", "conf", "menu", "flickr", "manager"],
-    function (oscar, L, jQuery, bootstrap, jbinary, mustache, jqueryui, leafletCluster, spinner, sidebar, mustacheLoader, slimbox, tools, config, menu, flickr, manager) {
+requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jqueryui", "leafletCluster", "spin", "sidebar", "mustacheLoader", "slimbox", "tools", "conf", "menu", "flickr", "manager", "switch"],
+    function (oscar, L, jQuery, bootstrap, jbinary, mustache, jqueryui, leafletCluster, spinner, sidebar, mustacheLoader, slimbox, tools, config, menu, flickr, manager, switchButton) {
         //main entry point
         var osmAttr = '&copy; <a target="_blank" href="http://www.openstreetmap.org">OpenStreetMap</a>';
         var state = {
@@ -76,7 +78,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 }
             },
             loadingtasks: 0,
-            oldZoomLevel: undefined,
             cqr: {},
             regionHandler: undefined,
             cqrRegExp: undefined,
@@ -137,7 +138,9 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
         menu.displayCategories();
 
         // init the map and sidebar
-        state.map = L.map('map').setView([48.74568, 9.1047], 17);
+        state.map = L.map('map', {
+            zoomControl: false
+        }).setView([48.74568, 9.1047], 17);
         state.sidebar = L.control.sidebar('sidebar').addTo(map);
         L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: osmAttr}).addTo(state.map);
 
@@ -464,7 +467,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 state.items.clusters.drawn.erase(i);
             }
             state.DAG = SimpleHash(); // TODO: kill whole Tree?
-            //$('#MyTree').tree('destroy');
             $('<ul>', {'id': "MyTree", 'class': "tree", 'role': "tree"}).appendTo('#fuelux_tree_parent');
             $('#MyTree').append($.Mustache.render('tree_template', null));
             $('#search_results_counter').empty();
@@ -721,39 +723,39 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
          }*/
 
         /*function displayRegionsItem() {
-            var cqr = state.cqr;
-            var rid = state.items.listview.selectedRegionId;
-            if (cqr === undefined || rid === undefined) {
-                return;
-            }
-            clearHighlightedShapes("items");
-            clearVisualizedItems();
-            state.items.listview.selectedRegionId = rid;
-            //don't fetch bbox of "world"
-            if (rid !== 0xFFFFFFFF) {
-                startLoadingSpinner();
-                oscar.getItem(rid, function (item) {
-                    endLoadingSpinner();
+         var cqr = state.cqr;
+         var rid = state.items.listview.selectedRegionId;
+         if (cqr === undefined || rid === undefined) {
+         return;
+         }
+         clearHighlightedShapes("items");
+         clearVisualizedItems();
+         state.items.listview.selectedRegionId = rid;
+         //don't fetch bbox of "world"
+         if (rid !== 0xFFFFFFFF) {
+         startLoadingSpinner();
+         oscar.getItem(rid, function (item) {
+         endLoadingSpinner();
 
-                    state.map.fitBounds(item.bbox());
-                    var mapRegion = state.regions.drawn.at(rid);
-                    if (mapRegion !== undefined) {
-                        for (var i in state.regions.highlighted) {
-                            state.regions.highlighted[i].setStyle(myConfig.styles.shapes.regions.normal);
-                            delete state.regions.highlighted[i];
-                        }
-                        state.regions.highlighted[rid] = mapRegion;
-                        mapRegion.setStyle(myConfig.styles.shapes.regions.highlight);
-                    }
-                }, defErrorCB);
-            }
-            else {
-                state.map.fitWorld();
-            }
-            $('#itemsList').empty();
-            state.items.listview.drawn.clear();
-            state.items.listview.promised.clear();
-        }*/
+         state.map.fitBounds(item.bbox());
+         var mapRegion = state.regions.drawn.at(rid);
+         if (mapRegion !== undefined) {
+         for (var i in state.regions.highlighted) {
+         state.regions.highlighted[i].setStyle(myConfig.styles.shapes.regions.normal);
+         delete state.regions.highlighted[i];
+         }
+         state.regions.highlighted[rid] = mapRegion;
+         mapRegion.setStyle(myConfig.styles.shapes.regions.highlight);
+         }
+         }, defErrorCB);
+         }
+         else {
+         state.map.fitWorld();
+         }
+         $('#itemsList').empty();
+         state.items.listview.drawn.clear();
+         state.items.listview.promised.clear();
+         }*/
 
         function closePopups() {
             if ($(".leaflet-popup-close-button")[0] !== undefined) {
@@ -875,22 +877,24 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
 
             oscar.getItems(itemIds,
                 function (items) {
+                    var node;
                     state.items.clusters.drawn.erase(regionId);
                     // manage items -> kill old items if there are too many of them and show clsuters again
                     if (state.items.listview.drawn.size() + items.length > myConfig.maxBufferedItems) {
                         for (var i in state.items.listview.drawn.values()) {
-                            for (var parent in state.DAG.at(i).parents) {
-                                if (!state.items.clusters.drawn.count(state.DAG.at(i).parents[parent].id)) {
-                                    state.markers.addLayer(state.DAG.at(i).parents[parent].marker);
-                                    state.items.clusters.drawn.insert(state.DAG.at(i).parents[parent].id, state.DAG.at(i).parents[parent].marker);
+                            node = state.DAG.at(i);
+                            for (var parent in node.parents) {
+                                if (!state.items.clusters.drawn.count(node.parents[parent].id)) {
+                                    state.markers.addLayer(node.parents[parent].marker);
+                                    state.items.clusters.drawn.insert(node.parents[parent].id, node.parents[parent].marker);
                                 }
                             }
-                            if (state.DAG.at(i).marker !== undefined) {
-                                state.markers.removeLayer(state.DAG.at(i).marker);
+                            if (node.marker) {
+                                state.markers.removeLayer(node.marker);
                             } else {
-                                alert("Marker: " + i);
+                                alert("Marker undefined! ID=" + i);
                             }
-                            state.DAG.at(i).kill();
+                            node.kill();
                         }
                         //clearListAndShapes("items");
                         state.items.listview.drawn.clear();
@@ -920,9 +924,8 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             );
         }
 
-        function displayCqr(cqr) {
-
-            var pathProcessor = {
+        function pathProcessor(cqr) {
+            return {
                 path: cqr.ohPath(),
                 i: 0,
                 process: function () {
@@ -945,27 +948,22 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                     }
                 }
             };
+        }
 
+        function displayCqr(cqr) {
             clearViews();
             state.regionHandler = flatCqrTreeDataSource(cqr);
-
+            var process = pathProcessor(cqr);
             var root = new TreeNode(0xFFFFFFFF, undefined);
             root.count = cqr.rootRegionApxItemCount();
             state.DAG.insert(0xFFFFFFFF, root);
             if (cqr.ohPath().length) {
-                state.regionHandler({rid: 0xFFFFFFFF, draw: false, pathProcessor: pathProcessor});
+                state.regionHandler({rid: 0xFFFFFFFF, draw: false, pathProcessor: process});
             } else {
-                state.regionHandler({rid: 0xFFFFFFFF, draw: true, pathProcessor: pathProcessor});
+                state.regionHandler({rid: 0xFFFFFFFF, draw: true, pathProcessor: process});
             }
 
-            state.map.on("zoomstart", function () {
-                state.oldZoomLevel = state.map.getZoom();
-            });
-
             state.map.on("zoomend dragend", function () {
-                $("#zoom").html("zoom-level: " + state.map.getZoom());
-                // zoom-in or dragging
-                //if (state.oldZoomLevel <= state.map.getZoom()) {
                 state.markers.eachLayer(function (marker) {
                     // first step: get all markers currently shown in the viewport
                     var bounds = state.map.getBounds();
@@ -990,12 +988,11 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                         }
                     }
                 });
-                //}
             });
         }
 
-        function removeMarker(marker){
-            if(marker.rec) {
+        function removeMarker(marker) {
+            if (marker.rec) {
                 state.map.removeLayer(marker.rec);
             }
             state.markers.removeLayer(marker);
@@ -1006,6 +1003,13 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             if ($("#search_text").val() === state.queries.lastQuery) {
                 return;
             }
+
+            if ($('#searchModi').is(":checked")) {
+                //TODO: wrong placement of markers if clsutering is aktive. Cause: region midpoint is outside of search rectangle
+                addSingleQueryStatementToQuery("$geo:" + state.map.getBounds().getSouthWest().lng + "," + state.map.getBounds().getSouthWest().lat + "," + state.map.getBounds().getNorthEast().lng + "," + state.map.getBounds().getNorthEast().lat);
+            }
+
+            $('#categoryToggle').click();
             state.sidebar.open("search");
             $("#flickr").hide("slide", {direction: "right"}, myConfig.styles.slide.speed);
 
@@ -1076,6 +1080,36 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
         }
 
         $(document).ready(function () {
+            $('#categoryToggle input').button().click(function () {
+                if ($(this).attr('mod') == 'hide') {
+                    $('#categories').hide(800);
+                    $('#subCategories').hide(800);
+                    $(this).attr('mod', 'show');
+                    $(this).attr('value', 'Show categories');
+                } else {
+                    $('#categories').show(800);
+                    $('#subCategories').show(800);
+                    $(this).attr('mod', 'hide');
+                    $(this).attr('value', 'Hide categories');
+                }
+            });
+
+            $('#advancedToggle input').button().click(function () {
+                if ($(this).attr('mod') == 'hide') {
+                    $('#advancedSearch').hide(800);
+                    $(this).attr('mod', 'show');
+                    $(this).attr('value', 'Show advanced Search');
+                } else {
+                    $('#advancedSearch').show(800);
+                    $(this).attr('mod', 'hide');
+                    $(this).attr('value', 'Hide advanced Search');
+                }
+            });
+
+            $("#searchModi").switchButton({
+                on_label: 'Local',
+                off_label: 'Global'
+            });
 
             if (!$('#results_tree_parent').is(':checked')) {
                 $('#results_tree_parent').hide();

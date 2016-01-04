@@ -13,7 +13,8 @@
     <link rel="stylesheet" media="screen" href="js/libs/twitter-bootstrap/css/bootstrap.css">
     <link rel="stylesheet" href="js/libs/jquery-ui/jquery-ui.css">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="js/libs/slimbox/css/slimbox2.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="js/libs/switch-button/jQuery.switchButton.css">
+    <link rel="stylesheet" href="js/libs/slimbox/css/slimbox2.css" type="text/css" media="screen"/>
     <link rel="stylesheet" href="css/loadingspinner.css">
     <link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-markercluster/v0.4.0/MarkerCluster.css'
           rel='stylesheet'/>
@@ -26,8 +27,9 @@
 <body>
 
 <div class="sidebar" id="flickr">
-    <a href="https://s.yimg.com/pw/images/goodies/white-small-chiclet.png" rel="lightbox"><img src="https://s.yimg.com/pw/images/goodies/white-small-chiclet.png" /></a>
-    <hr />
+    <a href="https://s.yimg.com/pw/images/goodies/white-small-chiclet.png" rel="lightbox"><img
+            src="https://s.yimg.com/pw/images/goodies/white-small-chiclet.png"/></a>
+    <hr/>
     <div id="flickr_images"></div>
 </div>
 
@@ -51,13 +53,52 @@
                 <h1 class="sidebar-header">Search
                     <div class="sidebar-close"><i class="fa fa-caret-left"></i></div>
                 </h1>
-
+                <form>
+                    <input type="checkbox" name="searchModi" id="searchModi">
+                </form>
                 <form class="form-inline pull-left" id="search_form">
                     <input name="q" type="text" placeholder="Wo möchten Sie suchen?" class="form-control"
                            id="search_text">
                 </form>
                 <div id="search_container">
                     <div id="categorieWrapper">
+                        <div id="actions">
+                            <div id="advancedToggle" mod="hide"><input type="submit" mod="show" value="Show advanced search">
+                            </div>
+                            <div id="categoryToggle" mod="hide"><input type="submit" mod="hide" value="Hide categories">
+                            </div>
+                        </div>
+                        <div style="clear:both;"></div>
+                        <div id="advancedSearch">
+                            <div class='form-group'>
+                                <button type="button" class="btn btn-default" id="pathquery_selectbutton">Select path
+                                </button>
+                        <span>
+                            Radius:
+                            <input id="pathquery_radius" type="number" value="100" min="50" max="20000" step="50"/>
+                        </span>
+                                <button type="button" class="btn btn-default" id="pathquery_acceptbutton">Accept path
+                                </button>
+                            </div>
+                            <div class='form-group'>
+                                <button type="button" class="btn btn-default" id="geoquery_selectbutton">Select rectangle:
+                                </button>
+                        <span data-class="geoquery_min_coord">
+                            (<input id="geoquery_minlat" data-class="geoquery_min_coord" type="number" value="0"
+                                    min="-90" max="90" step="1"/>,
+                            <input id="geoquery_minlon" data-class="geoquery_min_coord" type="number" value="0"
+                                   min="-180" max="180" step="1"/>)
+                        </span>
+                                X
+                        <span data-class="geoquery_max_coord">
+                            (<input id="geoquery_maxlat" data-class="geoquery_max_coord" type="number" value="0"
+                                    min="-90" max="90" step="1"/>,
+                            <input id="geoquery_maxlon" data-class="geoquery_max_coord" type="number" value="0"
+                                   min="-180" max="180" step="1"/>)
+                        </span>
+                                <button type="button" class="btn btn-default" id="geoquery_acceptbutton">Accept</button>
+                            </div>
+                        </div>
                         <div id="categories"></div>
                         <div id="subCategories"></div>
                     </div>
@@ -96,45 +137,12 @@
                             </label>
                         </div>
                         <div class='form-group'>
-                            <button type="button" class="btn btn-default" id="pathquery_selectbutton">Select path
-                            </button>
-                        <span>
-                            Radius:
-                            <input id="pathquery_radius" type="number" value="100" min="50" max="20000" step="50"/>
-                        </span>
-                            <button type="button" class="btn btn-default" id="pathquery_acceptbutton">Accept path
-                            </button>
-                        </div>
-                        <div class='form-group'>
-                            <button type="button" class="btn btn-default" id="geoquery_selectbutton">Select rectangle:
-                            </button>
-                        <span data-class="geoquery_min_coord">
-                            (<input id="geoquery_minlat" data-class="geoquery_min_coord" type="number" value="0"
-                                    min="-90" max="90" step="1"/>,
-                            <input id="geoquery_minlon" data-class="geoquery_min_coord" type="number" value="0"
-                                   min="-180" max="180" step="1"/>)
-                        </span>
-                            X
-                        <span data-class="geoquery_max_coord">
-                            (<input id="geoquery_maxlat" data-class="geoquery_max_coord" type="number" value="0"
-                                    min="-90" max="90" step="1"/>,
-                            <input id="geoquery_maxlon" data-class="geoquery_max_coord" type="number" value="0"
-                                   min="-180" max="180" step="1"/>)
-                        </span>
-                            <button type="button" class="btn btn-default" id="geoquery_acceptbutton">Accept</button>
-                        </div>
-                        <div class='form-group'>
-                            <label for="visualize_all_results_checkbox">
-                            <input type="checkbox" class="checkbox" id="visualize_all_results_checkbox" checked>Visualize
-                            results
-                        </label>
                             <label for="load_region_boundaries">
                                 <input type="checkbox" class="checkbox" id="load_region_boundaries">Load boundaries
                             </label>
                             <label for='oht_checkbox'>
                                 <input type="checkbox" class="checkbox" id="oht_checkbox" checked>Global unfold ratio
                             </label>
-
                             <div class="input-group" id='ohf_spinner_group'>
                                 <span class="input-group-addon">unfold ratio</span>
                                 <input class='form-control' type="number" value='95' min='0' max='100' id='ohf_spinner'
@@ -164,8 +172,8 @@
     </div>
 
     <div id="map"></div>
-    <div id="zoom"></div>
 </div>
-<script type="text/javascript" data-main="js/libs/oscar/oscarMapInteraction.js" src="js/libs/require.js/require.js"></script>
+<script type="text/javascript" data-main="js/libs/oscar/oscarMapInteraction.js"
+        src="js/libs/require.js/require.js"></script>
 </body>
 </html>

@@ -1,12 +1,13 @@
 html,
 body {
     height: 100%;
-	/* The html and body elements cannot have any padding or margin. */
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    /* The html and body elements cannot have any padding or margin. */
 }
 
 #map {
     height: 100%;
-/* 	z-index: -1; */
+    /* 	z-index: -1; */
 }
 
 #content_container {
@@ -19,7 +20,7 @@ body {
 
 #search_form {
     padding-top: 5px;
-    width:  95%;
+    width: 95%;
 }
 
 #search_container {
@@ -29,43 +30,45 @@ body {
     overflow-x: hidden;
     overflow-y: hidden;
     z-index: 100;
-	border-radius: 10px;
+    border-radius: 10px;
     display: block;
 }
 
-#categories{
-	width: 45%;
-	height: fit-content;
-	float: left;
+#categories {
+    width: 45%;
+    height: fit-content;
+    float: left;
 }
 
-#categorieWrapper a{
+#categorieWrapper a {
     background-color: transparent;
 }
 
-#categorieWrapper a:hover{
+#categorieWrapper a:hover {
     background-color: #0074d9;
     color: white;
     cursor: pointer;
 }
 
-#loader{
+#loader {
     position: fixed;
     z-index: 1000;
     top: 50%;
     right: 50%;
 }
 
-#subCategories{
-	width: 45%;
-	height: fit-content;
-	float: right;
-}
-#categorieWrapper{
-	width: 100%;
+#subCategories {
+    width: 45%;
     height: fit-content;
-	color: #000;
+    float: right;
 }
+
+#categorieWrapper {
+    width: 100%;
+    height: fit-content;
+    color: #000;
+}
+
 .menu_parent {
     z-index: 100;
     overflow-y: hidden;
@@ -80,7 +83,7 @@ body {
     width: auto;
     height: 80%;
     max-height: 80%;
-	display: none;
+    display: none;
 }
 
 #right_menu_parent {
@@ -113,7 +116,8 @@ body {
 
 #right_menu_movehandle {
     width: 100%;
-    height: 10px; //needs matching #right_menu_scroll_area.height
+    height: 10px;
+/ / needs matching #right_menu_scroll_area . height
 }
 
 #right_menu_scroll_area {
@@ -185,7 +189,7 @@ body {
 }
 
 #itemload_accept_button_span {
-    width : auto;
+    width: auto;
 }
 
 #itemload_spinner {
@@ -205,19 +209,19 @@ body {
 }
 
 #right_menu_parent .name-has-matched-tag {
-    color : #ff0000;
+    color: #ff0000;
 }
 
 .matched-key-color {
-    color : #ff0000;
+    color: #ff0000;
 }
 
 .matched-value-color {
-    color : #ff0000;
+    color: #ff0000;
 }
 
 .panel-heading h4 {
-    padding : 0 0 0 0;
+    padding: 0 0 0 0;
     margin: 0 0 0 0;
 }
 
@@ -234,7 +238,7 @@ body {
     background-color: #FFFFFF;
 }
 
-#flickr{
+#flickr {
     position: fixed;
     z-index: 200;
     right: 10px;
@@ -250,19 +254,31 @@ body {
     bottom: 10px;
 }
 
-#flickr img{
+#flickr img {
     padding: 5px 5px 5px 5px;
 }
 
-#flickr_images{
+#flickr_images {
     overflow-y: scroll;
     height: 90%;
 }
-#zoom{
-    position: fixed;
-    z-index: 1000;
-    top: 5px;
-    right: 5px;
-    color: red;
-    background-color: black;
+
+#categoryToggle {
+    height: 40px;
+    width: 50%;
+    float: left;
+}
+
+#advancedSearch {
+    display: none;
+}
+
+#advancedToggle{
+    width: 50%;
+    height: 40px;
+    float: left;
+}
+
+#searchModi{
+    margin-top: 5px;
 }
