@@ -25,6 +25,11 @@ SET(OSCAR_WEB_LINK_LIBS
 	${LIBRT_LIBRARIES}
 	${CPPCMS_LIBRARY}
 	${BOOSTER_LIBRARY}
+	"CGAL"
+	"mpfr"
+	"gmp"
+	"boost_thread"
+	"boost_system"
 )
 
 add_executable(${PROJECT_NAME} ${OSCAR_WEB_SOURCES_CPP})
