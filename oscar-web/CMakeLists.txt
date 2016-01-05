@@ -20,11 +20,11 @@ BinaryWriter.cpp
 IF(CPPCMS_FOUND AND NOT CMAKE_CROSSCOMPILING)
 
 SET(OSCAR_WEB_LINK_LIBS
-${liboscar_BINARY_DIR}/libliboscar.so
-${sserialize_BINARY_DIR}/libsserialize.a
-${LIBRT_LIBRARIES}
-${CPPCMS_LIBRARY}
-${BOOSTER_LIBRARY}
+	${liboscar_BINARY_DIR}/libliboscar.so
+	${sserialize_BINARY_DIR}/libsserialize.a
+	${LIBRT_LIBRARIES}
+	${CPPCMS_LIBRARY}
+	${BOOSTER_LIBRARY}
 )
 
 add_executable(${PROJECT_NAME} ${OSCAR_WEB_SOURCES_CPP})
