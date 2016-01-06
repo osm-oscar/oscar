@@ -301,7 +301,7 @@ template<typename TCT>
 void
 handleCellTextSearchBase(GeoCellConfig & cfg, State & state, sserialize::UByteArrayAdapter & dest) {
 	TCT ct(cfg.mmType);
-	sserialize::Static::ItemIndexStore idxStore( new sserialize::detail::ItemIndexStoreFromFactory(&(state.indexFactory)) );
+	sserialize::Static::ItemIndexStore idxStore( state.indexFactory.asItemIndexStore() );
 	ct.create(state.store, idxStore, InMemoryCTCSearchTraits(cfg, state.store));
 	sserialize::UByteArrayAdapter::OffsetType bO = dest.tellPutPtr();
 	uint32_t sq = (cfg.hasEnabled(TextSearchConfig::QueryType::SUBSTRING) ? sserialize::StringCompleter::SQ_EPSP : sserialize::StringCompleter::SQ_EP);
