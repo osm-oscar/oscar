@@ -5,6 +5,10 @@
 #include "Config.h"
 #include "CellTextCompleter.h"
 
+//TODO: should regions be included as items in the cells they enclose?
+//This is currently not the case but should be done
+//There should probably be an extra query to support that so that one can explicitly search for regions as items
+
 namespace oscar_create {
 
 class FilterState {
@@ -32,6 +36,14 @@ struct BaseSearchTraitsState {
 	}
 };
 
+struct OOM_SA_CTC_TraitsState {
+	sserialize::Static::spatial::GeoHierarchy gh;
+	sserialize::Static::ItemIndexStore idxStore;
+	OOM_SA_CTC_TraitsState(const sserialize::Static::spatial::GeoHierarchy & gh, const sserialize::Static::ItemIndexStore & idxStore) :
+	gh(gh),
+	idxStore(idxStore)
+	{}
+};
 
 template<TextSearchConfig::ItemType T_ITEM_TYPE = TextSearchConfig::ItemType::ITEM>
 class OOM_SA_CTC_Traits {
@@ -40,6 +52,7 @@ public:
 public:
 	typedef liboscar::Static::OsmKeyValueObjectStore::Item item_type;
 	typedef BaseSearchTraitsState State;
+	typedef std::shared_ptr<State> StateSharedPtr;
 
 	template<TextSearchConfig::QueryType T_QUERY_TYPE>
 	class StringsExtractor {
@@ -99,26 +112,46 @@ public:
 	struct ItemId {
 		inline uint32_t operator()(const item_type & item) { return item.id(); }
 	};
-	struct ItemCells {
+	
+	class ItemCells {
+	public:
+		ItemCells(const std::shared_ptr<OOM_SA_CTC_TraitsState> & state) : m_state(state) {}
 		template<typename TOutputIterator>
 		void operator()(const item_type & item, TOutputIterator out) {
-			for(const auto & x : item.cells()) {
-				*out = x;
-				++out;
+			if (T_ITEM_TYPE == TextSearchConfig::ItemType::ITEM) {
+				for(const auto & x : item.cells()) {
+					*out = x;
+					++out;
+				}
+			}
+			else if (T_ITEM_TYPE == TextSearchConfig::ItemType::REGION) {
+				if (item.isRegion()) {
+					//fetch the cells from the geohierarchy
+					const auto & gh = m_state->gh;
+					uint32_t ghId = gh.storeIdToGhId(item.id());
+					uint32_t cellPtr = gh.regionCellIdxPtr(ghId);
+					sserialize::ItemIndex cells(m_state->idxStore.at(cellPtr));
+					using std::copy;
+					copy(cells.begin(), cells.end(), out);
+				}
 			}
 		}
+	private:
+		std::shared_ptr<OOM_SA_CTC_TraitsState> m_state;
 	};
 public:
 	inline ExactStrings exactStrings() { return ExactStrings(m_state); }
 	inline SuffixStrings suffixStrings() { return SuffixStrings(m_state); }
 	inline ItemId itemId() { return ItemId(); }
-	inline ItemCells itemCells() { return ItemCells(); }
+	inline ItemCells itemCells() { return ItemCells(m_itemCellsState); }
 public:
-	OOM_SA_CTC_Traits(const TextSearchConfig & tsc, const liboscar::Static::OsmKeyValueObjectStore & store) : 
-	m_state(new State(store.kvStore(), tsc)) {}
+	OOM_SA_CTC_Traits(const TextSearchConfig & tsc, const liboscar::Static::OsmKeyValueObjectStore & store, const sserialize::Static::ItemIndexStore & idxStore) : 
+	m_state(new State(store.kvStore(), tsc)),
+	m_itemCellsState(new OOM_SA_CTC_TraitsState(store.geoHierarchy(), idxStore)) {}
 	OOM_SA_CTC_Traits(const std::shared_ptr<State> & state) : m_state(state) {}
 private:
-	std::shared_ptr<State> m_state;
+	StateSharedPtr m_state;
+	std::shared_ptr<OOM_SA_CTC_TraitsState> m_itemCellsState;
 };
 
 class SimpleSearchBaseTraits {

@@ -338,8 +338,8 @@ handleCellTextSearch(GeoCellConfig & cfg, State & state, sserialize::UByteArrayA
 
 void handleOOMCellTextSearch(OOMGeoCellConfig & cfg, State & state, sserialize::UByteArrayAdapter & dest) {
 	std::shared_ptr<BaseSearchTraitsState> searchState(new BaseSearchTraitsState(state.store.kvStore(), cfg));
-	OOM_SA_CTC_Traits<TextSearchConfig::ItemType::ITEM> itemTraits(cfg, state.store);
-	OOM_SA_CTC_Traits<TextSearchConfig::ItemType::REGION> regionTraits(cfg, state.store);
+	OOM_SA_CTC_Traits<TextSearchConfig::ItemType::ITEM> itemTraits(cfg, state.store, state.indexFactory.asItemIndexStore());
+	OOM_SA_CTC_Traits<TextSearchConfig::ItemType::REGION> regionTraits(cfg, state.store, state.indexFactory.asItemIndexStore());
 	
 	int sq = sserialize::StringCompleter::SQ_NONE;
 	if (cfg.hasEnabled(TextSearchConfig::QueryType::PREFIX)) {

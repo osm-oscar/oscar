@@ -65,10 +65,10 @@ FilterState::FilterState(const sserialize::Static::KeyValueObjectStore& kv, cons
 
 SimpleSearchBaseTraits::SimpleSearchBaseTraits(const TextSearchConfig & tsc, const liboscar::Static::OsmKeyValueObjectStore & store) : 
 m_state(new BaseSearchTraitsState(store.kvStore(), tsc)),
-m_ies(ItemSearchTraits(m_state).exactStrings()),
-m_iss(ItemSearchTraits(m_state).suffixStrings()),
-m_res(RegionSearchTraits(m_state).exactStrings()),
-m_rss(RegionSearchTraits(m_state).suffixStrings())
+m_ies(m_state),
+m_iss(m_state),
+m_res(m_state),
+m_rss(m_state)
 {}
 
 SimpleSearchTraits::SimpleSearchTraits(const TextSearchConfig & tsc, const liboscar::Static::OsmKeyValueObjectStore & store) :
