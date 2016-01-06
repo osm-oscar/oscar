@@ -14,10 +14,11 @@
 	"store" : {
 		"enabled" : true,
 		"threadCount" : 8,
-		"blobFetchCount" : 10,
+		"blobFetchCount" : 5,
 		"fullRegionIndex" : false,
+		"addRegionsToCells" : false,
 		"addParentInfo" : false,
-		"nodeTableSize" : 100000,
+		"nodeTableSize" : 1000000,
 		"tagFilter" : "all",
 		"itemFilter" : "all",
 		"latCount" : 100,
@@ -90,7 +91,7 @@
 				}
 			},
 			"threadCount" : 8,
-			"maxMemoryUsage" : 4096
+			"maxMemoryUsage" : 2048
 		}
 	}]
 }
