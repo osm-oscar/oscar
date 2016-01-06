@@ -171,7 +171,9 @@ std::ostream& KVStoreConfig::print(std::ostream& out) const {
 	out << "\n";
 	out << "Keys defining regions=" << keysDefiningRegions << "\n";
 	out << "Key:Values defining regions=" << keyValuesDefiningRegions << "\n";
-	out << " FullRegionIndex: " << (fullRegionIndex ? "yes" : "no" );
+	out << "FullRegionIndex: " << (fullRegionIndex ? "yes" : "no" ) << "\n";
+	out << "Add parent info: " << (addParentInfo ? "yes" : "no") << "\n";
+	out << "Add regions to cells they enclose: " << (addRegionsToCells ? "yes" : "no");
 	return out;
 }
 
@@ -509,6 +511,8 @@ maxNodeId(0),
 autoMaxMinNodeId(false),
 readBoundaries(false),
 fullRegionIndex(false),
+addRegionsToCells(false),
+addParentInfo(false),
 latCount(0),
 lonCount(0),
 maxTriangPerCell(std::numeric_limits<uint32_t>::max()),
@@ -535,6 +539,11 @@ itemSortOrder(OsmKeyValueObjectStore::ISO_NONE)
 	v = cfg["fullRegionIndex"];
 	if (v.isBool()) {
 		fullRegionIndex = v.asBool();
+	}
+	
+	v = cfg["addRegionsToCells"];
+	if (v.isBool()) {
+		addRegionsToCells = v.asBool();
 	}
 	
 	v = cfg["latCount"];

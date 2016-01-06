@@ -77,6 +77,7 @@ struct KVStoreConfig {
 	bool readBoundaries;
 	bool fullRegionIndex;
 	bool addParentInfo;
+	bool addRegionsToCells;
 	uint32_t latCount;
 	uint32_t lonCount;
 	uint32_t maxTriangPerCell;
