@@ -419,7 +419,7 @@
                                 }
                             },
                             menu : {
-                                fadeopacity : 0.9
+                                fadeopacity : 0.3
                             }
                         },
                 resultsview : {
@@ -437,7 +437,7 @@
                     }
                 },
                 timeouts : {
-                    query : 10000,
+                    query : 500,
                     loadingSpinner : 1000,
                     geoquery_select : 10000,
                     pathquery : {
@@ -478,7 +478,7 @@
             requirejs.config({
                 baseUrl: "js/libs",
                 config: {
-                    'oscar' : { url : "http://127.0.0.1:8080"}
+                    'oscar' : { url : "http://oscar.fmi.uni-stuttgart.de/oscar"}
                 },
                 paths: {
                     "jquery": "jquery/jquery",
