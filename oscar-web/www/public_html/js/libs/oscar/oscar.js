@@ -362,12 +362,13 @@ define(['jquery', 'sserialize', 'leaflet', 'module'], function (jQuery, sseriali
                 rootRegionApxItemCount: function () {
                     return this.d.rootRegionApxItemCount;
                 },
-                //returns [regionIds] in successCB
-                getMaximumIndependetSet: function (regionId, successCB, errorCB) {
+                //returns [regionIds] in successCB,
+                //maxOverlap in percent, prunes regions that overlap with more than maxOverlap percent cells of the currently selected set of children regions
+                getMaximumIndependetSet: function (regionId, maxOverlap, successCB, errorCB) {
                     if (regionId === undefined) {
                         regionId = 0xFFFFFFFF;
                     }
-                    this.p.simpleCqrMaxIndependentChildren(this.d.query, successCB, errorCB, regionId);
+                    this.p.simpleCqrMaxIndependentChildren(this.d.query, successCB, errorCB, regionId, maxOverlap);
                 },
                 //returning an array in successCB with objects={id : int, apxitems : int}
                 //returns rootRegionChildrenInfo if regionId is undefined
@@ -868,7 +869,7 @@ define(['jquery', 'sserialize', 'leaflet', 'module'], function (jQuery, sseriali
                 }
             });
         },
-        completeSimple: function (query, successCB, errorCB, ohf, globalOht) {
+        completeSimple : function(query, successCB, errorCB, ohf, globalOht) {
             var params = {};
             params['q'] = query;
             if (ohf !== undefined) {
@@ -888,14 +889,14 @@ define(['jquery', 'sserialize', 'leaflet', 'module'], function (jQuery, sseriali
                 type: "GET",
                 url: qpath,
                 data: params,
-                dataType: 'arraybuffer',
+                dataType : 'arraybuffer',
                 mimeType: 'application/octet-stream',
-                success: function (raw) {
+                success: function( raw ) {
                     var cqr = sserialize.simpleCqrFromRaw(raw);
                     cqr.query = params['q'];
                     successCB(myPtr.SimpleCellQueryResult(cqr, myPtr, mySqId));
                 },
-                error: function (jqXHR, textStatus, errorThrown) {
+                error: function(jqXHR, textStatus, errorThrown) {
                     errorCB(textStatus, errorThrown);
                 }
             });
@@ -959,11 +960,14 @@ define(['jquery', 'sserialize', 'leaflet', 'module'], function (jQuery, sseriali
                 }
             });
         },
-        simpleCqrMaxIndependentChildren: function (query, successCB, errorCB, selectedRegion) {
+        simpleCqrMaxIndependentChildren: function (query, successCB, errorCB, selectedRegion, maxOverlap) {
             var params = {};
             params['q'] = query;
             if (selectedRegion !== undefined) {
                 params['r'] = selectedRegion;
+            }
+            if (maxOverlap !== undefined) {
+                params['o'] = maxOverlap;
             }
             var qpath = this.completerBaseUrl + "/cqr/clustered/michildren";
             jQuery.ajax({
