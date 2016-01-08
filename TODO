@@ -1,3 +1,8 @@
+
+WARNINGS:
+-Wshorten-64-to-32 as default
+
+
 LONGTERM: (WIP)
 Out of memory creation
 
