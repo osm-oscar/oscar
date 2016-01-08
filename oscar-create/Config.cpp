@@ -107,6 +107,7 @@ std::ostream& TagStoreConfig::print(std::ostream& out) const {
 
 std::ostream& KVStoreConfig::print(std::ostream& out) const {
 	out << "Number of threads: " << numThreads << "\n";
+	out << "Number of blobs to fetch at once: " << blobFetchCount << "\n";
 	out << "Max node table entries: " << sserialize::toString(maxNodeHashTableSize) << "\n";
 	out << "Keys whose values are infalted: " << keysValuesToInflate << "\n";
 	out << "Node HashTable size: ";
@@ -170,7 +171,9 @@ std::ostream& KVStoreConfig::print(std::ostream& out) const {
 	out << "\n";
 	out << "Keys defining regions=" << keysDefiningRegions << "\n";
 	out << "Key:Values defining regions=" << keyValuesDefiningRegions << "\n";
-	out << " FullRegionIndex: " << (fullRegionIndex ? "yes" : "no" );
+	out << "FullRegionIndex: " << (fullRegionIndex ? "yes" : "no" ) << "\n";
+	out << "Add parent info: " << (addParentInfo ? "yes" : "no") << "\n";
+	out << "Add regions to cells they enclose: " << (addRegionsToCells ? "yes" : "no");
 	return out;
 }
 
@@ -277,24 +280,24 @@ std::ostream& Config::print(std::ostream& out) const {
 		out << "IndexStoreConfig: \n";
 		out << *indexStoreConfig << "\n";
 	}
-	if (kvStoreConfig) {
+	if (kvStoreConfig && kvStoreConfig->enabled) {
 		out << "KVStoreConfig:\n"; 
 		out << *kvStoreConfig << "\n";
 	}
-	if (gridConfig) {
+	if (gridConfig && gridConfig->enabled) {
 		out << "GridConfig:\n";
 		out << *gridConfig << "\n";
 	}
-	if (rTreeConfig) {
+	if (rTreeConfig && rTreeConfig->enabled) {
 		out << "RTreeConfig:\n";
 		out << *rTreeConfig << "\n";
 	}
-	if (tagStoreConfig) {
+	if (tagStoreConfig && tagStoreConfig->enabled) {
 		out << "TagStoreConfig:\n";
 		out << *tagStoreConfig << "\n";
 	}
 	for(TextSearchConfig * x : textSearchConfig) {
-		if (!x) {
+		if (!x || !(x->enabled)) {
 			continue;
 		}
 		out << "TextSearchConfig[";
@@ -508,16 +511,24 @@ maxNodeId(0),
 autoMaxMinNodeId(false),
 readBoundaries(false),
 fullRegionIndex(false),
+addParentInfo(false),
+addRegionsToCells(false),
 latCount(0),
 lonCount(0),
 maxTriangPerCell(std::numeric_limits<uint32_t>::max()),
 maxTriangCentroidDist(std::numeric_limits<double>::max()),
 numThreads(0),
+blobFetchCount(1),
 itemSortOrder(OsmKeyValueObjectStore::ISO_NONE)
 {
 	Json::Value v = cfg["enabled"];
 	if (v.isBool()) {
 		enabled = v.asBool();
+	}
+	
+	v = cfg["blobFetchCount"];
+	if (v.isNumeric()) {
+		blobFetchCount = v.asUInt();
 	}
 	
 	v = cfg["threadCount"];
@@ -528,6 +539,11 @@ itemSortOrder(OsmKeyValueObjectStore::ISO_NONE)
 	v = cfg["fullRegionIndex"];
 	if (v.isBool()) {
 		fullRegionIndex = v.asBool();
+	}
+	
+	v = cfg["addRegionsToCells"];
+	if (v.isBool()) {
+		addRegionsToCells = v.asBool();
 	}
 	
 	v = cfg["latCount"];
@@ -933,6 +949,23 @@ maxMemoryUsage(0xFFFFFFFF)
 
 std::string Config::help() {
 	return std::string("[-a] -i <input.osm.pbf|input dir> -o <output dir> -c <config.json>");
+}
+
+std::string Config::toString(Config::ValidationReturnValues v) {
+	if (v == VRV_OK) {
+		return "OK";
+	}
+	std::string ret;
+#define ERRA(__NAME) if (v & __NAME) { ret += #__NAME; ret += ',';}
+	ERRA(VRV_BROKEN)
+	ERRA(VRV_BROKEN_TAG_STORE)
+	ERRA(VRV_BROKEN_INDEX_STORE)
+	ERRA(VRV_BROKEN_TEXT_SEARCH)
+	ERRA(VRV_BROKEN_GRID)
+	ERRA(VRV_BROKEN_RTREE)
+	ERRA(VRV_BROKEN_KV_STORE)
+#undef ERRA
+	return ret;
 }
 
 Config::Config() :

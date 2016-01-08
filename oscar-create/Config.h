@@ -77,11 +77,13 @@ struct KVStoreConfig {
 	bool readBoundaries;
 	bool fullRegionIndex;
 	bool addParentInfo;
+	bool addRegionsToCells;
 	uint32_t latCount;
 	uint32_t lonCount;
 	uint32_t maxTriangPerCell;
 	double maxTriangCentroidDist;
 	uint32_t numThreads;
+	uint32_t blobFetchCount;
 	int itemSortOrder;//as defined by OsmKeyValueObjectStore::ItemSortOrder
 	std::string prioStringsFileName;
 	std::ostream & print(std::ostream & out) const;
@@ -210,6 +212,9 @@ public:
 	
 	static std::string help();
 
+	static std::string toString(ValidationReturnValues v);
+	
+public:
 	//Variables
 	std::string inFileName;
 	

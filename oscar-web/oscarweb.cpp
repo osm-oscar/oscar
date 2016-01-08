@@ -49,6 +49,7 @@ int main(int argc, char **argv) {
 		data.maxIndexDBReq = dbfile.get<uint32_t>("maxindexdbreq", 10);
 		data.maxItemDBReq = dbfile.get<uint32_t>("maxitemdbreq", 10);
 		data.textSearchers[liboscar::TextSearch::GEOCELL] = dbfile.get<uint32_t>("geocellcompleter", 0);
+		data.textSearchers[liboscar::TextSearch::OOMGEOCELL] = dbfile.get<uint32_t>("geocellcompleter", 0);
 		data.textSearchers[liboscar::TextSearch::ITEMS] = dbfile.get<uint32_t>("itemscompleter", 0);
 		data.textSearchers[liboscar::TextSearch::GEOHIERARCHY] = dbfile.get<uint32_t>("geohcompleter", 0);
 		data.geocompleter = dbfile.get<uint32_t>("geocompleter", 0);
@@ -81,6 +82,12 @@ int main(int argc, char **argv) {
 
 	if (!data.completer->setGeoCompleter(data.geocompleter)) {
 		std::cout << "Failed to set seleccted geo completer: " << data.geocompleter<< std::endl;
+	}
+	if (data.completer->textSearch().hasSearch(liboscar::TextSearch::GEOCELL)) {
+		std::cout << "Selected geocell text completer: " << data.completer->textSearch().get<liboscar::TextSearch::GEOCELL>().getName() << std::endl;
+	}
+	if (data.completer->textSearch().hasSearch(liboscar::TextSearch::OOMGEOCELL)) {
+		std::cout << "Selected oomgeocell text completer: " << data.completer->textSearch().get<liboscar::TextSearch::OOMGEOCELL>().getName() << std::endl;
 	}
 	if (data.completer->textSearch().hasSearch(liboscar::TextSearch::ITEMS)) {
 		std::cout << "Selected items text completer: " << data.completer->textSearch().get<liboscar::TextSearch::ITEMS>().getName() << std::endl;

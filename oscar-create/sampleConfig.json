@@ -14,7 +14,9 @@
 	"store" : {
 		"enabled" : false,
 		"threadCount" : 0,
+		"blobFetchCount" : 1,
 		"fullRegionIndex" : false,
+		"addRegionsToCells" : false,
 		"addParentInfo" : false,
 		"hashConfig" : {
 			"begin" : 0,

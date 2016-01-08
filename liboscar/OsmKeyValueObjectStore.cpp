@@ -141,6 +141,10 @@ uint32_t OsmKeyValueObjectStore::score(uint32_t itemPos) const {
 	return priv()->score(itemPos);
 }
 
+bool OsmKeyValueObjectStore::isRegion(uint32_t itemPos) const {
+	return priv()->isRegion(itemPos);
+}
+
 sserialize::BoundedCompactUintArray OsmKeyValueObjectStore::cells(uint32_t itemPos) const {
 	return priv()->cells(itemPos);
 }
@@ -378,6 +382,10 @@ int64_t OsmKeyValueObjectStorePrivate::osmId(uint32_t itemPos) const {
 
 uint32_t OsmKeyValueObjectStorePrivate::score(uint32_t itemPos) const {
 	return payload(itemPos).score();
+}
+
+bool OsmKeyValueObjectStorePrivate::isRegion(uint32_t itemPos) const {
+	return toInternalId(itemPos) < geoHierarchy().regionSize();
 }
 
 sserialize::BoundedCompactUintArray OsmKeyValueObjectStorePrivate::cells(uint32_t itemPos) const {
