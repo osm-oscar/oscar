@@ -34,7 +34,10 @@
 </div>
 
 <div id="loader"></div>
-
+<div id="tree">
+    <div id="close"><a href="#"><i class="remove glyphicon glyphicon-remove-sign glyphicon-black"></i></a></div>
+    <svg id="dag"></svg>
+</div>
 <div id="content_container">
     <div id="sidebar" class="sidebar collapsed">
 
@@ -63,9 +66,12 @@
                 <div id="search_container">
                     <div id="categorieWrapper">
                         <div id="actions">
-                            <div id="advancedToggle" mod="hide"><input type="submit" mod="show" value="Show advanced search">
+                            <div id="advancedToggle" mod="hide"><input type="submit" mod="show"
+                                                                       value="Show advanced search">
                             </div>
                             <div id="categoryToggle" mod="hide"><input type="submit" mod="hide" value="Hide categories">
+                            </div>
+                            <div id="showDag"><input type="submit" value="Show Tree">
                             </div>
                         </div>
                         <div style="clear:both;"></div>
@@ -81,7 +87,8 @@
                                 </button>
                             </div>
                             <div class='form-group'>
-                                <button type="button" class="btn btn-default" id="geoquery_selectbutton">Select rectangle:
+                                <button type="button" class="btn btn-default" id="geoquery_selectbutton">Select
+                                    rectangle:
                                 </button>
                         <span data-class="geoquery_min_coord">
                             (<input id="geoquery_minlat" data-class="geoquery_min_coord" type="number" value="0"
@@ -143,6 +150,7 @@
                             <label for='oht_checkbox'>
                                 <input type="checkbox" class="checkbox" id="oht_checkbox" checked>Global unfold ratio
                             </label>
+
                             <div class="input-group" id='ohf_spinner_group'>
                                 <span class="input-group-addon">unfold ratio</span>
                                 <input class='form-control' type="number" value='95' min='0' max='100' id='ohf_spinner'
@@ -170,7 +178,6 @@
             </div>
         </div>
     </div>
-
     <div id="map"></div>
 </div>
 <script type="text/javascript" data-main="js/libs/oscar/oscarMapInteraction.js"

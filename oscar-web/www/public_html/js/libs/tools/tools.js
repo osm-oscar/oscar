@@ -39,6 +39,7 @@ define(function () {
         parents.push(parent);
         return {
             id: id,
+            name : undefined,
             parents: parents,
             children: [],
             count: undefined,

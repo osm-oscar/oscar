@@ -282,3 +282,56 @@ body {
 #searchModi{
     margin-top: 5px;
 }
+
+#tree{
+    display: none;
+    background-color: white;
+    z-index: 50000;
+    height: 90%;
+    width: 90%;
+    position: fixed;
+    top: 5%;
+    right: 5%;
+    border-radius: 4px;
+    box-shadow: 0 1px 5px #000;
+}
+
+#dag{
+    height: 100%;
+    width: 100%;
+}
+
+#close{
+    position: absolute;
+    top: 5px;
+    right: 15px;
+    width: 10px;
+}
+
+a .glyphicon-black {
+    color: #000;
+    margin-bottom: 2px;
+    font-size: 1.5em;
+}
+
+/* This sets the color for "TK" nodes to a light blue green. */
+g.type-TK > rect {
+    fill: #00ffd0;
+}
+
+text {
+    font-weight: 300;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serf;
+    font-size: 14px;
+}
+
+.node rect {
+    stroke: #999;
+    fill: #fff;
+    stroke-width: 1.5px;
+}
+
+.edgePath path {
+    stroke: #333;
+    stroke-width: 1.5px;
+}

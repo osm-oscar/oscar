@@ -1,7 +1,7 @@
 requirejs.config({
     baseUrl: "js/libs",
     config: {
-        'oscar': {url: "http://oscardev.fmi.uni-stuttgart.de/oscar"}
+        'oscar': {url: "http://oscar.fmi.uni-stuttgart.de/oscar"}
     },
     paths: {
         "jquery": "jquery/jquery",
@@ -24,7 +24,10 @@ requirejs.config({
         "menu": "menu/menu",
         "flickr": "flickr/flickr",
         "manager": "connection/manager",
-        "switch": "switch-button/jquery.switchButton"
+        "switch": "switch-button/jquery.switchButton",
+        "d3": "dagre-d3/d3.min",
+        "dagre-d3": "dagre-d3/dagre-d3.min",
+        "tree": "tree/tree"
     },
     shim: {
         'bootstrap': {deps: ['jquery']},
@@ -37,9 +40,10 @@ requirejs.config({
     waitSeconds: 10
 });
 
-requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jqueryui", "leafletCluster", "spin", "sidebar", "mustacheLoader", "slimbox", "tools", "conf", "menu", "flickr", "manager", "switch"],
-    function (oscar, L, jQuery, bootstrap, jbinary, mustache, jqueryui, leafletCluster, spinner, sidebar, mustacheLoader, slimbox, tools, config, menu, flickr, manager, switchButton) {
+requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jqueryui", "leafletCluster", "spin", "sidebar", "mustacheLoader", "slimbox", "tools", "conf", "menu", "flickr", "manager", "switch", "tree"],
+    function (oscar, L, jQuery, bootstrap, jbinary, mustache, jqueryui, leafletCluster, spinner, sidebar, mustacheLoader, slimbox, tools, config, menu, flickr, manager, switchButton, tree) {
         //main entry point
+
         var osmAttr = '&copy; <a target="_blank" href="http://www.openstreetmap.org">OpenStreetMap</a>';
         var state = {
             map: {},
@@ -790,6 +794,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                             var node = parentNode.addChild(itemId);
                             node.count = regionChildrenApxItemsMap[itemId];
                             node.bbox = item.bbox();
+                            node.name = item.name();
                             state.DAG.insert(itemId, node);
                         }
 
@@ -803,7 +808,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                                 0 // offset
                             );
                         } else if (context.draw) {
-                            cqr.getMaximumIndependetSet(parentRid, function (regions) {
+                            cqr.getMaximumIndependetSet(parentRid, 0, function (regions) {
                                 state.items.clusters.drawn.erase(parentRid);
 
                                 var j;
@@ -956,6 +961,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             var process = pathProcessor(cqr);
             var root = new TreeNode(0xFFFFFFFF, undefined);
             root.count = cqr.rootRegionApxItemCount();
+            root.name = "World";
             state.DAG.insert(0xFFFFFFFF, root);
             if (cqr.ohPath().length) {
                 state.regionHandler({rid: 0xFFFFFFFF, draw: false, pathProcessor: process});
@@ -1106,6 +1112,14 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 }
             });
 
+            $('#showDag input').button().click(function () {
+                visualizeDAG(state.DAG.at(0xFFFFFFFF));
+            });
+
+            $('#close a').click(function(){
+                $('#tree').css("display", "none");
+            });
+
             $("#searchModi").switchButton({
                 on_label: 'Local',
                 off_label: 'Global'
@@ -1246,5 +1260,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
 
             //check if there's a query in our location string
             queryFromSearchLocation();
+
         });
     });
