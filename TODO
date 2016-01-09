@@ -1,3 +1,8 @@
+
+WARNINGS:
+-Wshorten-64-to-32 as default
+
+
 LONGTERM: (WIP)
 Out of memory creation
 
@@ -33,7 +38,13 @@ LONGTERM:
 full support for relations
 
 LONGTERM:
+Split regions into their subregions
+
+LONGTERM:
 anderer zwischen-bla-blub query der die hierarchie nutzt.
+
+LONGTERM:
+use builtin overflow (debian stable does not have gcc5)
 
 HIGH IMPORTANCE: (done, unchecked)
 neighbor-pointers in GeoHierarchy
@@ -43,6 +54,3 @@ manually add an extra level to specify continents (do this with a config)
 
 HIGH IMPORTANCE:
 dynamic polygon simplification
-
-HIGH IMPORTANCE:
-use builtin overflow

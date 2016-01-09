@@ -34,7 +34,9 @@ int main(int argc, char ** argv) {
 		return -1;
 	}
 	if (opts.validate() != oscar_create::Config::VRV_OK) {
-		std::cout << "Congig is invalid with errorcode: " << opts.validate() << std::endl;
+		auto errCode = opts.validate();
+		std::cout << "Config is invalid with errorcode: " << errCode << std::endl;
+		std::cout << "Error description: " << oscar_create::Config::toString(errCode) << std::endl;
 		return -1;
 	}
 	std::cout << "Selected Options:" << std::endl;
@@ -100,6 +102,7 @@ int main(int argc, char ** argv) {
 			}
 		}
 		state.indexFactory.setDeduplication(opts.indexStoreConfig->deduplicate);
+		assert(idxStore.size() == state.indexFactory.size());
 	}
 	kvTime.end();
 
@@ -109,6 +112,7 @@ int main(int argc, char ** argv) {
 	}
 	catch (sserialize::Exception & e) {
 		std::cerr << "Failed to open store file at " << storeFileName << " with error message: "<< e.what();
+		return -1;
 	}
 	assert(state.store.size());
 	

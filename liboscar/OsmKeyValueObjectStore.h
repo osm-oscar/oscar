@@ -128,6 +128,7 @@ public:
 	
 	int64_t osmId(uint32_t itemPos) const;
 	uint32_t score(uint32_t itemPos) const;
+	bool isRegion(uint32_t itemPos) const;
 	sserialize::BoundedCompactUintArray cells(uint32_t itemPos) const;
 	OsmKeyValueObjectStorePayload payload(uint32_t itemPos) const;
 	
@@ -164,6 +165,7 @@ public:
 	inline uint32_t internalId() const { return m_db.toInternalId(m_id); }
 	inline int64_t osmId() const { return m_db.osmId(id()); }
 	inline uint32_t score() const { return m_db.score(id()); }
+	inline bool isRegion() const { return db().isRegion(id()); }
 	inline sserialize::BoundedCompactUintArray cells() const { return m_db.cells(id()); }
 
 	inline uint32_t strCount() const { return MyBaseClass::size(); }
@@ -247,6 +249,7 @@ public:
 	
 	int64_t osmId(uint32_t itemPos) const;
 	uint32_t score(uint32_t itemPos) const;
+	bool isRegion(uint32_t itemPos) const;
 	sserialize::BoundedCompactUintArray cells(uint32_t itemPos) const;
 	OsmKeyValueObjectStorePayload payload(uint32_t itemPos) const;
 

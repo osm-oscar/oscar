@@ -64,6 +64,7 @@ public:
 	/** return the maximum set of independet region children for the query q:
 	  * q=<searchstring>
 	  * r=<regionid>
+	  * o=<maximum overlapp in percent>
 	  * Return:
 	  * array<uint32_t>: [regionId]
 	  */

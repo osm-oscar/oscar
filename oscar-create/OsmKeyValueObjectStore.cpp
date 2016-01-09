@@ -239,13 +239,11 @@ void OsmKeyValueObjectStore::Context::getNodes() {
 			std::unique_lock<std::mutex> lck(tmpDsLock);
 			tmpDs.push_back(tmp.begin(), tmp.end());
 			return tmpDs.size() < nodesToStore.size();
-		}, cc->numThreads
+		}, cc->numThreads, cc->blobFetchCount
 	);
 // 			std::cout << "Found " << tmpDs.size() << " out of " << nodesToStore.size() << " nodes" << std::endl;
-// 		sserialize::OutOfMemorySorter< std::pair<int64_t, RawGeoPoint> > ooms;
-// 		ooms.sort(tmpDs, std::less< std::pair<int64_t, RawGeoPoint> >());
 	assert(tmpDs.size() <= nodesToStore.size());
-	std::sort(tmpDs.begin(), tmpDs.end());
+	sserialize::mt_sort(tmpDs.begin(), tmpDs.end(), std::less< std::pair<int64_t, RawGeoPoint> >(), cc->numThreads);
 	nodesToStore.clear();
 	for(const std::pair<int64_t, RawGeoPoint> & x : tmpDs) {
 		nodesToStore[x.first] = x.second;
@@ -401,7 +399,7 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 		};
 		
 		ct.inFile.reset();
-		osmpbf::parseFileCPPThreads(ct.inFile, MyProc(&polyStore, &ct, &wct), 0, 1, true);
+		osmpbf::parseFileCPPThreads(ct.inFile, MyProc(&polyStore, &ct, &wct), ct.cc->numThreads, 1, true);
 		for(uint32_t x : wct.activeResidentialRegions) {
 			ct.residentialRegions.insert(polyStore.values().at(x).osmIdType);
 		}
@@ -466,7 +464,7 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 				ct.nodesToStore.mark(x);
 			}
 			return ct.nodesToStore.size() < ct.cc->maxNodeCoordTableSize;
-		}, ct.cc->numThreads);
+		}, ct.cc->numThreads, ct.cc->blobFetchCount);
 		#ifndef NDEBUG
 		osmpbf::OffsetType afterFilePos = ct.inFile.dataPosition();
 		#endif
@@ -648,7 +646,7 @@ void OsmKeyValueObjectStore::addPolyStoreItems(Context & ctx) {
 	Worker w(ctx, wct);
 	ctx.progressInfo.begin(ctx.inFile.dataSize(), "Adding items from polystore");
 	ctx.inFile.reset();
-	osmpbf::parseFileCPPThreads<Worker*>(ctx.inFile, &w, ctx.cc->numThreads);
+	osmpbf::parseFileCPPThreads<Worker*>(ctx.inFile, &w, ctx.cc->numThreads, ctx.cc->blobFetchCount);
 	w.flush();
 	ctx.progressInfo.end();
 	
@@ -690,7 +688,8 @@ void OsmKeyValueObjectStore::insertItemStrings(OsmKeyValueObjectStore::Context& 
 			}
 		};
 		ct.inFile.reset();
-		osmpbf::parseFileCPPThreads(ct.inFile, wf, std::min<uint32_t>(( ct.cc->numThreads ? ct.cc->numThreads : (uint32_t) std::thread::hardware_concurrency()), 2));
+		uint32_t myNumThreads = std::min<uint32_t>(( ct.cc->numThreads ? ct.cc->numThreads : (uint32_t) std::thread::hardware_concurrency()), 2);
+		osmpbf::parseFileCPPThreads(ct.inFile, wf, myNumThreads, ct.cc->blobFetchCount);
 	}
 
 	ct.progressInfo.begin(ct.inFile.dataSize(), "Fetching strings");
@@ -753,7 +752,7 @@ void OsmKeyValueObjectStore::insertItemStrings(OsmKeyValueObjectStore::Context& 
 				}
 			}
 			
-		}, ct.cc->numThreads);
+		}, ct.cc->numThreads, ct.cc->blobFetchCount);
 	}
 	ct.progressInfo.end();
 }
@@ -828,14 +827,14 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 				swct.missingRelation.insert(tmp.begin(), tmp.end());
 			};
 			ct.inFile.reset();
-			osmpbf::parseFileCPPThreads(ct.inFile, wf, ct.cc->numThreads);
+			osmpbf::parseFileCPPThreads(ct.inFile, wf, ct.cc->numThreads, ct.cc->blobFetchCount);
 			do {
 				for(const liboscar::OsmIdType & x : swct.missingRelation) {
 					ct.relationItems[x] = std::numeric_limits<uint32_t>::max();
 				}
 				swct.missingRelation.clear();
 				ct.inFile.reset();
-				osmpbf::parseFileCPPThreads(ct.inFile, swf, ct.cc->numThreads);
+				osmpbf::parseFileCPPThreads(ct.inFile, swf, ct.cc->numThreads, ct.cc->blobFetchCount);
 			} while(swct.missingRelation.size());
 		}
 		
@@ -873,6 +872,7 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 
 		//first get the node refs for our ways
 		uint32_t blobsRead = osmpbf::parseFileCPPThreads(ct.inFile, [&ct, &wct](osmpbf::PrimitiveBlockInputAdaptor & pbi) -> bool {
+			std::vector<int64_t> myNodesToStore;
 			for(osmpbf::IWayStream way = pbi.getWayStream(); !way.isNull(); way.next()) {
 				if (!way.refsSize() || !way.tagsSize()) {
 					continue;
@@ -882,14 +882,15 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 				
 				if (ct.cc->itemSaveDirector->process(rawItem)) {
 					ct.totalGeoPointCount += way.refsSize();
-					std::unique_lock<std::mutex> lck(wct.nodesToStoreLock);
-					for(osmpbf::IWayStream::RefIterator it(way.refBegin()), end(way.refEnd()); it != end; ++it) {
-						ct.nodesToStore.mark(*it);
-					}
+					myNodesToStore.insert(myNodesToStore.end(), way.refBegin(), way.refEnd());
 				}
 			}
+			std::unique_lock<std::mutex> lck(wct.nodesToStoreLock);
+			for(auto x : myNodesToStore) {
+				ct.nodesToStore.mark(x);
+			}
 			return ct.nodesToStore.size() < ct.cc->maxNodeCoordTableSize;
-		}, ct.cc->numThreads);
+		}, ct.cc->numThreads, ct.cc->blobFetchCount);
 		#ifndef NDEBUG
 		osmpbf::OffsetType afterFilePos = ct.inFile.dataPosition();
 		#endif
@@ -1138,7 +1139,7 @@ void OsmKeyValueObjectStore::applySort(oscar_create::OsmKeyValueObjectStore::Con
 	}
 	sserialize::TimeMeasurer tm;
 	tm.begin();
-	std::cout << "Sorting items..." << std::flush;
+	std::cout << "Sorting items..." << std::endl;
 	switch(ctx.cc->sortOrder) {
 	case ISO_NONE:
 		break;
@@ -1186,7 +1187,7 @@ void OsmKeyValueObjectStore::applySort(oscar_create::OsmKeyValueObjectStore::Con
 		break;
 	}
 	tm.end();
-	std::cout << "took " << tm << std::endl;
+	std::cout << "Sorting items took " << tm << std::endl;
 }
 
 bool OsmKeyValueObjectStore::processCellMap(Context & ctx) {

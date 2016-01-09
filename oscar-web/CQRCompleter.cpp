@@ -305,11 +305,17 @@ void CQRCompleter::maximumIndependentChildren() {
 	std::string cqs = request().get("q");
 	uint32_t regionId = sserialize::Static::spatial::GeoHierarchy::npos;
 	uint32_t cqrSize = 0;
+	uint32_t overlap = 0;
 
 	{
 		std::string tmpStr = request().get("r");
 		if (!tmpStr.empty()) {
 			regionId = atoi(tmpStr.c_str());
+		}
+		
+		tmpStr = request().get("o");
+		if (!tmpStr.empty()) {
+			overlap = atoi(tmpStr.c_str());
 		}
 	}
 	
@@ -330,7 +336,7 @@ void CQRCompleter::maximumIndependentChildren() {
 		for(uint32_t i(0), s(rPtr->size()); i < s; ++i) {
 			count2Pos.emplace_back(rPtr->at(i)->maxItemsSize(), i);
 		}
-		std::sort(count2Pos.begin(), count2Pos.end());
+		std::sort(count2Pos.begin(), count2Pos.end(), std::greater< std::pair<uint32_t, uint32_t> >());
 		std::unordered_set<uint32_t> pickedCellPositions;
 		if (subSet.sparse()) {
 			std::vector<uint32_t> currentChildCellPositions;
@@ -363,9 +369,25 @@ void CQRCompleter::maximumIndependentChildren() {
 			calc.pickedCellPositions = &pickedCellPositions;
 			for(uint32_t i(0), s(rPtr->size()); i < s; ++i) {
 				currentChildCellPositions.clear();
+				bool ok = true;
 				uint32_t rPos = count2Pos[i].second;
 				const auto & cPtr = rPtr->at(rPos);
-				if (calc(cPtr)) {
+				if (overlap) {
+					cPtr->visit([&currentChildCellPositions](const SubSetNodePtr::element_type & node) {
+						currentChildCellPositions.insert(currentChildCellPositions.end(), node.cellPositions().begin(), node.cellPositions().end());
+					});
+					uint32_t myOverlappCount = 0;
+					for(auto x : currentChildCellPositions) {
+						if (pickedCellPositions.count(x)) {
+							++myOverlappCount;
+						}
+					}
+					ok = 100*myOverlappCount/cPtr->cellPositions().size() < overlap;
+				}
+				else {
+					ok = calc(cPtr);
+				}
+				if (ok) {
 					pickedCellPositions.insert(currentChildCellPositions.begin(), currentChildCellPositions.end());
 					out << delim << gh.ghIdToStoreId(cPtr->ghId());
 					delim = ',';
@@ -378,10 +400,21 @@ void CQRCompleter::maximumIndependentChildren() {
 				bool ok = true;
 				const auto & cPtr = rPtr->at(rPos);
 				const auto & cCp = cPtr->cellPositions();
-				for(uint32_t x : cCp) {
-					if (pickedCellPositions.count(x)) {
-						ok = false;
-						break;
+				if (overlap) {
+					uint32_t myOverlappCount = 0;
+					for(uint32_t x : cCp) {
+						if (pickedCellPositions.count(x)) {
+							++myOverlappCount;
+						}
+					}
+					ok = 100*myOverlappCount/cCp.size()< overlap;
+				}
+				else {
+					for(uint32_t x : cCp) {
+						if (pickedCellPositions.count(x)) {
+							ok = false;
+							break;
+						}
 					}
 				}
 				if (ok) {

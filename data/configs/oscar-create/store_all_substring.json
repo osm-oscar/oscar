@@ -14,9 +14,11 @@
 	"store" : {
 		"enabled" : true,
 		"threadCount" : 8,
+		"blobFetchCount" : 5,
 		"fullRegionIndex" : false,
+		"addRegionsToCells" : false,
 		"addParentInfo" : false,
-		"nodeTableSize" : 100000,
+		"nodeTableSize" : 1000000,
 		"tagFilter" : "all",
 		"itemFilter" : "all",
 		"latCount" : 100,
@@ -80,16 +82,16 @@
 					}
 				},
 				"tags" : {
-					"file" : {
+					"prefix" : {
 						"enabled" : true,
-						"keys" : "lists/kv_region_inherit_tags.txt",
+						"file" : "lists/kv_region_inherit_tags.txt",
 						"caseSensitive" : false,
 						"diacriticSensitive" : false
 					}
 				}
 			},
 			"threadCount" : 8,
-			"maxMemoryUsage" : 4096
+			"maxMemoryUsage" : 2048
 		}
 	}]
 }

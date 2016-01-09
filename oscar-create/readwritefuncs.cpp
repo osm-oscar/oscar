@@ -80,6 +80,14 @@ bool createAndWriteGridRTree(const oscar_create::Config& opts, State & state, ss
 }
 
 void handleGeoSearch(Config & opts, State & state) {
+	if (!(
+		(opts.gridConfig && opts.gridConfig->enabled) ||
+		(opts.rTreeConfig && opts.rTreeConfig->enabled)
+	))
+	{
+		return;
+	}
+	
 	std::string fn = liboscar::fileNameFromFileConfig(opts.getOutFileDir(), liboscar::FC_GEO_SEARCH, false);
 	sserialize::UByteArrayAdapter dest( sserialize::UByteArrayAdapter::createFile(1, fn) );
 	if (dest.size() != 1) {
@@ -293,7 +301,7 @@ template<typename TCT>
 void
 handleCellTextSearchBase(GeoCellConfig & cfg, State & state, sserialize::UByteArrayAdapter & dest) {
 	TCT ct(cfg.mmType);
-	sserialize::Static::ItemIndexStore idxStore( new sserialize::detail::ItemIndexStoreFromFactory(&(state.indexFactory)) );
+	sserialize::Static::ItemIndexStore idxStore( state.indexFactory.asItemIndexStore() );
 	ct.create(state.store, idxStore, InMemoryCTCSearchTraits(cfg, state.store));
 	sserialize::UByteArrayAdapter::OffsetType bO = dest.tellPutPtr();
 	uint32_t sq = (cfg.hasEnabled(TextSearchConfig::QueryType::SUBSTRING) ? sserialize::StringCompleter::SQ_EPSP : sserialize::StringCompleter::SQ_EP);
@@ -330,8 +338,8 @@ handleCellTextSearch(GeoCellConfig & cfg, State & state, sserialize::UByteArrayA
 
 void handleOOMCellTextSearch(OOMGeoCellConfig & cfg, State & state, sserialize::UByteArrayAdapter & dest) {
 	std::shared_ptr<BaseSearchTraitsState> searchState(new BaseSearchTraitsState(state.store.kvStore(), cfg));
-	OOM_SA_CTC_Traits<TextSearchConfig::ItemType::ITEM> itemTraits(cfg, state.store);
-	OOM_SA_CTC_Traits<TextSearchConfig::ItemType::REGION> regionTraits(cfg, state.store);
+	OOM_SA_CTC_Traits<TextSearchConfig::ItemType::ITEM> itemTraits(cfg, state.store, state.indexFactory.asItemIndexStore());
+	OOM_SA_CTC_Traits<TextSearchConfig::ItemType::REGION> regionTraits(cfg, state.store, state.indexFactory.asItemIndexStore());
 	
 	int sq = sserialize::StringCompleter::SQ_NONE;
 	if (cfg.hasEnabled(TextSearchConfig::QueryType::PREFIX)) {
@@ -489,6 +497,8 @@ void handleKVCreation(oscar_create::Config & opts, State & state) {
 		cc.maxNodeId = opts.kvStoreConfig->maxNodeId;
 		cc.minNodeId = opts.kvStoreConfig->minNodeId;
 		cc.numThreads = opts.kvStoreConfig->numThreads;
+		cc.blobFetchCount = opts.kvStoreConfig->blobFetchCount;
+		cc.addRegionsToCells = opts.kvStoreConfig->addRegionsToCells;
 		cc.rc.regionFilter = oscar_create::AreaExtractor::nameFilter(opts.kvStoreConfig->keysDefiningRegions, opts.kvStoreConfig->keyValuesDefiningRegions);
 		cc.rc.polyStoreLatCount = opts.kvStoreConfig->latCount;
 		cc.rc.polyStoreLonCount = opts.kvStoreConfig->lonCount;
