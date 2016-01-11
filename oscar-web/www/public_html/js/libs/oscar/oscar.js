@@ -84,6 +84,7 @@ shapeCache : {},
 idxCache : {},
 cellIdxIdCache : {},
 cqrOps : {'(' : '(', ')' : ')', '+' : '+', '-' : '-', '/' : '/', '^' : '^' },
+cqrParseSkip : {' ' : ' ', '!' : '!', '#' : '#'},
 cqrRegExpEscapes : {
 	'*' : '*',
 	'(' : '(',
@@ -99,7 +100,8 @@ cqrRegExpEscapes : {
 	'?' : '?',
 	'{' : '}',
 	'}' : '}',
-	'=' : '!'
+	'=' : '=',
+	'!' : '!'
 }, //*(|.^$)[]-+?{}=!,
 cqrEscapesRegExp : new RegExp("^[\*\(\|\.\^\$\)\[\]\-\+\?\{\}\=\!\,]$"),
 
@@ -883,7 +885,7 @@ cqrRexExpFromQuery: function(query) {
 	var tokenString = "";
 	var qtype = 'substring';
 	for(i=0; i < query.length; ++i) {
-		while (query[i] === ' ' || this.cqrOps[query[i]] !== undefined) { //skip whitespace, ops and braces
+		while (this.cqrParseSkip[query[i]] !== undefined || this.cqrOps[query[i]] !== undefined) { //ops and braces
 			++i;
 		}
 		if (query[i] === '?') {
