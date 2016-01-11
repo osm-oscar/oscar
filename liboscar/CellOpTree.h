@@ -145,10 +145,10 @@ T_CQR_TYPE CellOpTreeImp<T_CQR_TYPE>::qc(const std::string & str) {
 	}
 	std::string qstr;
 	if ('!' == str[0] || '#' == str[0]) {
-		qstr.insert(qstr.end(), str.begin(), str.end());
+		qstr.insert(qstr.end(), str.begin()+1, str.end());
 	}
 	else {
-		qstr =str;
+		qstr = str;
 	}
 	sserialize::StringCompleter::QuerryType qt = sserialize::StringCompleter::QT_NONE;
 	qt = sserialize::StringCompleter::normalize(qstr);
