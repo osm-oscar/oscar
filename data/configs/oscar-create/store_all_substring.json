@@ -16,7 +16,7 @@
 		"threadCount" : 8,
 		"blobFetchCount" : 5,
 		"fullRegionIndex" : false,
-		"addRegionsToCells" : false,
+		"addRegionsToCells" : true,
 		"addParentInfo" : false,
 		"nodeTableSize" : 1000000,
 		"tagFilter" : "all",
