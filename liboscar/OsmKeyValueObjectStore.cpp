@@ -98,7 +98,6 @@ sserialize::StringCompleter::SupportedQuerries OsmKeyValueObjectStore::getSuppor
 	return priv()->getSupportedQuerries();
 }
 
-
 sserialize::ItemIndex OsmKeyValueObjectStore::complete(const sserialize::spatial::GeoRect & rect, bool /*approximate*/) const {
 	return priv()->complete(rect);
 }
@@ -272,6 +271,10 @@ void OsmKeyValueObjectStoreItem::print(std::ostream& out, bool withGeoPoints) co
 		shape.priv()->asString(out);
 	}
 	out << "]";
+}
+
+void OsmKeyValueObjectStoreItem::dump() {
+	print(std::cout, true);
 }
 
 std::string OsmKeyValueObjectStoreItem::getAllStrings() const {
