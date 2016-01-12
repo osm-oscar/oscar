@@ -71,7 +71,7 @@ public:
 			}
 			else {
 				std::string tmp = sserialize::unicode_to_lower(str);
-				*out = str;
+				*out = tmp;
 				++out;
 				if (cap.diacritcInSensitive) {
 					*out = m_state->dr(tmp);
