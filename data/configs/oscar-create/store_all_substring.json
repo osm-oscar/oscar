@@ -70,13 +70,13 @@
 				"values" : {
 					"prefix" : {
 						"enabled" : true,
-						"file" : "lists/k_region_inherit_tags.txt",
+						"file" : "lists/k_values_prefix.txt",
 						"caseSensitive" : false,
 						"diacriticSensitive" : false
 					},
 					"substring" : {
 						"enabled" : true,
-						"file" : "lists/k_region_inherit_tags.txt",
+						"file" : "lists/k_values_substring_prefix.txt",
 						"caseSensitive" : false,
 						"diacriticSensitive" : false
 					}
@@ -84,7 +84,7 @@
 				"tags" : {
 					"prefix" : {
 						"enabled" : true,
-						"file" : "lists/kv_region_inherit_tags.txt",
+						"file" : "lists/allkeys.txt",
 						"caseSensitive" : false,
 						"diacriticSensitive" : false
 					}
