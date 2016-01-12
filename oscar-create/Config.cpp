@@ -365,6 +365,9 @@ bool TextSearchConfig::valid() const {
 			}
 		}
 	}
+	if (!consistentCaseSensitive()) {
+		return false;
+	}
 	return true;
 }
 
@@ -1147,5 +1150,25 @@ bool TextSearchConfig::hasDiacriticInSensitive() const {
 	return false;
 }
 
+bool TextSearchConfig::consistentCaseSensitive() const {
+	bool hasCaseSensitive = false;
+	bool hasCaseInsensitive = false;
+	for(uint32_t i(0); i < 2; ++i) {
+		for(uint32_t j(0); j < 2; ++j) {
+			for(uint32_t k(0); k < 2; ++k) {
+				const SearchCapabilities & cap = searchCapabilites[i][j][k];
+				if (cap.enabled) {
+					if (searchCapabilites[i][j][k].caseSensitive) {
+						hasCaseSensitive = true;
+					}
+					else {
+						hasCaseInsensitive = true;
+					}
+				}
+			}
+		}
+	}
+	return hasCaseInsensitive != hasCaseSensitive;
+}
 
 }//end namespace oscar_create

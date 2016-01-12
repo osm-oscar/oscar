@@ -112,6 +112,7 @@ public:
 	bool hasEnabled(QueryType qt) const;
 	bool hasCaseSensitive() const;
 	bool hasDiacriticInSensitive() const;
+	bool consistentCaseSensitive() const;
 private:
 	void parseTagTypeObject(const Json::Value & cfg, ItemType itemType);
 	void parseQueryTypeObject(const Json::Value & cfg, ItemType itemType, TagType tagType);
