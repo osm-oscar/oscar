@@ -47,14 +47,9 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
         var osmAttr = '&copy; <a target="_blank" href="http://www.openstreetmap.org">OpenStreetMap</a>';
         var state = {
             map: {},
-            DAG: SimpleHash(), // represents the hierarchie-tree for a query
+            DAG: SimpleHash(),
             markers: L.markerClusterGroup(),
             sidebar: undefined,
-            regions: {
-                promised: {},//referenced by id
-                drawn: SimpleHash(),//id -> [Leaflet-Item]
-                highlighted: {}//id -> leaflet-item (stored in drawn)
-            },
             items: {
                 shapes: {
                     promised: {},//referenced by id
@@ -68,17 +63,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 },
                 clusters: {
                     drawn: SimpleHash(),//id -> marker
-                }
-            },
-            relatives: {
-                shapes: {
-                    promised: {},//referenced by id
-                    drawn: SimpleHash(),//id -> [leaflet-item]
-                    highlighted: {}//id -> id (stored in drawn)
-                },
-                listview: {
-                    promised: SimpleHash(),//referenced by id
-                    drawn: SimpleHash()//referenced by id
                 }
             },
             loadingtasks: 0,
@@ -442,29 +426,15 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             delete state.markers;
             state.markers = L.markerClusterGroup();
             state.map.addLayer(state.markers);
-            state.regions.highlighted = {};
-            state.regions.promised = {};
             state.items.listview.drawn.clear();
             state.items.listview.promised.clear();
             state.items.listview.selectedRegionId = undefined;
             state.items.shapes.highlighted = {};
             state.items.shapes.promised = {};
-            state.relatives.listview.drawn.clear();
-            state.relatives.listview.promised.clear();
-            state.relatives.shapes.highlighted = {};
-            state.relatives.shapes.promised = {};
 
-            for (var i in state.regions.drawn.values()) {
-                state.map.removeLayer(state.regions.drawn.at(i));
-                state.regions.drawn.erase(i);
-            }
             for (var i in state.items.shapes.drawn.values()) {
                 state.map.removeLayer(state.items.shapes.drawn.at(i));
                 state.items.shapes.drawn.erase(i);
-            }
-            for (var i in state.relatives.shapes.drawn.values()) {
-                state.map.removeLayer(state.relatives.shapes.drawn.at(i));
-                state.relatives.shapes.drawn.erase(i);
             }
             for (var i in state.items.clusters.drawn.values()) {
                 state.map.removeLayer(state.items.clusters.drawn.at(i));
@@ -487,21 +457,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 }
             }
             state[shapeSrcType].shapes.highlighted = {};
-        }
-
-        function clearVisualizedItems() {
-            state.items.shapes.promised = {};
-            state.items.shapes.highlighted = {};
-            for (var i in state.items.shapes.drawn.values()) {
-                if (state.items.shapes.highlighted[i] === undefined) {
-                    state.map.removeLayer(state.items.shapes.drawn.at(i));
-                }
-            }
-            for (var i in state.items.clusters.drawn.values()) {
-                state.map.removeLayer(state.items.clusters.drawn.at(i));
-            }
-            state.items.clusters.drawn.clear();
-            state.items.shapes.drawn.clear();
         }
 
         function visualizeResultListItems() {
@@ -665,102 +620,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             }, defErrorCB);
         }
 
-        function regionLayersToFront() {
-            for (var i in state.regions.drawn.values()) {
-                state.regions.drawn.values()[i].bringToFront();
-            }
-        }
-
-        /*function updateMapRegions(regions) {
-         if ($('#load_region_boundaries').is(':checked')) {
-         state.regions.promised = {};
-         var availableMapRegions = {};
-         var fetchMapRegions = [];
-         for (var rid in regions) {
-         if (state.regions.drawn.count(rid)) {
-         availableMapRegions[rid] = state.regions.drawn.at(rid);
-         state.regions.drawn.erase(rid);
-         }
-         else {
-         fetchMapRegions.push(rid);
-         }
-         }
-         //remove unused regions from map
-         for (var rid in state.regions.drawn.values()) {
-         state.map.removeLayer(state.regions.drawn.at(rid));
-         state.regions.drawn.erase(rid);
-         }
-         //replace old state.regions.drawn with new one
-         state.regions.drawn.clear();
-         for (var i in availableMapRegions) {
-         state.regions.drawn.insert(i, availableMapRegions[i]);
-         }
-         //fetch missing shapes
-         if (fetchMapRegions.length) {
-         for (var i in fetchMapRegions) {
-         state.regions.promised[fetchMapRegions[i]] = fetchMapRegions[i];
-         }
-         startLoadingSpinner();
-         oscar.getShapes(fetchMapRegions,
-         function (shapes) {
-         endLoadingSpinner();
-         for (var shapeId in shapes) {
-         if (state.regions.promised[shapeId] !== undefined && !state.regions.drawn.count(shapeId)) {
-         delete state.regions.promised[shapeId];
-         var shape = shapes[shapeId];
-         var leafletItem = oscar.leafletItemFromShape(shape);
-         leafletItem.setStyle(myConfig.styles.shapes['regions']['normal']);
-         state.regions.drawn.insert(shapeId, leafletItem);
-         state.markers.addLayer(leafletItem);
-         }
-         }
-         state.map.addLayer(state.markers);
-         regionLayersToFront();
-         },
-         defErrorCB
-         );
-         }
-         else {
-         regionLayersToFront();
-         }
-         }
-         }*/
-
-        /*function displayRegionsItem() {
-         var cqr = state.cqr;
-         var rid = state.items.listview.selectedRegionId;
-         if (cqr === undefined || rid === undefined) {
-         return;
-         }
-         clearHighlightedShapes("items");
-         clearVisualizedItems();
-         state.items.listview.selectedRegionId = rid;
-         //don't fetch bbox of "world"
-         if (rid !== 0xFFFFFFFF) {
-         startLoadingSpinner();
-         oscar.getItem(rid, function (item) {
-         endLoadingSpinner();
-
-         state.map.fitBounds(item.bbox());
-         var mapRegion = state.regions.drawn.at(rid);
-         if (mapRegion !== undefined) {
-         for (var i in state.regions.highlighted) {
-         state.regions.highlighted[i].setStyle(myConfig.styles.shapes.regions.normal);
-         delete state.regions.highlighted[i];
-         }
-         state.regions.highlighted[rid] = mapRegion;
-         mapRegion.setStyle(myConfig.styles.shapes.regions.highlight);
-         }
-         }, defErrorCB);
-         }
-         else {
-         state.map.fitWorld();
-         }
-         $('#itemsList').empty();
-         state.items.listview.drawn.clear();
-         state.items.listview.promised.clear();
-         }*/
-
         function closePopups() {
             if ($(".leaflet-popup-close-button")[0] !== undefined) {
                 $(".leaflet-popup-close-button")[0].click();
@@ -769,7 +628,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
 
         function flatCqrTreeDataSource(cqr) {
             function getItems(regionChildrenInfo, context) {
-                //fetch the items
                 var regionChildrenApxItemsMap = {};
                 var childIds = [];
                 var parentRid = context.rid;
@@ -784,14 +642,14 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
 
                 oscar.getItems(childIds,
                     function (items) {
-                        var itemMap = {};
+                        var itemMap = {}, node, item, itemId;
 
                         // modify DAG
                         for (var i in items) {
-                            var item = items[i];
-                            var itemId = item.id();
+                            item = items[i];
+                            itemId = item.id();
                             itemMap[itemId] = item;
-                            var node = parentNode.addChild(itemId);
+                            node = parentNode.addChild(itemId);
                             node.count = regionChildrenApxItemsMap[itemId];
                             node.bbox = item.bbox();
                             node.name = item.name();
@@ -823,7 +681,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                                     marker.on("click", function (e) {
                                         closePopups();
                                         state.items.clusters.drawn.erase(e.target.rid);
-                                        state.markers.removeLayer(e.target);
+                                        removeMarker(e.target);
                                         state.regionHandler({
                                             rid: e.target.rid,
                                             draw: true,
@@ -850,7 +708,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                                         state.DAG.at(marker.rid).marker = marker;
                                     }
                                 }
-                                //state.map.addLayer(state.markers);
 
                             }, defErrorCB);
                         }
@@ -897,11 +754,16 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                             if (node.marker) {
                                 state.markers.removeLayer(node.marker);
                             } else {
-                                alert("Marker undefined! ID=" + i);
+                                for(var parent in node.parents){
+                                    if(!state.items.clusters.drawn.at(node.parents[parent].id)){
+                                        console.log("Undefined marker!"); // this shouldn't happen => displayed search results would get killed
+                                    }
+                                }
                             }
                             node.kill();
                         }
                         //clearListAndShapes("items");
+                        $('#itemsList').empty();
                         state.items.listview.drawn.clear();
                         state.items.shapes.drawn.clear();
                     }
@@ -973,7 +835,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 state.markers.eachLayer(function (marker) {
                     // first step: get all markers currently shown in the viewport
                     var bounds = state.map.getBounds();
-                    if (marker.rid && bounds.contains(marker.getLatLng())) {
+                    if (bounds.contains(marker.getLatLng()) && marker.rid) {
                         // second step: we iterate only "leaf"-markers, so there could be a merged cluster viewed -> check whether the
                         // marker has a cluster-parent for the current zoom-level
                         var parent = marker.__parent;
@@ -987,7 +849,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                         // third step: calculate the overlap of the bbox and the viewport. If it is bigger
                         // than the config-value -> load additional data
                         var node = state.DAG.at(marker.rid);
-                        var percent = percentOfOverlap(state.map, state.map.getBounds(), node.bbox);
+                        var percent = percentOfOverlap(state.map, node.bbox);
                         if (!(marker instanceof L.MarkerCluster) && percent >= myConfig.overlap) {
                             removeMarker(marker);
                             state.regionHandler({rid: marker.rid, draw: true, bbox: node.bbox});
@@ -1116,7 +978,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 visualizeDAG(state.DAG.at(0xFFFFFFFF));
             });
 
-            $('#close a').click(function(){
+            $('#close a').click(function () {
                 $('#tree').css("display", "none");
             });
 
