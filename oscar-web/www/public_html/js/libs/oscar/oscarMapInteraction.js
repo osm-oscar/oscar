@@ -418,6 +418,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
 
         function clearViews() {
             $('#itemsList').empty();
+            $('#tabs').empty();
             $('#itemsList_counter').empty();
             $('#relativesList').empty();
             $('#relativesList_counter').empty();
@@ -773,6 +774,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                         }
                         //clearListAndShapes("items");
                         $('#itemsList').empty();
+                        $('#tabs').empty();
                         state.items.listview.drawn.clear();
                         state.items.shapes.drawn.clear();
                     }
@@ -789,7 +791,8 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                             state.items.listview.promised.erase(itemId);
                         }
                     }
-
+                    $('#items_parent').tabs("refresh");
+                    
                     visualizeResultListItems();
 
                     if (state.items.listview.drawn.size() === 1) {
