@@ -272,26 +272,23 @@ sserialize::CellQueryResult OsmCompleter::cqrComplete(const std::string& query, 
 	return r;
 }
 
+sserialize::Static::spatial::GeoHierarchy::SubSet
+OsmCompleter::clusteredComplete(const std::string& query, const sserialize::spatial::GeoHierarchySubSetCreator & ghs, uint32_t minCq4SparseSubSet, bool treedCQR) {
+	sserialize::CellQueryResult r = cqrComplete(query, treedCQR);
+	
+	return ghs.subSet(r, r.cellCount() > minCq4SparseSubSet);
+}
+
 sserialize::Static::spatial::GeoHierarchy::SubSet OsmCompleter::clusteredComplete(const std::string& query, uint32_t minCq4SparseSubSet, bool treedCQR) {
 	sserialize::CellQueryResult r = cqrComplete(query, treedCQR);
 	const sserialize::Static::spatial::GeoHierarchy * gh = &store().geoHierarchy();
 	
-	sserialize::Static::spatial::GeoHierarchy::SubSet ghSubSet;
-	sserialize::TimeMeasurer tm;
-	tm.begin();
 	if (m_store.geoHierarchy().cellSize() >= MEMORY_BASED_SUBSET_CREATOR_MIN_CELL_COUNT) {
-		ghSubSet = m_ghs.subSet(r, r.cellCount() > minCq4SparseSubSet);
+		return m_ghs.subSet(r, r.cellCount() > minCq4SparseSubSet);
 	}
 	else {
-		ghSubSet = gh->subSet(r, false);
+		return gh->subSet(r, false);
 	}
-	tm.end();
-	std::cout << "SubSet creation took " << tm.elapsedUseconds() << " usecs" << std::endl;
-	
-
-	std::cout << "END: CLUSTERED COMPLETER" << std::endl;
-
-	return ghSubSet;
 }
 
 TagStore OsmCompleter::tagStore() const {

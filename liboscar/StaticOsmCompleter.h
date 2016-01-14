@@ -83,6 +83,7 @@ public:
 	Static::OsmItemSet simpleComplete(const std::string & query, uint32_t maxResultSetSize, uint32_t minStrLen, const sserialize::spatial::GeoRect & rect);
 	Static::OsmItemSetIterator partialComplete(const std::string& query, const sserialize::spatial::GeoRect & rect = sserialize::spatial::GeoRect());
 	sserialize::CellQueryResult cqrComplete(const std::string & query, bool treedCQR = false);
+	sserialize::Static::spatial::GeoHierarchy::SubSet clusteredComplete(const std::string& query, const sserialize::spatial::GeoHierarchySubSetCreator & ghs, uint32_t minCq4SparseSubSet, bool treedCQR = false);
 	sserialize::Static::spatial::GeoHierarchy::SubSet clusteredComplete(const std::string& query, uint32_t minCq4SparseSubSet, bool treedCQR = false);
 	Static::TagStore tagStore() const;
 };
