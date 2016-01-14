@@ -31,7 +31,7 @@ define(["jquery"], menu = {
     appendToSearchString: function (string) {
         var myRegexp = /:(.*)/;
         var match = myRegexp.exec(string);
-        $("#search_text").tokenfield('createToken', { value: string, label: match[1] });;
+        $("#search_text").tokenfield('createToken', { value: string, label: match[1] });
     },
 
     categories: {

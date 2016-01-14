@@ -36,13 +36,13 @@ requirejs.config({
         'sidebar': {deps: ['leaflet', 'jquery']},
         'mustacheLoader': {deps: ['jquery']},
         'slimbox': {deps: ['jquery']},
-        'switch': {deps: ['jquery']},
+        'switch': {deps: ['jquery']}
     },
     waitSeconds: 10
 });
 
-requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jqueryui", "leafletCluster", "spin", "sidebar", "mustacheLoader", "slimbox", "tools", "conf", "menu", "flickr", "manager", "switch", "tree", "tokenfield"],
-    function (oscar, L, jQuery, bootstrap, jbinary, mustache, jqueryui, leafletCluster, spinner, sidebar, mustacheLoader, slimbox, tools, config, menu, flickr, manager, switchButton, tree, tokenfield) {
+requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jqueryui", "leafletCluster", "spin", "sidebar", "mustacheLoader", "tools", "conf", "menu", "tokenfield", "switch"],
+    function (oscar, L, jQuery, bootstrap, jbinary, mustache, jqueryui, leafletCluster, spinner, sidebar, mustacheLoader, tools, config, menu, tokenfield, switchButton) {
         //main entry point
 
         var osmAttr = '&copy; <a target="_blank" href="http://www.openstreetmap.org">OpenStreetMap</a>';
@@ -63,7 +63,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                     selectedRegionId: undefined
                 },
                 clusters: {
-                    drawn: SimpleHash(),//id -> marker
+                    drawn: SimpleHash()//id -> marker
                 }
             },
             loadingtasks: 0,
@@ -659,13 +659,17 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
 
                         // download locations, if end of hierarchy is reached or the region counts less than maxFetchItems
                         if (!items.length || (parentCount < oscar.maxFetchItems)) {
-                            $("#left_menu_parent").css("display", "block");
-                            state.items.listview.selectedRegionId = context.rid;
-                            state.cqr.regionItemIds(state.items.listview.selectedRegionId,
-                                getItemIds,
-                                defErrorCB,
-                                0 // offset
-                            );
+                            if (!context.draw && cqr.ohPath().length && cqr.ohPath()[cqr.ohPath().length - 1] != context.rid) {
+                                
+                            } else {
+                                $("#left_menu_parent").css("display", "block");
+                                state.items.listview.selectedRegionId = context.rid;
+                                state.cqr.regionItemIds(state.items.listview.selectedRegionId,
+                                    getItemIds,
+                                    defErrorCB,
+                                    0 // offset
+                                );
+                            }
                         } else if (context.draw) {
                             cqr.getMaximumIndependetSet(parentRid, 0, function (regions) {
                                 state.items.clusters.drawn.erase(parentRid);
@@ -746,9 +750,9 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                     var isInitNecessary = $('#tabs')[0].children.length;
                     var tab = "<li><a href='#tab-" + regionId + "'>" + state.DAG.at(regionId).name + "</a></li>";
                     $('#tabs').append(tab);
-                    if(isInitNecessary == 0){
+                    if (isInitNecessary == 0) {
                         $('#items_parent').tabs();
-                    }else{
+                    } else {
                         $('#items_parent').tabs("refresh");
                     }
                     // manage items -> kill old items if there are too many of them and show clsuters again
@@ -764,8 +768,8 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                             if (node.marker) {
                                 state.markers.removeLayer(node.marker);
                             } else {
-                                for(var parent in node.parents){
-                                    if(!state.items.clusters.drawn.at(node.parents[parent].id)){
+                                for (var parent in node.parents) {
+                                    if (!state.items.clusters.drawn.at(node.parents[parent].id)) {
                                         console.log("Undefined marker!"); // this shouldn't happen => displayed search results would get killed
                                     }
                                 }
