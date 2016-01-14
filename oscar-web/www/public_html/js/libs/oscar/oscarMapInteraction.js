@@ -541,7 +541,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             }
         }
 
-        function appendItemToListView(item, shapeSrcType) {
+        function appendItemToListView(item, shapeSrcType, parentElement) {
             if (item === undefined) {
                 console.log("Undefined item displayed");
                 return;
@@ -554,7 +554,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
 
             var itemTemplateData = resultListTemplateDataFromItem(item, shapeSrcType);
             var rendered = $.Mustache.render('itemListEntryHtmlTemplate', itemTemplateData);
-            var inserted = $($(rendered).appendTo('#' + shapeSrcType + 'List'));
+            var inserted = $($(rendered).appendTo(parentElement));
             $('#' + shapeSrcType + 'NameLink' + itemId, inserted).click(
                 function () {
                     highlightShape(itemId, shapeSrcType);
@@ -732,6 +732,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
         }
 
         function getItemIds(regionId, itemIds) {
+
             for (var i in itemIds) {
                 var itemId = itemIds[i];
                 state.items.listview.promised.insert(itemId, itemId);
@@ -741,6 +742,14 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 function (items) {
                     var node;
                     state.items.clusters.drawn.erase(regionId);
+                    var isInitNecessary = $('#tabs')[0].children.length;
+                    var tab = "<li><a href='#tab-" + regionId + "'>" + state.DAG.at(regionId).name + "</a></li>";
+                    $('#tabs').append(tab);
+                    if(isInitNecessary == 0){
+                        $('#items_parent').tabs();
+                    }else{
+                        $('#items_parent').tabs("refresh");
+                    }
                     // manage items -> kill old items if there are too many of them and show clsuters again
                     if (state.items.listview.drawn.size() + items.length > myConfig.maxBufferedItems) {
                         for (var i in state.items.listview.drawn.values()) {
@@ -768,12 +777,15 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                         state.items.shapes.drawn.clear();
                     }
 
+                    var regionDiv = "<div id='tab-" + regionId + "'></div>";
+                    $('#itemsList').append(regionDiv);
+                    var parentElement = $('#tab-' + regionId);
                     for (var i in items) {
                         var item = items[i];
                         var itemId = item.id();
                         if (state.items.listview.promised.count(itemId)) {
                             state.DAG.insert(itemId, state.DAG.at(regionId).addChild(itemId));
-                            appendItemToListView(item, "items");
+                            appendItemToListView(item, "items", parentElement);
                             state.items.listview.promised.erase(itemId);
                         }
                     }
