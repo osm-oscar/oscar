@@ -27,7 +27,8 @@ requirejs.config({
         "switch": "switch-button/jquery.switchButton",
         "d3": "dagre-d3/d3.min",
         "dagre-d3": "dagre-d3/dagre-d3.min",
-        "tree": "tree/tree"
+        "tree": "tree/tree",
+        "tokenfield": "tokenfield/bootstrap-tokenfield.min"
     },
     shim: {
         'bootstrap': {deps: ['jquery']},
@@ -35,13 +36,13 @@ requirejs.config({
         'sidebar': {deps: ['leaflet', 'jquery']},
         'mustacheLoader': {deps: ['jquery']},
         'slimbox': {deps: ['jquery']},
-        'switch': {deps: ['jquery']}
+        'switch': {deps: ['jquery']},
     },
     waitSeconds: 10
 });
 
-requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jqueryui", "leafletCluster", "spin", "sidebar", "mustacheLoader", "slimbox", "tools", "conf", "menu", "flickr", "manager", "switch", "tree"],
-    function (oscar, L, jQuery, bootstrap, jbinary, mustache, jqueryui, leafletCluster, spinner, sidebar, mustacheLoader, slimbox, tools, config, menu, flickr, manager, switchButton, tree) {
+requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jqueryui", "leafletCluster", "spin", "sidebar", "mustacheLoader", "slimbox", "tools", "conf", "menu", "flickr", "manager", "switch", "tree", "tokenfield"],
+    function (oscar, L, jQuery, bootstrap, jbinary, mustache, jqueryui, leafletCluster, spinner, sidebar, mustacheLoader, slimbox, tools, config, menu, flickr, manager, switchButton, tree, tokenfield) {
         //main entry point
 
         var osmAttr = '&copy; <a target="_blank" href="http://www.openstreetmap.org">OpenStreetMap</a>';
@@ -419,7 +420,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
         function clearViews() {
             $('#itemsList').empty();
             $('#tabs').empty();
-            $('#itemsList_counter').empty();
             $('#relativesList').empty();
             $('#relativesList_counter').empty();
             $('#relativesList_itemId').empty();
@@ -792,7 +792,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                         }
                     }
                     $('#items_parent').tabs("refresh");
-                    
+
                     visualizeResultListItems();
 
                     if (state.items.listview.drawn.size() === 1) {
@@ -1019,6 +1019,8 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 }
             });
 
+            $('#search_text').tokenfield({minWidth: 250, delimiter: " "});
+            $($('#search_form')[0].children).css("width", "100%");
             // TODO: parent area example
             $('#show_item_relatives_checkbox').bind('change',
                 function () {
@@ -1129,7 +1131,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 e.preventDefault();
                 instantCompletion();
             });
-            $('#search_button').bind('click', instantCompletion);
 
             $(window).bind('popstate', function (e) {
                 queryFromSearchLocation();

@@ -29,8 +29,9 @@ define(["jquery"], menu = {
     },
 
     appendToSearchString: function (string) {
-        var c = $("#search_text");
-        c.val(c.val() + string);
+        var myRegexp = /:(.*)/;
+        var match = myRegexp.exec(string);
+        $("#search_text").tokenfield('createToken', { value: string, label: match[1] });;
     },
 
     categories: {

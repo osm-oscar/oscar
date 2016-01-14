@@ -22,6 +22,7 @@
           rel='stylesheet'/>
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet"/>
     <link rel="stylesheet" href="css/leaflet-sidebar.css"/>
+    <link rel="stylesheet" href="css/bootstrap-tokenfield.min.css"/>
 </head>
 
 <body>
@@ -57,11 +58,11 @@
                     <div class="sidebar-close"><i class="fa fa-caret-left"></i></div>
                 </h1>
                 <form>
-                    <input type="checkbox" name="searchModi" id="searchModi">
+                    <input type="checkbox" name="searchModi" id="searchModi" class="form-control">
                 </form>
                 <form class="form-inline pull-left" id="search_form">
-                    <input name="q" type="text" placeholder="Wo möchten Sie suchen?" class="form-control"
-                           id="search_text">
+                    <input name="q" type="text" placeholder="Wo möchten Sie suchen?" class="form-control" id="search_text">
+                    <input type="submit" value="Submit" style="display: none">
                 </form>
                 <div id="search_container">
                     <div id="categorieWrapper">
@@ -114,9 +115,6 @@
 
                 <div id="left_menu_parent" class="menu_parent">
                     <div id="items_parent">
-                        <h2>
-                            Search Results<span id="itemsList_counter"></span>
-                        </h2>
                         <ul id="tabs"></ul>
                         <div class="panel-group" id="itemsList" role="tablist">
                         </div>
