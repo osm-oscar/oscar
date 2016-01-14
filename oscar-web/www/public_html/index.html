@@ -172,6 +172,18 @@
                         </div>
                     </div>
                     <div class='form-group'>
+                        <div class="input-group" id='region_filter_group'>
+                            <span class="input-group-addon">Display</span>
+                            <select class='form-control' id="region_filter"/>
+                                <option value="named" selected="selected">named</option>
+                                <option value="admin_level">administrative</option>
+                                <option value="all">all</option>
+                                <option value="natural_landuse">natural/landuse</option>
+                            </select>
+                            <span class="input-group-addon">regions</span>
+                        </div>
+                    </div>
+                    <div class='form-group'>
                         <button type="button" class="btn btn-default" id="pathquery_selectbutton">Select path</button>
                         <span>
                             Radius:
@@ -1405,6 +1417,7 @@
                     
                     var ohf = (parseInt(jQuery('#ohf_spinner').val())/100.0);
                     var globalOht = jQuery('#oht_checkbox').is(':checked');
+                    var regionFilter = jQuery('#region_filter').val();
                     //ready for lift-off
                     var myQueryCounter = state.queries.lastSubmited + 0;
                     state.queries.lastSubmited += 1;
@@ -1417,7 +1430,7 @@
                     }
                     else {
                         callFunc = function(q, scb, ecb) {
-                          oscar.completeSimple(q, scb, ecb, ohf, globalOht);  
+                          oscar.completeSimple(q, scb, ecb, ohf, globalOht, regionFilter);  
                         };
                     }
                     //ignite loading feedback

@@ -3,6 +3,7 @@
 #include <cppcms/applications_pool.h>
 #include <iostream>
 #include <liboscar/StaticOsmCompleter.h>
+#include <sserialize/algorithm/hashspecializations.h>
 #include "types.h"
 
 /*
@@ -23,6 +24,65 @@ query: ?q=<query-string>&limit=num
 
 */
 
+bool initGhFilters(cppcms::json::value ghfilter, oscar_web::CompletionFileDataPtr dataPtr) {
+	if (ghfilter.is_null()) {
+		return true;
+	}
+	cppcms::json::array & filterArray = ghfilter.array();
+	std::unordered_map<std::string, sserialize::spatial::GeoHierarchySubSetCreator> & ghSubSetCreators = dataPtr->ghSubSetCreators;
+	for(const cppcms::json::value & v : filterArray) {
+		if (v.type() != cppcms::json::is_object) {
+			continue;
+		}
+		const cppcms::json::object & filterDef = v.object();
+		
+		std::string name = filterDef.at("name").str();
+		
+		const auto & store = dataPtr->completer->store();
+		
+		//keys
+		std::unordered_set<uint32_t> keys;
+		//key-values
+		std::unordered_set< std::pair<uint32_t, uint32_t> > kv;
+		
+		if (filterDef.count("k")) {
+			for(const cppcms::json::value & x : filterDef.at("k").array()) {
+				const std::string & key = x.str();
+				keys.insert( store.keyStringTable().find(key)) ;//don't care about npos
+			}
+		}
+		
+		if (filterDef.count("kv")) {
+			for(const cppcms::json::object::value_type & x : filterDef.at("kv").object()) {
+				const std::string & key = x.first;
+				const std::string & value = x.second.str();
+				kv.emplace(store.keyStringTable().find(key), store.valueStringTable().find(value));
+			}
+		}
+		
+		const auto & gh = store.geoHierarchy();
+		std::vector<bool> validRegions(store.geoHierarchy().regionSize(), false);
+		for(uint32_t regionId(0), regionIdEnd(gh.regionSize()); regionId < regionIdEnd; ++regionId) {
+			uint32_t storeId = gh.ghIdToStoreId(regionId);
+			auto item = store.at(storeId);
+			for(uint32_t i(0), s(item.size()); i < s; ++i) {
+				uint32_t keyId = item.keyId(i);
+				if (keys.count(keyId) || kv.count(std::pair<uint32_t, uint32_t>(keyId, item.valueId(i)))) {
+					validRegions.at(regionId) = true;
+				}
+			}
+		}
+		
+		ghSubSetCreators.emplace(name,
+			sserialize::spatial::GeoHierarchySubSetCreator(gh,
+				[&validRegions](uint32_t regionId) {
+					return validRegions.at(regionId);
+				}
+			)
+		);
+	}
+	return true;
+}
 
 int main(int argc, char **argv) {
 	cppcms::json::value dbfile;
@@ -34,7 +94,7 @@ int main(int argc, char **argv) {
 		std::cerr << "Failed to parse dbfile object." << std::endl;
 		return -1;
 	}
-
+	
 	oscar_web::CompletionFileDataPtr completionFileDataPtr(new oscar_web::CompletionFileData() );
 	oscar_web::CompletionFileData & data = *completionFileDataPtr;
 	try {
@@ -69,6 +129,14 @@ int main(int argc, char **argv) {
 	}
 	catch (const std::exception & e) {
 		std::cout << "Failed to initialize completer from " << data.path << ": " << e.what() << std::endl;
+		return -1;
+	}
+	
+	try {
+		initGhFilters(app.settings().find("ghfilters"), completionFileDataPtr);
+	}
+	catch (cppcms::json::bad_value_cast & e) {
+		std::cerr << "Failed to parse ghfilters object." << std::endl;
 		return -1;
 	}
 	

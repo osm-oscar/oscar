@@ -317,7 +317,7 @@ SimpleCellQueryResult : function(data, parent, sqId) {
 			if (regionId === undefined) {
 				regionId = 0xFFFFFFFF;
 			}
-			simpleCqrMaxIndependentChildren(this.d.query, successCB, errorCB, regionId, maxOverlap);
+			simpleCqrMaxIndependentChildren(this.d.query, successCB, errorCB, regionId, maxOverlap, this.d.regionFilter);
 		},
 		//returning an array in successCB with objects={id : int, apxitems : int}
 		//returns rootRegionChildrenInfo if regionId is undefined
@@ -337,7 +337,8 @@ SimpleCellQueryResult : function(data, parent, sqId) {
 						successCB(myPtr.d.regionInfo[regionId]);
 					},
 					errorCB,
-					regionId);
+					regionId,
+					this.d.regionFilter);
 			}
 		},
 		hasResults : function() { var tmp = this.d.regionInfo[0xFFFFFFFF]; return tmp !== undefined && tmp.length > 0;},
@@ -773,7 +774,7 @@ completeFull : function(query, successCB, errorCB) {
 			error: function(jqXHR, textStatus, errorThrown) {errorCB(textStatus, errorThrown);}
 	});
 },
-completeSimple : function(query, successCB, errorCB, ohf, globalOht) {
+completeSimple : function(query, successCB, errorCB, ohf, globalOht, regionFilter) {
 	var params = {};
 	params['q'] = query;
 	if (ohf !== undefined) {
@@ -784,6 +785,9 @@ completeSimple : function(query, successCB, errorCB, ohf, globalOht) {
 	}
 	else {
 		params['oht'] = 'relative';
+	}
+	if (regionFilter !== undefined) {
+		params['rf'] = regionFilter;
 	}
 	var qpath = this.completerBaseUrl + "/cqr/clustered/simple";
 	var myPtr = this;
@@ -798,6 +802,7 @@ completeSimple : function(query, successCB, errorCB, ohf, globalOht) {
 			success: function( raw ) {
 				var cqr = sserialize.simpleCqrFromRaw(raw);
 				cqr.query = params['q'];
+				cqr.regionFilter = params['rf'];
 				successCB(myPtr.SimpleCellQueryResult(cqr, myPtr, mySqId));
 			},
 			error: function(jqXHR, textStatus, errorThrown) {errorCB(textStatus, errorThrown);}
@@ -829,11 +834,14 @@ simpleCqrItems : function(query, successCB, errorCB, numItems, selectedRegion, r
 			error: function(jqXHR, textStatus, errorThrown) {errorCB(textStatus, errorThrown);}
 	});
 },
-simpleCqrChildren : function(query, successCB, errorCB, selectedRegion) {
+simpleCqrChildren : function(query, successCB, errorCB, selectedRegion, regionFilter) {
 	var params = {};
 	params['q'] = query;
 	if (selectedRegion !== undefined) {
 		params['r'] = selectedRegion;
+	}
+	if (regionFilter !== undefined) {
+		params['rf'] = regionFilter;
 	}
 	var qpath = this.completerBaseUrl + "/cqr/clustered/children";
 	jQuery.ajax({
@@ -858,7 +866,7 @@ simpleCqrChildren : function(query, successCB, errorCB, selectedRegion) {
 			error: function(jqXHR, textStatus, errorThrown) {errorCB(textStatus, errorThrown);}
 	});
 },
-simpleCqrMaxIndependentChildren : function(query, successCB, errorCB, selectedRegion, maxOverlap) {
+simpleCqrMaxIndependentChildren : function(query, successCB, errorCB, selectedRegion, maxOverlap, regionFilter) {
 	var params = {};
 	params['q'] = query;
 	if (selectedRegion !== undefined) {
@@ -866,6 +874,9 @@ simpleCqrMaxIndependentChildren : function(query, successCB, errorCB, selectedRe
 	}
 	if (maxOverlap !== undefined) {
 		params['o'] = maxOverlap;
+	}
+	if(regionFilter !== undefined) {
+		params['rf'] = regionFilter;
 	}
 	var qpath = this.completerBaseUrl + "/cqr/clustered/michildren";
 	jQuery.ajax({

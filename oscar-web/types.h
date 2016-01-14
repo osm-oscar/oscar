@@ -38,6 +38,7 @@ struct CompletionFileData {
 	//runtime data
 	OsmCompleter completer;
 	std::shared_ptr<std::ofstream> log;
+	std::unordered_map<std::string, sserialize::spatial::GeoHierarchySubSetCreator> ghSubSetCreators;
 };
 
 

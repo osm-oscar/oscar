@@ -21,5 +21,12 @@
 			"geohcompleter" : 0, //select the geo hierarchy completer
 			"geocompleter" : 0, //select geocompleter
 			"treedCQR" : true //Use treed cqr calculation instead of normal one
-		}
+		},
+	"ghfilters" :
+		[
+			{"name" : "admin_level", "k" : ["admin_level"], "kv" : {"key", "value"}}
+			{"name" : "all" "__COMMENT" : "implicit, dont't define this"}
+			{"name" : "natural_landuse", "k" : ["natural", "landuse"]}
+			{"name" : "named", "k" : ["name"]}
+		]
 }

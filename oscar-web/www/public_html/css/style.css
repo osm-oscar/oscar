@@ -181,6 +181,10 @@ body {
     width: fit-content;
 }
 
+#region_filter_group {
+    width: fit-content;
+}
+
 #itemload_accept_button_span {
     width : auto;
 }

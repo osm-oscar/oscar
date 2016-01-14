@@ -57,12 +57,14 @@ public:
 	/** return the region children for the query q:
 	  * q=<searchstring>
 	  * r=<regionid>
+	  * rf=<region filter>
 	  * Return:
 	  * array<(uint32_t, uint32_t)>: [(region children|region children maxitems)]
 	  */
 	void children();
 	/** return the maximum set of independet region children for the query q:
 	  * q=<searchstring>
+	  * rf=<region filter>
 	  * r=<regionid>
 	  * o=<maximum overlapp in percent>
 	  * Return:

@@ -53,11 +53,19 @@ void CQRCompleter::fullCQR() {
 	ttm.begin();
 
 	std::string cqs = request().get("q");
+	std::string regionFilter = request().get("rf");
 	std::string sst = request().get("sst");
 	bool ssonly = sserialize::toBool(request().get("ssonly"));
 	
 	std::cout << "query is: " << cqs << std::endl;
-	sserialize::Static::spatial::GeoHierarchy::SubSet subSet = m_dataPtr->completer->clusteredComplete(cqs, m_dataPtr->fullSubSetLimit, m_dataPtr->treedCQR);
+	
+	sserialize::Static::spatial::GeoHierarchy::SubSet subSet;
+	if (m_dataPtr->ghSubSetCreators.count(regionFilter)) {
+		subSet = m_dataPtr->completer->clusteredComplete(cqs, m_dataPtr->ghSubSetCreators.at(regionFilter), m_dataPtr->fullSubSetLimit, m_dataPtr->treedCQR);
+	}
+	else {
+		subSet = m_dataPtr->completer->clusteredComplete(cqs, m_dataPtr->fullSubSetLimit, m_dataPtr->treedCQR);
+	}
 	
 	std::cout << "cqr.size=" << subSet.cqr().cellCount() << std::endl;
 	
@@ -101,6 +109,7 @@ void CQRCompleter::simpleCQR() {
 	
 	//params
 	std::string cqs = request().get("q");
+	std::string regionFilter = request().get("rf");
 	uint32_t cqrSize = 0;
 	double ohf = 0.0;
 	bool relativeReferenceItemCount = false;
@@ -124,7 +133,14 @@ void CQRCompleter::simpleCQR() {
 		}
 	}
 	
-	sserialize::Static::spatial::GeoHierarchy::SubSet subSet = m_dataPtr->completer->clusteredComplete(cqs, m_dataPtr->fullSubSetLimit, m_dataPtr->treedCQR);
+	sserialize::Static::spatial::GeoHierarchy::SubSet subSet;
+	if (m_dataPtr->ghSubSetCreators.count(regionFilter)) {
+		subSet = m_dataPtr->completer->clusteredComplete(cqs, m_dataPtr->ghSubSetCreators.at(regionFilter), m_dataPtr->fullSubSetLimit, m_dataPtr->treedCQR);
+	}
+	else {
+		subSet = m_dataPtr->completer->clusteredComplete(cqs, m_dataPtr->fullSubSetLimit, m_dataPtr->treedCQR);
+	}
+	
 	sserialize::Static::spatial::GeoHierarchy::SubSet::NodePtr rPtr(subSet.root());
 	subSetRootPtr = rPtr;
 	cqrSize = subSet.cqr().cellCount(); //for stats
@@ -256,6 +272,7 @@ void CQRCompleter::children() {
 	
 	//params
 	std::string cqs = request().get("q");
+	std::string regionFilter = request().get("rf");
 	uint32_t regionId = sserialize::Static::spatial::GeoHierarchy::npos;
 	uint32_t cqrSize = 0;
 
@@ -270,7 +287,14 @@ void CQRCompleter::children() {
 		cqs = sserialize::toString("$region:", regionId, " (", cqs, ")");
 	}
 
-	sserialize::Static::spatial::GeoHierarchy::SubSet subSet = m_dataPtr->completer->clusteredComplete(cqs, m_dataPtr->fullSubSetLimit, m_dataPtr->treedCQR);
+	sserialize::Static::spatial::GeoHierarchy::SubSet subSet;
+	if (m_dataPtr->ghSubSetCreators.count(regionFilter)) {
+		subSet = m_dataPtr->completer->clusteredComplete(cqs, m_dataPtr->ghSubSetCreators.at(regionFilter), m_dataPtr->fullSubSetLimit, m_dataPtr->treedCQR);
+	}
+	else {
+		subSet = m_dataPtr->completer->clusteredComplete(cqs, m_dataPtr->fullSubSetLimit, m_dataPtr->treedCQR);
+	}
+	
 	sserialize::Static::spatial::GeoHierarchy::SubSet::NodePtr rPtr(regionId != sserialize::Static::spatial::GeoHierarchy::npos ? subSet.regionByStoreId(regionId) : subSet.root());
 	cqrSize = subSet.cqr().cellCount(); //for stats
 
@@ -303,6 +327,7 @@ void CQRCompleter::maximumIndependentChildren() {
 	
 	//params
 	std::string cqs = request().get("q");
+	std::string regionFilter = request().get("rf");
 	uint32_t regionId = sserialize::Static::spatial::GeoHierarchy::npos;
 	uint32_t cqrSize = 0;
 	uint32_t overlap = 0;
@@ -322,8 +347,15 @@ void CQRCompleter::maximumIndependentChildren() {
 	if (regionId != sserialize::Static::spatial::GeoHierarchy::npos) {
 		cqs = sserialize::toString("$region:", regionId, " (", cqs, ")");
 	}
-
-	sserialize::Static::spatial::GeoHierarchy::SubSet subSet = m_dataPtr->completer->clusteredComplete(cqs, m_dataPtr->fullSubSetLimit, m_dataPtr->treedCQR);
+	
+	sserialize::Static::spatial::GeoHierarchy::SubSet subSet;
+	if (m_dataPtr->ghSubSetCreators.count(regionFilter)) {
+		subSet = m_dataPtr->completer->clusteredComplete(cqs, m_dataPtr->ghSubSetCreators.at(regionFilter), m_dataPtr->fullSubSetLimit, m_dataPtr->treedCQR);
+	}
+	else {
+		subSet = m_dataPtr->completer->clusteredComplete(cqs, m_dataPtr->fullSubSetLimit, m_dataPtr->treedCQR);
+	}
+	
 	sserialize::Static::spatial::GeoHierarchy::SubSet::NodePtr rPtr(regionId != sserialize::Static::spatial::GeoHierarchy::npos ? subSet.regionByStoreId(regionId) : subSet.root());
 	cqrSize = subSet.cqr().cellCount(); //for stats
 
