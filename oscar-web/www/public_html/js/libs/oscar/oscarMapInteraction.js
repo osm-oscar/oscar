@@ -41,8 +41,8 @@ requirejs.config({
     waitSeconds: 10
 });
 
-requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jqueryui", "leafletCluster", "spin", "sidebar", "mustacheLoader", "tools", "conf", "menu", "tokenfield", "switch"],
-    function (oscar, L, jQuery, bootstrap, jbinary, mustache, jqueryui, leafletCluster, spinner, sidebar, mustacheLoader, tools, config, menu, tokenfield, switchButton) {
+requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jqueryui", "leafletCluster", "spin", "sidebar", "mustacheLoader", "tools", "conf", "menu", "tokenfield", "switch", "tree"],
+    function (oscar, L, jQuery, bootstrap, jbinary, mustache, jqueryui, leafletCluster, spinner, sidebar, mustacheLoader, tools, config, menu, tokenfield, switchButton, tree) {
         //main entry point
 
         var osmAttr = '&copy; <a target="_blank" href="http://www.openstreetmap.org">OpenStreetMap</a>';
@@ -376,6 +376,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             var itemPanelRootId = '#' + shapeSrcType + 'PanelRoot' + itemId;
             if (myConfig.functionality.shapes.highlightListItemOnClick[shapeSrcType]) {
                 leafletItem.on('click', function () {
+                    state.sidebar.open("search");
                     $('#' + shapeSrcType + "List").find('.panel-collapse').each(
                         function () {
                             if ($(this).hasClass('in')) {
@@ -891,12 +892,12 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 return;
             }
 
-            if ($('#searchModi').is(":checked")) {
+            if ($('#searchModi input').is(":checked")) {
                 //TODO: wrong placement of markers if clsutering is aktive. Cause: region midpoint is outside of search rectangle
                 addSingleQueryStatementToQuery("$geo:" + state.map.getBounds().getSouthWest().lng + "," + state.map.getBounds().getSouthWest().lat + "," + state.map.getBounds().getNorthEast().lng + "," + state.map.getBounds().getNorthEast().lat);
             }
 
-            $('#categoryToggle').click();
+            $('#categoryToggle input').click();
             state.sidebar.open("search");
             $("#flickr").hide("slide", {direction: "right"}, myConfig.styles.slide.speed);
 
@@ -981,19 +982,19 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 }
             });
 
-            $('#advancedToggle input').button().click(function () {
+            $('#advancedToggle a').click(function () {
                 if ($(this).attr('mod') == 'hide') {
                     $('#advancedSearch').hide(800);
                     $(this).attr('mod', 'show');
-                    $(this).attr('value', 'Show advanced Search');
+                    $(this).text('Show advanced search');
                 } else {
                     $('#advancedSearch').show(800);
                     $(this).attr('mod', 'hide');
-                    $(this).attr('value', 'Hide advanced Search');
+                    $(this).text('Hide advanced search');
                 }
             });
 
-            $('#showDag input').button().click(function () {
+            $('#graph').click(function () {
                 visualizeDAG(state.DAG.at(0xFFFFFFFF));
             });
 
@@ -1001,7 +1002,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 $('#tree').css("display", "none");
             });
 
-            $("#searchModi").switchButton({
+            $("#searchModi input").switchButton({
                 on_label: 'Local',
                 off_label: 'Global'
             });

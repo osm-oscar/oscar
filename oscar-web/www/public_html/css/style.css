@@ -20,7 +20,8 @@ body {
 
 #search_form {
     padding-top: 5px;
-    width: 95%;
+    width: 90%;
+    float: left;
 }
 
 #search_container {
@@ -274,13 +275,13 @@ body {
 }
 
 #advancedToggle{
-    width: 50%;
-    height: 40px;
-    float: left;
+    margin-top: 3px;
+    float: right;
 }
 
 #searchModi{
     margin-top: 5px;
+    float:left;
 }
 
 #tree{
@@ -338,4 +339,10 @@ text {
 
 #actions{
     margin-bottom: 20px;
+}
+
+#graph{
+    margin-top: 10px;
+    font-size: 1.5em;
+    float: right;
 }

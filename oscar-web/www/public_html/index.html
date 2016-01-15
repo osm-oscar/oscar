@@ -57,22 +57,24 @@
                 <h1 class="sidebar-header">Search
                     <div class="sidebar-close"><i class="fa fa-caret-left"></i></div>
                 </h1>
-                <form>
-                    <input type="checkbox" name="searchModi" id="searchModi" class="form-control">
-                </form>
-                <form class="form-inline pull-left" id="search_form">
-                    <input name="q" type="text" placeholder="Wo möchten Sie suchen?" class="form-control" id="search_text">
-                    <input type="submit" value="Submit" style="display: none">
-                </form>
+                <div>
+                    <form id="searchModi">
+                        <input type="checkbox" name="searchModi" class="form-control">
+                    </form>
+                    <span id="advancedToggle" mod="hide"><a href="#">Show advanced search</a></span>
+                </div>
+                <div>
+                    <form class="form-inline pull-left" id="search_form">
+                        <input name="q" type="text" placeholder="Wo möchten Sie suchen?" class="form-control"
+                               id="search_text">
+                        <input type="submit" value="Submit" style="display: none">
+                    </form>
+                    <a href="#" id="graph" class="fa fa-bar-chart"></a>
+                </div>
                 <div id="search_container">
                     <div id="categorieWrapper">
                         <div id="actions">
-                            <div id="advancedToggle" mod="hide"><input type="submit" mod="show"
-                                                                       value="Show advanced search">
-                            </div>
                             <div id="categoryToggle" mod="hide"><input type="submit" mod="hide" value="Hide categories">
-                            </div>
-                            <div id="showDag"><input type="submit" value="Show Tree">
                             </div>
                         </div>
                         <div style="clear:both;"></div>
