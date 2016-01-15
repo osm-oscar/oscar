@@ -1032,7 +1032,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 }
             });
 
-            $('#search_text').tokenfield({minWidth: 250});
+            $('#search_text').tokenfield({minWidth: 250, delimiter: "|"});
             $($('#search_form')[0].children).css("width", "100%");
             // TODO: parent area example
             $('#show_item_relatives_checkbox').bind('change',
