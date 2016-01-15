@@ -346,3 +346,7 @@ text {
     font-size: 1.5em;
     float: right;
 }
+
+#showCategories{
+    float: left;
+}

@@ -969,15 +969,24 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
         }
 
         $(document).ready(function () {
-            /*$.each($('input'), function(key, value){
-                $(value).focus(function(){
-                    $('#categories').show(800);
-                    $('#subCategories').show(800);
-                });
-            });*/
-            $("#search_form").click(function(){
+            $("#search_form").click(function () {
                 $('#categories').show(800);
                 $('#subCategories').show(800);
+            });
+
+            $("#showCategories a").click(function () {
+                if ($(this).attr('mod') == 'hide') {
+                    $('#categories').show(800);
+                    $('#subCategories').show(800);
+                    $(this).attr('mod', 'show');
+                    $(this).text("Hide categories");
+                } else {
+                    $('#categories').hide(800);
+                    $('#subCategories').hide(800);
+                    $(this).attr('mod', 'hide');
+                    $(this).text("Show categories");
+
+                }
             });
 
             $('#advancedToggle a').click(function () {
