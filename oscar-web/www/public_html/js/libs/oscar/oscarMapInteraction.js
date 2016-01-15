@@ -128,8 +128,9 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
 
         // init the map and sidebar
         state.map = L.map('map', {
-            zoomControl: false
+            zoomControl: true
         }).setView([48.74568, 9.1047], 17);
+        state.map.zoomControl.setPosition('topright');
         state.sidebar = L.control.sidebar('sidebar').addTo(map);
         L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: osmAttr}).addTo(state.map);
 
