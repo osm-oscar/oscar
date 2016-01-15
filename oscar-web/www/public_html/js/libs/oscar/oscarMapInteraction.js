@@ -897,7 +897,8 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 addSingleQueryStatementToQuery("$geo:" + state.map.getBounds().getSouthWest().lng + "," + state.map.getBounds().getSouthWest().lat + "," + state.map.getBounds().getNorthEast().lng + "," + state.map.getBounds().getNorthEast().lat);
             }
 
-            $('#categoryToggle input').click();
+            $('#categories').hide(800);
+            $('#subCategories').hide(800);
             state.sidebar.open("search");
             $("#flickr").hide("slide", {direction: "right"}, myConfig.styles.slide.speed);
 
@@ -968,18 +969,15 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
         }
 
         $(document).ready(function () {
-            $('#categoryToggle input').button().click(function () {
-                if ($(this).attr('mod') == 'hide') {
-                    $('#categories').hide(800);
-                    $('#subCategories').hide(800);
-                    $(this).attr('mod', 'show');
-                    $(this).attr('value', 'Show categories');
-                } else {
+            /*$.each($('input'), function(key, value){
+                $(value).focus(function(){
                     $('#categories').show(800);
                     $('#subCategories').show(800);
-                    $(this).attr('mod', 'hide');
-                    $(this).attr('value', 'Hide categories');
-                }
+                });
+            });*/
+            $("#search_form").click(function(){
+                $('#categories').show(800);
+                $('#subCategories').show(800);
             });
 
             $('#advancedToggle a').click(function () {
