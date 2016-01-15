@@ -28,7 +28,7 @@ requirejs.config({
         "d3": "dagre-d3/d3.min",
         "dagre-d3": "dagre-d3/dagre-d3.min",
         "tree": "tree/tree",
-        "tokenfield": "tokenfield/bootstrap-tokenfield.min"
+        "tokenfield": "tokenfield/bootstrap-tokenfield"
     },
     shim: {
         'bootstrap': {deps: ['jquery']},
@@ -660,7 +660,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                         // download locations, if end of hierarchy is reached or the region counts less than maxFetchItems
                         if (!items.length || (parentCount < oscar.maxFetchItems)) {
                             if (!context.draw && cqr.ohPath().length && cqr.ohPath()[cqr.ohPath().length - 1] != context.rid) {
-                                
+
                             } else {
                                 $("#left_menu_parent").css("display", "block");
                                 state.items.listview.selectedRegionId = context.rid;
@@ -1023,7 +1023,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 }
             });
 
-            $('#search_text').tokenfield({minWidth: 250, delimiter: " "});
+            $('#search_text').tokenfield({minWidth: 250});
             $($('#search_form')[0].children).css("width", "100%");
             // TODO: parent area example
             $('#show_item_relatives_checkbox').bind('change',
