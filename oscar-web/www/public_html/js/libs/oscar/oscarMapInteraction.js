@@ -21,7 +21,7 @@ requirejs.config({
         "slimbox": "slimbox/js/slimbox2",
         "tools": "tools/tools",
         "conf": "config/config.min",
-        "menu": "menu/menu.min",
+        "menu": "menu/menu",
         "flickr": "flickr/flickr.min",
         "manager": "connection/manager.min",
         "switch": "switch-button/jquery.switchButton.min",
@@ -749,14 +749,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 function (items) {
                     var node;
                     state.items.clusters.drawn.erase(regionId);
-                    var isInitNecessary = $('#tabs')[0].children.length;
-                    var tab = "<li><a href='#tab-" + regionId + "'>" + state.DAG.at(regionId).name + "</a></li>";
-                    $('#tabs').append(tab);
-                    if (isInitNecessary == 0) {
-                        $('#items_parent').tabs();
-                    } else {
-                        $('#items_parent').tabs("refresh");
-                    }
+
                     // manage items -> kill old items if there are too many of them and show clsuters again
                     if (state.items.listview.drawn.size() + items.length > myConfig.maxBufferedItems) {
                         for (var i in state.items.listview.drawn.values()) {
@@ -783,6 +776,15 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                         $('#tabs').empty();
                         state.items.listview.drawn.clear();
                         state.items.shapes.drawn.clear();
+                    }
+
+                    var isInitNecessary = $('#tabs')[0].children.length;
+                    var tab = "<li><a href='#tab-" + regionId + "'>" + state.DAG.at(regionId).name + "</a></li>";
+                    $('#tabs').append(tab);
+                    if (isInitNecessary == 0) {
+                        $('#items_parent').tabs();
+                    } else {
+                        $('#items_parent').tabs("refresh");
                     }
 
                     var regionDiv = "<div id='tab-" + regionId + "'></div>";

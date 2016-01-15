@@ -31,7 +31,7 @@ define(["jquery"], menu = {
     appendToSearchString: function (string) {
         var myRegexp = /:(.*)/;
         var match = myRegexp.exec(string);
-        $("#search_text").tokenfield('createToken', { value: string, label: match[1] });
+        $("#search_text").tokenfield('createToken', {value: string, label: match[1]});
     },
 
     categories: {
@@ -58,6 +58,7 @@ define(["jquery"], menu = {
             img: "home",
             subcategories: {
                 restaurant: {value: "restaurant", desc: "Restaurant"},
+                hotel: {key: "tourism", value: "hotel", desc: "Hotel"},
                 cafe: {value: "cafe", desc: "Café"},
                 pharmacy: {value: "pharmacy", desc: "Pharmacy"},
                 hospital: {value: "hospital", desc: "Hospital"},
