@@ -41,8 +41,8 @@ requirejs.config({
     waitSeconds: 10
 });
 
-requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jqueryui", "leafletCluster", "spin", "sidebar", "mustacheLoader", "tools", "conf", "menu", "tokenfield", "switch", "tree"],
-    function (oscar, L, jQuery, bootstrap, jbinary, mustache, jqueryui, leafletCluster, spinner, sidebar, mustacheLoader, tools, config, menu, tokenfield, switchButton, tree) {
+requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jqueryui", "leafletCluster", "spin", "sidebar", "mustacheLoader", "tools", "conf", "menu", "tokenfield", "switch", "tree", "flickr"],
+    function (oscar, L, jQuery, bootstrap, jbinary, mustache, jqueryui, leafletCluster, spinner, sidebar, mustacheLoader, tools, config, menu, tokenfield, switchButton, tree, flickr) {
         //main entry point
 
         var osmAttr = '&copy; <a target="_blank" href="http://www.openstreetmap.org">OpenStreetMap</a>';
@@ -872,7 +872,12 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                         // third step: calculate the overlap of the bbox and the viewport. If it is bigger
                         // than the config-value -> load additional data
                         var node = state.DAG.at(marker.rid);
-                        var percent = percentOfOverlap(state.map, node.bbox);
+                        var viewport = state.map.getBounds();
+                        var midpointX = (state.map.project(viewport.getNorthEast()).x - state.map.project(viewport.getSouthWest()).x) / 2;
+                        var midpointY = (state.map.project(viewport.getNorthEast()).y - state.map.project(viewport.getSouthWest()).y) / 2;
+                        var gauss = gaussian(1, midpointX, midpointY, 500000, 500000);
+                        var pos = state.map.project(marker.getLatLng());
+                        var percent = percentOfOverlap(state.map, node.bbox) * gauss(pos.x, pos.y);
                         if (!(marker instanceof L.MarkerCluster) && percent >= myConfig.overlap) {
                             removeMarker(marker);
                             state.regionHandler({rid: marker.rid, draw: true, bbox: node.bbox});

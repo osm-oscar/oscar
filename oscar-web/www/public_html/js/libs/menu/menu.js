@@ -76,7 +76,10 @@ define(["jquery"], menu = {
             img: "shopping-cart",
             subcategories: {
                 eat: {value: "supermarket", desc: "Supermarket"},
+                bakery: {value :"bakery", desc: "Bakery"},
+                mall: {value :"mall", desc: "Mall"},
                 clothes: {value: "clothes", desc: "Clothes"},
+                shoes: {value: "shoes", desc: "Shoes"},
                 kiosk: {value: "kiosk", desc: "Kiosk"},
                 butcher: {value: "butcher", desc: "Butcher"}
             }
@@ -97,6 +100,8 @@ define(["jquery"], menu = {
             desc: "Leisure",
             img: "futbol-o",
             subcategories: {
+                dance: {value: "dance", desc: "Dance"},
+                playground: {value: "playground", desc: "Playground"},
                 park: {value: "park", desc: "Park"},
                 pitch: {value: "pitch", desc: "Pitch"},
                 water: {value: "swimming_pool", desc: "Water"}
