@@ -24,9 +24,15 @@
 		},
 	"ghfilters" :
 		[
-			{"name" : "admin_level", "k" : ["admin_level"], "kv" : {"key", "value"}}
-			{"name" : "all" "__COMMENT" : "implicit, dont't define this"}
-			{"name" : "natural_landuse", "k" : ["natural", "landuse"]}
+			{"name" : "admin_level", "k" : ["admin_level"], "kv" : {"key" : "value"}},
+			{"name" : "all" "__COMMENT" : "implicit, dont't define this"},
+			{
+				"name" : "natural_landuse",
+				"k" : ["natural", "landuse"],
+				"kv" : {
+					"admin_level" : ["1", "2", "3", "4", "5", "6"]
+				}
+			},
 			{"name" : "named", "k" : ["name"]}
 		]
 }

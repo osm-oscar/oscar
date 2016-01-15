@@ -55,8 +55,16 @@ bool initGhFilters(cppcms::json::value ghfilter, oscar_web::CompletionFileDataPt
 		if (filterDef.count("kv")) {
 			for(const cppcms::json::object::value_type & x : filterDef.at("kv").object()) {
 				const std::string & key = x.first;
-				const std::string & value = x.second.str();
-				kv.emplace(store.keyStringTable().find(key), store.valueStringTable().find(value));
+				if (x.second.type() == cppcms::json::is_string) {
+					const std::string & value = x.second.str();
+					kv.emplace(store.keyStringTable().find(key), store.valueStringTable().find(value));
+				}
+				else if (x.second.type() == cppcms::json::is_array) {
+					uint32_t keyId = store.keyStringTable().find(key);
+					for(const cppcms::json::value & y : x.second.array()) {
+						kv.emplace(keyId, store.valueStringTable().find(y.str()));
+					}
+				}
 			}
 		}
 		
