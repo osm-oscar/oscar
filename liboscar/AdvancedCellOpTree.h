@@ -65,17 +65,19 @@ public:
 		std::string::const_iterator end;
 	};
 public:
+	Tokenizer();
 	Tokenizer(std::string::const_iterator begin, std::string::const_iterator end); 
 	Tokenizer(const State & state);
 	Token next();
 private:
-	static bool isSeperator(char c) const;
+	static bool isSeperator(char c);
 private:
 	State m_state;
 };
 
 class Parser {
 public:
+	Parser();
 	Node * parse(const std::string & str);
 private:
 	Token peek();
@@ -124,7 +126,7 @@ private:
 template<typename T_CQR_TYPE>
 T_CQR_TYPE
 AdvancedCellOpTree::calc() {
-	typdef T_CQR_TYPE CQRType;
+	typedef T_CQR_TYPE CQRType;
 	if (m_root) {
 		Calc<CQRType> calculator( m_ctc );
 		return calculator.calc( m_root );
@@ -221,7 +223,7 @@ AdvancedCellOpTree::Calc<T_CQR_TYPE>::calcString(AdvancedCellOpTree::Node* node)
 template<typename T_CQR_TYPE>
 T_CQR_TYPE
 AdvancedCellOpTree::Calc<T_CQR_TYPE>::calcBinaryOp(AdvancedCellOpTree::Node* node) {
-	SSERIALIZE_CHEAP_ASSERT_EQUAL(q, node->value.size());
+	SSERIALIZE_CHEAP_ASSERT_EQUAL((std::string::size_type)1, node->value.size());
 	switch (node->value.front()) {
 	case '+':
 		return calc(node->children.front()) + calc(node->children.back());
@@ -229,7 +231,7 @@ AdvancedCellOpTree::Calc<T_CQR_TYPE>::calcBinaryOp(AdvancedCellOpTree::Node* nod
 	case ' ':
 		return calc(node->children.front()) / calc(node->children.back());
 	case '-':
-		return calc(node->children.front()) / calc(node->children.back());
+		return calc(node->children.front()) - calc(node->children.back());
 	case '^':
 		return calc(node->children.front()) ^ calc(node->children.back());
 	default:
@@ -240,7 +242,7 @@ AdvancedCellOpTree::Calc<T_CQR_TYPE>::calcBinaryOp(AdvancedCellOpTree::Node* nod
 template<typename T_CQR_TYPE>
 T_CQR_TYPE
 AdvancedCellOpTree::Calc<T_CQR_TYPE>::calcUnaryOp(AdvancedCellOpTree::Node* node) {
-	SSERIALIZE_CHEAP_ASSERT_EQUAL(q, node->value.size());
+	SSERIALIZE_CHEAP_ASSERT_EQUAL((std::string::size_type)1, node->value.size());
 	switch (node->value.front()) {
 	case '%':
 		return calc(node->children.front()).allToFull();

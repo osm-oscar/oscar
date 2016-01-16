@@ -5,6 +5,8 @@ namespace detail {
 namespace AdvancedCellOpTree {
 namespace parser {
 
+Tokenizer::Tokenizer() {}
+
 Tokenizer::Tokenizer(const Tokenizer::State& state) :
 m_state(state)
 {}
@@ -14,7 +16,7 @@ Tokenizer::Tokenizer(std::string::const_iterator begin, std::string::const_itera
 	m_state.end = end;
 }
 
-bool Tokenizer::isSeperator(char c) const {
+bool Tokenizer::isSeperator(char c) {
 	return (c == ' ' || c == '\t' || //white space
 			c == '(' || c == ')' || //braces open new queries
 			c == '+' || c == '-' || c == '/' || c == '%' || c == '^'); //operators
@@ -27,7 +29,7 @@ Token Tokenizer::next() {
 	while (m_state.it != m_state.end) {
 		switch (*m_state.it) {
 		case '%':
-			t = Token::UNARY_OP;
+			t.type = Token::UNARY_OP;
 			t.value += *m_state.it;
 			++m_state.it;
 			return t;
@@ -35,16 +37,17 @@ Token Tokenizer::next() {
 		case '-':
 		case '/':
 		case '^':
-			t = Token::BINARY_OP;
+			t.type = Token::BINARY_OP;
 			t.value += *m_state.it;
 			++m_state.it;
 			return t;
 		case ' ': //ignore whitespace
 		case '\t':
+			++m_state.it;
 			break;
 		case '(':
 		case ')':
-			t = *m_state.it;
+			t.type = *m_state.it;
 			t.value += *m_state.it;
 			++m_state.it;
 			return t;
@@ -102,7 +105,7 @@ Token Tokenizer::next() {
 						break;
 					}
 					else {
-						t.value += *m_state.it;
+						t.value += c;
 						++m_state.it;
 					}
 				}
@@ -123,8 +126,10 @@ bool Parser::pop() {
 	if (Token::ENDOFFILE != m_lastToken.type) {
 		m_lastToken.type = -1;
 	}
+	return true;
 }
 
+//dont turn return type to reference or const reference since this function may be called while tehre ist still a reference on the return value
 Token Parser::peek() {
 	if (-1 == m_lastToken.type) {
 		m_lastToken = m_tokenizer.next();
@@ -134,94 +139,140 @@ Token Parser::peek() {
 
 
 bool Parser::eat(Token::Type t) {
-	if (t != peek()) {
+	if (t != peek().type) {
 		return false;
 	}
 	pop();
 	return true;
 }
 
+//(((())) ggh)
+//Q ++ Q
 detail::AdvancedCellOpTree::Node* Parser::parseQ() {
 	Node * n = 0;
 	for(;;) {
 		Token t = peek();
+		Node * curTokenNode = 0;
 		switch (t.type) {
-		case '(': //opens a new 
+		case '(': //opens a new query
+		{
 			pop();
-			Node * n = parseQ();
-			eat(')');
+			curTokenNode = parseQ();
+			eat((Token::Type)')');
+			break;
+		}
+		case ')': //leave scope, caller removes closing brace
 			return n;
-		case ')': //superficial closing brace, skip
-			pop();
 			break;
-		case Token::UNARY_OP: //after that comes another query
-			{
-				pop();
-				assert(!n);
-				n = new Node();
-				n->type = Node::UNARY_OP;
-				n->value = t.value;
-				Node * cn = parseQ();
-				assert(cn);
-				n->children.push_back(cn);
-				return n;
-			}
+		case Token::UNARY_OP:
+		{
+			pop();
+			Node * unaryOpNode = new Node();
+			unaryOpNode->type = Node::UNARY_OP;
+			unaryOpNode->value = t.value;
+			curTokenNode = unaryOpNode;
+			break;
+		}
 		case Token::BINARY_OP:
-			{
-				pop();
-				//we need to have one child already
-				assert(n && n->type != Node::BINARY_OP && n->type != Node::UNARY_OP);
-				{
-					Node * opNode = new Node();
-					opNode->type = Node::BINARY_OP;
-					opNode->value = t.value;
-					opNode->children.push_back(n);
-					n = opNode;
-				}
-				//get the other child:
-				Node * cn = parseQ();
-				assert(cn);
-				n->children.push_back(cn);
-				return n;
-			}
-		case Token::CELL:
-			assert(!n);
+		{
 			pop();
-			return new Node(Node::CELL, t.value);
-		case Token::REGION:
-			pop();
-			assert(!n);
-			return new Node(Node::REGION, t.value);
-		case Token::GEO_PATH:
-			pop();
-			assert(!n);
-			return new Node(Node::PATH, t.value);
-		case Token::GEO_RECT:
-			pop();
-			assert(!n);
-			return new Node(Node::RECT, t.value);
-		case Token::STRING:
-			pop();
-			if (n) { //this is a intersection
-				Node * opNode = new Node(Node::BINARY_OP, ' ');
-				Node * cn = new Node(Node::STRING, t.value);
+			 //we have a valid child
+			if (n && !(n->type == Node::BINARY_OP && n->children.size() < 2) && !(n->type == Node::UNARY_OP && n->children.size() < 1)) {
+				Node * opNode = new Node();
+				opNode->type = Node::BINARY_OP;
+				opNode->value = t.value;
 				opNode->children.push_back(n);
-				opNode->children.push_back(cn);
-				n = opNode;
+				n = 0;
+				curTokenNode = opNode;
 			}
-			else {
-				n = new Node(Node::STRING, t.value);
-			}
+			//else: no valid child, skip this op
+			continue;
+		}
+		case Token::CELL:
+		{
+			assert(!n);
+			pop();
+			curTokenNode = new Node(Node::CELL, t.value);
 			break;
+		}
+		case Token::REGION:
+		{
+			pop();
+			assert(!n);
+			curTokenNode = new Node(Node::REGION, t.value);
+			break;
+		}
+		case Token::GEO_PATH:
+		{
+			pop();
+			assert(!n);
+			curTokenNode = new Node(Node::PATH, t.value);
+			break;
+		}
+		case Token::GEO_RECT:
+		{
+			pop();
+			assert(!n);
+			curTokenNode = new Node(Node::RECT, t.value);
+			break;
+		}
+		case Token::STRING:
+		{
+			pop();
+			curTokenNode = new Node(Node::STRING, t.value);
+			break;
+		}
 		case Token::ENDOFFILE:
 		default:
 			return n;
 		};
+		if (n) {
+			if (n->type == Node::BINARY_OP && n->children.size() < 2) {
+				n->children.push_back(curTokenNode);
+			}
+			else if (n->type == Node::UNARY_OP && n->children.size() < 1) {
+				n->children.push_back(curTokenNode);
+			}
+			else {//implicit intersection
+				Node * opNode = new Node(Node::BINARY_OP, " ");
+				opNode->children.push_back(n);
+				opNode->children.push_back(curTokenNode);
+				n = opNode;
+			}
+		}
+		else {
+			n = curTokenNode;
+		}
 	}
 }
 
+Parser::Parser() {
+	m_prevToken.type = -1;
+	m_lastToken.type = -1;
+}
+
 detail::AdvancedCellOpTree::Node* Parser::parse(const std::string & str) {
-	m_str = str;
+	m_str.clear();
+	//sanizize string, add as many openeing braces at the beginning as neccarray or as manny closing braces at the end
+	{
+		std::string::size_type obCount = 0;
+		std::string::size_type cbCount = 0;
+		for(char c : str) {
+			if (c == '(') {
+				++obCount;
+			}
+			else if (c == ')') {
+				++cbCount;
+			}
+		}
+		for(;obCount < cbCount; ++obCount) {
+			m_str += '(';
+		}
+		m_str += str;
+		for(;cbCount < obCount; ++cbCount) {
+			m_str += ')';
+		}
+	}
 	m_tokenizer  = Tokenizer(m_str.begin(), m_str.end());
 	m_lastToken.type = -1;
 	m_prevToken.type = -1;
