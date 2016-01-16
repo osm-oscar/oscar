@@ -56,6 +56,7 @@ struct Token {
 	int type;
 	std::string value;
 	Token() : type(INVALID_TOKEN) {}
+	Token(int type) : type(type) {}
 };
 
 class Tokenizer {
@@ -84,6 +85,7 @@ private:
 	bool eat(liboscar::detail::AdvancedCellOpTree::parser::Token::Type t);
 	bool pop();
 private:
+	Node* parseSingleQ();
 	Node* parseQ();
 private:
 	std::string m_str;

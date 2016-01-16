@@ -25,6 +25,9 @@ bool Tokenizer::isSeperator(char c) {
 
 //TODO:use ragel to parse?
 Token Tokenizer::next() {
+	if (m_state.it == m_state.end) {
+		return Token(Token::ENDOFFILE);
+	}
 	Token t;
 	while (m_state.it != m_state.end) {
 		switch (*m_state.it) {
@@ -146,6 +149,54 @@ bool Parser::eat(Token::Type t) {
 	return true;
 }
 
+//parses a Single query like STRING, REGION, CELL, GEO_RECT, GEO_PATH
+//calls parseQ() on opening a new SCOPE
+detail::AdvancedCellOpTree::Node* Parser::parseSingleQ() {
+	Token t = peek();
+	switch (t.type) {
+	case '(': //opens a new query
+	{
+		pop();
+		Node * tmp = parseQ();
+		eat((Token::Type)')');
+		return tmp;
+	}
+	case Token::CELL:
+	{
+		pop();
+		return new Node(Node::CELL, t.value);
+	}
+	case Token::REGION:
+	{
+		pop();
+		return new Node(Node::REGION, t.value);
+		break;
+	}
+	case Token::GEO_PATH:
+	{
+		pop();
+		return new Node(Node::PATH, t.value);
+		break;
+	}
+	case Token::GEO_RECT:
+	{
+		pop();
+		return new Node(Node::RECT, t.value);
+		break;
+	}
+	case Token::STRING:
+	{
+		pop();
+		return new Node(Node::STRING, t.value);
+		break;
+	}
+	case Token::ENDOFFILE:
+	default: //hand back to caller, somethings wrong
+		return 0;
+	};
+}
+
+
 //(((())) ggh)
 //Q ++ Q
 detail::AdvancedCellOpTree::Node* Parser::parseQ() {
@@ -154,14 +205,14 @@ detail::AdvancedCellOpTree::Node* Parser::parseQ() {
 		Token t = peek();
 		Node * curTokenNode = 0;
 		switch (t.type) {
-		case '(': //opens a new query
-		{
-			pop();
-			curTokenNode = parseQ();
-			eat((Token::Type)')');
-			break;
-		}
 		case ')': //leave scope, caller removes closing brace
+			//check if there's an unfinished operation, if there is ditch it
+			if (n && n->type == Node::BINARY_OP && n->children.size() == 1) {
+				Node* tmp = n;
+				n = tmp->children.front();
+				tmp->children.clear();
+				delete tmp;
+			}
 			return n;
 			break;
 		case Token::UNARY_OP:
@@ -170,67 +221,46 @@ detail::AdvancedCellOpTree::Node* Parser::parseQ() {
 			Node * unaryOpNode = new Node();
 			unaryOpNode->type = Node::UNARY_OP;
 			unaryOpNode->value = t.value;
-			curTokenNode = unaryOpNode;
+			Node* cn = parseSingleQ();
+			if (cn) {
+				unaryOpNode->children.push_back(cn);
+				curTokenNode = unaryOpNode;
+			}
+			else { //something went wrong, skip this op
+				continue;
+			}
 			break;
 		}
 		case Token::BINARY_OP:
 		{
 			pop();
-			 //we have a valid child
-			if (n && !(n->type == Node::BINARY_OP && n->children.size() < 2) && !(n->type == Node::UNARY_OP && n->children.size() < 1)) {
+			 //we need to have a valid child, otherwise this operation is bogus (i.e. Q ++ Q)
+			if (n && !(n->type == Node::BINARY_OP && n->children.size() < 2)) {
 				Node * opNode = new Node();
 				opNode->type = Node::BINARY_OP;
 				opNode->value = t.value;
 				opNode->children.push_back(n);
 				n = 0;
+				//get the other child in the next round
 				curTokenNode = opNode;
 			}
-			//else: no valid child, skip this op
-			continue;
-		}
-		case Token::CELL:
-		{
-			assert(!n);
-			pop();
-			curTokenNode = new Node(Node::CELL, t.value);
-			break;
-		}
-		case Token::REGION:
-		{
-			pop();
-			assert(!n);
-			curTokenNode = new Node(Node::REGION, t.value);
-			break;
-		}
-		case Token::GEO_PATH:
-		{
-			pop();
-			assert(!n);
-			curTokenNode = new Node(Node::PATH, t.value);
-			break;
-		}
-		case Token::GEO_RECT:
-		{
-			pop();
-			assert(!n);
-			curTokenNode = new Node(Node::RECT, t.value);
-			break;
-		}
-		case Token::STRING:
-		{
-			pop();
-			curTokenNode = new Node(Node::STRING, t.value);
+			else { //skip this op
+				continue;
+			}
 			break;
 		}
 		case Token::ENDOFFILE:
-		default:
 			return n;
+			break;
+		default:
+			curTokenNode = parseSingleQ();
+			break;
 		};
+		if (!curTokenNode) {
+			continue;
+		}
 		if (n) {
 			if (n->type == Node::BINARY_OP && n->children.size() < 2) {
-				n->children.push_back(curTokenNode);
-			}
-			else if (n->type == Node::UNARY_OP && n->children.size() < 1) {
 				n->children.push_back(curTokenNode);
 			}
 			else {//implicit intersection
@@ -244,6 +274,9 @@ detail::AdvancedCellOpTree::Node* Parser::parseQ() {
 			n = curTokenNode;
 		}
 	}
+	//this should never happen
+	SSERIALIZE_CHEAP_ASSERT(false);
+	return n;
 }
 
 Parser::Parser() {
