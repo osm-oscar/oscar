@@ -140,7 +140,6 @@ Token Parser::peek() {
 	return m_lastToken;
 }
 
-
 bool Parser::eat(Token::Type t) {
 	if (t != peek().type) {
 		return false;
@@ -286,24 +285,29 @@ Parser::Parser() {
 
 detail::AdvancedCellOpTree::Node* Parser::parse(const std::string & str) {
 	m_str.clear();
-	//sanizize string, add as many openeing braces at the beginning as neccarray or as manny closing braces at the end
+	//sanitize string, add as many openeing braces at the beginning as neccarray or as manny closing braces at the end
 	{
-		std::string::size_type obCount = 0;
-		std::string::size_type cbCount = 0;
+		int obCount = 0;
 		for(char c : str) {
 			if (c == '(') {
 				++obCount;
+				m_str += c;
 			}
 			else if (c == ')') {
-				++cbCount;
+				if (obCount > 0) {
+					m_str += c;
+					--obCount;
+				}
+				//else not enough opening braces, so skip this one
+			}
+			else {
+				m_str += c;
 			}
 		}
-		for(;obCount < cbCount; ++obCount) {
-			m_str += '(';
-		}
-		m_str += str;
-		for(;cbCount < obCount; ++cbCount) {
+		//add remaining closing braces to get a well-formed query
+		for(; obCount > 0;) {
 			m_str += ')';
+			--obCount;
 		}
 	}
 	m_tokenizer  = Tokenizer(m_str.begin(), m_str.end());
