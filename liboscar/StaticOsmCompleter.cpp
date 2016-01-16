@@ -8,6 +8,7 @@
 #include "SetOpTreePrivateGeo.h"
 #include "tagcompleters.h"
 #include "CellOpTree.h"
+#include "AdvancedCellOpTree.h"
 #include <sserialize/search/StringCompleterPrivateMulti.h>
 #include <sserialize/search/StringCompleterPrivateGeoHierarchyUnclustered.h>
 #include <sserialize/Static/StringCompleter.h>
@@ -255,14 +256,16 @@ sserialize::CellQueryResult OsmCompleter::cqrComplete(const std::string& query, 
 	sserialize::TimeMeasurer tm;
 	tm.begin();
 	if (!treedCQR) {
-		CellOpTree<sserialize::CellQueryResult> opTree(cmp, true);
+// 		CellOpTree<sserialize::CellQueryResult> opTree(cmp, true);
+		AdvancedCellOpTree opTree(cmp);
 		opTree.parse(query);
-		r = opTree.calc();
+		r = opTree.calc<sserialize::CellQueryResult>();
 	}
 	else {
-		CellOpTree<sserialize::TreedCellQueryResult> opTree(cmp, true);
+// 		CellOpTree<sserialize::TreedCellQueryResult> opTree(cmp, true);
+		AdvancedCellOpTree opTree(cmp);
 		opTree.parse(query);
-		r = opTree.calc().toCQR();
+		r = opTree.calc<sserialize::TreedCellQueryResult>().toCQR();
 	}
 	tm.end();
 	std::cout << "Completion of " << query << " took " << tm.elapsedUseconds() << " usecs" << std::endl;
