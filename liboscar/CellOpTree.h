@@ -35,8 +35,7 @@ struct AlwaysFalseStringHinter: sserialize::OpTree::detail::SetOpsOpTreeParser::
   *   STRING a region+items query
   *   !STRING a items query
   *   #STRING a region query
-  * STRING = as defined by StringCompleter::normalize
-  *
+  *   STRING = as defined by StringCompleter::normalize
   */
 
 template<typename T_CQR_TYPE = sserialize::CellQueryResult>
