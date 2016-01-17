@@ -255,15 +255,16 @@ sserialize::CellQueryResult OsmCompleter::cqrComplete(const std::string& query, 
 	
 	sserialize::TimeMeasurer tm;
 	tm.begin();
+	CQRDilator cqrd(store().cellCenterOfMass(), store().cellGraph());
 	if (!treedCQR) {
 // 		CellOpTree<sserialize::CellQueryResult> opTree(cmp, true);
-		AdvancedCellOpTree opTree(cmp);
+		AdvancedCellOpTree opTree(cmp, cqrd);
 		opTree.parse(query);
 		r = opTree.calc<sserialize::CellQueryResult>();
 	}
 	else {
 // 		CellOpTree<sserialize::TreedCellQueryResult> opTree(cmp, true);
-		AdvancedCellOpTree opTree(cmp);
+		AdvancedCellOpTree opTree(cmp, cqrd);
 		opTree.parse(query);
 		r = opTree.calc<sserialize::TreedCellQueryResult>().toCQR();
 	}
