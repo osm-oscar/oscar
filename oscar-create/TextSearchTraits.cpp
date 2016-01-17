@@ -34,7 +34,7 @@ FilterState::SingleFilter::SingleFilter(const TextSearchConfig::SearchCapabiliti
 	
 	for(uint32_t i = 0, s = keyStringTable.size(); i < s; ++i) {
 		std::string t = keyStringTable.at(i);
-		if (std::regex_match(t, keysToStoreRegex)) {
+		if (std::regex_match(t, keysToStoreRegex, std::regex_constants::match_any)) {
 			this->keys.insert(i);
 		}
 	}

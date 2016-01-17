@@ -237,7 +237,6 @@ private:
 	enum {PRT_OK, PRT_HELP};
 public:
 	std::string inFileName;
-	//no the todo queue
 	std::vector<WorkItem> workItems;
 private:
 	int parseSingleArg(int argc, char ** argv, int & i, int & printNumResults, std::string & completionString);

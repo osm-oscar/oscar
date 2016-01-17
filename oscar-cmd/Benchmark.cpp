@@ -8,6 +8,8 @@
 #include <limits>
 #include <algorithm>
 #include <fstream>
+#include <unistd.h>
+#include <fcntl.h>
 
 namespace oscarcmd {
 

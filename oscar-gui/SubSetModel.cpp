@@ -67,7 +67,7 @@ QVariant SubSetModel::data(const QModelIndex & index, int role) const {
 			DataNode * node = (DataNode*) index.internalPointer();
 			DataNode * parent = node->parent;
 			
-			if (!parent|| row < 0 || parent->childrenSize() <= static_cast<unsigned>(row)) {
+			if (!parent || row < 0 || parent->childrenSize() <= static_cast<unsigned>(row)) {
 				return QVariant("ERROR_INVALID");
 			}
 			return QVariant( displayText(node) );
