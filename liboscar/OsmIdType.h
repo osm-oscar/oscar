@@ -19,6 +19,7 @@ public:
 	inline int64_t & raw() { return m_d; }
 	inline int64_t id() const { return m_d >> 2; }
 	inline void id(int64_t v) { m_d = (v << 2) | type(); }
+	///type as defined by liboscar::OsmItemTypes
 	inline uint8_t type() const { return (m_d & 0x3); }
 	inline void type(liboscar::OsmItemTypes v) { m_d = (id() << 2) | v; }
 	inline bool operator==(const OsmIdType & other) const { return m_d == other.m_d; }
