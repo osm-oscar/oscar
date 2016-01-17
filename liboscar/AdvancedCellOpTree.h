@@ -5,12 +5,14 @@
 #include <sserialize/spatial/CellQueryResult.h>
 #include <sserialize/Static/CellTextCompleter.h>
 #include <sserialize/strings/stringfunctions.h>
+#include "CQRDilator.h"
 
 /** The AdvancedCellOpTree supports the following query language:
   *
   *
-  * Q := UNARY_OP Q | Q BINARY_OP Q | (Q) | Q Q | GEO_RECT | GEO_PATH | REGION | CELL
+  * Q := UNARY_OP Q | DILATION_OP Q | Q BINARY_OP Q | (Q) | Q Q | GEO_RECT | GEO_PATH | REGION | CELL
   * UNARY_OP := %
+  * DILATION_OP := %NUMBER%
   * BINARY_OP := - | + | / | ^
   * GEO_RECT := $geo[]
   * GEO_PATH := $path[]
@@ -22,7 +24,7 @@ namespace detail {
 namespace AdvancedCellOpTree {
 
 struct Node {
-	enum Type : int { UNARY_OP, BINARY_OP, RECT, PATH, REGION, CELL, STRING};
+	enum Type : int { DILATION_OP, UNARY_OP, BINARY_OP, RECT, PATH, REGION, CELL, STRING};
 	int type;
 	std::string value;
 	std::vector<Node*> children;
@@ -45,6 +47,7 @@ struct Token {
 		INVALID_TOKEN = 258,
 		INVALID_CHAR,
 		UNARY_OP,
+		DILATION_OP,
 		BINARY_OP,
 		GEO_RECT,
 		GEO_PATH,
@@ -100,7 +103,7 @@ class AdvancedCellOpTree {
 public:
 	typedef detail::AdvancedCellOpTree::Node Node;
 public:
-	AdvancedCellOpTree(const sserialize::Static::CellTextCompleter & ctc);
+	AdvancedCellOpTree(const sserialize::Static::CellTextCompleter & ctc, const CQRDilator & cqrd);
 	~AdvancedCellOpTree();
 	void parse(const std::string & str);
 	template<typename T_CQR_TYPE>
@@ -109,8 +112,12 @@ private:
 	template<typename T_CQR_TYPE>
 	struct Calc {
 		typedef T_CQR_TYPE CQRType;
-		Calc(sserialize::Static::CellTextCompleter & ctc) : m_ctc(ctc) {}
+		Calc(sserialize::Static::CellTextCompleter & ctc, const CQRDilator & cqrd) :
+		m_ctc(ctc),
+		m_cqrd(cqrd)
+		{}
 		sserialize::Static::CellTextCompleter & m_ctc;
+		const CQRDilator & m_cqrd;
 		CQRType calc(Node * node);
 		CQRType calcString(Node * node);
 		CQRType calcRect(Node * node);
@@ -119,9 +126,11 @@ private:
 		CQRType calcCell(Node * node);
 		CQRType calcUnaryOp(Node * node);
 		CQRType calcBinaryOp(Node * node);
+		CQRType calcDilationOp(Node * node);
 	};
 private:
 	sserialize::Static::CellTextCompleter m_ctc;
+	CQRDilator m_cqrd;
 	Node * m_root;
 };
 
@@ -130,7 +139,7 @@ T_CQR_TYPE
 AdvancedCellOpTree::calc() {
 	typedef T_CQR_TYPE CQRType;
 	if (m_root) {
-		Calc<CQRType> calculator( m_ctc );
+		Calc<CQRType> calculator(m_ctc, m_cqrd);
 		return calculator.calc( m_root );
 	}
 	else {
@@ -253,6 +262,14 @@ AdvancedCellOpTree::Calc<T_CQR_TYPE>::calcUnaryOp(AdvancedCellOpTree::Node* node
 	}
 }
 
+template<>
+sserialize::CellQueryResult
+AdvancedCellOpTree::Calc<sserialize::CellQueryResult>::calcDilationOp(AdvancedCellOpTree::Node* node);
+
+template<>
+sserialize::TreedCellQueryResult
+AdvancedCellOpTree::Calc<sserialize::TreedCellQueryResult>::calcDilationOp(AdvancedCellOpTree::Node* node);
+
 template<typename T_CQR_TYPE>
 T_CQR_TYPE
 AdvancedCellOpTree::Calc<T_CQR_TYPE>::calc(AdvancedCellOpTree::Node* node) {
@@ -272,6 +289,8 @@ AdvancedCellOpTree::Calc<T_CQR_TYPE>::calc(AdvancedCellOpTree::Node* node) {
 		return calcPath(node);
 	case Node::UNARY_OP:
 		return calcUnaryOp(node);
+	case Node::DILATION_OP:
+		return calcDilationOp(node);
 	case Node::BINARY_OP:
 		return calcBinaryOp(node);
 	default:

@@ -32,10 +32,25 @@ Token Tokenizer::next() {
 	while (m_state.it != m_state.end) {
 		switch (*m_state.it) {
 		case '%':
+		{
 			t.type = Token::UNARY_OP;
 			t.value += *m_state.it;
 			++m_state.it;
+			//check if theres a number afterwards, because then this is dilation operation
+			if (m_state.it != m_state.end && ('0' <= *m_state.it && '9' >= *m_state.it)) {
+				for(auto it(m_state.it); it != m_state.end; ++it) {
+					if ('0' > *it || '9' < *it) {
+						if (*it == '%') {
+							t.type = Token::DILATION_OP;
+							t.value.insert(t.value.end(), m_state.it, it);
+							m_state.it = it;
+						}
+						break;
+					}
+				}
+			}
 			return t;
+		}
 		case '+':
 		case '-':
 		case '/':
@@ -55,66 +70,66 @@ Token Tokenizer::next() {
 			++m_state.it;
 			return t;
 		case '$': //parse a region/cell/geo/path query
-			{
-				//read until the first occurence of :
-				std::string tmp;
-				for(++m_state.it; m_state.it != m_state.end;) {
-					if (*m_state.it == ':') {
-						++m_state.it;
-						break;
-					}
-					else {
-						tmp += *m_state.it;
-						++m_state.it;
-					}
+		{
+			//read until the first occurence of :
+			std::string tmp;
+			for(++m_state.it; m_state.it != m_state.end;) {
+				if (*m_state.it == ':') {
+					++m_state.it;
+					break;
 				}
-				if (tmp == "region") {
-					t.type = Token::REGION;
+				else {
+					tmp += *m_state.it;
+					++m_state.it;
 				}
-				else if (tmp == "cell") {
-					t.type = Token::CELL;
+			}
+			if (tmp == "region") {
+				t.type = Token::REGION;
+			}
+			else if (tmp == "cell") {
+				t.type = Token::CELL;
+			}
+			else if (tmp == "geo") {
+				t.type = Token::GEO_RECT;
+			}
+			else if (tmp == "path") {
+				t.type = Token::GEO_PATH;
+			}
+			for(; m_state.it != m_state.end;) {
+				if (isSeperator(*m_state.it)) {
+					break;
 				}
-				else if (tmp == "geo") {
-					t.type = Token::GEO_RECT;
+				else {
+					t.value += *m_state.it;
+					++m_state.it;
 				}
-				else if (tmp == "path") {
-					t.type = Token::GEO_PATH;
-				}
-				for(; m_state.it != m_state.end;) {
-					if (isSeperator(*m_state.it)) {
-						break;
-					}
-					else {
+			}
+			return t;
+			break;
+		}
+		default: //read as normal string
+		{
+			t.type = Token::STRING;
+			for(; m_state.it != m_state.end;) {
+				char c = *m_state.it;
+				if (c == '\\') { //next char is escaped
+					++m_state.it;
+					if (m_state.it != m_state.end) {
 						t.value += *m_state.it;
 						++m_state.it;
 					}
 				}
-				return t;
-			}
-			break;
-		default: //read as normal string
-			{
-				t.type = Token::STRING;
-				for(; m_state.it != m_state.end;) {
-					char c = *m_state.it;
-					if (c == '\\') { //next char is escaped
-						++m_state.it;
-						if (m_state.it != m_state.end) {
-							t.value += *m_state.it;
-							++m_state.it;
-						}
-					}
-					else if (isSeperator(c)) {
-						break;
-					}
-					else {
-						t.value += c;
-						++m_state.it;
-					}
+				else if (isSeperator(c)) {
+					break;
 				}
-				return t;
+				else {
+					t.value += c;
+					++m_state.it;
+				}
 			}
+			return t;
 			break;
+		}
 		};
 	}
 	return t;
@@ -215,10 +230,11 @@ detail::AdvancedCellOpTree::Node* Parser::parseQ() {
 			return n;
 			break;
 		case Token::UNARY_OP:
+		case Token::DILATION_OP:
 		{
 			pop();
 			Node * unaryOpNode = new Node();
-			unaryOpNode->type = Node::UNARY_OP;
+			unaryOpNode->type = (t.type == Token::UNARY_OP ? Node::UNARY_OP : Node::DILATION_OP);
 			unaryOpNode->value = t.value;
 			Node* cn = parseSingleQ();
 			if (cn) {
@@ -319,8 +335,9 @@ detail::AdvancedCellOpTree::Node* Parser::parse(const std::string & str) {
 
 }}}//end namespace detail::AdvancedCellOpTree::parser
 
-AdvancedCellOpTree::AdvancedCellOpTree(const sserialize::Static::CellTextCompleter& ctc) :
+AdvancedCellOpTree::AdvancedCellOpTree(const sserialize::Static::CellTextCompleter & ctc, const CQRDilator & cqrd) :
 m_ctc(ctc),
+m_cqrd(cqrd),
 m_root(0)
 {}
 
@@ -331,8 +348,28 @@ AdvancedCellOpTree::~AdvancedCellOpTree() {
 }
 
 void AdvancedCellOpTree::parse(const std::string& str) {
+	if (m_root) {
+		delete m_root;
+		m_root = 0;
+	}
 	detail::AdvancedCellOpTree::parser::Parser p;
 	m_root = p.parse(str);
+}
+
+template<>
+sserialize::CellQueryResult
+AdvancedCellOpTree::Calc<sserialize::CellQueryResult>::calcDilationOp(AdvancedCellOpTree::Node* node) {
+	double diameter = ::atof(node->value.c_str());
+	sserialize::CellQueryResult cqr( calc(node->children.front()) );
+	return sserialize::CellQueryResult( m_cqrd.dilate(cqr, diameter), cqr.geoHierarchy(), cqr.idxStore() ) + cqr;
+}
+
+template<>
+sserialize::TreedCellQueryResult
+AdvancedCellOpTree::Calc<sserialize::TreedCellQueryResult>::calcDilationOp(AdvancedCellOpTree::Node* node) {
+	double diameter = ::atof(node->value.c_str());
+	sserialize::TreedCellQueryResult cqr( calc(node->children.front()) );
+	return sserialize::TreedCellQueryResult( m_cqrd.dilate(cqr.toCQR(), diameter), cqr.geoHierarchy(), cqr.idxStore() ) + cqr;
 }
 
 
