@@ -10,7 +10,7 @@
 #include <sserialize/Static/TracGraph.h>
 #include <liboscar/constants.h>
 #include <liboscar/OsmIdType.h>
-#define LIBOSCAR_OSM_KEY_VALUE_OBJECT_STORE_VERSION 6
+#define LIBOSCAR_OSM_KEY_VALUE_OBJECT_STORE_VERSION 7
 
 namespace liboscar {
 namespace Static {
@@ -22,6 +22,7 @@ namespace Static {
   * v4: add support for OsmIdType (currently implemented)
   * v5: add support for region triangulation
   * v6: add support for region arrangement cell graph
+  * v7: add support for cellCenterOfMass
   * v?: add support for relations by storing their data in GeoShape
   *
   * {
@@ -32,8 +33,10 @@ namespace Static {
   *   GeoHierarchy        sserialize::Static::GeoHierarchy
   *   RegionArrangement   sserialize::Static::spatial::TriangulationGeoHierarchyArrangement
   *   RACellGraph         sserialize::Static::spatial::TRACGraph;
+  *   CellCenterOfMass    sserialize::Static::Array<sserialize::Static::spatial::GeoPoint>
   * }
   *
+  *Payload (v8)
   *Payload (v3)
   *--------------------------------------------
   *osmId|score|Shape   |cells
@@ -98,6 +101,7 @@ public:
 	const sserialize::Static::spatial::GeoHierarchy & geoHierarchy() const;
 	const sserialize::Static::spatial::TriangulationGeoHierarchyArrangement & regionArrangement() const;
 	const sserialize::Static::spatial::TracGraph & cellGraph() const;
+	const sserialize::Static::Array<sserialize::Static::spatial::GeoPoint> & cellCenterOfMass() const;
 	sserialize::UByteArrayAdapter::OffsetType getSizeInBytes() const;
 	
 	const_iterator begin() const;
@@ -217,6 +221,7 @@ private:
 	sserialize::Static::spatial::GeoHierarchy m_gh; //storeId is the remapped id, not the internalId
 	sserialize::Static::spatial::TriangulationGeoHierarchyArrangement m_ra;
 	sserialize::Static::spatial::TracGraph m_cg;
+	sserialize::Static::Array<sserialize::Static::spatial::GeoPoint> m_ccm;
 	uint32_t m_size;
 public:
 	OsmKeyValueObjectStorePrivate(const sserialize::UByteArrayAdapter & data);
@@ -231,6 +236,8 @@ public:
 	inline const sserialize::Static::spatial::GeoHierarchy & geoHierarchy() const { return m_gh; }
 	inline const sserialize::Static::spatial::TriangulationGeoHierarchyArrangement & regionArrangement() const { return m_ra; }
 	inline const sserialize::Static::spatial::TracGraph & cellGraph() const { return m_cg; }
+	inline const sserialize::Static::Array<sserialize::Static::spatial::GeoPoint> & cellCenterOfMass() const { m_ccm; }
+	
 	sserialize::Static::KeyValueObjectStoreItem kvItem(uint32_t pos) const;
 	
 	sserialize::ItemIndex complete(const sserialize::spatial::GeoRect & rect) const;

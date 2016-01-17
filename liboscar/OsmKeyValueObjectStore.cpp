@@ -57,6 +57,10 @@ const sserialize::Static::spatial::TracGraph& OsmKeyValueObjectStore::cellGraph(
 	return priv()->cellGraph();
 }
 
+const sserialize::Static::Array< sserialize::Static::spatial::GeoPoint >& OsmKeyValueObjectStore::cellCenterOfMass() const {
+	return priv()->cellCenterOfMass();
+}
+
 sserialize::UByteArrayAdapter::OffsetType OsmKeyValueObjectStore::getSizeInBytes() const {
 	return priv()->getSizeInBytes();
 }
@@ -321,7 +325,8 @@ m_idToInternalId(data+(1+m_payload.getSizeInBytes())),
 m_kv(data+(1+m_payload.getSizeInBytes()+m_idToInternalId.getSizeInBytes())),
 m_gh(data+(1+m_payload.getSizeInBytes()+m_idToInternalId.getSizeInBytes()+m_kv.getSizeInBytes())),
 m_ra(data+(1+m_payload.getSizeInBytes()+m_idToInternalId.getSizeInBytes()+m_kv.getSizeInBytes()+m_gh.getSizeInBytes())),
-m_cg(data+(1+m_payload.getSizeInBytes()+m_idToInternalId.getSizeInBytes()+m_kv.getSizeInBytes()+m_gh.getSizeInBytes()+m_ra.getSizeInBytes()))
+m_cg(data+(1+m_payload.getSizeInBytes()+m_idToInternalId.getSizeInBytes()+m_kv.getSizeInBytes()+m_gh.getSizeInBytes()+m_ra.getSizeInBytes())),
+m_ccm(data+(1+m_payload.getSizeInBytes()+m_idToInternalId.getSizeInBytes()+m_kv.getSizeInBytes()+m_gh.getSizeInBytes()+m_ra.getSizeInBytes()+m_cg.getSizeInBytes()))
 {
 	SSERIALIZE_VERSION_MISSMATCH_CHECK(LIBOSCAR_OSM_KEY_VALUE_OBJECT_STORE_VERSION, data.at(0), "OsmKeyValueObjectStore")
 	if (m_payload.size() != m_kv.size())
@@ -337,6 +342,9 @@ m_cg(data+(1+m_payload.getSizeInBytes()+m_idToInternalId.getSizeInBytes()+m_kv.g
 	if (m_ra.cellCount() != m_cg.size()) {
 		throw sserialize::CorruptDataException("OsmKeyValueObjectStore: m_ra.cellCount() != m_cg.size()");
 	}
+	if (m_ccm.size() != m_cg.size()) {
+		throw sserialize::CorruptDataException("OsmKeyValueObjectStore: m_ccm.size() != m_cg.size()");
+	}
 	m_size = m_payload.size();
 }
 
@@ -347,7 +355,9 @@ OsmKeyValueObjectStorePrivate::~OsmKeyValueObjectStorePrivate() {}
 uint32_t OsmKeyValueObjectStorePrivate::size() const { return m_size; }
 
 sserialize::UByteArrayAdapter::OffsetType OsmKeyValueObjectStorePrivate::getSizeInBytes() const {
-	return 1 + m_payload.getSizeInBytes() + m_idToInternalId.getSizeInBytes() + m_kv.getSizeInBytes() + m_gh.getSizeInBytes() + m_ra.getSizeInBytes();
+	return 1 + m_payload.getSizeInBytes() + m_idToInternalId.getSizeInBytes() +
+			m_kv.getSizeInBytes() + m_gh.getSizeInBytes() +
+			m_ra.getSizeInBytes() + m_cg.getSizeInBytes() + m_ccm.getSizeInBytes();
 }
 
 sserialize::Static::KeyValueObjectStoreItem OsmKeyValueObjectStorePrivate::kvItem(uint32_t pos) const {
