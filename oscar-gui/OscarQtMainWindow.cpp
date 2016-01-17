@@ -258,21 +258,21 @@ void OscarQtMainWindow::selectedTextSearchTypeChanged(int index) {
 	int ts = m_selectedTextSearchType->itemData(index).toInt();
 	if (ts == liboscar::TextSearch::GEOCELL && m_cmp->textSearch().hasSearch(liboscar::TextSearch::GEOCELL)) {
 		m_selectedCompleterType->clear();
-		for(uint32_t i : sserialize::RangeGenerator::range(0, m_cmp->textSearch().size(liboscar::TextSearch::GEOCELL))) {
+		for(uint32_t i : sserialize::RangeGenerator<uint32_t>::range(0, m_cmp->textSearch().size(liboscar::TextSearch::GEOCELL))) {
 			m_selectedCompleterType->addItem(QString::fromStdString(m_cmp->textSearch().get<liboscar::TextSearch::GEOCELL>(i).trie().getName()), i);
 		}
 		selectCellTextCompletion();
 	}
 	else if (ts == liboscar::TextSearch::ITEMS && m_cmp->textSearch().hasSearch(liboscar::TextSearch::ITEMS)) {
 		m_selectedCompleterType->clear();
-		for(uint32_t i : sserialize::RangeGenerator::range(0, m_cmp->textSearch().size(liboscar::TextSearch::ITEMS))) {
+		for(uint32_t i : sserialize::RangeGenerator<uint32_t>::range(0, m_cmp->textSearch().size(liboscar::TextSearch::ITEMS))) {
 			m_selectedCompleterType->addItem(QString::fromStdString(m_cmp->textSearch().get<liboscar::TextSearch::ITEMS>(i).getName()), i);
 		}
 		selectItemsCompletion();
 	}
 	else if (ts == liboscar::TextSearch::GEOHIERARCHY && m_cmp->textSearch().hasSearch(liboscar::TextSearch::GEOHIERARCHY)) {
 		m_selectedCompleterType->clear();
-		for(uint32_t i : sserialize::RangeGenerator::range(0, m_cmp->textSearch().size(liboscar::TextSearch::GEOHIERARCHY))) {
+		for(uint32_t i : sserialize::RangeGenerator<uint32_t>::range(0, m_cmp->textSearch().size(liboscar::TextSearch::GEOHIERARCHY))) {
 			m_selectedCompleterType->addItem(QString::fromStdString(m_cmp->textSearch().get<liboscar::TextSearch::GEOHIERARCHY>(i).getName()), i);
 		}
 		selectGeoHierarchyCompletion();
