@@ -57,3 +57,6 @@ dynamic polygon simplification
 
 HIGH IMPORTANCE:
 fix TextSearchTraits bug (maybe this should be done two layers deeper)
+
+NOW:
+Dilation operator
