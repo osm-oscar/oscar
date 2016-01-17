@@ -42,7 +42,7 @@ private:
 		CompletersInfo() : selected(0) {}
 		uint32_t selected;
 		std::vector<T> completers;
-		uint32_t size() const { return completers.size(); }
+		uint32_t size() const { return (uint32_t) completers.size(); }
 		inline void push_back(const T & t) { completers.push_back(t); }
 		template<typename...Args>
 		inline void emplace_back(Args &&...args) { completers.emplace_back(std::forward<Args>(args)...); }
