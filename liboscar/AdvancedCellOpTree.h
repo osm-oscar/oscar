@@ -7,14 +7,17 @@
 #include <sserialize/strings/stringfunctions.h>
 #include <sserialize/utility/assert.h>
 #include "CQRDilator.h"
+#include "CQRFromComplexSpatialQuery.h"
 
 /** The AdvancedCellOpTree supports the following query language:
   *
   *
-  * Q := UNARY_OP Q | DILATION_OP Q | Q BINARY_OP Q | (Q) | Q Q | GEO_RECT | GEO_PATH | REGION | CELL
+  * Q := UNARY_OP Q | DILATION_OP Q | COMPASS_OP Q | Q BETWEEN_OP Q | Q BINARY_OP Q | (Q) | Q Q | GEO_RECT | GEO_PATH | REGION | CELL
   * UNARY_OP := %
   * DILATION_OP := %NUMBER%
-  * BINARY_OP := - | + | / | ^
+  * COMPASS_OP := :^ | :v | :> | :< | :north-of | :east-of | :south-of | :west-of
+  * BETWEEN_OP := <->
+  * BINARY_OP := - | + | / | ^ 
   * GEO_RECT := $geo[]
   * GEO_PATH := $path[]
   * REGION := $region:id
@@ -25,7 +28,7 @@ namespace detail {
 namespace AdvancedCellOpTree {
 
 struct Node {
-	enum Type : int { DILATION_OP, UNARY_OP, BINARY_OP, RECT, PATH, REGION, CELL, STRING};
+	enum Type : int { DILATION_OP, COMPASS_OP, UNARY_OP, BETWEEN_OP, BINARY_OP, RECT, PATH, REGION, CELL, STRING};
 	int type;
 	std::string value;
 	std::vector<Node*> children;
@@ -49,6 +52,8 @@ struct Token {
 		INVALID_CHAR,
 		UNARY_OP,
 		DILATION_OP,
+		COMPASS_OP,
+		BETWEEN_OP,
 		BINARY_OP,
 		GEO_RECT,
 		GEO_PATH,
@@ -111,15 +116,25 @@ public:
 	template<typename T_CQR_TYPE>
 	T_CQR_TYPE calc();
 private:
-	template<typename T_CQR_TYPE>
-	struct Calc {
-		typedef T_CQR_TYPE CQRType;
-		Calc(sserialize::Static::CellTextCompleter & ctc, const CQRDilator & cqrd) :
+	struct CalcBase {
+		CalcBase(sserialize::Static::CellTextCompleter & ctc, const CQRDilator & cqrd, const CQRFromComplexSpatialQuery & csq) :
 		m_ctc(ctc),
-		m_cqrd(cqrd)
+		m_cqrd(cqrd),
+		m_csq(csq)
 		{}
 		sserialize::Static::CellTextCompleter & m_ctc;
 		const CQRDilator & m_cqrd;
+		const CQRFromComplexSpatialQuery & m_csq;
+		sserialize::ItemIndex calcBetweenOp(const sserialize::CellQueryResult & c1, const sserialize::CellQueryResult & c2);
+		sserialize::ItemIndex calcCompassOp(Node * node, const sserialize::CellQueryResult & cqr);
+	};
+
+	template<typename T_CQR_TYPE>
+	struct Calc: public CalcBase {
+		typedef T_CQR_TYPE CQRType;
+		Calc(sserialize::Static::CellTextCompleter & ctc, const CQRDilator & cqrd, const CQRFromComplexSpatialQuery & csq) :
+		CalcBase(ctc, cqrd, csq)
+		{}
 		CQRType calc(Node * node);
 		CQRType calcString(Node * node);
 		CQRType calcRect(Node * node);
@@ -127,12 +142,15 @@ private:
 		CQRType calcRegion(Node * node);
 		CQRType calcCell(Node * node);
 		CQRType calcUnaryOp(Node * node);
-		CQRType calcBinaryOp(Node * node);
 		CQRType calcDilationOp(Node * node);
+		CQRType calcCompassOp(Node * node);
+		CQRType calcBinaryOp(Node * node);
+		CQRType calcBetweenOp(Node * node);
 	};
 private:
 	sserialize::Static::CellTextCompleter m_ctc;
 	CQRDilator m_cqrd;
+	CQRFromComplexSpatialQuery m_csq;
 	Node * m_root;
 };
 
@@ -141,7 +159,7 @@ T_CQR_TYPE
 AdvancedCellOpTree::calc() {
 	typedef T_CQR_TYPE CQRType;
 	if (m_root) {
-		Calc<CQRType> calculator(m_ctc, m_cqrd);
+		Calc<CQRType> calculator(m_ctc, m_cqrd, m_csq);
 		return calculator.calc( m_root );
 	}
 	else {
@@ -266,6 +284,22 @@ AdvancedCellOpTree::Calc<T_CQR_TYPE>::calcUnaryOp(AdvancedCellOpTree::Node* node
 
 template<>
 sserialize::CellQueryResult
+AdvancedCellOpTree::Calc<sserialize::CellQueryResult>::calcBetweenOp(AdvancedCellOpTree::Node* node);
+
+template<>
+sserialize::TreedCellQueryResult
+AdvancedCellOpTree::Calc<sserialize::TreedCellQueryResult>::calcBetweenOp(AdvancedCellOpTree::Node* node);
+
+template<>
+sserialize::CellQueryResult
+AdvancedCellOpTree::Calc<sserialize::CellQueryResult>::calcCompassOp(AdvancedCellOpTree::Node* node);
+
+template<>
+sserialize::TreedCellQueryResult
+AdvancedCellOpTree::Calc<sserialize::TreedCellQueryResult>::calcCompassOp(AdvancedCellOpTree::Node* node);
+
+template<>
+sserialize::CellQueryResult
 AdvancedCellOpTree::Calc<sserialize::CellQueryResult>::calcDilationOp(AdvancedCellOpTree::Node* node);
 
 template<>
@@ -293,8 +327,12 @@ AdvancedCellOpTree::Calc<T_CQR_TYPE>::calc(AdvancedCellOpTree::Node* node) {
 		return calcUnaryOp(node);
 	case Node::DILATION_OP:
 		return calcDilationOp(node);
+	case Node::COMPASS_OP:
+		return calcCompassOp(node);
 	case Node::BINARY_OP:
 		return calcBinaryOp(node);
+	case Node::BETWEEN_OP:
+		return calcBetweenOp(node);
 	default:
 		return CQRType();
 	};

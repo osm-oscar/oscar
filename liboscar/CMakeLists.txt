@@ -16,6 +16,7 @@ CellOpTree.cpp
 AdvancedCellOpTree.cpp
 CQRDilator.cpp
 CQRFromPolygon.cpp
+CQRFromComplexSpatialQuery.cpp
 )
 
 add_target_properties(sserialize COMPILE_FLAGS -fPIC)

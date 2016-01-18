@@ -23,7 +23,7 @@ bool Tokenizer::isSeperator(char c) {
 }
 
 
-//TODO:use ragel to parse?
+//TODO:use ragel to parse? yes, use ragel since this gets more and more complex
 Token Tokenizer::next() {
 	if (m_state.it == m_state.end) {
 		return Token(Token::ENDOFFILE);
@@ -107,6 +107,27 @@ Token Tokenizer::next() {
 			}
 			return t;
 			break;
+		}
+		case ':':
+		{
+			t.type = Token::COMPASS_OP;
+			for(auto it(m_state.it); it != m_state.it; ++it) {
+				if (*it == ' ' || *it == '\t' || *it == '(') {
+					t.value.assign(m_state.it, it);
+					m_state.it = it;
+				}
+			}
+			return t;
+		}
+		case '<':
+		{
+			t.type = Token::BETWEEN_OP;
+			const char * cmp = "->";
+			auto it(m_state.it);
+			for(int i(0); it != m_state.end && i < 2 && *it == *cmp; ++it, ++cmp, ++i) {}
+			t.value.assign(m_state.it, it);
+			m_state.it = it;
+			return t;
 		}
 		default: //read as normal string
 		{
@@ -361,6 +382,7 @@ detail::AdvancedCellOpTree::Node* Parser::parse(const std::string & str) {
 AdvancedCellOpTree::AdvancedCellOpTree(const sserialize::Static::CellTextCompleter & ctc, const CQRDilator & cqrd) :
 m_ctc(ctc),
 m_cqrd(cqrd),
+m_csq(ctc.geoHierarchy()),
 m_root(0)
 {}
 
@@ -368,6 +390,27 @@ AdvancedCellOpTree::~AdvancedCellOpTree() {
 	if (m_root) {
 		delete m_root;
 	}
+}
+
+sserialize::ItemIndex AdvancedCellOpTree::CalcBase::calcBetweenOp(const sserialize::CellQueryResult& c1, const sserialize::CellQueryResult& c2) {
+	return m_csq.betweenOp(c1, c2);
+}
+
+sserialize::ItemIndex AdvancedCellOpTree::CalcBase::calcCompassOp(AdvancedCellOpTree::Node* node, const sserialize::CellQueryResult& cqr) {
+	CQRFromComplexSpatialQuery::UnaryOp direction = CQRFromComplexSpatialQuery::UO_INVALID;
+	if (node->value == ":^" || node->value == ":north-of") {
+		direction = CQRFromComplexSpatialQuery::UO_NORTH_OF;
+	}
+	else if (node->value == ":>" || node->value == ":east-of") {
+		direction = CQRFromComplexSpatialQuery::UO_EAST_OF;
+	}
+	else if (node->value == ":v" || node->value == ":south-of") {
+		direction = CQRFromComplexSpatialQuery::UO_SOUTH_OF;
+	}
+	else if (node->value == ":<" || node->value == ":west-of") {
+		direction = CQRFromComplexSpatialQuery::UO_WEST_OF;
+	}
+	return m_csq.compassOp(cqr, direction);
 }
 
 void AdvancedCellOpTree::parse(const std::string& str) {
@@ -395,5 +438,37 @@ AdvancedCellOpTree::Calc<sserialize::TreedCellQueryResult>::calcDilationOp(Advan
 	return sserialize::TreedCellQueryResult( m_cqrd.dilate(cqr.toCQR(), diameter), cqr.geoHierarchy(), cqr.idxStore() ) + cqr;
 }
 
+
+template<>
+sserialize::CellQueryResult
+AdvancedCellOpTree::Calc<sserialize::CellQueryResult>::calcBetweenOp(AdvancedCellOpTree::Node* node) {
+	SSERIALIZE_CHEAP_ASSERT(node->children.size() == 2);
+	sserialize::ItemIndex result = CalcBase::calcBetweenOp(calc(node->children.front()), calc(node->children.back()));
+	return sserialize::CellQueryResult(result, m_ctc.geoHierarchy(), m_ctc.idxStore());
+}
+
+template<>
+sserialize::TreedCellQueryResult
+AdvancedCellOpTree::Calc<sserialize::TreedCellQueryResult>::calcBetweenOp(AdvancedCellOpTree::Node* node) {
+	SSERIALIZE_CHEAP_ASSERT(node->children.size() == 2);
+	sserialize::ItemIndex result = CalcBase::calcBetweenOp(calc(node->children.front()).toCQR(), calc(node->children.back()).toCQR());
+	return sserialize::TreedCellQueryResult(result, m_ctc.geoHierarchy(), m_ctc.idxStore());
+}
+
+template<>
+sserialize::CellQueryResult
+AdvancedCellOpTree::Calc<sserialize::CellQueryResult>::calcCompassOp(AdvancedCellOpTree::Node* node) {
+	SSERIALIZE_CHEAP_ASSERT(node->children.size() == 1);
+	sserialize::ItemIndex result = CalcBase::calcCompassOp(node, calc(node->children.front()));
+	return sserialize::CellQueryResult(result, m_ctc.geoHierarchy(), m_ctc.idxStore());
+}
+
+template<>
+sserialize::TreedCellQueryResult
+AdvancedCellOpTree::Calc<sserialize::TreedCellQueryResult>::calcCompassOp(AdvancedCellOpTree::Node* node) {
+	SSERIALIZE_CHEAP_ASSERT(node->children.size() == 1);
+	sserialize::ItemIndex result = CalcBase::calcCompassOp(node, calc(node->children.front()).toCQR());
+	return sserialize::TreedCellQueryResult(result, m_ctc.geoHierarchy(), m_ctc.idxStore());
+}
 
 }//end namespace
