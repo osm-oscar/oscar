@@ -236,7 +236,7 @@ public:
 	inline const sserialize::Static::spatial::GeoHierarchy & geoHierarchy() const { return m_gh; }
 	inline const sserialize::Static::spatial::TriangulationGeoHierarchyArrangement & regionArrangement() const { return m_ra; }
 	inline const sserialize::Static::spatial::TracGraph & cellGraph() const { return m_cg; }
-	inline const sserialize::Static::Array<sserialize::Static::spatial::GeoPoint> & cellCenterOfMass() const { m_ccm; }
+	inline const sserialize::Static::Array<sserialize::Static::spatial::GeoPoint> & cellCenterOfMass() const { return m_ccm; }
 	
 	sserialize::Static::KeyValueObjectStoreItem kvItem(uint32_t pos) const;
 	
