@@ -1208,6 +1208,7 @@ bool OsmKeyValueObjectStore::processCellMap(Context & ctx) {
 		ctx.trs.append(m_ra, oldToNewCellId);
 		sserialize::UByteArrayAdapter::OffsetType tracGraphBegin = m_ra.size();
 		ctx.trs.cellGraph().append(m_ra, oldToNewCellId);
+		m_ra << ctx.trs.cellCenterOfMass(oldToNewCellId);
 		tracGraph = sserialize::Static::spatial::TracGraph(m_ra+tracGraphBegin);
 		ctx.trs.clear();
 	}
@@ -1322,7 +1323,7 @@ sserialize::spatial::GeoRect OsmKeyValueObjectStore::boundary() const {
 
 sserialize::UByteArrayAdapter::OffsetType OsmKeyValueObjectStore::serialize(sserialize::UByteArrayAdapter & dest, sserialize::ItemIndexFactory & idxFactory, bool fullRegionIndex) const {
 	sserialize::UByteArrayAdapter::OffsetType dataBegin = dest.tellPutPtr();
-	dest.putUint8(6);//version
+	dest.putUint8(7);//version
 	std::cout << "Serializing OsmKeyValueObjectStore payload..." << std::flush;
 	sserialize::TimeMeasurer tm;
 	tm.begin();
