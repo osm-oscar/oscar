@@ -88,6 +88,7 @@ private:
 	bool eat(liboscar::detail::AdvancedCellOpTree::parser::Token::Type t);
 	bool pop();
 private:
+	Node* parseUnaryOps();
 	Node* parseSingleQ();
 	Node* parseQ();
 private:

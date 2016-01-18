@@ -42,7 +42,8 @@ Token Tokenizer::next() {
 					if ('0' > *it || '9' < *it) {
 						if (*it == '%') {
 							t.type = Token::DILATION_OP;
-							t.value.insert(t.value.end(), m_state.it, it);
+							t.value.assign(m_state.it, it);
+							++it;
 							m_state.it = it;
 						}
 						break;
@@ -163,6 +164,31 @@ bool Parser::eat(Token::Type t) {
 	return true;
 }
 
+detail::AdvancedCellOpTree::Node* Parser::parseUnaryOps() {
+	Token t = peek();
+	switch (t.type) {
+	case Token::DILATION_OP:
+	case Token::UNARY_OP:
+	{
+		pop();
+		Node * unaryOpNode = new Node();
+		unaryOpNode->type = (t.type == Token::UNARY_OP ? Node::UNARY_OP : Node::DILATION_OP);
+		unaryOpNode->value = t.value;
+		Node* cn = parseSingleQ();
+		if (cn) {
+			unaryOpNode->children.push_back(cn);
+			return unaryOpNode;
+		}
+		else { //something went wrong, skip this op
+			return 0;
+		}
+		break;
+	}
+	default://hand back
+		return 0;
+	};
+}
+
 //parses a Single query like STRING, REGION, CELL, GEO_RECT, GEO_PATH
 //calls parseQ() on opening a new SCOPE
 detail::AdvancedCellOpTree::Node* Parser::parseSingleQ() {
@@ -174,6 +200,11 @@ detail::AdvancedCellOpTree::Node* Parser::parseSingleQ() {
 		Node * tmp = parseQ();
 		eat((Token::Type)')');
 		return tmp;
+	}
+	case Token::DILATION_OP:
+	case Token::UNARY_OP:
+	{
+		return parseUnaryOps();
 	}
 	case Token::CELL:
 	{
@@ -232,16 +263,8 @@ detail::AdvancedCellOpTree::Node* Parser::parseQ() {
 		case Token::UNARY_OP:
 		case Token::DILATION_OP:
 		{
-			pop();
-			Node * unaryOpNode = new Node();
-			unaryOpNode->type = (t.type == Token::UNARY_OP ? Node::UNARY_OP : Node::DILATION_OP);
-			unaryOpNode->value = t.value;
-			Node* cn = parseSingleQ();
-			if (cn) {
-				unaryOpNode->children.push_back(cn);
-				curTokenNode = unaryOpNode;
-			}
-			else { //something went wrong, skip this op
+			curTokenNode = parseUnaryOps();
+			if (!curTokenNode) { //something went wrong, skip this op
 				continue;
 			}
 			break;
