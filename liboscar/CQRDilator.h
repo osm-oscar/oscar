@@ -35,8 +35,8 @@ private:
 	double distance(const sserialize::Static::spatial::GeoPoint & gp, uint32_t cellId) const;
 	double distance(uint32_t cellId1, uint32_t cellId2) const;
 private:
-	sserialize::Static::spatial::TracGraph m_tg;
 	CellInfo m_ci;
+	sserialize::Static::spatial::TracGraph m_tg;
 };
 
 
