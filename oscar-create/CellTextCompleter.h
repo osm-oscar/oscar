@@ -472,7 +472,7 @@ struct Payload {
 };
 
 uint8_t serialize(const Payload::ResultDesc & src, sserialize::UByteArrayAdapter & dest);
-NO_OPTIMIZE_ON_DEBUG sserialize::UByteArrayAdapter & operator<<(sserialize::UByteArrayAdapter & dest, const Payload & src);
+sserialize::UByteArrayAdapter & operator<<(sserialize::UByteArrayAdapter & dest, const Payload & src);
 
 
 class PayloadHandler {

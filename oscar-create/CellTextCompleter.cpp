@@ -222,7 +222,7 @@ uint8_t serialize(const Payload::ResultDesc & src, sserialize::UByteArrayAdapter
 	return sserialize::CompactUintArray::create(tmp, dest);
 }
 
-NO_OPTIMIZE_ON_DEBUG void testPayloadSerializer(sserialize::RLEStream::Creator & dest, const Payload::ResultDesc & rd) {
+void testPayloadSerializer(sserialize::RLEStream::Creator & dest, const Payload::ResultDesc & rd) {
 	dest.checkpoint(rd.fmPtr);
 	dest.put(rd.pPtr);
 	for(uint32_t x : rd.pItemsPtrs) {
@@ -264,7 +264,7 @@ sserialize::UByteArrayAdapter & operator<<(sserialize::UByteArrayAdapter & dest,
 		offsets.push_back(tmpAdap.size());
 		testPayloadSerializer(cto, src.exact);
 		cto.flush();
-		#ifdef DEBUG_CHECK_ALL
+		#ifdef WITH_SSERIALIZE_EXPENSIVE_ASSERT
 		sserialize::RLEStream rs(tmpAdap+offsets.back());
 		assert(*rs == src.exact.fmPtr);
 		++rs;
@@ -280,7 +280,7 @@ sserialize::UByteArrayAdapter & operator<<(sserialize::UByteArrayAdapter & dest,
 		offsets.push_back(tmpAdap.size());
 		testPayloadSerializer(cto, src.prefix);
 		cto.flush();
-		#ifdef DEBUG_CHECK_ALL
+		#ifdef WITH_SSERIALIZE_EXPENSIVE_ASSERT
 		sserialize::RLEStream rs(tmpAdap+offsets.back());
 		assert(*rs == src.prefix.fmPtr);
 		++rs;
@@ -296,7 +296,7 @@ sserialize::UByteArrayAdapter & operator<<(sserialize::UByteArrayAdapter & dest,
 		offsets.push_back(tmpAdap.size());
 		testPayloadSerializer(cto, src.suffix);
 		cto.flush();
-		#ifdef DEBUG_CHECK_ALL
+		#ifdef WITH_SSERIALIZE_EXPENSIVE_ASSERT
 		sserialize::RLEStream rs(tmpAdap+offsets.back());
 		assert(*rs == src.suffix.fmPtr);
 		++rs;
@@ -312,7 +312,7 @@ sserialize::UByteArrayAdapter & operator<<(sserialize::UByteArrayAdapter & dest,
 		offsets.push_back(tmpAdap.size());
 		testPayloadSerializer(cto, src.substr);
 		cto.flush();
-		#ifdef DEBUG_CHECK_ALL
+		#ifdef WITH_SSERIALIZE_EXPENSIVE_ASSERT
 		sserialize::RLEStream rs(tmpAdap+offsets.back());
 		assert(*rs == src.substr.fmPtr);
 		++rs;
