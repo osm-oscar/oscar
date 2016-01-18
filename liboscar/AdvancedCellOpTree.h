@@ -5,6 +5,7 @@
 #include <sserialize/spatial/CellQueryResult.h>
 #include <sserialize/Static/CellTextCompleter.h>
 #include <sserialize/strings/stringfunctions.h>
+#include <sserialize/utility/assert.h>
 #include "CQRDilator.h"
 
 /** The AdvancedCellOpTree supports the following query language:
