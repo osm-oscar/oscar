@@ -15,6 +15,7 @@ GeoSearch.cpp
 CellOpTree.cpp
 AdvancedCellOpTree.cpp
 CQRDilator.cpp
+CQRFromPolygon.cpp
 )
 
 add_target_properties(sserialize COMPILE_FLAGS -fPIC)
