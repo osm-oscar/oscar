@@ -2,7 +2,7 @@
 #include <sserialize/utility/exceptions.h>
 #include <sserialize/Static/GeoWay.h>
 #include <sserialize/Static/GeoMultiPolygon.h>
-
+#include <sserialize/utility/VersionChecker.h>
 
 namespace liboscar {
 namespace Static {
@@ -320,7 +320,7 @@ OsmKeyValueObjectStoreItem::~OsmKeyValueObjectStoreItem() {}
 /* OsmKeyValueObjectStorePrivate begin */
 
 OsmKeyValueObjectStorePrivate::OsmKeyValueObjectStorePrivate(const sserialize::UByteArrayAdapter & data) :
-m_payload(data+1),
+m_payload(sserialize::VersionChecker::check(data, LIBOSCAR_OSM_KEY_VALUE_OBJECT_STORE_VERSION, data.at(0), "OsmKeyValueObjectStore")+1),
 m_idToInternalId(data+(1+m_payload.getSizeInBytes())),
 m_kv(data+(1+m_payload.getSizeInBytes()+m_idToInternalId.getSizeInBytes())),
 m_gh(data+(1+m_payload.getSizeInBytes()+m_idToInternalId.getSizeInBytes()+m_kv.getSizeInBytes())),
@@ -328,7 +328,6 @@ m_ra(data+(1+m_payload.getSizeInBytes()+m_idToInternalId.getSizeInBytes()+m_kv.g
 m_cg(data+(1+m_payload.getSizeInBytes()+m_idToInternalId.getSizeInBytes()+m_kv.getSizeInBytes()+m_gh.getSizeInBytes()+m_ra.getSizeInBytes())),
 m_ccm(data+(1+m_payload.getSizeInBytes()+m_idToInternalId.getSizeInBytes()+m_kv.getSizeInBytes()+m_gh.getSizeInBytes()+m_ra.getSizeInBytes()+m_cg.getSizeInBytes()))
 {
-	SSERIALIZE_VERSION_MISSMATCH_CHECK(LIBOSCAR_OSM_KEY_VALUE_OBJECT_STORE_VERSION, data.at(0), "OsmKeyValueObjectStore")
 	if (m_payload.size() != m_kv.size())
 		throw sserialize::CorruptDataException("OsmKeyValueObjectStore: m_shapes.size() != m_kv.size()");
 	if (m_gh.regionSize() > m_kv.size())
