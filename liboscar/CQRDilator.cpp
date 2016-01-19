@@ -66,6 +66,8 @@ sserialize::ItemIndex CQRDilator::dilate(const sserialize::CellQueryResult& src,
 			}
 			dilatedMarks.set(x);
 		}
+		relaxed.clear();
+		queue.clear();
 	}
 	//depending on the size of dilated it should be faster to just get them from dilatedMarks since these are ordered
 	uint32_t dilatedSize = (uint32_t) dilated.size()*sizeof(uint32_t);
