@@ -106,11 +106,11 @@ private:
 
 }}}//end namespace detail::AdvancedCellOpTree::parser
 
-class AdvancedCellOpTree {
+class AdvancedCellOpTree final {
 public:
 	typedef detail::AdvancedCellOpTree::Node Node;
 public:
-	AdvancedCellOpTree(const sserialize::Static::CellTextCompleter & ctc, const CQRDilator & cqrd);
+	AdvancedCellOpTree(const sserialize::Static::CellTextCompleter & ctc, const CQRDilator & cqrd, const CQRFromComplexSpatialQuery & csq);
 	~AdvancedCellOpTree();
 	void parse(const std::string & str);
 	template<typename T_CQR_TYPE>

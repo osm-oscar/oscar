@@ -4,6 +4,25 @@
 
 namespace liboscar {
 
+CQRFromPolygon::CQRFromPolygon(const CQRFromPolygon & other) :
+m_priv(other.m_priv)
+{}
+
+CQRFromPolygon::CQRFromPolygon(const Static::OsmKeyValueObjectStore & store, const sserialize::Static::ItemIndexStore & idxStore) :
+m_priv(new detail::CQRFromPolygon(store, idxStore))
+{}
+
+CQRFromPolygon::~CQRFromPolygon() {}
+
+const sserialize::Static::spatial::GeoHierarchy & CQRFromPolygon::geoHierarchy() const {
+	return m_priv->geoHierarchy();
+}
+sserialize::ItemIndex CQRFromPolygon::intersectingCells(const sserialize::spatial::GeoPolygon & gp, Accuracy ac) const {
+	return m_priv->intersectingCells(gp, ac);
+}
+
+namespace detail {
+
 CQRFromPolygon::CQRFromPolygon(const Static::OsmKeyValueObjectStore& store, const sserialize::Static::ItemIndexStore & idxStore) :
 m_store(store),
 m_idxStore(idxStore)
@@ -11,15 +30,19 @@ m_idxStore(idxStore)
 
 CQRFromPolygon::~CQRFromPolygon() {}
 
-sserialize::ItemIndex CQRFromPolygon::intersectingCells(const sserialize::spatial::GeoPolygon & gp, CQRFromPolygon::Accuracy ac) const {
+const sserialize::Static::spatial::GeoHierarchy& CQRFromPolygon::geoHierarchy() const {
+	return m_store.geoHierarchy();
+}
+
+sserialize::ItemIndex CQRFromPolygon::intersectingCells(const sserialize::spatial::GeoPolygon & gp, liboscar::CQRFromPolygon::Accuracy ac) const {
 	switch (ac) {
-	case AC_POLYGON_CELL:
-	case AC_POLYGON_CELL_BBOX:
+	case liboscar::CQRFromPolygon::AC_POLYGON_CELL:
+	case liboscar::CQRFromPolygon::AC_POLYGON_CELL_BBOX:
 	{
 		return intersectingCellsPolygonCellBBox(gp);
 		break;
 	}
-	case AC_POLYGON_BBOX_CELL_BBOX:
+	case liboscar::CQRFromPolygon::AC_POLYGON_BBOX_CELL_BBOX:
 	default:
 		return m_store.geoHierarchy().intersectingCells(m_idxStore, gp.boundary());
 		break;
@@ -108,4 +131,4 @@ sserialize::ItemIndex CQRFromPolygon::intersectingCellsPolygonCellBBox(const sse
 
 
 
-}//end namespace
+}}//end namespace liboscar::detail

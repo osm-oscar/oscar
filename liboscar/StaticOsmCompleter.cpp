@@ -256,15 +256,18 @@ sserialize::CellQueryResult OsmCompleter::cqrComplete(const std::string& query, 
 	sserialize::TimeMeasurer tm;
 	tm.begin();
 	CQRDilator cqrd(store().cellCenterOfMass(), store().cellGraph());
+	CQRFromPolygon cqrfp(store(), indexStore());
+	sserialize::spatial::GeoHierarchySubSetCreator ghs(store().geoHierarchy(), sserialize::spatial::GeoHierarchySubSetCreator::T_PASS_THROUGH);
+	CQRFromComplexSpatialQuery csq(ghs, cqrfp);
 	if (!treedCQR) {
 // 		CellOpTree<sserialize::CellQueryResult> opTree(cmp, true);
-		AdvancedCellOpTree opTree(cmp, cqrd);
+		AdvancedCellOpTree opTree(cmp, cqrd, csq);
 		opTree.parse(query);
 		r = opTree.calc<sserialize::CellQueryResult>();
 	}
 	else {
 // 		CellOpTree<sserialize::TreedCellQueryResult> opTree(cmp, true);
-		AdvancedCellOpTree opTree(cmp, cqrd);
+		AdvancedCellOpTree opTree(cmp, cqrd, csq);
 		opTree.parse(query);
 		r = opTree.calc<sserialize::TreedCellQueryResult>().toCQR();
 	}
@@ -279,7 +282,6 @@ sserialize::CellQueryResult OsmCompleter::cqrComplete(const std::string& query, 
 sserialize::Static::spatial::GeoHierarchy::SubSet
 OsmCompleter::clusteredComplete(const std::string& query, const sserialize::spatial::GeoHierarchySubSetCreator & ghs, uint32_t minCq4SparseSubSet, bool treedCQR) {
 	sserialize::CellQueryResult r = cqrComplete(query, treedCQR);
-	
 	return ghs.subSet(r, r.cellCount() > minCq4SparseSubSet);
 }
 

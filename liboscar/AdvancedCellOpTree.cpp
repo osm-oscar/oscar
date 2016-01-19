@@ -379,10 +379,10 @@ detail::AdvancedCellOpTree::Node* Parser::parse(const std::string & str) {
 
 }}}//end namespace detail::AdvancedCellOpTree::parser
 
-AdvancedCellOpTree::AdvancedCellOpTree(const sserialize::Static::CellTextCompleter & ctc, const CQRDilator & cqrd) :
+AdvancedCellOpTree::AdvancedCellOpTree(const sserialize::Static::CellTextCompleter & ctc, const CQRDilator & cqrd, const CQRFromComplexSpatialQuery & csq) :
 m_ctc(ctc),
 m_cqrd(cqrd),
-m_csq(ctc.geoHierarchy()),
+m_csq(csq),
 m_root(0)
 {}
 
