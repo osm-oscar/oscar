@@ -93,6 +93,9 @@ Token Tokenizer::next() {
 			else if (tmp == "geo") {
 				t.type = Token::GEO_RECT;
 			}
+			else if (tmp == "poly") {
+				t.type = Token::GEO_POLYGON;
+			}
 			else if (tmp == "path") {
 				t.type = Token::GEO_PATH;
 			}
@@ -248,6 +251,12 @@ detail::AdvancedCellOpTree::Node* Parser::parseSingleQ() {
 	{
 		pop();
 		return new Node(Node::RECT, t.value);
+		break;
+	}
+	case Token::GEO_POLYGON:
+	{
+		pop();
+		return new Node(Node::POLYGON, t.value);
 		break;
 	}
 	case Token::STRING:

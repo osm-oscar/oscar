@@ -19,6 +19,7 @@
   * BETWEEN_OP := <->
   * BINARY_OP := - | + | / | ^ 
   * GEO_RECT := $geo[]
+  * POLYGON := $poly[]
   * GEO_PATH := $path[]
   * REGION := $region:id
   * CELL := $cell:id
@@ -28,7 +29,7 @@ namespace detail {
 namespace AdvancedCellOpTree {
 
 struct Node {
-	enum Type : int { DILATION_OP, COMPASS_OP, UNARY_OP, BETWEEN_OP, BINARY_OP, RECT, PATH, REGION, CELL, STRING};
+	enum Type : int { DILATION_OP, COMPASS_OP, UNARY_OP, BETWEEN_OP, BINARY_OP, RECT, POLYGON, PATH, REGION, CELL, STRING};
 	int type;
 	std::string value;
 	std::vector<Node*> children;
@@ -56,6 +57,7 @@ struct Token {
 		BETWEEN_OP,
 		BINARY_OP,
 		GEO_RECT,
+		GEO_POLYGON,
 		GEO_PATH,
 		REGION,
 		CELL,
@@ -138,6 +140,7 @@ private:
 		CQRType calc(Node * node);
 		CQRType calcString(Node * node);
 		CQRType calcRect(Node * node);
+		CQRType calcPolygon(Node * node);
 		CQRType calcPath(Node * node);
 		CQRType calcRegion(Node * node);
 		CQRType calcCell(Node * node);
@@ -171,6 +174,45 @@ template<typename T_CQR_TYPE>
 T_CQR_TYPE
 AdvancedCellOpTree::Calc<T_CQR_TYPE>::calcRect(AdvancedCellOpTree::Node* node) {
 	return m_ctc.cqrFromRect<CQRType>(sserialize::spatial::GeoRect(node->value, true));
+}
+
+template<typename T_CQR_TYPE>
+T_CQR_TYPE
+AdvancedCellOpTree::Calc<T_CQR_TYPE>::calcPolygon(AdvancedCellOpTree::Node* node) {
+	//first construct the polygon out of the values
+	std::vector<sserialize::spatial::GeoPoint> gps;
+	{
+		struct MyOut {
+			std::vector<sserialize::spatial::GeoPoint> * dest;
+			double m_firstCoord;
+			MyOut & operator++() { return *this; }
+			MyOut & operator*() { return *this; }
+			MyOut & operator=(const std::string & str) {
+				double t = ::atof(str.c_str());
+				if (m_firstCoord == std::numeric_limits<double>::max()) {
+					m_firstCoord = t;
+				}
+				else {
+					dest->emplace_back(m_firstCoord, t);
+					m_firstCoord = std::numeric_limits<double>::max();
+				}
+				return *this;
+			}
+			MyOut(std::vector<sserialize::spatial::GeoPoint> * d) : dest(d), m_firstCoord(std::numeric_limits<double>::max()) {}
+		};
+		typedef sserialize::OneValueSet<uint32_t> MyS;
+		sserialize::split<std::string::const_iterator, MyS, MyS, MyOut>(node->value.begin(), node->value.end(), MyS(','), MyS('\\'), MyOut(&gps));
+	}
+	if (gps.size() < 3) {
+		return T_CQR_TYPE();
+	}
+	//check if back and front are the same, if not, close the polygon:
+	if (gps.back() != gps.front()) {
+		gps.push_back(gps.front());
+	}
+	
+	sserialize::ItemIndex res = m_csq.cqrfp().intersectingCells(sserialize::spatial::GeoPolygon(std::move(gps)), CQRFromPolygon::AC_POLYGON_CELL_BBOX);
+	return T_CQR_TYPE(res, m_ctc.geoHierarchy(), m_ctc.idxStore());
 }
 
 template<typename T_CQR_TYPE>
