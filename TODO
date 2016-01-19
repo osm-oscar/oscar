@@ -61,5 +61,10 @@ fix TextSearchTraits bug (maybe this should be done two layers deeper)
 HIGH IMPORTANCE:
 abstract GeoShape to have different backends 
 
+HIGH IMPORTANCE:
+oscar-web: improve support for geoobjects: just add a reference in the query string and add ability to change polygon/paths/rectangles
+So a query would look like that: $rect:1 + $poly:1 + $path:2 - $path:1
+the ids would be replaced before sending to the server (needs some extra work to do the parsing of the uri)
+
 NOW:
 between query
