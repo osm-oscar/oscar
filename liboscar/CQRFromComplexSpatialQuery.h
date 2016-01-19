@@ -21,6 +21,7 @@ public:
 	~CQRFromComplexSpatialQuery();
 	sserialize::ItemIndex compassOp(const sserialize::CellQueryResult & cqr, UnaryOp direction) const;
 	sserialize::ItemIndex betweenOp(const sserialize::CellQueryResult & cqr1, const sserialize::CellQueryResult & cqr2) const;
+	const liboscar::CQRFromPolygon & cqrfp() const;
 private:
 	sserialize::RCPtrWrapper<detail::CQRFromComplexSpatialQuery> m_priv;
 };
@@ -33,6 +34,7 @@ public:
 	virtual ~CQRFromComplexSpatialQuery();
 	sserialize::ItemIndex compassOp(const sserialize::CellQueryResult& cqr, liboscar::CQRFromComplexSpatialQuery::UnaryOp direction) const;
 	sserialize::ItemIndex betweenOp(const sserialize::CellQueryResult & cqr1, const sserialize::CellQueryResult & cqr2) const;
+	const liboscar::CQRFromPolygon & cqrfp() const;
 private:
 	sserialize::spatial::GeoHierarchySubSetCreator m_ssc;
 	liboscar::CQRFromPolygon m_cqrfp;

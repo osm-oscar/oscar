@@ -12,6 +12,10 @@ m_priv(other.m_priv)
 
 CQRFromComplexSpatialQuery::~CQRFromComplexSpatialQuery() {}
 
+const liboscar::CQRFromPolygon & CQRFromComplexSpatialQuery::cqrfp() const {
+	return m_priv->cqrfp();
+}
+
 sserialize::ItemIndex CQRFromComplexSpatialQuery::compassOp(const sserialize::CellQueryResult & cqr, UnaryOp direction) const {
 	return m_priv->compassOp(cqr, direction);
 }
@@ -28,6 +32,10 @@ m_cqrfp(cqrfp)
 {}
 
 CQRFromComplexSpatialQuery::~CQRFromComplexSpatialQuery() {}
+
+const liboscar::CQRFromPolygon & CQRFromComplexSpatialQuery::cqrfp() const {
+	return m_cqrfp;
+}
 
 sserialize::ItemIndex CQRFromComplexSpatialQuery::betweenOp(const sserialize::CellQueryResult& cqr1, const sserialize::CellQueryResult& cqr2) const {
 
