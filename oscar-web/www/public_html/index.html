@@ -162,47 +162,52 @@
                         </label>
                         <span class="glyphicon glyphicon-move" aria-hidden="true" id='config_menu_movehandle'></span>
                     </div>
-                    <div class='form-group'>
-                        <div class="input-group" id='itemload_group'>
-                            <span class="input-group-addon">Load additional</span>
-                            <input class='form-control' type="number" value='500' min='0' max='5000' id='itemload_spinner' step="100"/>
-                            <span class="input-group-btn" id='itemload_accept_button_span'>
-                                <button type="button" class="btn btn-default" id="itemload_accept_button">results!</button>
-                            </span>
+                    <h4>Results presentation</h4>
+                    <div class="form-inline">
+                        <div class='form-group'>
+                            <div class="input-group" id='itemload_group'>
+                                <span class="input-group-btn" id='itemload_accept_button_span'>
+                                    <button type="button" class="btn btn-default" id="itemload_accept_button">Load additional</button>
+                                </span>
+                                <input class='form-control' type="number" value='500' min='0' max='5000' id='itemload_spinner' step="100"/>
+                            </div>
+                        </div>
+                        <div class='form-group'>
+                            <div class="input-group" id='region_filter_group'>
+                                <span class="input-group-addon">Display</span>
+                                <select class='form-control' id="region_filter"/>
+                                    <option value="named" selected="selected">named</option>
+                                    <option value="admin_level">administrative</option>
+                                    <option value="all">all</option>
+                                    <option value="natural_landuse">natural/landuse</option>
+                                </select>
+                                <span class="input-group-addon">regions</span>
+                            </div>
                         </div>
                     </div>
-                    <div class='form-group'>
-                        <div class="input-group" id='region_filter_group'>
-                            <span class="input-group-addon">Display</span>
-                            <select class='form-control' id="region_filter"/>
-                                <option value="named" selected="selected">named</option>
-                                <option value="admin_level">administrative</option>
-                                <option value="all">all</option>
-                                <option value="natural_landuse">natural/landuse</option>
-                            </select>
-                            <span class="input-group-addon">regions</span>
+                    <h4>Spatial queries</h4>
+                    <div class="form-inline">
+                        <div class='form-group'>
+                            <div class="input-group">
+                                <span class="input-group-btn">
+                                    <button type="button" class="btn btn-default" id="spatialquery_selectbutton">Create</button>
+                                </span>
+                                <select class='form-control' id="spatialquery_type"/>
+                                    <option value="rect" selected="selected">Rectangle</option>
+                                    <option value="poly">Polygon</option>
+                                    <option value="path">Path</option>
+                                </select>
+                                <span class="input-group-btn">
+                                    <button type="button" class="btn btn-default" id="spatialquery_acceptbutton">Accept</button>
+                                </span>
+                            </div>
                         </div>
-                    </div>
-                    <div class='form-group'>
-                        <button type="button" class="btn btn-default" id="pathquery_selectbutton">Select path</button>
-                        <span>
-                            Radius:
-                            <input id="pathquery_radius" type="number" value="100" min="50" max="20000" step="50"/>
-                        </span>
-                        <button type="button" class="btn btn-default" id="pathquery_acceptbutton">Accept path</button>
-                    </div>
-                    <div class='form-group'>
-                        <button type="button" class="btn btn-default" id="geoquery_selectbutton">Select rectangle:</button>
-                        <span data-class="geoquery_min_coord">
-                            (<input id="geoquery_minlat" data-class="geoquery_min_coord" type="number" value="0" min="-90" max="90" step="1"/>,
-                            <input id="geoquery_minlon" data-class="geoquery_min_coord" type="number" value="0" min="-180" max="180" step="1"/>)
-                        </span>
-                        X
-                        <span data-class="geoquery_max_coord">
-                            (<input id="geoquery_maxlat"  data-class="geoquery_max_coord" type="number" value="0" min="-90" max="90" step="1"/>,
-                            <input id="geoquery_maxlon"  data-class="geoquery_max_coord" type="number" value="0" min="-180" max="180" step="1"/>)
-                        </span>
-                        <button type="button" class="btn btn-default" id="geoquery_acceptbutton">Accept</button>
+                        <div class='form-group'>
+                            <div class="input-group">
+                                <span class="input-group-addon">Radius:</span>
+                                <input id="spatialquery_radius" type="number" value="100" min="50" max="20000" step="50"/>
+                            </div>
+                        </div>
                     </div>
                     <div class='form-group'>
                         <label for="visualize_all_results_checkbox">
@@ -431,31 +436,31 @@
 	</div>
         <script type="text/javascript" src="js/libs/require.js/require.js"></script>
         <script type="text/javascript">
-			var protoRegExp = /^.*:\/\//;
-			var uriParsers = {
-				"id" : function(x) {
-					return x;
-				},
-				"http" : function(x) {
-					return (protoRegExp.test(x) ? x : "http://" + x);
-				},
-				"wikipedia" : function(x) {
-					if (protoRegExp.test(x)) {
-						return x;
-					}
-					else {
-						return "http://en.wikipedia.org/wiki/" + x;
-					}
-				},
-				"wikicommons" : function(x) {
-					if (protoRegExp.test(x)) {
-						return x;
-					}
-					else {
-						return "http://en.wikipedia.org/wiki/commons:" + x;
-					}
-				}
-			};
+            var protoRegExp = /^.*:\/\//;
+            var uriParsers = {
+                    "id" : function(x) {
+                            return x;
+                    },
+                    "http" : function(x) {
+                            return (protoRegExp.test(x) ? x : "http://" + x);
+                    },
+                    "wikipedia" : function(x) {
+                            if (protoRegExp.test(x)) {
+                                    return x;
+                            }
+                            else {
+                                    return "http://en.wikipedia.org/wiki/" + x;
+                            }
+                    },
+                    "wikicommons" : function(x) {
+                            if (protoRegExp.test(x)) {
+                                    return x;
+                            }
+                            else {
+                                    return "http://en.wikipedia.org/wiki/commons:" + x;
+                            }
+                    }
+            };
             var myConfig = {
                 styles : {
                             shapes : {
@@ -476,6 +481,10 @@
                                     highlight : {color: '#00BFFF', stroke: true, fill: true, opacity: 1.0}
                                 },
                                 pathquery : {
+                                    normal : {color: '#00BFFF', stroke: true, fill: false, opacity: 0.5},
+                                    highlight : {color: '#00BFFF', stroke: true, fill: false, opacity: 1.0}
+                                },
+                                polyquery : {
                                     normal : {color: '#00BFFF', stroke: true, fill: false, opacity: 0.5},
                                     highlight : {color: '#00BFFF', stroke: true, fill: false, opacity: 1.0}
                                 }
@@ -509,8 +518,7 @@
                 timeouts : {
                     query : 10000,
                     loadingSpinner : 1000,
-                    geoquery_select : 10000,
-                    pathquery : {
+                    spatialquery : {
                         select : 10000
                     }
                 }
@@ -620,18 +628,15 @@
                         queryInBound : false
                     },
                     timers : {
-                        geoquery : undefined,
-                        pathquery: undefined,
+                        spatialquery: undefined,
                         query : undefined,
                         loadingSpinner : undefined
                     },
-                    geoquery : {
+                    spatialquery : {
                         active : false,
-                        clickcount : 0,
-                        mapshape : undefined
-                    },
-                    pathquery : {
                         mapshape : undefined,
+                        type : undefined, //one of rect, poly, path
+                        coords : [],
                         selectButtonState : 'select'
                     },
                     domcache : {
@@ -708,131 +713,113 @@
                         state.loadingtasks -= 1;
                     }
                 };
-                function clearGeoQueryMapShape() {
-                    if (state.geoquery.mapshape !== undefined) {
-                        state.map.removeLayer(state.geoquery.mapshape);
-                        state.geoquery.mapshape = undefined;
+                function clearSpatialQueryMapShape() {
+                    if (state.spatialquery.mapshape !== undefined) {
+                        state.map.removeLayer(state.spatialquery.mapshape);
+                        state.spatialquery.mapshape = undefined;
                     }
-                }
-                function clearGeoQuerySelect() {
-                        endGeoQuerySelect();
-                        jQuery('#geoquery_acceptbutton').removeClass('btn-info');
-                        jQuery('#geoquery_selectbutton').html('Select rectangle');
-                        state.geoquery.active = false;
-                        clearGeoQueryMapShape();
-                }
-                function updateGeoQueryMapShape() {
-                    clearGeoQueryMapShape();
-                    var sampleStep = 1.0 / myConfig.geoquery.samplecount;
-                    var sampleCount = myConfig.geoquery.samplecount;
-                    var pts = [];
-                    function fillPts(sLat, sLng, tLat, tLng) {
-                        var latDiff = (tLat-sLat)*sampleStep;
-                        var lngDiff = (tLng-sLng)*sampleStep;
-                        for(i=0; i < sampleCount; ++i) {
-                            pts.push(L.latLng(sLat, sLng));
-                            sLat += latDiff;
-                            sLng += lngDiff;
+                };
+                //begin spatial query functions
+                function spatialQueryOnClick(e) {
+                    //reset timers
+                    if (state.timers.spatialquery !== undefined) {
+                        clearTimeout(state.timers.spatialquery);
+                        state.timers.spatialquery = setTimeout(endSpatialQuery, myConfig.timeouts.spatialquery.select);
+                    }
+                    state.spatialquery.coords.push(e.latlng);
+                    if (state.spatialquery.type === "rect") {
+                        if (state.spatialquery.coords.length === 2) {
+                            endSpatialQuery();
                         }
                     }
-                    var minLat = parseFloat(jQuery('#geoquery_minlat').val());
-                    var maxLat = parseFloat(jQuery('#geoquery_maxlat').val());
-                    var minLng = parseFloat(jQuery('#geoquery_minlon').val());
-                    var maxLng = parseFloat(jQuery('#geoquery_maxlon').val());
-                    
-                    fillPts(minLat, minLng, minLat, maxLng);
-                    fillPts(minLat, maxLng, maxLat, maxLng);
-                    fillPts(maxLat, maxLng, maxLat, minLng);
-                    fillPts(maxLat, minLng, minLat, minLng);
-                    
-                    state.geoquery.mapshape = L.polygon(pts, myConfig.styles.shapes.geoquery.normal);
-                    state.map.addLayer(state.geoquery.mapshape);
-                    
+                    else {
+                        updateSpatialQueryMapShape();
+                    }
                 };
-                function geoQuerySelect(e) {
-                    if (state.geoquery.clickcount === 0) {
-                        jQuery('#geoquery_minlat').val(e.latlng.lat);
-                        jQuery('#geoquery_minlon').val(e.latlng.lng);
-                        jQuery('[data-class="geoquery_min_coord"]').removeClass('bg-info');
-                        jQuery('[data-class="geoquery_max_coord"]').addClass('bg-info');
-                        state.geoquery.clickcount = 1;
+                function startSpatialQuery() {
+                    if (state.timers.spatialquery !== undefined) {
+                        clearTimeout(state.timers.spatialquery);
+                        state.timers.spatialquery = undefined;
                     }
-                    else if (state.geoquery.clickcount === 1) {
-                        jQuery('#geoquery_maxlat').val(e.latlng.lat);
-                        jQuery('#geoquery_maxlon').val(e.latlng.lng);
-                        state.geoquery.clickcount = 2;
-                        endGeoQuerySelect();
+                    jQuery('#spatialquery_acceptbutton').removeClass("btn-info");
+                    jQuery('#spatialquery_selectbutton').addClass("btn-info");
+                    jQuery('#spatialquery_selectbutton').html("Finish");
+                    state.spatialquery.selectButtonState = 'finish';
+                    state.spatialquery.type = jQuery('#spatialquery_type').val();
+                    state.map.on('click', spatialQueryOnClick);
+                    state.timers.spatialquery = setTimeout(endSpatialQuery, myConfig.timeouts.spatialquery.select);
+                };
+                function endSpatialQuery() {
+                    updateSpatialQueryMapShape();
+                    if (state.timers.spatialquery !== undefined) {
+                        clearTimeout(state.timers.spatialquery);
+                        state.timers.spatialquery = undefined;
                     }
-                }
-                function endGeoQuerySelect() {
-                    if (state.timers.geoquery !== undefined) {
-                        clearTimeout(state.timers.geoquery);
-                        state.timers.geoquery = undefined;
+                    state.map.removeEventListener('click', spatialQueryOnClick);
+                    
+                    state.spatialquery.selectButtonState = 'clear';
+                    jQuery('#spatialquery_selectbutton').html('Clear');
+                    jQuery('#spatialquery_acceptbutton').addClass('btn-info');
+                };
+                function clearSpatialQuery() {
+                    if (state.timers.spatialquery !== undefined) {
+                        clearTimeout(state.timers.spatialquery);
+                        state.timers.spatialquery = undefined;
                     }
-                    jQuery('#geoquery_selectbutton').removeClass("btn-info");
-                    jQuery('[data-class="geoquery_min_coord"]').removeClass('bg-info');
-                    jQuery('[data-class="geoquery_max_coord"]').removeClass('bg-info');
-                    state.map.removeEventListener('click', geoQuerySelect);
-                    jQuery('#geoquery_acceptbutton').addClass('btn-info');
-                    updateGeoQueryMapShape();
-                }
-                function startGeoQuerySelect() {
-                    if (state.timers.geoquery !== undefined) {
-                        clearTimeout(state.timers.geoquery);
+                    
+                    clearSpatialQueryMapShape();
+                    
+                    state.map.removeEventListener('click', spatialQueryOnClick);
+                    
+                    state.spatialquery.coords = [];
+                    state.spatialquery.selectButtonState = 'select';
+                    state.spatialquery.type = undefined;
+                    
+                    jQuery('#spatialquery_acceptbutton').removeClass("btn-info");
+                    jQuery('#spatialquery_selectbutton').removeClass("btn-info");
+                    jQuery('#spatialquery_selectbutton').html('Create');
+                };
+                function updateSpatialQueryMapShape() {
+                    //clear old mapshape
+                    clearSpatialQueryMapShape();
+                    if (state.spatialquery.type === undefined) {
+                        console.log("updateSpatialQueryMapShape called with undefined query type");
+                        return;
                     }
-                    jQuery('#geoquery_acceptbutton').removeClass('btn-info');
-                    state.geoquery.clickcount = 0;
-                    state.geoquery.active = true;
-                    jQuery('#geoquery_selectbutton').addClass("btn-info");
-                    jQuery('#geoquery_selectbutton').html('Clear rectangle');
-                    jQuery('[data-class="geoquery_min_coord"]').addClass('bg-info');
-                    state.map.on('click', geoQuerySelect);
-                    state.timers.geoquery = setTimeout(endGeoQuerySelect, myConfig.timeouts.geoquery_select);
-                }
-                function resetPathQuery() {
-                    if (state.timers.pathquery !== undefined) {
-                        clearTimeout(state.timers.pathquery);
+                    else if (state.spatialquery.type === "rect") {
+                        var sampleStep = 1.0 / myConfig.geoquery.samplecount;
+                        var sampleCount = myConfig.geoquery.samplecount;
+                        var pts = [];
+                        function fillPts(sLat, sLng, tLat, tLng) {
+                            var latDiff = (tLat-sLat)*sampleStep;
+                            var lngDiff = (tLng-sLng)*sampleStep;
+                            for(i=0; i < sampleCount; ++i) {
+                                pts.push(L.latLng(sLat, sLng));
+                                sLat += latDiff;
+                                sLng += lngDiff;
+                            }
+                        }
+                        var minLat = Math.min(state.spatialquery.coords[0].lat, state.spatialquery.coords[1].lat);
+                        var maxLat = Math.max(state.spatialquery.coords[0].lat, state.spatialquery.coords[1].lat);
+                        var minLng = Math.min(state.spatialquery.coords[0].lng, state.spatialquery.coords[1].lng);
+                        var maxLng = Math.max(state.spatialquery.coords[0].lng, state.spatialquery.coords[1].lng);
+
+                        fillPts(minLat, minLng, minLat, maxLng);
+                        fillPts(minLat, maxLng, maxLat, maxLng);
+                        fillPts(maxLat, maxLng, maxLat, minLng);
+                        fillPts(maxLat, minLng, minLat, minLng);
+
+                        state.spatialquery.mapshape = L.polygon(pts, myConfig.styles.shapes.geoquery.normal);
                     }
-                    state.map.removeEventListener('click', pathQuerySelect);
-                    state.map.removeLayer(state.pathquery.mapshape);
-                    state.pathquery.mapshape = undefined;
-                    state.pathquery.selectButtonState = 'select';
-                    jQuery('#pathquery_acceptbutton').removeClass("btn-info");
-                    jQuery('#pathquery_selectbutton').removeClass("btn-info");
-                    jQuery('#pathquery_selectbutton').html('Select path');
-                }
-                function pathQuerySelect(e) {
-                    if (state.timers.pathquery !== undefined) {
-                        clearTimeout(state.timers.pathquery);
-                        state.timers.pathquery = setTimeout(endPathQuery, myConfig.timeouts.pathquery.select);
+                    else if (state.spatialquery.type === "poly") {
+                        state.spatialquery.mapshape = L.polygon(state.spatialquery.coords, myConfig.styles.shapes.polyquery.highlight);
                     }
-                    if (state.pathquery.mapshape === undefined) {
-                        state.pathquery.mapshape = L.polyline([], myConfig.styles.shapes.pathquery.highlight).addTo(state.map);
+                    else if (state.spatialquery.type === "path") {
+                        state.spatialquery.mapshape = L.polyline(state.spatialquery.coords, myConfig.styles.shapes.pathquery.highlight);
                     }
-                    state.pathquery.mapshape.addLatLng(e.latlng);
-                }
-                function endPathQuery() {
-                    if (state.timers.pathquery !== undefined) {
-                        clearTimeout(state.timers.pathquery);
-                    }
-                    state.map.removeEventListener('click', pathQuerySelect);
-                    jQuery('#pathquery_acceptbutton').addClass("btn-info");
-                    jQuery('#pathquery_selectbutton').removeClass("btn-info");
-                    jQuery('#pathquery_selectbutton').html('Clear path');
-                    state.pathquery.selectButtonState = 'clear';
-                }
-                function startPathQuery() {
-                    if (state.timers.pathquery !== undefined) {
-                        clearTimeout(state.timers.pathquery);
-                    }
-                    state.pathquery.points = []
-                    jQuery('#pathquery_acceptbutton').removeClass("btn-info");
-                    jQuery('#pathquery_selectbutton').addClass("btn-info");
-                    jQuery('#pathquery_selectbutton').html("Finish path");
-                    state.pathquery.selectButtonState = 'finish';
-                    state.map.on('click', pathQuerySelect);
-                    state.timers.pathquery = setTimeout(endPathQuery, myConfig.timeouts.pathquery.select);
-                }
+                    state.map.addLayer(state.spatialquery.mapshape);
+                };
+                //end spatial query functions
                 function addSingleQueryStatementToQuery(qstr) {
                     var searchInput = jQuery('#search_text');
                     qstr = searchInput.val() + " " + qstr.replace(' ', '\\ '); 
@@ -1637,72 +1624,54 @@
                             loadMoreIntoResultList();
                         }
                     });
-                    jQuery('#geoquery_selectbutton').click(function() {
-                        if (state.geoquery.active) {
-                            clearGeoQuerySelect();
+                    jQuery('#spatialquery_selectbutton').click(function() {
+                        if (state.spatialquery.selectButtonState === 'select') {
+                            startSpatialQuery();
                         }
-                        else {
-                            startGeoQuerySelect();
+                        else if (state.spatialquery.selectButtonState === 'finish') {
+                            endSpatialQuery();
                         }
-                    });
-                    jQuery('#geoquery_acceptbutton').click(function() {
-                        //first fetch the coordinates
-                        var minlat = parseFloat(jQuery('#geoquery_minlat').val());
-                        var minlon = parseFloat(jQuery('#geoquery_minlon').val());
-                        var maxlat = parseFloat(jQuery('#geoquery_maxlat').val());
-                        var maxlon = parseFloat(jQuery('#geoquery_maxlon').val());
-                        
-                        //end the geoquery
-                        clearGeoQuerySelect();
-                        
-                        if (minlat > maxlat) {
-                            tmp = maxlat;
-                            maxlat = minlat;
-                            minlat = tmp;
-                        }
-                        if (minlon > maxlon) {
-                            tmp = maxlon;
-                            maxlon = minlon;
-                            minlon = tmp;
-                        }
-                        var q = "$geo:" + minlon + "," + minlat + "," + maxlon + "," + maxlat;
-                        var st = jQuery('#search_text');
-                        st.val(st.val() + " " + q);
-                        st.change();
-                        clearGeoQueryMapShape();
-                    });
-                    jQuery('#geoquery_minlat, #geoquery_maxlat, #geoquery_minlon, #geoquery_maxlon').change(function(e) {
-                        updateGeoQueryMapShape();
-                    });
-                    
-                    jQuery('#pathquery_selectbutton').click(function() {
-                        if (state.pathquery.selectButtonState === 'select') {
-                            startPathQuery();
-                        }
-                        else if (state.pathquery.selectButtonState === 'finish') {
-                            endPathQuery();
-                        }
-                        else {
-                            resetPathQuery();
+                        else if (state.spatialquery.selectButtonState === 'clear') {
+                            clearSpatialQuery();
                         }
                     });
-                    jQuery('#pathquery_acceptbutton').click(function() {
-                        endPathQuery();
-                        if (state.pathquery.mapshape !== undefined) {
-                            var latLngs = state.pathquery.mapshape.getLatLngs();
-                            if (latLngs.length) {
-                                var qStr = "$path:" + jQuery('#pathquery_radius').val();
-                                
-                                for(i in latLngs) {
-                                    qStr += "," + latLngs[i].lat + "," + latLngs[i].lng;
+                    jQuery('#spatialquery_acceptbutton').click(function() {
+                        if (state.spatialquery.type === undefined) {
+                            return;
+                        }
+                        endSpatialQuery();
+                        var qStr = ""
+                        if (state.spatialquery.type === "rect") {
+                            var minLat = Math.min(state.spatialquery.coords[0].lat, state.spatialquery.coords[1].lat);
+                            var maxLat = Math.max(state.spatialquery.coords[0].lat, state.spatialquery.coords[1].lat);
+                            var minLng = Math.min(state.spatialquery.coords[0].lng, state.spatialquery.coords[1].lng);
+                            var maxLng = Math.max(state.spatialquery.coords[0].lng, state.spatialquery.coords[1].lng);
+                            qStr = "$geo:" + minLng + "," + minLat + "," + maxLng + "," + maxLat;
+                        }
+                        else if (state.spatialquery.type === "path") {
+                            if (state.spatialquery.coords.length > 0) {
+                                qStr = "$path:" + jQuery('#spatialquery_radius').val();
+                                for(i in state.spatialquery.coords) {
+                                    qStr += "," + state.spatialquery.coords[i].lat + "," + state.spatialquery.coords[i].lng;
                                 }
-                            
-                                var st = jQuery('#search_text');
-                                st.val(st.val() + " " + qStr);
-                                st.change();
                             }
                         }
-                        resetPathQuery();
+                        else if (state.spatialquery.type === "poly") {
+                            if (state.spatialquery.coords.length > 3) {
+                                qStr = "$poly";
+                                var delim = ":"
+                                for(i in state.spatialquery.coords) {
+                                    qStr += delim + state.spatialquery.coords[i].lat + "," + state.spatialquery.coords[i].lng;
+                                    delim = ",";
+                                }
+                            }
+                        }
+                        if (qStr.length) {
+                            var st = jQuery('#search_text');
+                            st.val(st.val() + " " + qStr);
+                            st.change();
+                        }
+                        clearSpatialQuery();
                     });
                     
                     //setup help
