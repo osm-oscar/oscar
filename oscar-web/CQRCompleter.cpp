@@ -99,7 +99,9 @@ void CQRCompleter::fullCQR() {
 }
 
 void CQRCompleter::simpleCQR() {
-	typedef sserialize::Static::spatial::GeoHierarchy::SubSet::NodePtr SubSetNodePtr;
+	typedef sserialize::Static::spatial::GeoHierarchy GeoHierarchy;
+	typedef GeoHierarchy::SubSet::NodePtr SubSetNodePtr;
+	typedef std::unordered_set<const sserialize::Static::spatial::GeoHierarchy::SubSet::Node*> RegionSet;
 	sserialize::TimeMeasurer ttm;
 	ttm.begin();
 
@@ -112,10 +114,10 @@ void CQRCompleter::simpleCQR() {
 	std::string regionFilter = request().get("rf");
 	uint32_t cqrSize = 0;
 	double ohf = 0.0;
-	bool relativeReferenceItemCount = false;
+	bool globalUnfoldRatio = true;
 
 	//local
-	std::unordered_set<sserialize::Static::spatial::GeoHierarchy::SubSet::Node*> regions;
+	RegionSet regions;
 	std::vector<uint32_t> ohPath;
 	SubSetNodePtr subSetRootPtr;
 	
@@ -129,11 +131,11 @@ void CQRCompleter::simpleCQR() {
 		}
 		tmpStr = request().get("oht");
 		if (tmpStr == "relative") {
-			relativeReferenceItemCount = true;
+			globalUnfoldRatio = false;
 		}
 	}
 	
-	sserialize::Static::spatial::GeoHierarchy::SubSet subSet;
+	GeoHierarchy::SubSet subSet;
 	if (m_dataPtr->ghSubSetCreators.count(regionFilter)) {
 		subSet = m_dataPtr->completer->clusteredComplete(cqs, m_dataPtr->ghSubSetCreators.at(regionFilter), m_dataPtr->fullSubSetLimit, m_dataPtr->treedCQR);
 	}
@@ -141,36 +143,27 @@ void CQRCompleter::simpleCQR() {
 		subSet = m_dataPtr->completer->clusteredComplete(cqs, m_dataPtr->fullSubSetLimit, m_dataPtr->treedCQR);
 	}
 	
-	sserialize::Static::spatial::GeoHierarchy::SubSet::NodePtr rPtr(subSet.root());
+	GeoHierarchy::SubSet::NodePtr rPtr(subSet.root());
 	subSetRootPtr = rPtr;
 	cqrSize = subSet.cqr().cellCount(); //for stats
 	if (ohf != 0.0) {
-		typedef sserialize::Static::spatial::GeoHierarchy::SubSet::Node::iterator NodeIterator;
-		rPtr = subSet.root();
-		double referenceItemCount = rPtr->maxItemsSize();
-		uint32_t curMax = 0;
-		while (rPtr->size()) {
-			curMax = 0;
-			NodeIterator curMaxChild = rPtr->begin();
-			for(NodeIterator it(rPtr->begin()), end(rPtr->end()); it != end; ++it) {
-				uint32_t tmp = (*it)->maxItemsSize();
-				if ( tmp > curMax ) {
-					curMax = tmp;
-					curMaxChild = it;
-				}
+		struct MyIterator {
+			std::vector<uint32_t> * ohPath;
+			RegionSet * regions;
+			const GeoHierarchy * gh;
+			MyIterator & operator*() { return *this; }
+			MyIterator & operator++() { return *this; }
+			MyIterator & operator=(const SubSetNodePtr & node) {
+				uint32_t storeId = gh->ghIdToStoreId( node->ghId() );
+				ohPath->push_back(storeId);
+				regions->insert(node.get());
 			}
-			if ((double)(curMax)/referenceItemCount >= ohf) {
-				rPtr = *curMaxChild;
-				ohPath.push_back( gh.ghIdToStoreId(rPtr->ghId()) );
-				regions.insert(rPtr.get());
-				if (relativeReferenceItemCount) {
-					referenceItemCount = curMax;
-				}
-			}
-			else {
-				break;
-			}
-		}
+			MyIterator(std::vector<uint32_t> * ohPath, RegionSet * regions, const GeoHierarchy * gh) :
+			ohPath(ohPath), regions(regions), gh(gh)
+			{}
+		};
+		
+		subSet.pathToBranch(MyIterator(&ohPath, &regions, &gh), ohf, globalUnfoldRatio);
 	}
 	//now write the data
 	BinaryWriter bw(response().out());
