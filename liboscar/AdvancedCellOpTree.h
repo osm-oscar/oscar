@@ -363,6 +363,8 @@ AdvancedCellOpTree::Calc<T_CQR_TYPE>::calc(AdvancedCellOpTree::Node* node) {
 		return calcCell(node);
 	case Node::RECT:
 		return calcRect(node);
+	case Node::POLYGON:
+		return calcPolygon(node);
 	case Node::PATH:
 		return calcPath(node);
 	case Node::UNARY_OP:
