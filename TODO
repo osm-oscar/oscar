@@ -67,4 +67,10 @@ So a query would look like that: $rect:1 + $poly:1 + $path:2 - $path:1
 the ids would be replaced before sending to the server (needs some extra work to do the parsing of the uri)
 
 NOW:
+scoring is broken
+
+NOW:
+polygon query is broken? are cells split? such that they are connected?
+
+NOW:
 between query
