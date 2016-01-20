@@ -211,6 +211,8 @@ detail::AdvancedCellOpTree::Node* Parser::parseUnaryOps() {
 	default://hand back
 		return 0;
 	};
+	SSERIALIZE_CHEAP_ASSERT(false);
+	return 0;
 }
 
 //parses a Single query like STRING, REGION, CELL, GEO_RECT, GEO_PATH
