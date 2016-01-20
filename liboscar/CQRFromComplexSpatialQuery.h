@@ -30,11 +30,16 @@ namespace detail {
 
 class CQRFromComplexSpatialQuery: public sserialize::RefCountObject {
 public:
+	typedef sserialize::Static::spatial::GeoHierarchy::SubSet SubSet;
+public:
 	CQRFromComplexSpatialQuery(const sserialize::spatial::GeoHierarchySubSetCreator& ssc, const liboscar::CQRFromPolygon& cqrfp);
 	virtual ~CQRFromComplexSpatialQuery();
 	sserialize::ItemIndex compassOp(const sserialize::CellQueryResult& cqr, liboscar::CQRFromComplexSpatialQuery::UnaryOp direction) const;
 	sserialize::ItemIndex betweenOp(const sserialize::CellQueryResult & cqr1, const sserialize::CellQueryResult & cqr2) const;
 	const liboscar::CQRFromPolygon & cqrfp() const;
+private:
+	SubSet createSubSet(const sserialize::CellQueryResult cqr) const;
+	SubSet::NodePtr determineRelevantRegion(const SubSet & subset) const;
 private:
 	sserialize::spatial::GeoHierarchySubSetCreator m_ssc;
 	liboscar::CQRFromPolygon m_cqrfp;
