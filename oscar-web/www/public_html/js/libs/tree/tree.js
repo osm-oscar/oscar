@@ -7,7 +7,7 @@ define(["dagre-d3", "d3", "jquery"], function () {
                 for (var child in node.children) {
                     if (node.children[child].name) {
                         g.setNode(node.children[child].id, {label: node.children[child].name.toString()});
-                        g.setEdge(node.id, node.children[child].id);
+                        g.setEdge(node.id, node.children[child].id, {lineInterpolate: 'basis'});
                         recursiveAddToGraph(node.children[child], graph)
                     }
                 }
@@ -17,8 +17,8 @@ define(["dagre-d3", "d3", "jquery"], function () {
         // Create the input graph
         var g = new dagreD3.graphlib.Graph()
             .setGraph({
-                nodesep: 70,
-                ranksep: 50,
+                nodesep: 30,
+                ranksep: 30,
                 rankdir: "LR",
                 marginx: 20,
                 marginy: 20
@@ -36,6 +36,10 @@ define(["dagre-d3", "d3", "jquery"], function () {
             node.rx = node.ry = 5;
         });
 
+        g.edges().forEach(function(x){
+            var edge = g.edge(x);
+        });
+
         var render = new dagreD3.render();
         $("#tree").css("display", "block");
         // Set up an SVG group so that we can translate the final graph.
@@ -51,7 +55,7 @@ define(["dagre-d3", "d3", "jquery"], function () {
         // Run the renderer. This is what draws the final graph.
         render(d3.select("svg g"), g);
         // Center the graph
-        var xCenterOffset = (svg.attr("width") - g.graph().width) / 2;
+        var xCenterOffset = ($("#tree").width() - g.graph().width) / 2;
         svgGroup.attr("transform", "translate(" + xCenterOffset + ", 20)");
         svg.attr("height", g.graph().height + 40);
     }
