@@ -879,11 +879,11 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                         var width = (state.map.project(viewport.getNorthEast()).x - state.map.project(viewport.getSouthWest()).x);
                         var height = (state.map.project(viewport.getSouthWest()).y - state.map.project(viewport.getNorthEast()).y);
                         var midpointX = state.map.project(viewport.getSouthWest()).x + (width / 2);
-                        var midpointY = state.map.project(viewport.getSouthWest()).y + (height / 2);
-                        var kernelWidthX = width * 1.6;
-                        var kernelWidthY = height * 1.6;
+                        var midpointY = state.map.project(viewport.getNorthEast()).y + (height / 2);
+                        var kernelWidthX = width / 1.75;
+                        var kernelWidthY = height / 1.75;
                         // use formula for full width at half maximum to set up gaussian: https://en.wikipedia.org/wiki/Gaussian_function
-                        state.gauss = gaussian(2, midpointX, midpointY, kernelWidthX / 2.35482, kernelWidthY / 2.35482);
+                        state.gauss = gaussian(1, midpointX, midpointY, kernelWidthX / 2.35482, kernelWidthY / 2.35482);
 
                         var percent = percentOfOverlap(state.map, node.bbox) * state.gauss(pos.x, pos.y);
                         if (!(marker instanceof L.MarkerCluster) && percent >= myConfig.overlap) {
