@@ -95,7 +95,8 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             domcache: {
                 searchResultsCounter: undefined
             },
-            spinner: new spinner(myConfig.spinnerOpts)
+            spinner: new spinner(myConfig.spinnerOpts),
+            gauss: undefined
         };
 
         // show names of subregions of a cluster in a popup
@@ -872,12 +873,19 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                         // third step: calculate the overlap of the bbox and the viewport. If it is bigger
                         // than the config-value -> load additional data
                         var node = state.DAG.at(marker.rid);
-                        var viewport = state.map.getBounds();
-                        var midpointX = (state.map.project(viewport.getNorthEast()).x - state.map.project(viewport.getSouthWest()).x) / 2;
-                        var midpointY = (state.map.project(viewport.getNorthEast()).y - state.map.project(viewport.getSouthWest()).y) / 2;
-                        var gauss = gaussian(1, midpointX, midpointY, 500000, 500000);
                         var pos = state.map.project(marker.getLatLng());
-                        var percent = percentOfOverlap(state.map, node.bbox) * gauss(pos.x, pos.y);
+
+                        var viewport = state.map.getBounds();
+                        var width = (state.map.project(viewport.getNorthEast()).x - state.map.project(viewport.getSouthWest()).x);
+                        var height = (state.map.project(viewport.getSouthWest()).y - state.map.project(viewport.getNorthEast()).y);
+                        var midpointX = state.map.project(viewport.getSouthWest()).x + (width / 2);
+                        var midpointY = state.map.project(viewport.getSouthWest()).y + (height / 2);
+                        var kernelWidthX = width * 1.6;
+                        var kernelWidthY = height * 1.6;
+                        // use formula for full width at half maximum to set up gaussian: https://en.wikipedia.org/wiki/Gaussian_function
+                        state.gauss = gaussian(2, midpointX, midpointY, kernelWidthX / 2.35482, kernelWidthY / 2.35482);
+
+                        var percent = percentOfOverlap(state.map, node.bbox) * state.gauss(pos.x, pos.y);
                         if (!(marker instanceof L.MarkerCluster) && percent >= myConfig.overlap) {
                             removeMarker(marker);
                             state.regionHandler({rid: marker.rid, draw: true, bbox: node.bbox});
