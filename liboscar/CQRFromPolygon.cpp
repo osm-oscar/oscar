@@ -85,10 +85,10 @@ sserialize::ItemIndex CQRFromPolygon::intersectingCellsPolygonCellBBox(const sse
 		queue.pop_front();
 		sserialize::Static::spatial::GeoShape gs(m_store.geoShape(r.storeId()));
 		bool enclosed = false;
-		if (sgp.type() == sserialize::spatial::GS_POLYGON) {
+		if (gs.type() == sserialize::spatial::GS_POLYGON) {
 			enclosed = sgp.encloses(*(gs.get<sserialize::Static::spatial::GeoPolygon>()));
 		}
-		else if (sgp.type() == sserialize::spatial::GS_MULTI_POLYGON) {
+		else if (gs.type() == sserialize::spatial::GS_MULTI_POLYGON) {
 			enclosed = gs.get<sserialize::Static::spatial::GeoMultiPolygon>()->enclosed(sgp);
 		}
 		if (enclosed) {
