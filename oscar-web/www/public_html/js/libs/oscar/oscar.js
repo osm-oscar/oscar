@@ -623,6 +623,10 @@ define(['jquery', 'sserialize', 'leaflet', 'module'], function (jQuery, sseriali
             );
         },
 
+        isShapeInCache: function(itemId){
+            return this.shapeCache[itemId] !== undefined;
+        },
+
         fetchIndexes: function (arrayOfIndexIds, successCB, errorCB) {
             var idcsToFetch = [];
             var remainingIdcsToFetch = [];

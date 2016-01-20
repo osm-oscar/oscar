@@ -1,5 +1,5 @@
 define(["dagre-d3", "d3", "jquery"], function () {
-    visualizeDAG = function (root) {
+    visualizeDAG = function (root, regionHandler) {
         var dagreD3 = require("dagre-d3");
         var recursiveAddToGraph = function (node, graph) {
             if (node.name) {
@@ -12,6 +12,10 @@ define(["dagre-d3", "d3", "jquery"], function () {
                     }
                 }
             }
+        };
+
+        var nodeOnClick = function(id){
+            regionHandler({rid: id, draw: true});
         };
 
         // Create the input graph
@@ -36,11 +40,8 @@ define(["dagre-d3", "d3", "jquery"], function () {
             node.rx = node.ry = 5;
         });
 
-        g.edges().forEach(function(x){
-            var edge = g.edge(x);
-        });
-
         var render = new dagreD3.render();
+
         $("#tree").css("display", "block");
         // Set up an SVG group so that we can translate the final graph.
         $("#dag").empty();
@@ -54,6 +55,9 @@ define(["dagre-d3", "d3", "jquery"], function () {
         svg.call(zoom);
         // Run the renderer. This is what draws the final graph.
         render(d3.select("svg g"), g);
+
+        d3.selectAll(".node").on("click", nodeOnClick);
+
         // Center the graph
         var xCenterOffset = ($("#tree").width() - g.graph().width) / 2;
         svgGroup.attr("transform", "translate(" + xCenterOffset + ", 20)");

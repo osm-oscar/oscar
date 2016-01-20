@@ -677,6 +677,10 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                             cqr.getMaximumIndependetSet(parentRid, 0, function (regions) {
                                 state.items.clusters.drawn.erase(parentRid);
 
+                                // just load regionShapes into the cache
+                                oscar.getShapes(regions, function (res) {
+                                }, defErrorCB);
+
                                 var j;
                                 for (var i in regions) {
                                     j = itemMap[regions[i]];
@@ -698,16 +702,25 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                                     });
 
                                     marker.on("mouseover", function (e) {
+                                        if(oscar.isShapeInCache(e.target.rid)) {
+                                            oscar.getShape(e.target.rid, function (shape) {
+                                                var leafletItem = oscar.leafletItemFromShape(shape);
+                                                leafletItem.setStyle(myConfig.styles.shapes['regions']['normal']);
+                                                e.target.shape = leafletItem;
+                                                state.map.addLayer(leafletItem);
+                                            }, defErrorCB);
+                                        }
+
                                         L.popup({offset: new L.Point(0, -10)})
                                             .setLatLng(e.latlng)
                                             .setContent(e.target.name).openOn(state.map);
-                                        e.target.rec = L.rectangle(e.target.bbox, {color: "#ff7800", weight: 1});
-                                        e.target.rec.addTo(state.map);
                                     });
 
                                     marker.on("mouseout", function (e) {
                                         closePopups();
-                                        state.map.removeLayer(e.target.rec);
+                                        if (e.target.shape) {
+                                            state.map.removeLayer(e.target.shape);
+                                        }
                                     });
 
                                     if (!state.items.clusters.drawn.count(j.id())) {
@@ -896,8 +909,8 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
         }
 
         function removeMarker(marker) {
-            if (marker.rec) {
-                state.map.removeLayer(marker.rec);
+            if(marker.shape){
+                state.map.removeLayer(marker.shape);
             }
             state.markers.removeLayer(marker);
             closePopups();
@@ -1018,7 +1031,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             });
 
             $('#graph').click(function () {
-                visualizeDAG(state.DAG.at(0xFFFFFFFF));
+                visualizeDAG(state.DAG.at(0xFFFFFFFF), state.regionHandler);
             });
 
             $('#close a').click(function () {
