@@ -279,17 +279,17 @@ body {
     display: none;
 }
 
-#advancedToggle{
+#advancedToggle {
     margin-top: 3px;
     float: right;
 }
 
-#searchModi{
+#searchModi {
     margin-top: 5px;
-    float:left;
+    float: left;
 }
 
-#tree{
+#tree {
     display: none;
     background-color: white;
     z-index: 50000;
@@ -302,12 +302,12 @@ body {
     box-shadow: 0 1px 5px #000;
 }
 
-#dag{
+#dag {
     height: 100%;
     width: 100%;
 }
 
-#close{
+#close {
     position: absolute;
     top: 5px;
     right: 15px;
@@ -320,9 +320,13 @@ a .glyphicon-black {
     font-size: 1.5em;
 }
 
-/* This sets the color for "TK" nodes to a light blue green. */
-g.type-TK > rect {
-    fill: #00ffd0;
+g.type-LOADABLE > rect {
+    fill: #007fff;
+    cursor: pointer;
+}
+
+g.type-LOADABLE .label{
+    cursor: pointer;
 }
 
 text {
@@ -342,16 +346,16 @@ text {
     stroke-width: 1.5px;
 }
 
-#actions{
+#actions {
     margin-bottom: 20px;
 }
 
-#graph{
+#graph {
     margin-top: 10px;
     font-size: 1.5em;
     float: right;
 }
 
-#showCategories{
+#showCategories {
     float: left;
 }

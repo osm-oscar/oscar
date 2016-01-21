@@ -1,12 +1,24 @@
 define(["dagre-d3", "d3", "jquery"], function () {
-    visualizeDAG = function (root, regionHandler) {
+    visualizeDAG = function (root, state) {
         var dagreD3 = require("dagre-d3");
         var recursiveAddToGraph = function (node, graph) {
             if (node.name) {
-                g.setNode(node.id, {label: node.name.toString()});
+                var attr = {label: node.name.toString()};
+                if (state.items.clusters.drawn.count(node.id)) {
+                    attr = {label: node.name.toString(), class: "type-LOADABLE", labelStyle: "color: white"};
+                }
+                g.setNode(node.id, attr);
                 for (var child in node.children) {
                     if (node.children[child].name) {
-                        g.setNode(node.children[child].id, {label: node.children[child].name.toString()});
+                        attr = {label: node.children[child].name.toString()};
+                        if (state.items.clusters.drawn.count(node.children[child].id)) {
+                            attr = {
+                                label: node.children[child].name.toString(),
+                                class: "type-LOADABLE",
+                                labelStyle: "color: white"
+                            };
+                        }
+                        g.setNode(node.children[child].id, attr);
                         g.setEdge(node.id, node.children[child].id, {lineInterpolate: 'basis'});
                         recursiveAddToGraph(node.children[child], graph)
                     }
@@ -14,8 +26,13 @@ define(["dagre-d3", "d3", "jquery"], function () {
             }
         };
 
-        var nodeOnClick = function(id){
-            regionHandler({rid: id, draw: true});
+        var nodeOnClick = function (id) {
+            var marker = state.DAG.at(id).marker;
+            if (marker.shape) {
+                state.map.removeLayer(marker.shape);
+            }
+            state.markers.removeLayer(marker);
+            state.regionHandler({rid: id, draw: true});
         };
 
         // Create the input graph
@@ -56,7 +73,7 @@ define(["dagre-d3", "d3", "jquery"], function () {
         // Run the renderer. This is what draws the final graph.
         render(d3.select("svg g"), g);
 
-        d3.selectAll(".node").on("click", nodeOnClick);
+        d3.selectAll(".type-LOADABLE").on("click", nodeOnClick);
 
         // Center the graph
         var xCenterOffset = ($("#tree").width() - g.graph().width) / 2;

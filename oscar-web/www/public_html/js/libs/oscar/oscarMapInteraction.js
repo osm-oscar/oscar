@@ -96,7 +96,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 searchResultsCounter: undefined
             },
             spinner: new spinner(myConfig.spinnerOpts),
-            gauss: undefined
         };
 
         // show names of subregions of a cluster in a popup
@@ -161,7 +160,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 var itemKey = item.key(i);
                 var itemValue = item.value(i);
 
-                switch (itemKey){
+                switch (itemKey) {
                     case "addr:city":
                         city = itemValue;
                         break;
@@ -723,7 +722,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                                     });
 
                                     marker.on("mouseover", function (e) {
-                                        if(oscar.isShapeInCache(e.target.rid)) {
+                                        if (oscar.isShapeInCache(e.target.rid)) {
                                             oscar.getShape(e.target.rid, function (shape) {
                                                 var leafletItem = oscar.leafletItemFromShape(shape);
                                                 leafletItem.setStyle(myConfig.styles.shapes['regions']['normal']);
@@ -917,9 +916,9 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                         var kernelWidthX = width / 1.75;
                         var kernelWidthY = height / 1.75;
                         // use formula for full width at half maximum to set up gaussian: https://en.wikipedia.org/wiki/Gaussian_function
-                        state.gauss = gaussian(1, midpointX, midpointY, kernelWidthX / 2.35482, kernelWidthY / 2.35482);
+                        var gauss = gaussian(1, midpointX, midpointY, kernelWidthX / 2.35482, kernelWidthY / 2.35482);
 
-                        var percent = percentOfOverlap(state.map, node.bbox) * state.gauss(pos.x, pos.y);
+                        var percent = percentOfOverlap(state.map, node.bbox) * gauss(pos.x, pos.y);
                         if (!(marker instanceof L.MarkerCluster) && percent >= myConfig.overlap) {
                             removeMarker(marker);
                             state.regionHandler({rid: marker.rid, draw: true, bbox: node.bbox});
@@ -930,7 +929,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
         }
 
         function removeMarker(marker) {
-            if(marker.shape){
+            if (marker.shape) {
                 state.map.removeLayer(marker.shape);
             }
             state.markers.removeLayer(marker);
@@ -944,7 +943,9 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
 
             if ($('#searchModi input').is(":checked")) {
                 //TODO: wrong placement of markers if clsutering is aktive. Cause: region midpoint is outside of search rectangle
-                addSingleQueryStatementToQuery("$geo:" + state.map.getBounds().getSouthWest().lng + "," + state.map.getBounds().getSouthWest().lat + "," + state.map.getBounds().getNorthEast().lng + "," + state.map.getBounds().getNorthEast().lat);
+                addSingleQueryStatementToQuery("$geo:" + state.map.getBounds().getSouthWest().lng
+                    + "," + state.map.getBounds().getSouthWest().lat + ","
+                    + state.map.getBounds().getNorthEast().lng + "," + state.map.getBounds().getNorthEast().lat);
             }
 
             $("#showCategories a").click();
@@ -1019,8 +1020,9 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
 
         $(document).ready(function () {
             $("#search_form").click(function () {
-                $('#categories').show(800);
-                $('#subCategories').show(800);
+                if (!$('#categories').is(":visible")) {
+                    $("#showCategories a").click();
+                }
             });
 
             $("#showCategories a").click(function () {
@@ -1051,7 +1053,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             });
 
             $('#graph').click(function () {
-                visualizeDAG(state.DAG.at(0xFFFFFFFF), state.regionHandler);
+                visualizeDAG(state.DAG.at(0xFFFFFFFF), state);
             });
 
             $('#close a').click(function () {
