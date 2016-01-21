@@ -188,7 +188,9 @@ sserialize::ItemIndex CQRFromComplexSpatialQuery::compassOp(const sserialize::Ce
 		p.normalize(sserialize::spatial::GeoPoint::NT_CLIP);
 	}
 	
-	return sserialize::ItemIndex(m_cqrfp.intersectingCells(sserialize::spatial::GeoPolygon(gp), liboscar::CQRFromPolygon::AC_POLYGON_CELL_BBOX));
+	sserialize::ItemIndex tmp(m_cqrfp.intersectingCells(sserialize::spatial::GeoPolygon(gp), liboscar::CQRFromPolygon::AC_POLYGON_CELL_BBOX));
+	tmp = tmp - idxStore().at(m_cqrfp.geoHierarchy().regionCellIdxPtr(myRegion->ghId()));
+	return tmp;
 }
 
 detail::CQRFromComplexSpatialQuery::SubSet
