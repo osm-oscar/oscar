@@ -2,11 +2,11 @@
     <div class="panel panel-default" id="{{{shapeSrcType}}}PanelRoot{{{itemId}}}">
         <div class="panel-heading results-panel-title" role="tab">
             <div class="panel-title" id="{{{shapeSrcType}}}PanelTitle{{{itemId}}}">
-                <h4>
+                <h5>
                     <a class="accordion-toggle {{{matchingTagClass}}}" data-toggle="collapse" data-parent="#{{{shapeSrcType}}}List" href="#{{{shapeSrcType}}}Details{{{itemId}}}" id="{{{shapeSrcType}}}NameLink{{{itemId}}}" aria-expanded="true">
-                        {{itemName}}
+                        <b>{{itemName}}</b>{{#street}}, {{postcode}} {{city}} {{street}} {{housenumber}}{{/street}}
                     </a>
-                </h4>
+                </h5>
             </div>
         </div>
         <div class="panel-collapse collapse" role="tabpanel" id="{{{shapeSrcType}}}Details{{{itemId}}}" data-item-id="{{{itemId}}}" aria-expanded="true">

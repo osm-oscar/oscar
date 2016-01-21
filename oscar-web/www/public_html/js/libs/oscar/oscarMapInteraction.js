@@ -155,10 +155,27 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             var wikiLink = undefined;
             var hasMatchingTag = false;
             var protoRegExp = /^.*:\/\//;
+            var postcode, street, city, houseNumber;
 
             for (var i = 0; i < item.size(); ++i) {
                 var itemKey = item.key(i);
                 var itemValue = item.value(i);
+
+                switch (itemKey){
+                    case "addr:city":
+                        city = itemValue;
+                        break;
+                    case "addr:postcode":
+                        postcode = itemValue;
+                        break;
+                    case "addr:street":
+                        street = itemValue;
+                        break;
+                    case "addr:housenumber":
+                        houseNumber = itemValue;
+                        break;
+                }
+
                 if (itemKey === "wikipedia") {
                     if (protoRegExp.test(itemValue)) {
                         itemUrls.push({"k": itemKey, "v": itemValue});
@@ -190,6 +207,10 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 "osmId": item.osmid(),
                 "osmType": item.type(),
                 "itemName": item.name(),
+                "postcode": postcode,
+                "city": city,
+                "street": street,
+                "housenumber": houseNumber,
                 "matchingTagClass": (hasMatchingTag ? "name-has-matched-tag" : false),
                 "wikilink": wikiLink,
                 "urlkvs": itemUrls,
