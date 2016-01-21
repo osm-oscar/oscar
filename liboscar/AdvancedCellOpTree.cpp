@@ -126,9 +126,9 @@ Token Tokenizer::next() {
 		case '<':
 		{
 			t.type = Token::BETWEEN_OP;
-			const char * cmp = "->";
+			const char * cmp = "<->";
 			auto it(m_state.it);
-			for(int i(0); it != m_state.end && i < 2 && *it == *cmp; ++it, ++cmp, ++i) {}
+			for(int i(0); it != m_state.end && i < 3 && *it == *cmp; ++it, ++cmp, ++i) {}
 			t.value.assign(m_state.it, it);
 			m_state.it = it;
 			return t;
