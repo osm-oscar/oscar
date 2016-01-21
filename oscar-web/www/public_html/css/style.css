@@ -206,7 +206,12 @@ body {
 }
 
 .results-panel-title:hover {
-    background: #e0e0e0;
+    border-color: #003eff;
+    background: #007fff;
+}
+
+.results-panel-title:hover a {
+    color: white;
 }
 
 #right_menu_parent .name-has-matched-tag {

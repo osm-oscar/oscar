@@ -926,8 +926,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 addSingleQueryStatementToQuery("$geo:" + state.map.getBounds().getSouthWest().lng + "," + state.map.getBounds().getSouthWest().lat + "," + state.map.getBounds().getNorthEast().lng + "," + state.map.getBounds().getNorthEast().lat);
             }
 
-            $('#categories').hide(800);
-            $('#subCategories').hide(800);
+            $("#showCategories a").click();
             state.sidebar.open("search");
             $("#flickr").hide("slide", {direction: "right"}, myConfig.styles.slide.speed);
 
