@@ -29,12 +29,18 @@ namespace detail {
 namespace AdvancedCellOpTree {
 
 struct Node {
-	enum Type : int { DILATION_OP, COMPASS_OP, UNARY_OP, BETWEEN_OP, BINARY_OP, RECT, POLYGON, PATH, REGION, CELL, STRING};
-	int type;
+	enum Type : int { UNARY_OP, BINARY_OP, LEAF};
+	enum OpType : int {
+		FM_CONVERSION_OP, DILATION_OP, COMPASS_OP,
+		SET_OP, BETWEEN_OP,
+		RECT, POLYGON, PATH, REGION, CELL, STRING
+	};
+	int baseType;
+	int subType;
 	std::string value;
 	std::vector<Node*> children;
 	Node() {}
-	Node(int type, const std::string & value) : type(type), value(value) {}
+	Node(int baseType, int subType, const std::string & value) : baseType(baseType), subType(subType), value(value) {}
 	~Node() {
 		for(Node* & n : children) {
 			delete n;
@@ -51,11 +57,11 @@ struct Token {
 		ENDOFFILE = 0,
 		INVALID_TOKEN = 258,
 		INVALID_CHAR,
-		UNARY_OP,
+		FM_CONVERSION_OP,
 		DILATION_OP,
 		COMPASS_OP,
 		BETWEEN_OP,
-		BINARY_OP,
+		SET_OP,
 		GEO_RECT,
 		GEO_POLYGON,
 		GEO_PATH,
@@ -354,32 +360,51 @@ AdvancedCellOpTree::Calc<T_CQR_TYPE>::calc(AdvancedCellOpTree::Node* node) {
 	if (!node) {
 		return CQRType();
 	}
-	switch (node->type) {
-	case Node::STRING:
-		return calcString(node);
-	case Node::REGION:
-		return calcRegion(node);
-	case Node::CELL:
-		return calcCell(node);
-	case Node::RECT:
-		return calcRect(node);
-	case Node::POLYGON:
-		return calcPolygon(node);
-	case Node::PATH:
-		return calcPath(node);
+	switch (node->baseType) {
+	case Node::LEAF:
+		switch (node->subType) {
+		case Node::STRING:
+			return calcString(node);
+		case Node::REGION:
+			return calcRegion(node);
+		case Node::CELL:
+			return calcCell(node);
+		case Node::RECT:
+			return calcRect(node);
+		case Node::POLYGON:
+			return calcPolygon(node);
+		case Node::PATH:
+			return calcPath(node);
+		default:
+			break;
+		};
+		break;
 	case Node::UNARY_OP:
-		return calcUnaryOp(node);
-	case Node::DILATION_OP:
-		return calcDilationOp(node);
-	case Node::COMPASS_OP:
-		return calcCompassOp(node);
+		switch(node->subType) {
+		case Node::FM_CONVERSION_OP:
+			return calcUnaryOp(node);
+		case Node::DILATION_OP:
+			return calcDilationOp(node);
+		case Node::COMPASS_OP:
+			return calcCompassOp(node);
+		default:
+			break;
+		};
+		break;
 	case Node::BINARY_OP:
-		return calcBinaryOp(node);
-	case Node::BETWEEN_OP:
-		return calcBetweenOp(node);
+		switch(node->subType) {
+		case Node::SET_OP:
+			return calcBinaryOp(node);
+		case Node::BETWEEN_OP:
+			return calcBetweenOp(node);
+		default:
+			break;
+		};
+		break;
 	default:
-		return CQRType();
+		break;
 	};
+	return CQRType();
 }
 
 }//end namespace

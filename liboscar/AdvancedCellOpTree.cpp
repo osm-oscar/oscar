@@ -33,7 +33,7 @@ Token Tokenizer::next() {
 		switch (*m_state.it) {
 		case '%':
 		{
-			t.type = Token::UNARY_OP;
+			t.type = Token::FM_CONVERSION_OP;
 			t.value += *m_state.it;
 			++m_state.it;
 			//check if theres a number afterwards, because then this is dilation operation
@@ -56,7 +56,7 @@ Token Tokenizer::next() {
 		case '-':
 		case '/':
 		case '^':
-			t.type = Token::BINARY_OP;
+			t.type = Token::SET_OP;
 			t.value += *m_state.it;
 			++m_state.it;
 			return t;
@@ -114,7 +114,8 @@ Token Tokenizer::next() {
 		case ':':
 		{
 			t.type = Token::COMPASS_OP;
-			for(auto it(m_state.it); it != m_state.it; ++it) {
+			++m_state.it;
+			for(auto it(m_state.it); it != m_state.end; ++it) {
 				if (*it == ' ' || *it == '\t' || *it == '(') {
 					t.value.assign(m_state.it, it);
 					m_state.it = it;
@@ -190,13 +191,29 @@ bool Parser::eat(Token::Type t) {
 
 detail::AdvancedCellOpTree::Node* Parser::parseUnaryOps() {
 	Token t = peek();
+	int nst = 0;
 	switch (t.type) {
 	case Token::DILATION_OP:
-	case Token::UNARY_OP:
+		nst = Node::DILATION_OP;
+		break;
+	case Token::FM_CONVERSION_OP:
+		nst = Node::FM_CONVERSION_OP;
+		break;
+	case Token::COMPASS_OP:
+		nst = Node::COMPASS_OP;
+	default:
+		break;
+	}
+	
+	switch (t.type) {
+	case Token::DILATION_OP:
+	case Token::FM_CONVERSION_OP:
+	case Token::COMPASS_OP:
 	{
 		pop();
 		Node * unaryOpNode = new Node();
-		unaryOpNode->type = (t.type == Token::UNARY_OP ? Node::UNARY_OP : Node::DILATION_OP);
+		unaryOpNode->baseType = Node::UNARY_OP;
+		unaryOpNode->subType = nst;
 		unaryOpNode->value = t.value;
 		Node* cn = parseSingleQ();
 		if (cn) {
@@ -228,43 +245,44 @@ detail::AdvancedCellOpTree::Node* Parser::parseSingleQ() {
 		return tmp;
 	}
 	case Token::DILATION_OP:
-	case Token::UNARY_OP:
+	case Token::FM_CONVERSION_OP:
+	case Token::COMPASS_OP:
 	{
 		return parseUnaryOps();
 	}
 	case Token::CELL:
 	{
 		pop();
-		return new Node(Node::CELL, t.value);
+		return new Node(Node::LEAF, Node::CELL, t.value);
 	}
 	case Token::REGION:
 	{
 		pop();
-		return new Node(Node::REGION, t.value);
+		return new Node(Node::LEAF, Node::REGION, t.value);
 		break;
 	}
 	case Token::GEO_PATH:
 	{
 		pop();
-		return new Node(Node::PATH, t.value);
+		return new Node(Node::LEAF, Node::PATH, t.value);
 		break;
 	}
 	case Token::GEO_RECT:
 	{
 		pop();
-		return new Node(Node::RECT, t.value);
+		return new Node(Node::LEAF, Node::RECT, t.value);
 		break;
 	}
 	case Token::GEO_POLYGON:
 	{
 		pop();
-		return new Node(Node::POLYGON, t.value);
+		return new Node(Node::LEAF, Node::POLYGON, t.value);
 		break;
 	}
 	case Token::STRING:
 	{
 		pop();
-		return new Node(Node::STRING, t.value);
+		return new Node(Node::LEAF, Node::STRING, t.value);
 		break;
 	}
 	case Token::ENDOFFILE:
@@ -284,7 +302,7 @@ detail::AdvancedCellOpTree::Node* Parser::parseQ() {
 		switch (t.type) {
 		case ')': //leave scope, caller removes closing brace
 			//check if there's an unfinished operation, if there is ditch it
-			if (n && n->type == Node::BINARY_OP && n->children.size() == 1) {
+			if (n && n->baseType == Node::BINARY_OP && n->children.size() == 1) {
 				Node* tmp = n;
 				n = tmp->children.front();
 				tmp->children.clear();
@@ -292,8 +310,9 @@ detail::AdvancedCellOpTree::Node* Parser::parseQ() {
 			}
 			return n;
 			break;
-		case Token::UNARY_OP:
+		case Token::FM_CONVERSION_OP:
 		case Token::DILATION_OP:
+		case Token::COMPASS_OP:
 		{
 			curTokenNode = parseUnaryOps();
 			if (!curTokenNode) { //something went wrong, skip this op
@@ -301,13 +320,15 @@ detail::AdvancedCellOpTree::Node* Parser::parseQ() {
 			}
 			break;
 		}
-		case Token::BINARY_OP:
+		case Token::SET_OP:
+		case Token::BETWEEN_OP:
 		{
 			pop();
 			 //we need to have a valid child, otherwise this operation is bogus (i.e. Q ++ Q)
-			if (n && !(n->type == Node::BINARY_OP && n->children.size() < 2)) {
+			if (n && !(n->baseType == Node::BINARY_OP && n->children.size() < 2)) {
 				Node * opNode = new Node();
-				opNode->type = Node::BINARY_OP;
+				opNode->baseType = Node::BINARY_OP;
+				opNode->subType = (t.type == Token::SET_OP ? Node::SET_OP : Node::BETWEEN_OP);
 				opNode->value = t.value;
 				opNode->children.push_back(n);
 				n = 0;
@@ -330,11 +351,11 @@ detail::AdvancedCellOpTree::Node* Parser::parseQ() {
 			continue;
 		}
 		if (n) {
-			if (n->type == Node::BINARY_OP && n->children.size() < 2) {
+			if (n->baseType == Node::BINARY_OP && n->children.size() < 2) {
 				n->children.push_back(curTokenNode);
 			}
 			else {//implicit intersection
-				Node * opNode = new Node(Node::BINARY_OP, " ");
+				Node * opNode = new Node(Node::BINARY_OP, Node::SET_OP, " ");
 				opNode->children.push_back(n);
 				opNode->children.push_back(curTokenNode);
 				n = opNode;
@@ -409,16 +430,16 @@ sserialize::ItemIndex AdvancedCellOpTree::CalcBase::calcBetweenOp(const sseriali
 
 sserialize::ItemIndex AdvancedCellOpTree::CalcBase::calcCompassOp(AdvancedCellOpTree::Node* node, const sserialize::CellQueryResult& cqr) {
 	CQRFromComplexSpatialQuery::UnaryOp direction = CQRFromComplexSpatialQuery::UO_INVALID;
-	if (node->value == ":^" || node->value == ":north-of") {
+	if (node->value == "^" || node->value == "north-of") {
 		direction = CQRFromComplexSpatialQuery::UO_NORTH_OF;
 	}
-	else if (node->value == ":>" || node->value == ":east-of") {
+	else if (node->value == ">" || node->value == "east-of") {
 		direction = CQRFromComplexSpatialQuery::UO_EAST_OF;
 	}
-	else if (node->value == ":v" || node->value == ":south-of") {
+	else if (node->value == "v" || node->value == "south-of") {
 		direction = CQRFromComplexSpatialQuery::UO_SOUTH_OF;
 	}
-	else if (node->value == ":<" || node->value == ":west-of") {
+	else if (node->value == "<" || node->value == "west-of") {
 		direction = CQRFromComplexSpatialQuery::UO_WEST_OF;
 	}
 	return m_csq.compassOp(cqr, direction);
