@@ -17,6 +17,7 @@ public:
 	CQRFromPolygon(const Static::OsmKeyValueObjectStore & store, const sserialize::Static::ItemIndexStore & idxStore);
 	~CQRFromPolygon();
 	const sserialize::Static::spatial::GeoHierarchy & geoHierarchy() const;
+	const sserialize::Static::ItemIndexStore & idxStore() const;
 	sserialize::ItemIndex intersectingCells(const sserialize::spatial::GeoPolygon & gp, Accuracy ac) const;
 private:
 	sserialize::RCPtrWrapper<detail::CQRFromPolygon> m_priv;
@@ -29,6 +30,7 @@ public:
 	CQRFromPolygon(const Static::OsmKeyValueObjectStore & store, const sserialize::Static::ItemIndexStore & idxStore);
 	virtual ~CQRFromPolygon();
 	const sserialize::Static::spatial::GeoHierarchy & geoHierarchy() const;
+	const sserialize::Static::ItemIndexStore & idxStore() const;
 	sserialize::ItemIndex intersectingCells(const sserialize::spatial::GeoPolygon& gp, liboscar::CQRFromPolygon::Accuracy ac) const;
 private:
 	sserialize::ItemIndex intersectingCellsPolygonCellBBox(const sserialize::spatial::GeoPolygon & gp) const;

@@ -17,6 +17,11 @@ CQRFromPolygon::~CQRFromPolygon() {}
 const sserialize::Static::spatial::GeoHierarchy & CQRFromPolygon::geoHierarchy() const {
 	return m_priv->geoHierarchy();
 }
+
+const sserialize::Static::ItemIndexStore & CQRFromPolygon::idxStore() const {
+	return m_priv->idxStore();
+}
+
 sserialize::ItemIndex CQRFromPolygon::intersectingCells(const sserialize::spatial::GeoPolygon & gp, Accuracy ac) const {
 	return m_priv->intersectingCells(gp, ac);
 }
@@ -32,6 +37,10 @@ CQRFromPolygon::~CQRFromPolygon() {}
 
 const sserialize::Static::spatial::GeoHierarchy& CQRFromPolygon::geoHierarchy() const {
 	return m_store.geoHierarchy();
+}
+
+const sserialize::Static::ItemIndexStore & CQRFromPolygon::idxStore() const {
+	return m_idxStore;
 }
 
 sserialize::ItemIndex CQRFromPolygon::intersectingCells(const sserialize::spatial::GeoPolygon & gp, liboscar::CQRFromPolygon::Accuracy ac) const {
