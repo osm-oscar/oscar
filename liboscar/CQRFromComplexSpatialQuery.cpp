@@ -1,4 +1,5 @@
 #include "CQRFromComplexSpatialQuery.h"
+#include <sserialize/spatial/LatLonCalculations.h>
 
 namespace liboscar {
 
@@ -37,11 +38,91 @@ const liboscar::CQRFromPolygon & CQRFromComplexSpatialQuery::cqrfp() const {
 	return m_cqrfp;
 }
 
-sserialize::ItemIndex CQRFromComplexSpatialQuery::betweenOp(const sserialize::CellQueryResult& cqr1, const sserialize::CellQueryResult& cqr2) const {
-
-	return sserialize::ItemIndex();
+const sserialize::Static::ItemIndexStore& CQRFromComplexSpatialQuery::idxStore() const {
+	return m_cqrfp.idxStore();
 }
 
+sserialize::ItemIndex CQRFromComplexSpatialQuery::betweenOp(const sserialize::CellQueryResult& cqr1, const sserialize::CellQueryResult& cqr2) const {
+	SubSet s1(createSubSet(cqr1)), s2(createSubSet(cqr2));
+	SubSet::NodePtr np1(determineRelevantRegion(s1)), np2(determineRelevantRegion(s2));
+	if (!np1.get() || !np2.get() || np1->ghId() == np2->ghId()) {
+		return sserialize::ItemIndex();
+	}
+	
+	sserialize::spatial::GeoRect rect1(m_cqrfp.geoHierarchy().regionBoundary(np1->ghId()));
+	sserialize::spatial::GeoRect rect2(m_cqrfp.geoHierarchy().regionBoundary(np2->ghId()));
+	
+	//real bearing may be the wrong bearing here
+	double bearing = sserialize::spatial::bearingTo(rect1.midLat(), rect1.midLon(), rect2.midLat(), rect2.midLon());
+// 	bearing = ::sin(bearing);
+	
+	std::vector<sserialize::spatial::GeoPoint> gp;
+	
+	//we distinguish 8 different cases, bearing is the angle to the north
+	if (bearing > (360.0-22.5) || bearing < 22.5) { //north
+		//used points: mid points of the boundaries
+		gp.emplace_back(rect1.midLat(), rect1.minLon()); //lower left
+		gp.emplace_back(rect2.midLat(), rect2.minLon()); //upper left
+		gp.emplace_back(rect2.midLat(), rect2.maxLon()); //upper right
+		gp.emplace_back(rect1.midLat(), rect1.maxLon()); //lower right
+	}
+	else if (bearing < (45.0+22.5)) { //north-east
+		//used points: diagonal points of the bbox
+		gp.emplace_back(rect1.minLat(), rect1.maxLon()); //lower left
+		gp.emplace_back(rect1.maxLat(), rect1.minLon()); //upper left
+		gp.emplace_back(rect2.maxLat(), rect2.minLon()); //upper right
+		gp.emplace_back(rect2.minLat(), rect2.maxLon()); //lower right
+	}
+	else if (bearing < (90.0+22.5)) { //east
+		gp.emplace_back(rect1.minLat(), rect1.midLon()); //lower left
+		gp.emplace_back(rect1.maxLat(), rect1.midLon()); //upper left
+		gp.emplace_back(rect2.maxLat(), rect2.midLon()); //upper right
+		gp.emplace_back(rect2.minLat(), rect2.midLon()); //lower right
+	}
+	else if (bearing < 135.0+22.5) { //south-east
+		gp.emplace_back(rect1.minLat(), rect1.minLon()); //lower left
+		gp.emplace_back(rect1.maxLat(), rect1.maxLon()); //upper left
+		gp.emplace_back(rect2.maxLat(), rect2.maxLon()); //upper right 
+		gp.emplace_back(rect2.minLat(), rect2.minLon()); //lower left
+	}
+	else if (bearing < (180.0+22.5)) { //south
+		gp.emplace_back(rect2.midLat(), rect2.minLon()); //lower left
+		gp.emplace_back(rect1.midLat(), rect1.minLon()); //upper left
+		gp.emplace_back(rect1.midLat(), rect1.maxLon()); //upper right
+		gp.emplace_back(rect2.midLat(), rect2.maxLon()); //lower right
+	}
+	else if (bearing < (225.0+22.5)) { //south-west
+		gp.emplace_back(rect2.minLat(), rect2.maxLon()); //lower left
+		gp.emplace_back(rect2.maxLat(), rect2.minLon()); //upper left
+		gp.emplace_back(rect1.maxLat(), rect1.minLon()); //upper right
+		gp.emplace_back(rect1.minLat(), rect1.maxLon()); //lower right
+	}
+	else if (bearing < (270.0+22.5)) { //west
+		gp.emplace_back(rect2.minLat(), rect2.midLon()); //lower left
+		gp.emplace_back(rect2.maxLat(), rect2.midLon()); //upper left
+		gp.emplace_back(rect1.maxLat(), rect1.midLon()); //upper right
+		gp.emplace_back(rect1.minLat(), rect1.midLon()); //lower right
+	}
+	else { //north-west
+		gp.emplace_back(rect2.minLat(), rect2.minLon()); //lower left
+		gp.emplace_back(rect2.maxLat(), rect2.maxLon()); //upper left
+		gp.emplace_back(rect1.maxLat(), rect1.maxLon()); //upper right
+		gp.emplace_back(rect1.minLat(), rect1.minLon()); //lower right
+	}
+	
+	//normalize points
+	for(sserialize::spatial::GeoPoint & p : gp) {
+		p.normalize(sserialize::spatial::GeoPoint::NT_CLIP);
+	}
+	
+	sserialize::ItemIndex tmp(m_cqrfp.intersectingCells(sserialize::spatial::GeoPolygon(gp), liboscar::CQRFromPolygon::AC_POLYGON_CELL_BBOX));
+	//now remove the cells that are part of the input regions
+	tmp = tmp - idxStore().at(m_cqrfp.geoHierarchy().regionCellIdxPtr(np1->ghId()));
+	tmp = tmp - idxStore().at(m_cqrfp.geoHierarchy().regionCellIdxPtr(np2->ghId()));
+	return tmp;
+}
+
+//todo: clip
 sserialize::ItemIndex CQRFromComplexSpatialQuery::compassOp(const sserialize::CellQueryResult& cqr, liboscar::CQRFromComplexSpatialQuery::UnaryOp direction) const {
 	double inDirectionScale = 2.0; //in direction of compass
 	double orthoToDirectionScale = 0.5; //orthogonal to compass direction
@@ -102,6 +183,10 @@ sserialize::ItemIndex CQRFromComplexSpatialQuery::compassOp(const sserialize::Ce
 	default:
 		return sserialize::ItemIndex();
 	};
+	//normalize points
+	for(sserialize::spatial::GeoPoint & p : gp) {
+		p.normalize(sserialize::spatial::GeoPoint::NT_CLIP);
+	}
 	
 	return sserialize::ItemIndex(m_cqrfp.intersectingCells(sserialize::spatial::GeoPolygon(gp), liboscar::CQRFromPolygon::AC_POLYGON_CELL_BBOX));
 }

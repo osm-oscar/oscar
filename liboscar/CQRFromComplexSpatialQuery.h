@@ -40,6 +40,7 @@ public:
 private:
 	SubSet createSubSet(const sserialize::CellQueryResult cqr) const;
 	SubSet::NodePtr determineRelevantRegion(const SubSet & subset) const;
+	const sserialize::Static::ItemIndexStore & idxStore() const;
 private:
 	sserialize::spatial::GeoHierarchySubSetCreator m_ssc;
 	liboscar::CQRFromPolygon m_cqrfp;
