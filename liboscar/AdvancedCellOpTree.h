@@ -88,7 +88,9 @@ public:
 	Tokenizer(const State & state);
 	Token next();
 private:
-	static bool isSeperator(char c);
+	static bool isWhiteSpace(char c);
+	static bool isOperator(char c);
+	static bool isScope(char c);
 private:
 	State m_state;
 };

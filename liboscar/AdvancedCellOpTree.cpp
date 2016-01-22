@@ -16,12 +16,18 @@ Tokenizer::Tokenizer(std::string::const_iterator begin, std::string::const_itera
 	m_state.end = end;
 }
 
-bool Tokenizer::isSeperator(char c) {
-	return (c == ' ' || c == '\t' || //white space
-			c == '(' || c == ')' || //braces open new queries
-			c == '+' || c == '-' || c == '/' || c == '%' || c == '^'); //operators
+bool Tokenizer::isScope(char c) {
+	return (c == '(' || c == ')');
 }
 
+
+bool Tokenizer::isWhiteSpace(char c) {
+	return (c == ' ' || c == '\t');
+}
+
+bool Tokenizer::isOperator(char c) {
+	return (c == '+' || c == '-' || c == '/' || c == '^' || c == '%' || c == ':');
+}
 
 //TODO:use ragel to parse? yes, use ragel since this gets more and more complex
 Token Tokenizer::next() {
@@ -100,7 +106,7 @@ Token Tokenizer::next() {
 				t.type = Token::GEO_PATH;
 			}
 			for(; m_state.it != m_state.end;) {
-				if (isSeperator(*m_state.it)) {
+				if (isWhiteSpace(*m_state.it) || isOperator(*m_state.it) || isScope(*m_state.it)) {
 					break;
 				}
 				else {
@@ -145,7 +151,7 @@ Token Tokenizer::next() {
 						++m_state.it;
 					}
 				}
-				else if (isSeperator(c)) {
+				else if (isWhiteSpace(c) || isScope(c)) {
 					break;
 				}
 				else {
