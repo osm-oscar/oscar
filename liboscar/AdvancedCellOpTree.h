@@ -82,17 +82,25 @@ public:
 		std::string::const_iterator it;
 		std::string::const_iterator end;
 	};
+private:
+	//reserved for the future in case string hinting is needed, should get optimized away
+	struct StringHinter {
+		inline bool operator()(const std::string::const_iterator & /*begin*/, const std::string::const_iterator & /*end*/) const { return false; }
+	};
 public:
 	Tokenizer();
 	Tokenizer(std::string::const_iterator begin, std::string::const_iterator end); 
 	Tokenizer(const State & state);
 	Token next();
 private:
+	std::string readString();
+private:
 	static bool isWhiteSpace(char c);
 	static bool isOperator(char c);
 	static bool isScope(char c);
 private:
 	State m_state;
+	StringHinter * m_strHinter;
 };
 
 class Parser {

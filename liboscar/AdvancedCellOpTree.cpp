@@ -5,10 +5,11 @@ namespace detail {
 namespace AdvancedCellOpTree {
 namespace parser {
 
-Tokenizer::Tokenizer() {}
+Tokenizer::Tokenizer() : m_strHinter(0) {}
 
 Tokenizer::Tokenizer(const Tokenizer::State& state) :
-m_state(state)
+m_state(state),
+m_strHinter(new StringHinter())
 {}
 
 Tokenizer::Tokenizer(std::string::const_iterator begin, std::string::const_iterator end) {
@@ -27,6 +28,112 @@ bool Tokenizer::isWhiteSpace(char c) {
 
 bool Tokenizer::isOperator(char c) {
 	return (c == '+' || c == '-' || c == '/' || c == '^' || c == '%' || c == ':');
+}
+
+std::string Tokenizer::readString() {
+	std::string tokenString;
+	int lastValidStrSize = -1; //one passed the end == size of the valid string
+	std::string::const_iterator lastValidStrIt = m_state.it;
+	if (*m_state.it == '?') {
+		tokenString += '?';
+		++m_state.it;
+		lastValidStrIt = m_state.it;
+		lastValidStrSize = tokenString.size();
+	}
+	if (*m_state.it == '"') {
+		tokenString += *m_state.it;
+		++m_state.it;
+		while(m_state.it != m_state.end) {
+			if (*m_state.it == '\\') {
+				++m_state.it;
+				if (m_state.it != m_state.end) {
+					tokenString += *m_state.it;
+					++m_state.it;
+				}
+				else {
+					break;
+				}
+			}
+			else if (*m_state.it == '"') {
+				tokenString += *m_state.it;
+				++m_state.it;
+				break;
+			}
+			else {
+				tokenString += *m_state.it;
+				++m_state.it;
+			}
+		}
+		lastValidStrIt = m_state.it;
+		lastValidStrSize = tokenString.size();
+		if (m_state.it != m_state.end && *m_state.it == '?') {
+			tokenString += *m_state.it;
+			++m_state.it;
+			lastValidStrIt = m_state.it;
+			lastValidStrSize = tokenString.size();
+		}
+	}
+	else {
+		if (lastValidStrSize > 0) { //we've read a '?'
+			lastValidStrIt = m_state.it-1;
+			lastValidStrSize = -1;
+		}
+		while (m_state.it != m_state.end) {
+			if (*m_state.it == '\\') {
+				++m_state.it;
+				if (m_state.it != m_state.end) {
+					tokenString += *m_state.it;
+					++m_state.it;
+				}
+				else
+					break;
+			}
+			else if (*m_state.it == ' ') {
+				tokenString += *m_state.it;
+				if (m_strHinter->operator()(tokenString.cbegin(), tokenString.cend())) {
+					if (tokenString.size() > 1 && tokenString.at(tokenString.size()-2) != ' ') {
+						lastValidStrSize = tokenString.size()-1;
+						lastValidStrIt = m_state.it;
+					}
+					++m_state.it;
+				}
+				else {
+					tokenString.pop_back();
+					break;
+				}
+			}
+			else if (isScope(*m_state.it)) {
+				//we've read a string with spaces, check if all up to here is also part of it
+				if (lastValidStrSize >= 0 && tokenString.size() && tokenString.back() != ' ' && m_strHinter->operator()(tokenString.cbegin(), tokenString.cend())) {
+					lastValidStrSize = tokenString.size();
+					lastValidStrIt = m_state.it;
+				}
+				break;
+			}
+			else if (isOperator(*m_state.it)) {
+				if (tokenString.size() && tokenString.back() == ' ') {
+					break;
+				}
+				else {
+					tokenString += *m_state.it;
+					++m_state.it;
+				}
+			}
+			else {
+				tokenString += *m_state.it;
+				++m_state.it;
+			}
+		}
+		if (lastValidStrSize < 0 || (m_state.it == m_state.end && m_strHinter->operator()(tokenString.cbegin(), tokenString.cend()))) {
+			lastValidStrSize = tokenString.size();
+			lastValidStrIt = m_state.it;
+		}
+		else if (lastValidStrSize > 0) {
+			m_state.it = lastValidStrIt;
+		}
+	}
+	tokenString.resize(lastValidStrSize);
+	return tokenString;
 }
 
 //TODO:use ragel to parse? yes, use ragel since this gets more and more complex
@@ -142,23 +249,7 @@ Token Tokenizer::next() {
 		default: //read as normal string
 		{
 			t.type = Token::STRING;
-			for(; m_state.it != m_state.end;) {
-				char c = *m_state.it;
-				if (c == '\\') { //next char is escaped
-					++m_state.it;
-					if (m_state.it != m_state.end) {
-						t.value += *m_state.it;
-						++m_state.it;
-					}
-				}
-				else if (isWhiteSpace(c) || isScope(c)) {
-					break;
-				}
-				else {
-					t.value += c;
-					++m_state.it;
-				}
-			}
+			t.value = readString();
 			return t;
 			break;
 		}
