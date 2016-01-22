@@ -210,7 +210,7 @@ CQRFromComplexSpatialQuery::determineRelevantRegion(const detail::CQRFromComplex
 		SubSet::NodePtr & nodePtr;
 		MyIterator & operator*() { return *this; }
 		MyIterator & operator++() { return *this; }
-		MyIterator & operator=(const SubSet::NodePtr & node) { nodePtr = node; }
+		MyIterator & operator=(const SubSet::NodePtr & node) { nodePtr = node; return *this;}
 		MyIterator(SubSet::NodePtr & nodePtr) : nodePtr(nodePtr) {}
 	};
 	MyIterator myIt(nodePtr);

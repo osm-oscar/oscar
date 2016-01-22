@@ -1,6 +1,4 @@
 #include "CQRFromPolygon.h"
-#include <sserialize/Static/GeoPolygon.h>
-#include <sserialize/Static/GeoMultiPolygon.h>
 
 namespace liboscar {
 
@@ -59,112 +57,65 @@ sserialize::ItemIndex CQRFromPolygon::fullMatches(const sserialize::spatial::Geo
 	}
 	case liboscar::CQRFromPolygon::AC_POLYGON_BBOX_CELL_BBOX:
 	default:
-		return m_store.geoHierarchy().intersectingCells(m_idxStore, gp.boundary());
+		return m_store.geoHierarchy().intersectingCells(idxStore(), gp.boundary());
 		break;
 	};
 }
 
 sserialize::CellQueryResult CQRFromPolygon::cqr(const sserialize::spatial::GeoPolygon& gp, liboscar::CQRFromPolygon::Accuracy ac) const {
 	switch (ac) {
-	case liboscar::CQRFromPolygon::AC_POLYGON_ITEM_BBOX:
-		return intersectingCellsPolygonItemBBox(gp);
-	case liboscar::CQRFromPolygon::AC_POLYGON_ITEM:
-		return intersectingCellsPolygonItem(gp);
 	case liboscar::CQRFromPolygon::AC_POLYGON_BBOX_CELL_BBOX:
+		return sserialize::CellQueryResult(m_store.geoHierarchy().intersectingCells(idxStore(), gp.boundary()), m_store.geoHierarchy(), idxStore());
 	case liboscar::CQRFromPolygon::AC_POLYGON_CELL_BBOX:
 	case liboscar::CQRFromPolygon::AC_POLYGON_CELL:
-	default:
 		return sserialize::CellQueryResult(intersectingCellsPolygonCellBBox(gp), m_store.geoHierarchy(), idxStore());
+	case liboscar::CQRFromPolygon::AC_POLYGON_ITEM_BBOX:
+		return intersectingCellsPolygonItem<detail::CQRFromPolygonHelpers::PolyCellItemBBoxIntersectOp>(gp);
+	case liboscar::CQRFromPolygon::AC_POLYGON_ITEM:
+		return intersectingCellsPolygonItem<detail::CQRFromPolygonHelpers::PolyCellItemIntersectOp>(gp);
+	default:
+		throw sserialize::InvalidEnumValueException("CQRFromPolygon::Accuracy does not have " + std::to_string(ac) + " as value");
+		return sserialize::CellQueryResult();;
 	};
 }
 
+sserialize::Static::spatial::GeoPolygon detail::CQRFromPolygon::toStatic(const sserialize::spatial::GeoPolygon& gp) const {
+	//as of now intersection between static and non-static geometry is not available
+	sserialize::UByteArrayAdapter d(sserialize::UByteArrayAdapter::createCache(1, sserialize::MM_PROGRAM_MEMORY));
+	gp.append(d);
+	d.resetPtrs();
+	return sserialize::Static::spatial::GeoPolygon(d);
+}
+
 sserialize::ItemIndex CQRFromPolygon::intersectingCellsPolygonCellBBox(const sserialize::spatial::GeoPolygon& gp) const {
-	typedef sserialize::Static::spatial::GeoHierarchy::Region Region;
-	typedef sserialize::Static::spatial::GeoHierarchy GeoHierarchy;
-	
-	sserialize::Static::spatial::GeoPolygon sgp;
-	{//as of now intersection between static and non-static geometry is not available
-		sserialize::UByteArrayAdapter d(sserialize::UByteArrayAdapter::createCache(1, sserialize::MM_PROGRAM_MEMORY));
-		gp.append(d);
-		d.resetPtrs();
-		sgp = sserialize::Static::spatial::GeoPolygon(d);
-	}
-	
-	const GeoHierarchy & gh = m_store.geoHierarchy();
-	sserialize::spatial::GeoRect rect(gp.boundary());
-	
-	std::deque<uint32_t> queue;
 	std::vector<uint32_t> intersectingCells;
-	std::unordered_set<uint32_t> visitedRegions;
-	Region r(gh.rootRegion());
-	for(uint32_t i(0), s(r.childrenSize()); i < s; ++i) {
-		uint32_t childId = r.child(i);
-		if (rect.overlap(gh.regionBoundary(childId))) {
-			uint32_t childStoreId = gh.ghIdToStoreId(childId);
-			sserialize::Static::spatial::GeoShape gs(m_store.geoShape(childStoreId));
-			if(gs.get<sserialize::spatial::GeoRegion>()->intersects(sgp)) {
-				queue.push_back(childId);
-				visitedRegions.insert(childId);
-			}
+	
+	struct MyOperator {
+		const sserialize::spatial::GeoPolygon & gp;
+		const sserialize::Static::spatial::GeoHierarchy & gh;
+		std::vector<uint32_t> & intersectingCells;
+		
+		void enclosed(const sserialize::ItemIndex & enclosedCells) {
+			intersectingCells.insert(intersectingCells.end(), enclosedCells.cbegin(), enclosedCells.cend());
 		}
-	}
-	while (queue.size()) {
-		//by definition: regions in the queue intersect the query polygon
-		r = gh.region(queue.front());
-		queue.pop_front();
-		sserialize::Static::spatial::GeoShape gs(m_store.geoShape(r.storeId()));
-		bool enclosed = false;
-		if (gs.type() == sserialize::spatial::GS_POLYGON) {
-			enclosed = sgp.encloses(*(gs.get<sserialize::Static::spatial::GeoPolygon>()));
-		}
-		else if (gs.type() == sserialize::spatial::GS_MULTI_POLYGON) {
-			enclosed = gs.get<sserialize::Static::spatial::GeoMultiPolygon>()->enclosed(sgp);
-		}
-		if (enclosed) {
-			//checking the itemsCount of the region does only work if the hierarchy was created with a full region item index
-			//so instead we have to check the cellcount
-			uint32_t cIdxPtr = r.cellIndexPtr();
-			if (m_idxStore.idxSize(cIdxPtr)) {
-				sserialize::ItemIndex idx(m_idxStore.at(cIdxPtr));
-				intersectingCells.insert(intersectingCells.end(), idx.cbegin(), idx.cend());
-			}
-		}
-		else {//just an intersection, check the children and the region exclusive cells
-			for(uint32_t i(0), s(r.childrenSize()); i < s; ++i) {
-				uint32_t childId = r.child(i);
-				if (!visitedRegions.count(childId) && rect.overlap(gh.regionBoundary(childId))) {
-					uint32_t childStoreId = gh.ghIdToStoreId(childId);
-					sserialize::Static::spatial::GeoShape gs(m_store.geoShape(childStoreId));
-					if(gs.get<sserialize::spatial::GeoRegion>()->intersects(sgp)) {
-						queue.push_back(childId);
-						visitedRegions.insert(childId);
-					}
-				}
-			}
-			//check cells that are not part of children regions
-			uint32_t exclusiveCellIndexPtr = r.exclusiveCellIndexPtr();
-			if (m_idxStore.idxSize(exclusiveCellIndexPtr)) {
-				sserialize::ItemIndex idx(m_idxStore.at(exclusiveCellIndexPtr));
-				for(uint32_t cellId : idx) {
-					if (gp.intersects(gh.cellBoundary(cellId))) {
-						intersectingCells.push_back(cellId);
-					}
+		void candidates(const sserialize::ItemIndex & candidateCells) {
+			for(uint32_t cellId : candidateCells) {
+				if (gp.intersects(gh.cellBoundary(cellId))) {
+					intersectingCells.push_back(cellId);
 				}
 			}
 		}
-	}
+		MyOperator(const sserialize::spatial::GeoPolygon & gp, const sserialize::Static::spatial::GeoHierarchy & gh, std::vector<uint32_t> & intersectingCells) :
+		gp(gp), gh(gh), intersectingCells(intersectingCells)
+		{}
+	};
+	MyOperator myOp(gp, m_store.geoHierarchy(), intersectingCells);
+
+	visit(gp, toStatic(gp), myOp);
+
 	std::sort(intersectingCells.begin(), intersectingCells.end());
 	intersectingCells.resize(std::unique(intersectingCells.begin(), intersectingCells.end())-intersectingCells.begin());
-	return sserialize::ItemIndex(std::move(intersectingCells)); 
+	return sserialize::ItemIndex(std::move(intersectingCells));
 }
-
-sserialize::CellQueryResult CQRFromPolygon::intersectingCellsPolygonItemBBox(const sserialize::spatial::GeoPolygon& gp) const {
-	return sserialize::CellQueryResult();
-}
-
-sserialize::CellQueryResult detail::CQRFromPolygon::intersectingCellsPolygonItem(const sserialize::spatial::GeoPolygon& gp) const {
-	return sserialize::CellQueryResult();
-}
-
 
 }}//end namespace liboscar::detail
