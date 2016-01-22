@@ -217,7 +217,7 @@ AdvancedCellOpTree::Calc<T_CQR_TYPE>::calcPolygon(AdvancedCellOpTree::Node* node
 		gps.push_back(gps.front());
 	}
 	
-	sserialize::ItemIndex res = m_csq.cqrfp().intersectingCells(sserialize::spatial::GeoPolygon(std::move(gps)), CQRFromPolygon::AC_POLYGON_CELL_BBOX);
+	sserialize::ItemIndex res = m_csq.cqrfp().fullMatches(sserialize::spatial::GeoPolygon(std::move(gps)), CQRFromPolygon::AC_POLYGON_CELL_BBOX);
 	return T_CQR_TYPE(res, m_ctc.geoHierarchy(), m_ctc.idxStore());
 }
 

@@ -10,15 +10,18 @@ namespace detail {
 
 class CQRFromPolygon final {
 public:
-	///AC_POLYGON_CELL is currently unimplemented and falls back to AC_POLYGON_CELL_BBOX
-	enum Accuracy : uint32_t { AC_POLYGON_BBOX_CELL_BBOX, AC_POLYGON_CELL_BBOX, AC_POLYGON_CELL};
+	///AC_POLYGON_CELL and better arecurrently unimplemented and fall back to AC_POLYGON_CELL_BBOX
+	enum Accuracy : uint32_t { AC_POLYGON_BBOX_CELL_BBOX, AC_POLYGON_CELL_BBOX, AC_POLYGON_CELL, AC_POLYGON_ITEM_BBOX, AC_POLYGON_ITEM};
 public:
 	CQRFromPolygon(const CQRFromPolygon & other);
 	CQRFromPolygon(const Static::OsmKeyValueObjectStore & store, const sserialize::Static::ItemIndexStore & idxStore);
 	~CQRFromPolygon();
 	const sserialize::Static::spatial::GeoHierarchy & geoHierarchy() const;
 	const sserialize::Static::ItemIndexStore & idxStore() const;
-	sserialize::ItemIndex intersectingCells(const sserialize::spatial::GeoPolygon & gp, Accuracy ac) const;
+	///returns only fm cells, only usefull with AC_POLYGON_BBOX_CELL and AC_POLYGON_CELL_BBOX
+	sserialize::ItemIndex fullMatches(const sserialize::spatial::GeoPolygon & gp, Accuracy ac) const;
+	///supports AC_POLYGON_ITEM_BBOX and AC_POLYGON_ITEM, does NOT support AC_POLYGON_CELL, falls back to AC_POLYGON_CELL_BBOX
+	sserialize::CellQueryResult cqr(const sserialize::spatial::GeoPolygon & gp, Accuracy ac) const;
 private:
 	sserialize::RCPtrWrapper<detail::CQRFromPolygon> m_priv;
 };
@@ -31,9 +34,12 @@ public:
 	virtual ~CQRFromPolygon();
 	const sserialize::Static::spatial::GeoHierarchy & geoHierarchy() const;
 	const sserialize::Static::ItemIndexStore & idxStore() const;
-	sserialize::ItemIndex intersectingCells(const sserialize::spatial::GeoPolygon& gp, liboscar::CQRFromPolygon::Accuracy ac) const;
+	sserialize::ItemIndex fullMatches(const sserialize::spatial::GeoPolygon& gp, liboscar::CQRFromPolygon::Accuracy ac) const;
+	sserialize::CellQueryResult cqr(const sserialize::spatial::GeoPolygon & gp, liboscar::CQRFromPolygon::Accuracy ac) const;
 private:
 	sserialize::ItemIndex intersectingCellsPolygonCellBBox(const sserialize::spatial::GeoPolygon & gp) const;
+	sserialize::CellQueryResult intersectingCellsPolygonItemBBox(const sserialize::spatial::GeoPolygon & gp) const;
+	sserialize::CellQueryResult intersectingCellsPolygonItem(const sserialize::spatial::GeoPolygon & gp) const;
 private:
 	Static::OsmKeyValueObjectStore m_store;
 	sserialize::Static::ItemIndexStore m_idxStore;

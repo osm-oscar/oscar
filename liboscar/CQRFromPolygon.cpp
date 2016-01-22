@@ -22,8 +22,12 @@ const sserialize::Static::ItemIndexStore & CQRFromPolygon::idxStore() const {
 	return m_priv->idxStore();
 }
 
-sserialize::ItemIndex CQRFromPolygon::intersectingCells(const sserialize::spatial::GeoPolygon & gp, Accuracy ac) const {
-	return m_priv->intersectingCells(gp, ac);
+sserialize::ItemIndex CQRFromPolygon::fullMatches(const sserialize::spatial::GeoPolygon & gp, Accuracy ac) const {
+	return m_priv->fullMatches(gp, ac);
+}
+
+sserialize::CellQueryResult CQRFromPolygon::cqr(const sserialize::spatial::GeoPolygon& gp, Accuracy ac) const {
+	return m_priv->cqr(gp, ac);
 }
 
 namespace detail {
@@ -43,10 +47,12 @@ const sserialize::Static::ItemIndexStore & CQRFromPolygon::idxStore() const {
 	return m_idxStore;
 }
 
-sserialize::ItemIndex CQRFromPolygon::intersectingCells(const sserialize::spatial::GeoPolygon & gp, liboscar::CQRFromPolygon::Accuracy ac) const {
+sserialize::ItemIndex CQRFromPolygon::fullMatches(const sserialize::spatial::GeoPolygon & gp, liboscar::CQRFromPolygon::Accuracy ac) const {
 	switch (ac) {
-	case liboscar::CQRFromPolygon::AC_POLYGON_CELL:
 	case liboscar::CQRFromPolygon::AC_POLYGON_CELL_BBOX:
+	case liboscar::CQRFromPolygon::AC_POLYGON_CELL:
+	case liboscar::CQRFromPolygon::AC_POLYGON_ITEM_BBOX:
+	case liboscar::CQRFromPolygon::AC_POLYGON_ITEM:
 	{
 		return intersectingCellsPolygonCellBBox(gp);
 		break;
@@ -55,6 +61,20 @@ sserialize::ItemIndex CQRFromPolygon::intersectingCells(const sserialize::spatia
 	default:
 		return m_store.geoHierarchy().intersectingCells(m_idxStore, gp.boundary());
 		break;
+	};
+}
+
+sserialize::CellQueryResult CQRFromPolygon::cqr(const sserialize::spatial::GeoPolygon& gp, liboscar::CQRFromPolygon::Accuracy ac) const {
+	switch (ac) {
+	case liboscar::CQRFromPolygon::AC_POLYGON_ITEM_BBOX:
+		return intersectingCellsPolygonItemBBox(gp);
+	case liboscar::CQRFromPolygon::AC_POLYGON_ITEM:
+		return intersectingCellsPolygonItem(gp);
+	case liboscar::CQRFromPolygon::AC_POLYGON_BBOX_CELL_BBOX:
+	case liboscar::CQRFromPolygon::AC_POLYGON_CELL_BBOX:
+	case liboscar::CQRFromPolygon::AC_POLYGON_CELL:
+	default:
+		return sserialize::CellQueryResult(intersectingCellsPolygonCellBBox(gp), m_store.geoHierarchy(), idxStore());
 	};
 }
 
@@ -138,6 +158,13 @@ sserialize::ItemIndex CQRFromPolygon::intersectingCellsPolygonCellBBox(const sse
 	return sserialize::ItemIndex(std::move(intersectingCells)); 
 }
 
+sserialize::CellQueryResult CQRFromPolygon::intersectingCellsPolygonItemBBox(const sserialize::spatial::GeoPolygon& gp) const {
+	return sserialize::CellQueryResult();
+}
+
+sserialize::CellQueryResult detail::CQRFromPolygon::intersectingCellsPolygonItem(const sserialize::spatial::GeoPolygon& gp) const {
+	return sserialize::CellQueryResult();
+}
 
 
 }}//end namespace liboscar::detail
