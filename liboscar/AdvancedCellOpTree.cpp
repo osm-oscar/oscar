@@ -521,11 +521,11 @@ AdvancedCellOpTree::~AdvancedCellOpTree() {
 	}
 }
 
-sserialize::ItemIndex AdvancedCellOpTree::CalcBase::calcBetweenOp(const sserialize::CellQueryResult& c1, const sserialize::CellQueryResult& c2) {
+sserialize::CellQueryResult AdvancedCellOpTree::CalcBase::calcBetweenOp(const sserialize::CellQueryResult& c1, const sserialize::CellQueryResult& c2) {
 	return m_csq.betweenOp(c1, c2);
 }
 
-sserialize::ItemIndex AdvancedCellOpTree::CalcBase::calcCompassOp(AdvancedCellOpTree::Node* node, const sserialize::CellQueryResult& cqr) {
+sserialize::CellQueryResult AdvancedCellOpTree::CalcBase::calcCompassOp(liboscar::AdvancedCellOpTree::Node* node, const sserialize::CellQueryResult& cqr) {
 	CQRFromComplexSpatialQuery::UnaryOp direction = CQRFromComplexSpatialQuery::UO_INVALID;
 	if (node->value == "^" || node->value == "north-of") {
 		direction = CQRFromComplexSpatialQuery::UO_NORTH_OF;
@@ -572,32 +572,28 @@ template<>
 sserialize::CellQueryResult
 AdvancedCellOpTree::Calc<sserialize::CellQueryResult>::calcBetweenOp(AdvancedCellOpTree::Node* node) {
 	SSERIALIZE_CHEAP_ASSERT(node->children.size() == 2);
-	sserialize::ItemIndex result = CalcBase::calcBetweenOp(calc(node->children.front()), calc(node->children.back()));
-	return sserialize::CellQueryResult(result, m_ctc.geoHierarchy(), m_ctc.idxStore());
+	return CalcBase::calcBetweenOp(calc(node->children.front()), calc(node->children.back()));
 }
 
 template<>
 sserialize::TreedCellQueryResult
 AdvancedCellOpTree::Calc<sserialize::TreedCellQueryResult>::calcBetweenOp(AdvancedCellOpTree::Node* node) {
 	SSERIALIZE_CHEAP_ASSERT(node->children.size() == 2);
-	sserialize::ItemIndex result = CalcBase::calcBetweenOp(calc(node->children.front()).toCQR(), calc(node->children.back()).toCQR());
-	return sserialize::TreedCellQueryResult(result, m_ctc.geoHierarchy(), m_ctc.idxStore());
+	return sserialize::TreedCellQueryResult( CalcBase::calcBetweenOp(calc(node->children.front()).toCQR(), calc(node->children.back()).toCQR()) );
 }
 
 template<>
 sserialize::CellQueryResult
 AdvancedCellOpTree::Calc<sserialize::CellQueryResult>::calcCompassOp(AdvancedCellOpTree::Node* node) {
 	SSERIALIZE_CHEAP_ASSERT(node->children.size() == 1);
-	sserialize::ItemIndex result = CalcBase::calcCompassOp(node, calc(node->children.front()));
-	return sserialize::CellQueryResult(result, m_ctc.geoHierarchy(), m_ctc.idxStore());
+	return CalcBase::calcCompassOp(node, calc(node->children.front()));
 }
 
 template<>
 sserialize::TreedCellQueryResult
 AdvancedCellOpTree::Calc<sserialize::TreedCellQueryResult>::calcCompassOp(AdvancedCellOpTree::Node* node) {
 	SSERIALIZE_CHEAP_ASSERT(node->children.size() == 1);
-	sserialize::ItemIndex result = CalcBase::calcCompassOp(node, calc(node->children.front()).toCQR());
-	return sserialize::TreedCellQueryResult(result, m_ctc.geoHierarchy(), m_ctc.idxStore());
+	return sserialize::TreedCellQueryResult( CalcBase::calcCompassOp(node, calc(node->children.front()).toCQR()) );
 }
 
 }//end namespace

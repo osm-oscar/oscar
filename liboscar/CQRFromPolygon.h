@@ -18,6 +18,7 @@ public:
 	CQRFromPolygon(const CQRFromPolygon & other);
 	CQRFromPolygon(const Static::OsmKeyValueObjectStore & store, const sserialize::Static::ItemIndexStore & idxStore);
 	~CQRFromPolygon();
+	const Static::OsmKeyValueObjectStore & store() const;
 	const sserialize::Static::spatial::GeoHierarchy & geoHierarchy() const;
 	const sserialize::Static::ItemIndexStore & idxStore() const;
 	///returns only fm cells, only usefull with AC_POLYGON_BBOX_CELL and AC_POLYGON_CELL_BBOX
@@ -34,6 +35,7 @@ class CQRFromPolygon: public sserialize::RefCountObject {
 public:
 	CQRFromPolygon(const Static::OsmKeyValueObjectStore & store, const sserialize::Static::ItemIndexStore & idxStore);
 	virtual ~CQRFromPolygon();
+	const Static::OsmKeyValueObjectStore & store() const;
 	const sserialize::Static::spatial::GeoHierarchy & geoHierarchy() const;
 	const sserialize::Static::ItemIndexStore & idxStore() const;
 	sserialize::ItemIndex fullMatches(const sserialize::spatial::GeoPolygon& gp, liboscar::CQRFromPolygon::Accuracy ac) const;

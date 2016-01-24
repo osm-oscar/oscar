@@ -143,8 +143,8 @@ private:
 		sserialize::Static::CellTextCompleter & m_ctc;
 		const CQRDilator & m_cqrd;
 		const CQRFromComplexSpatialQuery & m_csq;
-		sserialize::ItemIndex calcBetweenOp(const sserialize::CellQueryResult & c1, const sserialize::CellQueryResult & c2);
-		sserialize::ItemIndex calcCompassOp(Node * node, const sserialize::CellQueryResult & cqr);
+		sserialize::CellQueryResult calcBetweenOp(const sserialize::CellQueryResult & c1, const sserialize::CellQueryResult & c2);
+		sserialize::CellQueryResult calcCompassOp(Node * node, const sserialize::CellQueryResult & cqr);
 	};
 
 	template<typename T_CQR_TYPE>

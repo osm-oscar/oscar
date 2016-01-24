@@ -12,6 +12,10 @@ m_priv(new detail::CQRFromPolygon(store, idxStore))
 
 CQRFromPolygon::~CQRFromPolygon() {}
 
+const Static::OsmKeyValueObjectStore& CQRFromPolygon::store() const {
+	return m_priv->store();
+}
+
 const sserialize::Static::spatial::GeoHierarchy & CQRFromPolygon::geoHierarchy() const {
 	return m_priv->geoHierarchy();
 }
@@ -36,6 +40,10 @@ m_idxStore(idxStore)
 {}
 
 CQRFromPolygon::~CQRFromPolygon() {}
+
+const Static::OsmKeyValueObjectStore& CQRFromPolygon::store() const {
+	return m_store;
+}
 
 const sserialize::Static::spatial::GeoHierarchy& CQRFromPolygon::geoHierarchy() const {
 	return m_store.geoHierarchy();

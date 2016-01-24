@@ -19,8 +19,8 @@ public:
 	CQRFromComplexSpatialQuery(const CQRFromComplexSpatialQuery & other);
 	CQRFromComplexSpatialQuery(const sserialize::spatial::GeoHierarchySubSetCreator & ssc, const CQRFromPolygon & cqrfp);
 	~CQRFromComplexSpatialQuery();
-	sserialize::ItemIndex compassOp(const sserialize::CellQueryResult & cqr, UnaryOp direction) const;
-	sserialize::ItemIndex betweenOp(const sserialize::CellQueryResult & cqr1, const sserialize::CellQueryResult & cqr2) const;
+	sserialize::CellQueryResult compassOp(const sserialize::CellQueryResult & cqr, UnaryOp direction) const;
+	sserialize::CellQueryResult betweenOp(const sserialize::CellQueryResult & cqr1, const sserialize::CellQueryResult & cqr2) const;
 	const liboscar::CQRFromPolygon & cqrfp() const;
 private:
 	sserialize::RCPtrWrapper<detail::CQRFromComplexSpatialQuery> m_priv;
@@ -34,12 +34,25 @@ public:
 public:
 	CQRFromComplexSpatialQuery(const sserialize::spatial::GeoHierarchySubSetCreator& ssc, const liboscar::CQRFromPolygon& cqrfp);
 	virtual ~CQRFromComplexSpatialQuery();
-	sserialize::ItemIndex compassOp(const sserialize::CellQueryResult& cqr, liboscar::CQRFromComplexSpatialQuery::UnaryOp direction) const;
-	sserialize::ItemIndex betweenOp(const sserialize::CellQueryResult & cqr1, const sserialize::CellQueryResult & cqr2) const;
+	sserialize::CellQueryResult compassOp(const sserialize::CellQueryResult& cqr, liboscar::CQRFromComplexSpatialQuery::UnaryOp direction) const;
+	sserialize::CellQueryResult betweenOp(const sserialize::CellQueryResult & cqr1, const sserialize::CellQueryResult & cqr2) const;
 	const liboscar::CQRFromPolygon & cqrfp() const;
+public: //cqr creation
+	//uses auto-detection of accuracy
+	sserialize::CellQueryResult cqrFromPolygon(const sserialize::spatial::GeoPolygon & gp) const;
+private://polygon creation functions
+	///between 0->360, north is at 0
+	double bearing(double fromLat, double fromLon, double toLat, double toLon) const;
+	void normalize(std::vector<sserialize::spatial::GeoPoint> & gp) const;
+	void createPolygon(const sserialize::spatial::GeoRect & rect1, const sserialize::spatial::GeoRect & rect2, std::vector<sserialize::spatial::GeoPoint> & gp) const;
 private:
 	SubSet createSubSet(const sserialize::CellQueryResult cqr) const;
 	SubSet::NodePtr determineRelevantRegion(const SubSet & subset) const;
+	///@return itemId
+	uint32_t determineRelevantItem(const SubSet & subSet, const SubSet::NodePtr & rPtr) const;
+private: //accessor function
+	const liboscar::Static::OsmKeyValueObjectStore & store() const;
+	const sserialize::Static::spatial::GeoHierarchy & geoHierarchy() const;
 	const sserialize::Static::ItemIndexStore & idxStore() const;
 private:
 	sserialize::spatial::GeoHierarchySubSetCreator m_ssc;
