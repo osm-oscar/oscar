@@ -13,7 +13,7 @@ namespace detail {
 class CQRFromPolygon final {
 public:
 	///AC_POLYGON_CELL and better arecurrently unimplemented and fall back to AC_POLYGON_CELL_BBOX
-	enum Accuracy : uint32_t { AC_POLYGON_BBOX_CELL_BBOX, AC_POLYGON_CELL_BBOX, AC_POLYGON_CELL, AC_POLYGON_ITEM_BBOX, AC_POLYGON_ITEM};
+	enum Accuracy : uint32_t { AC_AUTO, AC_POLYGON_BBOX_CELL_BBOX, AC_POLYGON_CELL_BBOX, AC_POLYGON_CELL, AC_POLYGON_ITEM_BBOX, AC_POLYGON_ITEM};
 public:
 	CQRFromPolygon(const CQRFromPolygon & other);
 	CQRFromPolygon(const Static::OsmKeyValueObjectStore & store, const sserialize::Static::ItemIndexStore & idxStore);
