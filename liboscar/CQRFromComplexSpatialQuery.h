@@ -44,7 +44,12 @@ private://polygon creation functions
 	///between 0->360, north is at 0
 	double bearing(double fromLat, double fromLon, double toLat, double toLon) const;
 	void normalize(std::vector<sserialize::spatial::GeoPoint> & gp) const;
+	void createPolygon(const sserialize::spatial::GeoPoint& p1, const sserialize::spatial::GeoPoint& p2, std::vector< sserialize::spatial::GeoPoint >& pp) const;
+	void createPolygon(const sserialize::Static::spatial::GeoWay & gw1, const sserialize::Static::spatial::GeoWay & gw2, std::vector< sserialize::spatial::GeoPoint >& pp) const;
 	void createPolygon(const sserialize::spatial::GeoRect & rect1, const sserialize::spatial::GeoRect & rect2, std::vector<sserialize::spatial::GeoPoint> & gp) const;
+	void createPolygon(const sserialize::Static::spatial::GeoWay & gw, const sserialize::Static::spatial::GeoPoint & gp, std::vector< sserialize::spatial::GeoPoint >& pp) const;
+	void createPolygon(const sserialize::spatial::GeoRect & polyRect, const sserialize::spatial::GeoPoint & point, std::vector< sserialize::spatial::GeoPoint >& pp) const;
+	void createPolygon(const sserialize::spatial::GeoRect & polyRect, const sserialize::Static::spatial::GeoWay & gw, std::vector< sserialize::spatial::GeoPoint >& pp) const;
 private:
 	SubSet createSubSet(const sserialize::CellQueryResult cqr) const;
 	SubSet::NodePtr determineRelevantRegion(const SubSet & subset) const;

@@ -53,18 +53,7 @@ const sserialize::Static::ItemIndexStore & CQRFromComplexSpatialQuery::idxStore(
 //the helper funtionts
 
 sserialize::CellQueryResult CQRFromComplexSpatialQuery::cqrFromPolygon(const sserialize::spatial::GeoPolygon & gp) const {
-	liboscar::CQRFromPolygon::Accuracy ac;
-	double gpLen = gp.length();
-	if (gpLen < 4*500.0) { //smaller than a square of 500m
-		ac = liboscar::CQRFromPolygon::AC_POLYGON_ITEM;
-	}
-	else if (gpLen < 4*1000.0) { //smaller than a square of 1000m
-		ac = liboscar::CQRFromPolygon::AC_POLYGON_ITEM_BBOX;
-	}
-	else { //really large, use fast test
-		ac = liboscar::CQRFromPolygon::AC_POLYGON_CELL_BBOX;
-	}
-	return cqrfp().cqr(gp, ac);
+	return cqrfp().cqr(gp, liboscar::CQRFromPolygon::AC_AUTO);
 }
 
 //Now the polygon creation functions
@@ -79,6 +68,40 @@ void CQRFromComplexSpatialQuery::normalize(std::vector< sserialize::spatial::Geo
 		p.normalize(sserialize::spatial::GeoPoint::NT_CLIP);
 	}
 }
+
+void 
+CQRFromComplexSpatialQuery::
+createPolygon(const sserialize::spatial::GeoPoint& p1, const sserialize::spatial::GeoPoint& p2, std::vector< sserialize::spatial::GeoPoint >& pp) const {
+	sserialize::spatial::GeoPoint mp, tp;
+	sserialize::spatial::midPoint(p1.lat(), p1.lon(), p2.lat(), p2.lon(), mp.lat(), mp.lon());
+	double dist = sserialize::spatial::distanceTo(p1.lat(), p1.lon(), p2.lat(), p2.lon())/4.0; //half-diameter ellipse
+	double myBearing = sserialize::spatial::bearingTo(mp.lat(), mp.lon(), p2.lat(), p2.lon());
+	
+	double destBearing = ::fmod(myBearing+90.0, 360.0);
+	sserialize::spatial::destinationPoint(mp.lat(), mp.lon(), destBearing, dist, tp.lat(), tp.lon());
+	
+	pp.emplace_back(p1);
+	pp.emplace_back(mp);
+	pp.emplace_back(p2);
+	
+	destBearing = ::fmod(myBearing+270.0, 360.0);
+	sserialize::spatial::destinationPoint(mp.lat(), mp.lon(), destBearing, dist, tp.lat(), tp.lon());
+	
+	pp.emplace_back(mp);
+	pp.emplace_back(p1);
+	this->normalize(pp);
+}
+
+void 
+CQRFromComplexSpatialQuery::
+createPolygon(
+	const sserialize::Static::spatial::GeoWay& gw1,
+	const sserialize::Static::spatial::GeoWay& gw2,
+	std::vector< sserialize::spatial::GeoPoint >& pp) const
+{
+	
+}
+
 
 void
 CQRFromComplexSpatialQuery::
@@ -144,6 +167,91 @@ createPolygon(
 	this->normalize(gp);
 }
 
+void 
+CQRFromComplexSpatialQuery::
+createPolygon(
+	const sserialize::Static::spatial::GeoWay& gw,
+	const sserialize::Static::spatial::GeoPoint& gp,
+	std::vector< sserialize::spatial::GeoPoint >& pp) const
+{
+	pp.emplace_back(gp);
+	pp.insert(pp.end(), gw.cbegin(), gw.cend());
+	pp.emplace_back(gp);
+	this->normalize(pp);
+}
+
+void
+CQRFromComplexSpatialQuery::
+createPolygon(
+	const sserialize::spatial::GeoRect & polyRect,
+	const sserialize::spatial::GeoPoint & point,
+	std::vector< sserialize::spatial::GeoPoint >& pp) const
+{
+	//real bearing may be the wrong bearing here
+	double bearing = this->bearing(polyRect.midLat(), polyRect.midLon(), point.lat(), point.lon());
+	
+	//we distinguish 8 different cases, bearing is the angle to the north
+	if (bearing > (360.0-22.5) || bearing < 22.5) { //north
+		pp.emplace_back(polyRect.midLat(), polyRect.minLon());
+		pp.emplace_back(polyRect.maxLat(), polyRect.minLon());
+		pp.emplace_back(point);
+		pp.emplace_back(polyRect.maxLat(), polyRect.maxLon());
+		pp.emplace_back(polyRect.midLat(), polyRect.maxLon());
+	}
+	else if (bearing < (45.0+22.5)) { //north-east
+		pp.emplace_back(polyRect.maxLat(), polyRect.minLon());
+		pp.emplace_back(point);
+		pp.emplace_back(polyRect.minLat(), polyRect.maxLon());
+	}
+	else if (bearing < (90.0+22.5)) { //east
+		pp.emplace_back(polyRect.maxLat(), polyRect.midLon());
+		pp.emplace_back(polyRect.maxLat(), polyRect.maxLon());
+		pp.emplace_back(pp);
+		pp.emplace_back(polyRect.minLat(), polyRect.maxLon());
+		pp.emplace_back(polyRect.minLat(), polyRect.midLon());
+	}
+	else if (bearing < 135.0+22.5) { //south-east
+		pp.emplace_back(polyRect.maxLat(), polyRect.maxLon());
+		pp.emplace_back(point);
+		pp.emplace_back(polyRect.minLat(), polyRect.minLon());
+	}
+	else if (bearing < (180.0+22.5)) { //south
+		pp.emplace_back(point);
+		pp.emplace_back(polyRect.minLat(), polyRect.minLon());
+		pp.emplace_back(polyRect.midLat(), polyRect.minLon());
+		pp.emplace_back(polyRect.midLat(), polyRect.maxLon());
+		pp.emplace_back(polyRect.minLat(), polyRect.maxLon());
+	}
+	else if (bearing < (225.0+22.5)) { //south-west
+		pp.emplace_back(polyRect.maxLat(), polyRect.minLon());
+		pp.emplace_back(point);
+		pp.emplace_back(polyRect.minLat(), polyRect.minLon());
+	}
+	else if (bearing < (270.0+22.5)) { //west
+		pp.emplace_back(polyRect.minLat(), polyRect.midLon());
+		pp.emplace_back(polyRect.minLat(), polyRect.minLon());
+		pp.emplace_back(point);
+		pp.emplace_back(polyRect.maxLat(), polyRect.minLon());
+		pp.emplace_back(polyRect.maxLat(), polyRect.midLon());
+	}
+	else { //north-west
+		pp.emplace_back(polyRect.minLat(), polyRect.minLon());
+		pp.emplace_back(point);
+		pp.emplace_back(polyRect.maxLat(), polyRect.maxLon());
+	}
+	this->normalize(pp);
+}
+
+void
+CQRFromComplexSpatialQuery::
+createPolygon(
+	const sserialize::spatial::GeoRect& polyRect,
+	const sserialize::Static::spatial::GeoWay& gw,
+	std::vector< sserialize::spatial::GeoPoint >& pp) const
+{
+	
+}
+
 
 //there are 3 cases:
 // region<->item or item<->region
@@ -183,46 +291,49 @@ sserialize::CellQueryResult CQRFromComplexSpatialQuery::betweenOp(const sseriali
 		//point-point need a diamond (ellipse)
 		//way-way use both ways as part of the polygon and connect their endpoints
 		//poly-poly use bbox of polygons
-		//
 		//point-way use the way as one part of the polygon and the point as another point
 		//point-poly use bbox of poly and the point
 		//way-poly use way and bbox of poly
 
 		//the accuracy depends on the size of the polygon
 		std::vector<sserialize::spatial::GeoPoint> pp;
-		if (st1 == sserialize::spatial::GS_POINT && st2 == sserialize::spatial::GS_POINT) {
-			const sserialize::spatial::GeoPoint * p1(shape1.get<sserialize::Static::spatial::GeoPoint>());
-			const sserialize::spatial::GeoPoint * p2(shape2.get<sserialize::Static::spatial::GeoPoint>());
-			sserialize::spatial::GeoPoint mp, tp;
-			sserialize::spatial::midPoint(p1->lat(), p1->lon(), p2->lat(), p2->lon(), mp.lat(), mp.lon());
-			double dist = sserialize::spatial::distanceTo(p1->lat(), p1->lon(), p2->lat(), p2->lon())/4.0; //half-diameter ellipse
-			double myBearing = sserialize::spatial::bearingTo(mp.lat(), mp.lon(), p2->lat(), p2->lon());
-			
-			double destBearing = ::fmod(myBearing+90.0, 360.0);
-			sserialize::spatial::destinationPoint(mp.lat(), mp.lon(), destBearing, dist, tp.lat(), tp.lon());
-			
-			pp.emplace_back(*p1);
-			pp.emplace_back(mp);
-			pp.emplace_back(*p2);
-			
-			destBearing = ::fmod(myBearing+270.0, 360.0);
-			sserialize::spatial::destinationPoint(mp.lat(), mp.lon(), destBearing, dist, tp.lat(), tp.lon());
-			
-			pp.emplace_back(mp);
-			pp.emplace_back(*p1);
+		if (st1 == sserialize::spatial::GS_POINT && st2 == sserialize::spatial::GS_POINT) { //point-point
+			createPolygon(
+							*shape1.get<sserialize::Static::spatial::GeoPoint>()
+							*shape2.get<sserialize::Static::spatial::GeoPoint>()
+			);
 		}
-		else if (st1 == sserialize::spatial::GS_WAY && st2 == sserialize::spatial::GS_WAY) {
-			
+		else if (st1 == sserialize::spatial::GS_WAY && st2 == sserialize::spatial::GS_WAY) { //way-way
+			createPolygon(
+							*shape1.get<sserialize::Static::spatial::GeoWay>()
+							*shape2.get<sserialize::Static::spatial::GeoWay>()
+			);
 		}
-		else if ((st1 == sserialize::spatial::GS_POLYGON || st1 == sserialize::spatial::GS_POLYGON) &&
-					(st2 == sserialize::spatial::GS_POLYGON || st2 == sserialize::spatial::GS_MULTI_POLYGON))
+		else if ((st1 == sserialize::spatial::GS_POLYGON || st1 == sserialize::spatial::GS_MULTI_POLYGON) &&
+					(st2 == sserialize::spatial::GS_POLYGON || st2 == sserialize::spatial::GS_MULTI_POLYGON)) // poly-poly
 		{
-			//only consider bbox
-			uint32_t itemId1 = determineRelevantItem(s1, np1);
-			uint32_t itemId2 = determineRelevantItem(s2, np2);
-			sserialize::spatial::GeoRect rect1(store().geoShape(itemId1).boundary());
-			sserialize::spatial::GeoRect rect2(store().geoShape(itemId2).boundary());
-			createPolygon(rect1, rect2, pp);
+			createPolygon(shape1.boundary(), shape2.boundary(), pp);
+		}
+		else if (st1 == sserialize::spatial::GS_POINT && st2 == sserialize::spatial::GS_WAY) { //point-way
+			createPolygon(*shape2.get<sserialize::Static::spatial::GeoWay>(), *shape1.get<sserialize::Static::spatial::GeoPoint>());
+		}
+		else if (st1 == sserialize::spatial::GS_WAY && st2 == sserialize::spatial::GS_POINT) { //way-point
+			createPolygon(*shape1.get<sserialize::Static::spatial::GeoWay>(), *shape2.get<sserialize::Static::spatial::GeoPoint>());
+		}
+		else if (st1 == sserialize::spatial::GS_POINT && (st2 == sserialize::spatial::GS_POLYGON || st2 == sserialize::spatial::GS_MULTI_POLYGON)) { //point-poly
+			createPolygon(shape2.boundary(), *shape1.get<sserialize::Static::spatial::GeoPoint>());
+		}
+		else if ((st1 == sserialize::spatial::GS_POLYGON || st1 == sserialize::spatial::GS_MULTI_POLYGON) && st2 == sserialize::spatial::GS_POINT) {
+			createPolygon(shape1.boundary(), *shape2.get<sserialize::Static::spatial::GeoPoint>());
+		}
+		else if (st1 == sserialize::spatial::GS_WAY && (st2 == sserialize::spatial::GS_POLYGON || st2 == sserialize::spatial::GS_MULTI_POLYGON)) {
+			createPolygon(shape2.boundary(), *shape1.get<sserialize::Static::spatial::GeoWay>());
+		}
+		else if ((st1 == sserialize::spatial::GS_POLYGON || st1 == sserialize::spatial::GS_MULTI_POLYGON) && st2 == sserialize::spatial::GS_WAY) {
+			createPolygon(shape1.boundary(), *shape2.get<sserialize::Static::spatial::GeoWay>());
+		}
+		else {
+			createPolygon(shape1.boundary(), shape2.boundary(), pp);
 		}
 		
 		return cqrFromPolygon( sserialize::spatial::GeoPolygon(pp) );
