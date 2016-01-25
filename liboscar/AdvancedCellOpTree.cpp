@@ -149,18 +149,32 @@ Token Tokenizer::next() {
 			t.type = Token::FM_CONVERSION_OP;
 			t.value += *m_state.it;
 			++m_state.it;
+			//check for modifiers
+			if (m_state.it != m_state.end) {
+				if (*m_state.it == '#') {
+					t.type = Token::REGION_DILATION_OP;
+					++m_state.it;
+				}
+				else if('0' <= *m_state.it && '9' >= *m_state.it) {
+					t.type = Token::CELL_DILATION_OP;
+				}
+			}
 			//check if theres a number afterwards, because then this is dilation operation
 			if (m_state.it != m_state.end && ('0' <= *m_state.it && '9' >= *m_state.it)) {
+				bool ok = false;
 				for(auto it(m_state.it); it != m_state.end; ++it) {
 					if ('0' > *it || '9' < *it) {
 						if (*it == '%') {
-							t.type = Token::DILATION_OP;
+							ok = true;
 							t.value.assign(m_state.it, it);
 							++it;
 							m_state.it = it;
 						}
 						break;
 					}
+				}
+				if (!ok) {
+					t.type = Token::FM_CONVERSION_OP;
 				}
 			}
 			return t;
@@ -290,8 +304,10 @@ detail::AdvancedCellOpTree::Node* Parser::parseUnaryOps() {
 	Token t = peek();
 	int nst = 0;
 	switch (t.type) {
-	case Token::DILATION_OP:
-		nst = Node::DILATION_OP;
+	case Token::CELL_DILATION_OP:
+		nst = Node::CELL_DILATION_OP;
+	case Token::REGION_DILATION_OP:
+		nst = Node::REGION_DILATION_OP;
 		break;
 	case Token::FM_CONVERSION_OP:
 		nst = Node::FM_CONVERSION_OP;
@@ -303,8 +319,9 @@ detail::AdvancedCellOpTree::Node* Parser::parseUnaryOps() {
 	}
 	
 	switch (t.type) {
-	case Token::DILATION_OP:
 	case Token::FM_CONVERSION_OP:
+	case Token::CELL_DILATION_OP:
+	case Token::REGION_DILATION_OP:
 	case Token::COMPASS_OP:
 	{
 		pop();
@@ -341,8 +358,9 @@ detail::AdvancedCellOpTree::Node* Parser::parseSingleQ() {
 		eat((Token::Type)')');
 		return tmp;
 	}
-	case Token::DILATION_OP:
 	case Token::FM_CONVERSION_OP:
+	case Token::CELL_DILATION_OP:
+	case Token::REGION_DILATION_OP:
 	case Token::COMPASS_OP:
 	{
 		return parseUnaryOps();
@@ -408,7 +426,8 @@ detail::AdvancedCellOpTree::Node* Parser::parseQ() {
 			return n;
 			break;
 		case Token::FM_CONVERSION_OP:
-		case Token::DILATION_OP:
+		case Token::CELL_DILATION_OP:
+		case Token::REGION_DILATION_OP:
 		case Token::COMPASS_OP:
 		{
 			curTokenNode = parseUnaryOps();
@@ -542,6 +561,54 @@ sserialize::CellQueryResult AdvancedCellOpTree::CalcBase::calcCompassOp(liboscar
 	return m_csq.compassOp(cqr, direction);
 }
 
+sserialize::ItemIndex AdvancedCellOpTree::CalcBase::calcDilateRegionOp(AdvancedCellOpTree::Node * node, const sserialize::CellQueryResult & cqr) {
+	const sserialize::Static::spatial::GeoHierarchy & gh = m_ctc.geoHierarchy();
+	const sserialize::Static::ItemIndexStore & idxStore = this->idxStore();
+
+	double th = ::atof(node->value.c_str());
+	if (th <= 0.0) {
+		return sserialize::ItemIndex();
+	}
+	th /= 100.0;
+	
+	std::vector<uint32_t> regions;
+
+	std::unordered_map<uint32_t, uint32_t> r2cc;
+	
+	for(auto it(cqr.cbegin()), end(cqr.cend()); it != end; ++it) {
+		uint32_t cellId = it.cellId();
+		for(uint32_t cP(gh.cellParentsBegin(cellId)), cE(gh.cellParentsEnd(cellId)); cP != cE; ++cP) {
+			uint32_t rId = gh.cellPtr(cP);
+			if (r2cc.count(rId)) {
+				r2cc[rId] += 1;
+			}
+			else {
+				r2cc[rId] = 1;
+			}
+		}
+	}
+	for(auto x : r2cc) {
+		if ( (double)x.second / (double)idxStore.idxSize( gh.regionCellIdxPtr(x.first) ) > th) {
+			regions.push_back(x.first);
+		}
+	}
+	
+	//regions need to be unique
+	sserialize::ItemIndex res = sserialize::treeReduceMap<std::vector<uint32_t>::iterator, sserialize::ItemIndex>(regions.begin(), regions.end(),
+		[](const sserialize::ItemIndex & a, const sserialize::ItemIndex & b) { return a+b; },
+		[&gh, &idxStore](uint32_t x) { return idxStore.at( gh.regionCellIdxPtr(x) ); }
+	);
+	return res;
+}
+
+const sserialize::Static::spatial::GeoHierarchy& AdvancedCellOpTree::CalcBase::gh() const {
+	return m_ctc.geoHierarchy();
+}
+
+const sserialize::Static::ItemIndexStore& AdvancedCellOpTree::CalcBase::idxStore() const {
+	return m_ctc.idxStore();
+}
+
 void AdvancedCellOpTree::parse(const std::string& str) {
 	if (m_root) {
 		delete m_root;
@@ -567,6 +634,20 @@ AdvancedCellOpTree::Calc<sserialize::TreedCellQueryResult>::calcDilationOp(Advan
 	return sserialize::TreedCellQueryResult( m_cqrd.dilate(cqr.toCQR(), diameter), cqr.geoHierarchy(), cqr.idxStore() ) + cqr;
 }
 
+
+template<>
+sserialize::CellQueryResult
+AdvancedCellOpTree::Calc<sserialize::CellQueryResult>::calcRegionDilationOp(AdvancedCellOpTree::Node* node) {
+	sserialize::CellQueryResult cqr( calc(node->children.front()) );
+	return sserialize::CellQueryResult( CalcBase::calcDilateRegionOp(node, cqr) , cqr.geoHierarchy(), cqr.idxStore() );
+}
+
+template<>
+sserialize::TreedCellQueryResult
+AdvancedCellOpTree::Calc<sserialize::TreedCellQueryResult>::calcRegionDilationOp(AdvancedCellOpTree::Node* node) {
+	sserialize::TreedCellQueryResult cqr( calc(node->children.front()) );
+	return sserialize::TreedCellQueryResult( CalcBase::calcDilateRegionOp(node, cqr.toCQR()), cqr.geoHierarchy(), cqr.idxStore() );
+}
 
 template<>
 sserialize::CellQueryResult
