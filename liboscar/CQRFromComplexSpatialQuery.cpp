@@ -299,6 +299,132 @@ createPolygon(
 	this->normalize(pp);
 }
 
+void
+CQRFromComplexSpatialQuery::
+createPolygon(
+	const sserialize::spatial::GeoPoint& point,
+	double distance,
+	liboscar::CQRFromComplexSpatialQuery::UnaryOp direction,
+	std::vector< sserialize::spatial::GeoPoint >& pp) const
+{
+	//opening angle betwen 0-90.0
+	double oa = 45.0;
+	
+	//temp data
+	double lat, lon;
+	
+	pp.emplace_back(point);
+	switch(direction) {
+	case liboscar::CQRFromComplexSpatialQuery::UO_NORTH_OF:
+	{
+		sserialize::spatial::destinationPoint(point.lat(), point.lon(), 270.0+90.0-oa, distance, lat, lon);
+		pp.emplace_back(lat, lon);
+		sserialize::spatial::destinationPoint(point.lat(), point.lon(), oa, distance, lat, lon);
+		pp.emplace_back(lat, lon);
+		break;
+	}
+	case liboscar::CQRFromComplexSpatialQuery::UO_EAST_OF:
+	{
+		sserialize::spatial::destinationPoint(point.lat(), point.lon(), 90.0-oa, distance, lat, lon);
+		pp.emplace_back(lat, lon);
+		sserialize::spatial::destinationPoint(point.lat(), point.lon(), 90.0+oa, distance, lat, lon);
+		pp.emplace_back(lat, lon);
+		break;
+	}
+	case liboscar::CQRFromComplexSpatialQuery::UO_SOUTH_OF:
+	{
+		sserialize::spatial::destinationPoint(point.lat(), point.lon(), 180.0-oa, distance, lat, lon);
+		pp.emplace_back(lat, lon);
+		sserialize::spatial::destinationPoint(point.lat(), point.lon(), 180.0+oa, distance, lat, lon);
+		pp.emplace_back(lat, lon);
+		break;
+	}
+	case liboscar::CQRFromComplexSpatialQuery::UO_WEST_OF:
+	{
+		sserialize::spatial::destinationPoint(point.lat(), point.lon(), 270.0-oa, distance, lat, lon);
+		pp.emplace_back(lat, lon);
+		sserialize::spatial::destinationPoint(point.lat(), point.lon(), 270.0+oa, distance, lat, lon);
+		pp.emplace_back(lat, lon);
+		break;
+	}
+	default:
+		break;
+	};
+	this->normalize(pp);
+}
+
+void 
+CQRFromComplexSpatialQuery::
+createPolygon(
+	const sserialize::Static::spatial::GeoWay& way,
+	liboscar::CQRFromComplexSpatialQuery::UnaryOp direction,
+	std::vector< sserialize::spatial::GeoPoint >& pp) const
+{
+	
+}
+
+void
+CQRFromComplexSpatialQuery::
+createPolygon(
+	const sserialize::spatial::GeoRect& rect,
+	liboscar::CQRFromComplexSpatialQuery::UnaryOp direction,
+	std::vector< sserialize::spatial::GeoPoint >& pp) const
+{
+	double inDirectionScale = 2.0; //in direction of compass
+	double orthoToDirectionScale = 0.5; //orthogonal to compass direction
+
+	double latDist = rect.maxLat() - rect.minLat();
+	double lonDist = rect.maxLon()-rect.minLon();
+
+	switch (direction) {
+	case liboscar::CQRFromComplexSpatialQuery::UO_NORTH_OF:
+	{
+		double minLat = rect.minLat() + latDist/2.0;
+		double maxLat = minLat + latDist*inDirectionScale;
+		pp.emplace_back(minLat, rect.minLon()); //lower left
+		pp.emplace_back(maxLat, rect.minLon()-lonDist*orthoToDirectionScale); //upper left
+		pp.emplace_back(maxLat, rect.maxLon()+lonDist*orthoToDirectionScale); //upper right
+		pp.emplace_back(minLat, rect.maxLon()); //lower right
+		break;
+	}
+	case liboscar::CQRFromComplexSpatialQuery::UO_EAST_OF:
+	{
+		double minLon = rect.minLon() + lonDist/2.0;
+		double maxLon = minLon + lonDist*inDirectionScale;
+		pp.emplace_back(rect.minLat(), minLon);//lower left
+		pp.emplace_back(rect.maxLat(), minLon); //upper left
+		pp.emplace_back(rect.maxLat()+latDist*orthoToDirectionScale, maxLon); //upper right
+		pp.emplace_back(rect.minLat()-latDist*orthoToDirectionScale, maxLon);//lower right
+		break;
+	}
+	case liboscar::CQRFromComplexSpatialQuery::UO_SOUTH_OF:
+	{
+		double maxLat = rect.minLat() + latDist/2.0;
+		double minLat = rect.minLat() - latDist*inDirectionScale;
+		double lonDist = rect.maxLon() - rect.minLon();
+		pp.emplace_back(minLat, rect.minLon()-lonDist*orthoToDirectionScale); //lower left
+		pp.emplace_back(maxLat, rect.minLon()); //upper left
+		pp.emplace_back(maxLat, rect.maxLon()); //upper right
+		pp.emplace_back(minLat, rect.maxLon()+lonDist*orthoToDirectionScale); //lower right
+		break;
+	}
+	case liboscar::CQRFromComplexSpatialQuery::UO_WEST_OF:
+	{
+		double minLon = rect.minLon() + lonDist/2.0;
+		double maxLon = minLon + lonDist*inDirectionScale;
+		pp.emplace_back(rect.minLat()-latDist*orthoToDirectionScale, minLon);//lower left
+		pp.emplace_back(rect.maxLat()+latDist*orthoToDirectionScale, minLon); //upper left
+		pp.emplace_back(rect.maxLat(), maxLon); //upper right
+		pp.emplace_back(rect.minLat(), maxLon);//lower right
+		break;
+	}
+	default:
+		break;
+	};
+	//normalize points
+	normalize(pp);
+}
+
 //there are 3 cases:
 // region<->item or item<->region
 // region<->region
@@ -452,71 +578,40 @@ sserialize::CellQueryResult CQRFromComplexSpatialQuery::compassOp(const sseriali
 		return sserialize::CellQueryResult();
 	}
 	
-	double inDirectionScale = 2.0; //in direction of compass
-	double orthoToDirectionScale = 0.5; //orthogonal to compass direction
-
 	SubSet subSet( createSubSet(cqr) );
 	SubSet::NodePtr myRegion( determineRelevantRegion(subSet) );
 	if (!myRegion.get()) {
 		return sserialize::CellQueryResult();
 	}
 	//now construct the polygon
-	std::vector<sserialize::spatial::GeoPoint> gp;
-	sserialize::spatial::GeoRect rect(m_cqrfp.geoHierarchy().regionBoundary(myRegion->ghId()));
-	double latDist = rect.maxLat() - rect.minLat();
-	double lonDist = rect.maxLon()-rect.minLon();
-	
-	switch (direction) {
-	case liboscar::CQRFromComplexSpatialQuery::UO_NORTH_OF:
-	{
-		double minLat = rect.minLat() + latDist/2.0;
-		double maxLat = minLat + latDist*inDirectionScale;
-		gp.emplace_back(minLat, rect.minLon()); //lower left
-		gp.emplace_back(maxLat, rect.minLon()-lonDist*orthoToDirectionScale); //upper left
-		gp.emplace_back(maxLat, rect.maxLon()+lonDist*orthoToDirectionScale); //upper right
-		gp.emplace_back(minLat, rect.maxLon()); //lower right
-		break;
+	std::vector<sserialize::spatial::GeoPoint> pp;
+	if (cqr.cellCount() < ITEM_QUERY_CELL_THREADSHOLD && myRegion->maxItemsSize() < ITEM_QUERY_ITEM_THRESHOLD) {
+		uint32_t itemId = determineRelevantItem(subSet, myRegion);
+		auto shape(store().geoShape(itemId));
+		auto st(shape.type());
+		switch (st) {
+		case sserialize::spatial::GS_POINT:
+			//BUG: the size of the area should depend on the item type
+			createPolygon(*shape.get<sserialize::spatial::GeoPoint>(), 200.0, direction);
+			break;
+		case sserialize::spatial::GS_WAY:
+			createPolygon(*shape.get<sserialize::Static::spatial::GeoWay>(), direction);
+			break;
+		case sserialize::spatial::GS_POLYGON:
+		case sserialize::spatial::GS_MULTI_POLYGON:
+			createPolygon(shape.boundary(), direction);
+			break;
+		default:
+			return sserialize::CellQueryResult();
+		}
+		return m_cqrfp.cqr(sserialize::spatial::GeoPolygon(std::move(pp)), liboscar::CQRFromPolygon::AC_AUTO);
 	}
-	case liboscar::CQRFromComplexSpatialQuery::UO_EAST_OF:
-	{
-		double minLon = rect.minLon() + lonDist/2.0;
-		double maxLon = minLon + lonDist*inDirectionScale;
-		gp.emplace_back(rect.minLat(), minLon);//lower left
-		gp.emplace_back(rect.maxLat(), minLon); //upper left
-		gp.emplace_back(rect.maxLat()+latDist*orthoToDirectionScale, maxLon); //upper right
-		gp.emplace_back(rect.minLat()-latDist*orthoToDirectionScale, maxLon);//lower right
-		break;
+	else {
+		createPolygon(geoHierarchy().regionBoundary(myRegion->ghId()), direction, pp);
+		sserialize::ItemIndex tmp(m_cqrfp.fullMatches(sserialize::spatial::GeoPolygon(std::move(pp)), liboscar::CQRFromPolygon::AC_POLYGON_CELL_BBOX));
+		tmp = tmp - idxStore().at(m_cqrfp.geoHierarchy().regionCellIdxPtr(myRegion->ghId()));
+		return sserialize::CellQueryResult(tmp, geoHierarchy(), idxStore());
 	}
-	case liboscar::CQRFromComplexSpatialQuery::UO_SOUTH_OF:
-	{
-		double maxLat = rect.minLat() + latDist/2.0;
-		double minLat = rect.minLat() - latDist*inDirectionScale;
-		double lonDist = rect.maxLon() - rect.minLon();
-		gp.emplace_back(minLat, rect.minLon()-lonDist*orthoToDirectionScale); //lower left
-		gp.emplace_back(maxLat, rect.minLon()); //upper left
-		gp.emplace_back(maxLat, rect.maxLon()); //upper right
-		gp.emplace_back(minLat, rect.maxLon()+lonDist*orthoToDirectionScale); //lower right
-		break;
-	}
-	case liboscar::CQRFromComplexSpatialQuery::UO_WEST_OF:
-	{
-		double minLon = rect.minLon() + lonDist/2.0;
-		double maxLon = minLon + lonDist*inDirectionScale;
-		gp.emplace_back(rect.minLat()-latDist*orthoToDirectionScale, minLon);//lower left
-		gp.emplace_back(rect.maxLat()+latDist*orthoToDirectionScale, minLon); //upper left
-		gp.emplace_back(rect.maxLat(), maxLon); //upper right
-		gp.emplace_back(rect.minLat(), maxLon);//lower right
-		break;
-	}
-	default:
-		return sserialize::CellQueryResult();
-	};
-	//normalize points
-	normalize(gp);
-	
-	sserialize::ItemIndex tmp(m_cqrfp.fullMatches(sserialize::spatial::GeoPolygon(gp), liboscar::CQRFromPolygon::AC_POLYGON_CELL_BBOX));
-	tmp = tmp - idxStore().at(m_cqrfp.geoHierarchy().regionCellIdxPtr(myRegion->ghId()));
-	return sserialize::CellQueryResult(tmp, geoHierarchy(), idxStore());
 }
 
 detail::CQRFromComplexSpatialQuery::SubSet

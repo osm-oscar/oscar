@@ -40,7 +40,7 @@ public:
 public: //cqr creation
 	//uses auto-detection of accuracy
 	sserialize::CellQueryResult cqrFromPolygon(const sserialize::spatial::GeoPolygon & gp) const;
-private://polygon creation functions
+private://polygon creation functions for betweenOp
 	///between 0->360, north is at 0
 	double bearing(double fromLat, double fromLon, double toLat, double toLon) const;
 	void normalize(std::vector<sserialize::spatial::GeoPoint> & gp) const;
@@ -50,6 +50,10 @@ private://polygon creation functions
 	void createPolygon(const sserialize::Static::spatial::GeoWay & gw, const sserialize::Static::spatial::GeoPoint & gp, std::vector< sserialize::spatial::GeoPoint >& pp) const;
 	void createPolygon(const sserialize::spatial::GeoRect & polyRect, const sserialize::spatial::GeoPoint & point, std::vector< sserialize::spatial::GeoPoint >& pp) const;
 	void createPolygon(const sserialize::spatial::GeoRect & polyRect, const sserialize::Static::spatial::GeoWay & gw, std::vector< sserialize::spatial::GeoPoint >& pp) const;
+private: //polygon creation functions for compassOp
+	void createPolygon(const sserialize::spatial::GeoPoint & point, double distance, liboscar::CQRFromComplexSpatialQuery::UnaryOp direction, std::vector< sserialize::spatial::GeoPoint >& pp) const;
+	void createPolygon(const sserialize::Static::spatial::GeoWay & way, liboscar::CQRFromComplexSpatialQuery::UnaryOp direction, std::vector< sserialize::spatial::GeoPoint >& pp) const;
+	void createPolygon(const sserialize::spatial::GeoRect & rect, liboscar::CQRFromComplexSpatialQuery::UnaryOp direction, std::vector< sserialize::spatial::GeoPoint >& pp) const;
 private:
 	SubSet createSubSet(const sserialize::CellQueryResult cqr) const;
 	SubSet::NodePtr determineRelevantRegion(const SubSet & subset) const;
