@@ -269,6 +269,9 @@ Token Tokenizer::next() {
 		}
 		};
 	}
+	if (m_state.it == m_state.end) {
+		t.type = Token::ENDOFFILE;
+	}
 	return t;
 }
 
@@ -458,6 +461,10 @@ detail::AdvancedCellOpTree::Node* Parser::parseQ() {
 		}
 		case Token::ENDOFFILE:
 			return n;
+			break;
+		case Token::INVALID_TOKEN:
+		case Token::INVALID_CHAR:
+			pop();
 			break;
 		default:
 			curTokenNode = parseSingleQ();
