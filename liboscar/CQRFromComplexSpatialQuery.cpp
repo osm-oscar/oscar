@@ -358,9 +358,56 @@ CQRFromComplexSpatialQuery::
 createPolygon(
 	const sserialize::Static::spatial::GeoWay& way,
 	liboscar::CQRFromComplexSpatialQuery::UnaryOp direction,
-	std::vector< sserialize::spatial::GeoPoint >& pp) const
+	std::vector<sserialize::spatial::GeoPoint> & pp) const
 {
+	double len = way.length();
+	sserialize::spatial::GeoRect wayRect(way.boundary());
+	//determine a point that is northest, southest etc. as midpoint and the nuse the createPolygon from Point function
+	//to add the triangle in the view direction and then use the convex hull of this and the original way to create the final polygon
+	sserialize::spatial::GeoPoint refPoint;
+	switch (direction) {
+	case liboscar::CQRFromComplexSpatialQuery::UO_NORTH_OF:
+	{
+		refPoint.lat() = wayRect.maxLat();
+		refPoint.lon() = wayRect.midLon();
+		break;
+	}
+	case liboscar::CQRFromComplexSpatialQuery::UO_EAST_OF:
+	{
+		refPoint.lat() = wayRect.midLat();
+		refPoint.lon() = wayRect.maxLon();
+		break;
+	}
+	case liboscar::CQRFromComplexSpatialQuery::UO_SOUTH_OF:
+	{
+		refPoint.lat() = wayRect.minLat();
+		refPoint.lon() = wayRect.midLon();
+		break;
+	}
+	case liboscar::CQRFromComplexSpatialQuery::UO_WEST_OF:
+	{
+		refPoint.lat() = wayRect.midLat();
+		refPoint.lon() = wayRect.minLon();
+		break;
+	}
+	default:
+		break;
+	};
 	
+	std::vector<sserialize::spatial::GeoPoint> tmpTria;
+	createPolygon(refPoint, len, direction, tmpTria);
+	
+	std::vector<CHFromPoints::Point_2> tmpP;
+	for(const sserialize::spatial::GeoPoint gp : way) {
+		tmpP.emplace_back(gp.lat(), gp.lon());
+	}
+	for(const sserialize::spatial::GeoPoint & gp : tmpTria) {
+		tmpP.emplace_back(gp.lat(), gp.lon());
+	}
+	
+	CHFromPoints::calc(tmpP.begin(), tmpP.end(), pp);
+	
+	//normalization not needed since all points are valid already
 }
 
 void
