@@ -60,58 +60,65 @@ void CQRFromPolygon::visit(const sserialize::spatial::GeoPolygon& gp, const sser
 	const GeoHierarchy & gh = m_store.geoHierarchy();
 	sserialize::spatial::GeoRect rect(gp.boundary());
 	
-	std::deque<uint32_t> queue;
-	std::unordered_set<uint32_t> visitedRegions;
-	Region r(gh.rootRegion());
-	for(uint32_t i(0), s(r.childrenSize()); i < s; ++i) {
-		uint32_t childId = r.child(i);
-		if (rect.overlap(gh.regionBoundary(childId))) {
-			uint32_t childStoreId = gh.ghIdToStoreId(childId);
-			sserialize::Static::spatial::GeoShape gs(m_store.geoShape(childStoreId));
-			if(gs.get<sserialize::spatial::GeoRegion>()->intersects(sgp)) {
-				queue.push_back(childId);
-				visitedRegions.insert(childId);
-			}
-		}
+	double rectDiag = rect.diagInM();
+	if (rectDiag < 1000) {
+		sserialize::ItemIndex cellCandidates = m_store.regionArrangement().cellsAlongPath(rectDiag/2.0, gp.points().cbegin(), gp.points().cend());
+		op.candidates(cellCandidates);
 	}
-	while (queue.size()) {
-		//by definition: regions in the queue intersect the query polygon
-		r = gh.region(queue.front());
-		queue.pop_front();
-		sserialize::Static::spatial::GeoShape gs(m_store.geoShape(r.storeId()));
-		bool enclosed = false;
-		if (gs.type() == sserialize::spatial::GS_POLYGON) {
-			enclosed = sgp.encloses(*(gs.get<sserialize::Static::spatial::GeoPolygon>()));
-		}
-		else if (gs.type() == sserialize::spatial::GS_MULTI_POLYGON) {
-			enclosed = gs.get<sserialize::Static::spatial::GeoMultiPolygon>()->enclosed(sgp);
-		}
-		if (enclosed) {
-			//checking the itemsCount of the region does only work if the hierarchy was created with a full region item index
-			//so instead we have to check the cellcount
-			uint32_t cIdxPtr = r.cellIndexPtr();
-			if (m_idxStore.idxSize(cIdxPtr)) {
-				sserialize::ItemIndex idx(m_idxStore.at(cIdxPtr));
-				op.enclosed(idx);
-			}
-		}
-		else {//just an intersection, check the children and the region exclusive cells
-			for(uint32_t i(0), s(r.childrenSize()); i < s; ++i) {
-				uint32_t childId = r.child(i);
-				if (!visitedRegions.count(childId) && rect.overlap(gh.regionBoundary(childId))) {
-					uint32_t childStoreId = gh.ghIdToStoreId(childId);
-					sserialize::Static::spatial::GeoShape gs(m_store.geoShape(childStoreId));
-					if(gs.get<sserialize::spatial::GeoRegion>()->intersects(sgp)) {
-						queue.push_back(childId);
-						visitedRegions.insert(childId);
-					}
+	else {
+		std::deque<uint32_t> queue;
+		std::unordered_set<uint32_t> visitedRegions;
+		Region r(gh.rootRegion());
+		for(uint32_t i(0), s(r.childrenSize()); i < s; ++i) {
+			uint32_t childId = r.child(i);
+			if (rect.overlap(gh.regionBoundary(childId))) {
+				uint32_t childStoreId = gh.ghIdToStoreId(childId);
+				sserialize::Static::spatial::GeoShape gs(m_store.geoShape(childStoreId));
+				if(gs.get<sserialize::spatial::GeoRegion>()->intersects(sgp)) {
+					queue.push_back(childId);
+					visitedRegions.insert(childId);
 				}
 			}
-			//check cells that are not part of children regions
-			uint32_t exclusiveCellIndexPtr = r.exclusiveCellIndexPtr();
-			if (m_idxStore.idxSize(exclusiveCellIndexPtr)) {
-				sserialize::ItemIndex idx(m_idxStore.at(exclusiveCellIndexPtr));
-				op.candidates(idx);
+		}
+		while (queue.size()) {
+			//by definition: regions in the queue intersect the query polygon
+			r = gh.region(queue.front());
+			queue.pop_front();
+			sserialize::Static::spatial::GeoShape gs(m_store.geoShape(r.storeId()));
+			bool enclosed = false;
+			if (gs.type() == sserialize::spatial::GS_POLYGON) {
+				enclosed = sgp.encloses(*(gs.get<sserialize::Static::spatial::GeoPolygon>()));
+			}
+			else if (gs.type() == sserialize::spatial::GS_MULTI_POLYGON) {
+				enclosed = gs.get<sserialize::Static::spatial::GeoMultiPolygon>()->enclosed(sgp);
+			}
+			if (enclosed) {
+				//checking the itemsCount of the region does only work if the hierarchy was created with a full region item index
+				//so instead we have to check the cellcount
+				uint32_t cIdxPtr = r.cellIndexPtr();
+				if (m_idxStore.idxSize(cIdxPtr)) {
+					sserialize::ItemIndex idx(m_idxStore.at(cIdxPtr));
+					op.enclosed(idx);
+				}
+			}
+			else {//just an intersection, check the children and the region exclusive cells
+				for(uint32_t i(0), s(r.childrenSize()); i < s; ++i) {
+					uint32_t childId = r.child(i);
+					if (!visitedRegions.count(childId) && rect.overlap(gh.regionBoundary(childId))) {
+						uint32_t childStoreId = gh.ghIdToStoreId(childId);
+						sserialize::Static::spatial::GeoShape gs(m_store.geoShape(childStoreId));
+						if(gs.get<sserialize::spatial::GeoRegion>()->intersects(sgp)) {
+							queue.push_back(childId);
+							visitedRegions.insert(childId);
+						}
+					}
+				}
+				//check cells that are not part of children regions
+				uint32_t exclusiveCellIndexPtr = r.exclusiveCellIndexPtr();
+				if (m_idxStore.idxSize(exclusiveCellIndexPtr)) {
+					sserialize::ItemIndex idx(m_idxStore.at(exclusiveCellIndexPtr));
+					op.candidates(idx);
+				}
 			}
 		}
 	}
