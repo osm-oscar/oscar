@@ -639,14 +639,14 @@ sserialize::CellQueryResult CQRFromComplexSpatialQuery::compassOp(const sseriali
 		switch (st) {
 		case sserialize::spatial::GS_POINT:
 			//BUG: the size of the area should depend on the item type
-			createPolygon(*shape.get<sserialize::spatial::GeoPoint>(), 200.0, direction);
+			createPolygon(*shape.get<sserialize::spatial::GeoPoint>(), 200.0, direction, pp);
 			break;
 		case sserialize::spatial::GS_WAY:
-			createPolygon(*shape.get<sserialize::Static::spatial::GeoWay>(), direction);
+			createPolygon(*shape.get<sserialize::Static::spatial::GeoWay>(), direction, pp);
 			break;
 		case sserialize::spatial::GS_POLYGON:
 		case sserialize::spatial::GS_MULTI_POLYGON:
-			createPolygon(shape.boundary(), direction);
+			createPolygon(shape.boundary(), direction, pp);
 			break;
 		default:
 			return sserialize::CellQueryResult();
