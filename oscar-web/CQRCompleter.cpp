@@ -157,6 +157,7 @@ void CQRCompleter::simpleCQR() {
 				uint32_t storeId = gh->ghIdToStoreId( node->ghId() );
 				ohPath->push_back(storeId);
 				regions->insert(node.get());
+				return *this;
 			}
 			MyIterator(std::vector<uint32_t> * ohPath, RegionSet * regions, const GeoHierarchy * gh) :
 			ohPath(ohPath), regions(regions), gh(gh)
