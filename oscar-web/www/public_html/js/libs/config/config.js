@@ -1,4 +1,4 @@
-define(myConfig = {
+define({
     styles: {
         shapes: {
             regions: {

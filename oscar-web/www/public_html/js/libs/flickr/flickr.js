@@ -1,5 +1,5 @@
-define(["jqueryui", "slimbox"], function () {
-    return flickr = {
+define(["jquery", "jqueryui", "slimbox", "conf"], function ($, jqueryui, slimbox, config) {
+    return {
         _api_key: "46f7a6dce46471b81aa7c1592fcc9733",
 
         _query: function (text, geopos, callback) {
@@ -61,13 +61,13 @@ define(["jqueryui", "slimbox"], function () {
             }
 
             if (urls.length > 0) {
-                $('#flickr').show("slide", {direction: "right"}, myConfig.styles.slide.speed);
+                $('#flickr').show("slide", {direction: "right"}, config.styles.slide.speed);
                 // slimbox fails with dynamic content => updated added images
                 $("a[rel^='lightbox']").slimbox({}, null, function (el) {
                     return (this == el) || ((this.rel.length > 8) && (this.rel == el.rel));
                 });
             } else {
-                $('#flickr').hide("slide", {direction: "right"}, myConfig.styles.slide.speed);
+                $('#flickr').hide("slide", {direction: "right"}, config.styles.slide.speed);
             }
         }
     }

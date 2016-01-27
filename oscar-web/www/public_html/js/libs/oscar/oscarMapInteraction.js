@@ -20,9 +20,9 @@ requirejs.config({
         "jqueryui": "jquery-ui/jquery-ui.min",
         "slimbox": "slimbox/js/slimbox2",
         "tools": "tools/tools",
-        "conf": "config/config.min",
+        "conf": "config/config",
         "menu": "menu/menu",
-        "flickr": "flickr/flickr.min",
+        "flickr": "flickr/flickr",
         "manager": "connection/manager.min",
         "switch": "switch-button/jquery.switchButton.min",
         "d3": "dagre-d3/d3.min",
@@ -48,22 +48,23 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
         var osmAttr = '&copy; <a target="_blank" href="http://www.openstreetmap.org">OpenStreetMap</a>';
         var state = {
             map: {},
-            DAG: SimpleHash(),
+            visualizationActive: false,
+            DAG: tools.SimpleHash(),
             markers: L.markerClusterGroup(),
             sidebar: undefined,
             items: {
                 shapes: {
                     promised: {},//referenced by id
-                    drawn: SimpleHash(),//id -> [leaflet-item]
+                    drawn: tools.SimpleHash(),//id -> [leaflet-item]
                     highlighted: {}//id -> id (stored in drawn)
                 },
                 listview: {
-                    promised: SimpleHash(),//referenced by id
-                    drawn: SimpleHash(),//referenced by id
+                    promised: tools.SimpleHash(),//referenced by id
+                    drawn: tools.SimpleHash(),//referenced by id
                     selectedRegionId: undefined
                 },
                 clusters: {
-                    drawn: SimpleHash()//id -> marker
+                    drawn: tools.SimpleHash()//id -> marker
                 }
             },
             loadingtasks: 0,
@@ -95,7 +96,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             domcache: {
                 searchResultsCounter: undefined
             },
-            spinner: new spinner(myConfig.spinnerOpts),
+            spinner: new spinner(config.spinnerOpts),
         };
 
         // show names of subregions of a cluster in a popup
@@ -183,7 +184,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                         wikiLink = itemValue;
                     }
                 }
-                else if (myConfig.resultsview.urltags[itemKey] !== undefined) {
+                else if (config.resultsview.urltags[itemKey] !== undefined) {
                     if (!protoRegExp.test(itemValue)) {
                         itemValue = "http://" + itemValue;
                     }
@@ -230,7 +231,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
 
         function startLoadingSpinner() {
             if (state.timers.loadingSpinner === undefined) {
-                state.timers.loadingSpinner = setTimeout(displayLoadingSpinner, myConfig.timeouts.loadingSpinner);
+                state.timers.loadingSpinner = setTimeout(displayLoadingSpinner, config.timeouts.loadingSpinner);
             }
             state.loadingtasks += 1;
         }
@@ -266,8 +267,8 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
 
         function updateGeoQueryMapShape() {
             clearGeoQueryMapShape();
-            var sampleStep = 1.0 / myConfig.geoquery.samplecount;
-            var sampleCount = myConfig.geoquery.samplecount;
+            var sampleStep = 1.0 / config.geoquery.samplecount;
+            var sampleCount = config.geoquery.samplecount;
             var pts = [];
 
             function fillPts(sLat, sLng, tLat, tLng) {
@@ -290,7 +291,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             fillPts(maxLat, maxLng, maxLat, minLng);
             fillPts(maxLat, minLng, minLat, minLng);
 
-            state.geoquery.mapshape = L.polygon(pts, myConfig.styles.shapes.geoquery.normal);
+            state.geoquery.mapshape = L.polygon(pts, config.styles.shapes.geoquery.normal);
             state.map.addLayer(state.geoquery.mapshape);
 
         }
@@ -335,7 +336,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             $('#geoquery_selectbutton').html('Clear rectangle');
             $('[data-class="geoquery_min_coord"]').addClass('bg-info');
             state.map.on('click', geoQuerySelect);
-            state.timers.geoquery = setTimeout(endGeoQuerySelect, myConfig.timeouts.geoquery_select);
+            state.timers.geoquery = setTimeout(endGeoQuerySelect, config.timeouts.geoquery_select);
         }
 
         function resetPathQuery() {
@@ -354,10 +355,10 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
         function pathQuerySelect(e) {
             if (state.timers.pathquery !== undefined) {
                 clearTimeout(state.timers.pathquery);
-                state.timers.pathquery = setTimeout(endPathQuery, myConfig.timeouts.pathquery.select);
+                state.timers.pathquery = setTimeout(endPathQuery, config.timeouts.pathquery.select);
             }
             if (state.pathquery.mapshape === undefined) {
-                state.pathquery.mapshape = L.polyline([], myConfig.styles.shapes.pathquery.highlight).addTo(state.map);
+                state.pathquery.mapshape = L.polyline([], config.styles.shapes.pathquery.highlight).addTo(state.map);
             }
             state.pathquery.mapshape.addLatLng(e.latlng);
         }
@@ -383,7 +384,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             $('#pathquery_selectbutton').html("Finish path");
             state.pathquery.selectButtonState = 'finish';
             state.map.on('click', pathQuerySelect);
-            state.timers.pathquery = setTimeout(endPathQuery, myConfig.timeouts.pathquery.select);
+            state.timers.pathquery = setTimeout(endPathQuery, config.timeouts.pathquery.select);
         }
 
         function addSingleQueryStatementToQuery(qstr) {
@@ -396,7 +397,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
         function addShapeToMap(leafletItem, itemId, shapeSrcType) {
             var itemDetailsId = '#' + shapeSrcType + 'Details' + itemId;
             var itemPanelRootId = '#' + shapeSrcType + 'PanelRoot' + itemId;
-            if (myConfig.functionality.shapes.highlightListItemOnClick[shapeSrcType]) {
+            if (config.functionality.shapes.highlightListItemOnClick[shapeSrcType]) {
                 leafletItem.on('click', function () {
                     state.sidebar.open("search");
                     $('#' + shapeSrcType + "List").find('.panel-collapse').each(
@@ -464,7 +465,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 state.map.removeLayer(state.items.clusters.drawn.at(i));
                 state.items.clusters.drawn.erase(i);
             }
-            state.DAG = SimpleHash(); // TODO: kill whole Tree?
+            state.DAG = tools.SimpleHash(); // TODO: kill whole Tree?
             $('<ul>', {'id': "MyTree", 'class': "tree", 'role': "tree"}).appendTo('#fuelux_tree_parent');
             $('#MyTree').append($.Mustache.render('tree_template', null));
             $('#search_results_counter').empty();
@@ -477,7 +478,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                     state[shapeSrcType].shapes.drawn.erase(i);
                 }
                 else {
-                    state[shapeSrcType].shapes.drawn.at(i).setStyle(myConfig.styles.shapes[shapeSrcType]['normal']);
+                    state[shapeSrcType].shapes.drawn.at(i).setStyle(config.styles.shapes[shapeSrcType]['normal']);
                 }
             }
             state[shapeSrcType].shapes.highlighted = {};
@@ -511,7 +512,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
 
                     delete state.items.shapes.promised[itemId];
                     var itemShape = oscar.leafletItemFromShape(shapes[itemId]);
-                    itemShape.setStyle(myConfig.styles.shapes.items.normal);
+                    itemShape.setStyle(config.styles.shapes.items.normal);
 
                     if (itemShape instanceof L.MultiPolygon) {
                         marker = L.marker(itemShape.getLatLngs()[0][0]);
@@ -539,7 +540,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 var lfi = state[shapeSrcType].shapes.drawn.at(itemId);
                 clearHighlightedShapes(shapeSrcType);
                 state[shapeSrcType].shapes.highlighted[itemId] = lfi;
-                lfi.setStyle(myConfig.styles.shapes[shapeSrcType]['highlight']);
+                lfi.setStyle(config.styles.shapes[shapeSrcType]['highlight']);
                 state.map.fitBounds(lfi.getBounds());
             }
             else {
@@ -552,7 +553,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                         }
                         clearHighlightedShapes(shapeSrcType);
                         var leafLetItem = oscar.leafletItemFromShape(shape);
-                        leafLetItem.setStyle(myConfig.styles.shapes[shapeSrcType]['highlight']);
+                        leafLetItem.setStyle(config.styles.shapes[shapeSrcType]['highlight']);
                         state[shapeSrcType].shapes.highlighted[itemId] = itemId;
                         addShapeToMap(leafLetItem, itemId, shapeSrcType);
                     },
@@ -725,7 +726,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                                         if (oscar.isShapeInCache(e.target.rid)) {
                                             oscar.getShape(e.target.rid, function (shape) {
                                                 var leafletItem = oscar.leafletItemFromShape(shape);
-                                                leafletItem.setStyle(myConfig.styles.shapes['regions']['normal']);
+                                                leafletItem.setStyle(config.styles.shapes['regions']['normal']);
                                                 e.target.shape = leafletItem;
                                                 state.map.addLayer(leafletItem);
                                             }, defErrorCB);
@@ -748,6 +749,10 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                                         state.markers.addLayer(marker);
                                         state.DAG.at(marker.rid).marker = marker;
                                     }
+                                }
+
+                                if(state.visualizationActive){
+                                    tree.refresh(parentRid);
                                 }
 
                             }, defErrorCB);
@@ -785,7 +790,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                     state.items.clusters.drawn.erase(regionId);
 
                     // manage items -> kill old items if there are too many of them and show clsuters again
-                    if (state.items.listview.drawn.size() + items.length > myConfig.maxBufferedItems) {
+                    if (state.items.listview.drawn.size() + items.length > config.maxBufferedItems) {
                         for (var i in state.items.listview.drawn.values()) {
                             node = state.DAG.at(i);
                             for (var parent in node.parents) {
@@ -878,7 +883,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             clearViews();
             state.regionHandler = flatCqrTreeDataSource(cqr);
             var process = pathProcessor(cqr);
-            var root = new TreeNode(0xFFFFFFFF, undefined);
+            var root = new tools.TreeNode(0xFFFFFFFF, undefined);
             root.count = cqr.rootRegionApxItemCount();
             root.name = "World";
             state.DAG.insert(0xFFFFFFFF, root);
@@ -916,10 +921,10 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                         var kernelWidthX = width / 1.75;
                         var kernelWidthY = height / 1.75;
                         // use formula for full width at half maximum to set up gaussian: https://en.wikipedia.org/wiki/Gaussian_function
-                        var gauss = gaussian(1, midpointX, midpointY, kernelWidthX / 2.35482, kernelWidthY / 2.35482);
+                        var gauss = tools.gaussian(1, midpointX, midpointY, kernelWidthX / 2.35482, kernelWidthY / 2.35482);
 
-                        var percent = percentOfOverlap(state.map, node.bbox) * gauss(pos.x, pos.y);
-                        if (!(marker instanceof L.MarkerCluster) && percent >= myConfig.overlap) {
+                        var percent = tools.percentOfOverlap(state.map, node.bbox) * gauss(pos.x, pos.y);
+                        if (!(marker instanceof L.MarkerCluster) && percent >= config.overlap) {
                             removeMarker(marker);
                             state.regionHandler({rid: marker.rid, draw: true, bbox: node.bbox});
                         }
@@ -950,7 +955,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
 
             $("#showCategories a").click();
             state.sidebar.open("search");
-            $("#flickr").hide("slide", {direction: "right"}, myConfig.styles.slide.speed);
+            $("#flickr").hide("slide", {direction: "right"}, config.styles.slide.speed);
 
             //query has changed, ddos the server!
             var myQuery = $("#search_text").val();
@@ -999,7 +1004,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             if (state.timers.query !== undefined) {
                 clearTimeout(state.timers.query);
             }
-            state.timers.query = setTimeout(instantCompletion, myConfig.timeouts.query);
+            state.timers.query = setTimeout(instantCompletion, config.timeouts.query);
         }
 
         //https://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
@@ -1053,10 +1058,11 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             });
 
             $('#graph').click(function () {
-                visualizeDAG(state.DAG.at(0xFFFFFFFF), state);
+                tree.visualizeDAG(state.DAG.at(0xFFFFFFFF), state);
             });
 
             $('#close a').click(function () {
+                state.visualizationActive = false;
                 $('#tree').css("display", "none");
             });
 
