@@ -41,7 +41,7 @@
                                         <span>id</span>
                                     </td>
                                     <td>
-                                        <span>{{itemId}}</span>
+                                        <a href='#' class="item-detail-id" data-query='{{itemId}}'>{{itemId}}</span>
                                     </td>
                                 </tr>
                                 <tr>
@@ -1022,6 +1022,16 @@
                                 }
                             }
                     );
+                    function itemIdQuery(e) {
+                        var me = jQuery(this);
+                        var myKey = me.attr('data-query');
+                        if (myKey === undefined) {
+                            return false;
+                        }
+                        var myQstr = "$item:" + myKey;
+                        addSingleQueryStatementToQuery(myQstr);
+                        return false;
+                    }
                     function itemDetailQuery(e) {
                         var me = jQuery(this);
                         var myKey = me.attr('data-query-key');
@@ -1038,6 +1048,7 @@
                     }
                     jQuery('#' + shapeSrcType + 'Details'+itemId+" .item-detail-key", inserted).click(itemDetailQuery);
                     jQuery('#' + shapeSrcType + 'Details'+itemId+" .item-detail-value", inserted).click(itemDetailQuery);
+                    jQuery('#' + shapeSrcType + 'Details'+itemId+" .item-detail-id", inserted).click(itemIdQuery);
                     searchResultsCounter = jQuery('#' + shapeSrcType + 'List_counter');
                     searchResultsCounter.empty();
                     searchResultsCounter.append("(" + state[shapeSrcType].listview.drawn.size() + ")");
