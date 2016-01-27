@@ -155,6 +155,7 @@ struct PolyCellItemIntersectBaseOp {
 				}
 				if (intersectingItems.size() == cellItems.size()) { //this is a fullmatch
 					fullMatches.insert(cellId);
+					intersectingItems.clear();
 				}
 				else if (intersectingItems.size()) {
 					partialMatches[cellId] = sserialize::ItemIndex(std::move(intersectingItems));
