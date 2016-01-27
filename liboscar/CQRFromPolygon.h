@@ -146,7 +146,17 @@ struct PolyCellItemIntersectBaseOp {
 	}
 	void candidates(const sserialize::ItemIndex & candidateCells) {
 		for(uint32_t cellId : candidateCells) {
-			if (!fullMatches.count(cellId) && !partialMatches.count(cellId) && gp.intersects(gh.cellBoundary(cellId))) {
+			if (fullMatches.count(cellId) || partialMatches.count(cellId)) {
+				continue;
+			}
+			sserialize::spatial::GeoRect cellBoundary(gh.cellBoundary(cellId));
+			if (!gp.intersects(cellBoundary)) {
+				continue;
+			}
+			if (gp.encloses( sserialize::spatial::GeoPolygon::fromRect(cellBoundary)) ) {
+				fullMatches.insert(cellId);
+			}
+			else {
 				sserialize::ItemIndex cellItems( idxStore.at( gh.cellItemsPtr(cellId) ) );
 				for(uint32_t itemId : cellItems) {
 					if (static_cast<MySubClass*>(this)->intersects(itemId)) {
