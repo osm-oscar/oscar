@@ -301,7 +301,7 @@ template<typename T_CQR_TYPE>
 T_CQR_TYPE
 AdvancedCellOpTree::Calc<T_CQR_TYPE>::calcItem(AdvancedCellOpTree::Node * node) {
 	uint32_t id = atoi(node->value.c_str());
-	liboscar::Static::OsmKeyValueObjectStore::Item item(store());
+	liboscar::Static::OsmKeyValueObjectStore::Item item(store().at(id));
 	if (!item.valid()) {
 		return CQRType();
 	}
@@ -425,6 +425,8 @@ AdvancedCellOpTree::Calc<T_CQR_TYPE>::calc(AdvancedCellOpTree::Node* node) {
 			return calcPolygon(node);
 		case Node::PATH:
 			return calcPath(node);
+		case Node::ITEM:
+			return calcItem(node);
 		default:
 			break;
 		};
