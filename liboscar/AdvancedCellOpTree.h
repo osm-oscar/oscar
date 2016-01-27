@@ -12,7 +12,9 @@
 /** The AdvancedCellOpTree supports the following query language:
   *
   *
-  * Q := FM_CONVERSION Q | DILATION_OP Q | COMPASS_OP Q | Q BETWEEN_OP Q | Q BINARY_OP Q | (Q) | Q Q | GEO_RECT | GEO_PATH | REGION | CELL
+  * Q := FM_CONVERSION Q | DILATION_OP Q | COMPASS_OP Q | Q BETWEEN_OP Q | Q BINARY_OP Q
+  * Q := (Q) | Q Q
+  * Q := ITEM | GEO_RECT | GEO_PATH | REGION | CELL
   * FM_CONVERSION := %
   * DILATION_OP := CELL_DILATION | REGION_DILATOIN
   * CELL_DILATION := %NUMBER%
@@ -20,6 +22,7 @@
   * COMPASS_OP := :^ | :v | :> | :< | :north-of | :east-of | :south-of | :west-of
   * BETWEEN_OP := <->
   * BINARY_OP := - | + | / | ^ 
+  * ITEM := $item:id
   * GEO_RECT := $geo[]
   * POLYGON := $poly[]
   * GEO_PATH := $path[]
@@ -35,7 +38,7 @@ struct Node {
 	enum OpType : int {
 		FM_CONVERSION_OP, CELL_DILATION_OP, REGION_DILATION_OP, COMPASS_OP,
 		SET_OP, BETWEEN_OP,
-		RECT, POLYGON, PATH, REGION, CELL, STRING
+		RECT, POLYGON, PATH, REGION, CELL, STRING, ITEM
 	};
 	int baseType;
 	int subType;
@@ -70,7 +73,8 @@ struct Token {
 		GEO_PATH,
 		REGION,
 		CELL,
-		STRING
+		STRING,
+		ITEM
 		
 	};
 	int type;
@@ -149,6 +153,7 @@ private:
 		
 		const sserialize::Static::ItemIndexStore & idxStore() const;
 		const sserialize::Static::spatial::GeoHierarchy & gh() const;
+		const liboscar::Static::OsmKeyValueObjectStore & store() const;
 		
 		sserialize::CellQueryResult calcBetweenOp(const sserialize::CellQueryResult & c1, const sserialize::CellQueryResult & c2);
 		sserialize::CellQueryResult calcCompassOp(Node * node, const sserialize::CellQueryResult & cqr);
@@ -162,6 +167,7 @@ private:
 		CalcBase(ctc, cqrd, csq)
 		{}
 		CQRType calc(Node * node);
+		CQRType calcItem(Node * node);
 		CQRType calcString(Node * node);
 		CQRType calcRect(Node * node);
 		CQRType calcPolygon(Node * node);
@@ -280,15 +286,31 @@ AdvancedCellOpTree::Calc<T_CQR_TYPE>::calcPath(AdvancedCellOpTree::Node* node) {
 template<typename T_CQR_TYPE>
 T_CQR_TYPE
 AdvancedCellOpTree::Calc<T_CQR_TYPE>::calcRegion(AdvancedCellOpTree::Node * node) {
-	uint32_t id = atoi(node->value.c_str()); //-1 fo the terminating 0
+	uint32_t id = atoi(node->value.c_str());
 	return m_ctc.cqrFromRegionStoreId<CQRType>(id);
 }
 
 template<typename T_CQR_TYPE>
 T_CQR_TYPE
 AdvancedCellOpTree::Calc<T_CQR_TYPE>::calcCell(AdvancedCellOpTree::Node* node) {
-	uint32_t id = atoi(node->value.c_str()); //-1 fo the terminating 0
+	uint32_t id = atoi(node->value.c_str());
 	return m_ctc.cqrFromCellId<CQRType>(id);
+}
+
+template<typename T_CQR_TYPE>
+T_CQR_TYPE
+AdvancedCellOpTree::Calc<T_CQR_TYPE>::calcItem(AdvancedCellOpTree::Node * node) {
+	uint32_t id = atoi(node->value.c_str());
+	liboscar::Static::OsmKeyValueObjectStore::Item item(store());
+	if (!item.valid()) {
+		return CQRType();
+	}
+	auto itemCells( item.cells() );
+	sserialize::ItemIndex idx(std::vector<uint32_t>(1, id));
+	sserialize::ItemIndex pmIdx(std::vector<uint32_t>(itemCells.begin(), itemCells.end()));
+	std::vector<sserialize::ItemIndex> cellIdx(pmIdx.size(), idx);
+	
+	return CQRType(sserialize::ItemIndex(), pmIdx, cellIdx.begin(), gh(), idxStore());
 }
 
 template<typename T_CQR_TYPE>
