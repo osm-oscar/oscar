@@ -66,6 +66,8 @@ private: //accessor function
 private:
 	sserialize::spatial::GeoHierarchySubSetCreator m_ssc;
 	liboscar::CQRFromPolygon m_cqrfp;
+	uint32_t m_itemQueryItemCountTh;
+	uint32_t m_itemQueryCellCountTh;
 };
 
 }}//end namespace liboscar::detail

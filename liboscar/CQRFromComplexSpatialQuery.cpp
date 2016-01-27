@@ -34,7 +34,9 @@ namespace detail {
 
 CQRFromComplexSpatialQuery::CQRFromComplexSpatialQuery(const sserialize::spatial::GeoHierarchySubSetCreator & ssc, const liboscar::CQRFromPolygon & cqrfp) :
 m_ssc(ssc),
-m_cqrfp(cqrfp)
+m_cqrfp(cqrfp),
+m_itemQueryItemCountTh(20),
+m_itemQueryCellCountTh(10)
 {}
 
 CQRFromComplexSpatialQuery::~CQRFromComplexSpatialQuery() {}
@@ -479,8 +481,6 @@ createPolygon(
 // set accuracy depending on the size of the rectangle to be?:
 // rectangle diagonal less thant 500m -> POLYGON_ITEM
 
-#define ITEM_QUERY_ITEM_THRESHOLD 100
-#define ITEM_QUERY_CELL_THREADSHOLD 2
 
 sserialize::CellQueryResult CQRFromComplexSpatialQuery::betweenOp(const sserialize::CellQueryResult& cqr1, const sserialize::CellQueryResult& cqr2) const {
 	SubSet s1(createSubSet(cqr1)), s2(createSubSet(cqr2));
@@ -495,8 +495,8 @@ sserialize::CellQueryResult CQRFromComplexSpatialQuery::betweenOp(const sseriali
 	//or sum them all up into a single big rectangle?
 	//construct the convex hull?
 	
-	bool cqr1IsItemQuery = cqr1.cellCount() < ITEM_QUERY_CELL_THREADSHOLD && np1->maxItemsSize() < ITEM_QUERY_ITEM_THRESHOLD;
-	bool cqr2IsItemQuery = cqr2.cellCount() < ITEM_QUERY_CELL_THREADSHOLD && np2->maxItemsSize() < ITEM_QUERY_ITEM_THRESHOLD;
+	bool cqr1IsItemQuery = cqr1.cellCount() < m_itemQueryCellCountTh && np1->maxItemsSize() < m_itemQueryItemCountTh;
+	bool cqr2IsItemQuery = cqr2.cellCount() < m_itemQueryCellCountTh && np2->maxItemsSize() < m_itemQueryItemCountTh;
 	
 	if (cqr1IsItemQuery && cqr2IsItemQuery) {
 		//lets find the item
@@ -632,7 +632,7 @@ sserialize::CellQueryResult CQRFromComplexSpatialQuery::compassOp(const sseriali
 	}
 	//now construct the polygon
 	std::vector<sserialize::spatial::GeoPoint> pp;
-	if (cqr.cellCount() < ITEM_QUERY_CELL_THREADSHOLD && myRegion->maxItemsSize() < ITEM_QUERY_ITEM_THRESHOLD) {
+	if (cqr.cellCount() < m_itemQueryCellCountTh && myRegion->maxItemsSize() < m_itemQueryItemCountTh) {
 		uint32_t itemId = determineRelevantItem(subSet, myRegion);
 		auto shape(store().geoShape(itemId));
 		auto st(shape.type());
