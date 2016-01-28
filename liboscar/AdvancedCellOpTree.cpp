@@ -249,6 +249,7 @@ Token Tokenizer::next() {
 				if (*it == ' ' || *it == '\t' || *it == '(') {
 					t.value.assign(m_state.it, it);
 					m_state.it = it;
+					break;
 				}
 			}
 			return t;
