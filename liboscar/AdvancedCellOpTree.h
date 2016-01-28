@@ -279,7 +279,13 @@ AdvancedCellOpTree::Calc<T_CQR_TYPE>::calcPath(AdvancedCellOpTree::Node* node) {
 		for(std::vector<double>::const_iterator it(tmp.begin()+1), end(tmp.end()); it != end; it += 2) {
 			gp.emplace_back(*it, *(it+1));
 		}
-		return m_ctc.cqrAlongPath<CQRType>(radius, gp.begin(), gp.end());
+		sserialize::spatial::GeoWay gw(gp);
+		if (gw.length() < 100*1000) { //less than a hundred kilometers long
+			return m_ctc.cqrAlongPath<CQRType>(radius, gp.begin(), gp.end());
+		}
+		else {
+			return CQRType(m_cqrd.dilate(m_ctc.cqrAlongPath<sserialize::CellQueryResult>(0.0, gp.begin(), gp.end()), radius), gh(), idxStore());
+		}
 	}
 }
 
