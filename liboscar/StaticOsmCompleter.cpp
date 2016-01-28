@@ -255,7 +255,7 @@ sserialize::CellQueryResult OsmCompleter::cqrComplete(const std::string& query, 
 	
 	sserialize::TimeMeasurer tm;
 	tm.begin();
-	CQRDilator cqrd(store().cellCenterOfMass(), store().cellGraph());
+	sserialize::Static::CQRDilator cqrd(store().cellCenterOfMass(), store().cellGraph());
 	CQRFromPolygon cqrfp(store(), indexStore());
 	sserialize::spatial::GeoHierarchySubSetCreator ghs(store().geoHierarchy(), sserialize::spatial::GeoHierarchySubSetCreator::T_PASS_THROUGH);
 	CQRFromComplexSpatialQuery csq(ghs, cqrfp);

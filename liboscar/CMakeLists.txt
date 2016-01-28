@@ -14,7 +14,6 @@ TextSearch.cpp
 GeoSearch.cpp
 CellOpTree.cpp
 AdvancedCellOpTree.cpp
-CQRDilator.cpp
 CQRFromPolygon.cpp
 CQRFromComplexSpatialQuery.cpp
 )

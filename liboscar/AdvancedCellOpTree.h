@@ -6,7 +6,7 @@
 #include <sserialize/Static/CellTextCompleter.h>
 #include <sserialize/strings/stringfunctions.h>
 #include <sserialize/utility/assert.h>
-#include "CQRDilator.h"
+#include <sserialize/Static/CQRDilator.h>
 #include "CQRFromComplexSpatialQuery.h"
 
 /** The AdvancedCellOpTree supports the following query language:
@@ -135,20 +135,20 @@ class AdvancedCellOpTree final {
 public:
 	typedef detail::AdvancedCellOpTree::Node Node;
 public:
-	AdvancedCellOpTree(const sserialize::Static::CellTextCompleter & ctc, const CQRDilator & cqrd, const CQRFromComplexSpatialQuery & csq);
+	AdvancedCellOpTree(const sserialize::Static::CellTextCompleter & ctc, const sserialize::Static::CQRDilator & cqrd, const CQRFromComplexSpatialQuery & csq);
 	~AdvancedCellOpTree();
 	void parse(const std::string & str);
 	template<typename T_CQR_TYPE>
 	T_CQR_TYPE calc();
 private:
 	struct CalcBase {
-		CalcBase(sserialize::Static::CellTextCompleter & ctc, const CQRDilator & cqrd, const CQRFromComplexSpatialQuery & csq) :
+		CalcBase(sserialize::Static::CellTextCompleter & ctc, const sserialize::Static::CQRDilator & cqrd, const CQRFromComplexSpatialQuery & csq) :
 		m_ctc(ctc),
 		m_cqrd(cqrd),
 		m_csq(csq)
 		{}
 		sserialize::Static::CellTextCompleter & m_ctc;
-		const CQRDilator & m_cqrd;
+		const sserialize::Static::CQRDilator & m_cqrd;
 		const CQRFromComplexSpatialQuery & m_csq;
 		
 		const sserialize::Static::ItemIndexStore & idxStore() const;
@@ -163,7 +163,7 @@ private:
 	template<typename T_CQR_TYPE>
 	struct Calc: public CalcBase {
 		typedef T_CQR_TYPE CQRType;
-		Calc(sserialize::Static::CellTextCompleter & ctc, const CQRDilator & cqrd, const CQRFromComplexSpatialQuery & csq) :
+		Calc(sserialize::Static::CellTextCompleter & ctc, const sserialize::Static::CQRDilator & cqrd, const CQRFromComplexSpatialQuery & csq) :
 		CalcBase(ctc, cqrd, csq)
 		{}
 		CQRType calc(Node * node);
@@ -183,7 +183,7 @@ private:
 	};
 private:
 	sserialize::Static::CellTextCompleter m_ctc;
-	CQRDilator m_cqrd;
+	sserialize::Static::CQRDilator m_cqrd;
 	CQRFromComplexSpatialQuery m_csq;
 	Node * m_root;
 };

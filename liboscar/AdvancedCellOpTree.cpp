@@ -544,7 +544,7 @@ detail::AdvancedCellOpTree::Node* Parser::parse(const std::string & str) {
 
 }}}//end namespace detail::AdvancedCellOpTree::parser
 
-AdvancedCellOpTree::AdvancedCellOpTree(const sserialize::Static::CellTextCompleter & ctc, const CQRDilator & cqrd, const CQRFromComplexSpatialQuery & csq) :
+AdvancedCellOpTree::AdvancedCellOpTree(const sserialize::Static::CellTextCompleter & ctc, const sserialize::Static::CQRDilator & cqrd, const CQRFromComplexSpatialQuery & csq) :
 m_ctc(ctc),
 m_cqrd(cqrd),
 m_csq(csq),
@@ -558,7 +558,25 @@ AdvancedCellOpTree::~AdvancedCellOpTree() {
 }
 
 sserialize::CellQueryResult AdvancedCellOpTree::CalcBase::calcBetweenOp(const sserialize::CellQueryResult& c1, const sserialize::CellQueryResult& c2) {
-	return m_csq.betweenOp(c1, c2);
+	auto tmp = m_csq.betweenOp(c1, c2);
+	for(const sserialize::ItemIndex & x : tmp) {
+		assert(std::is_sorted(x.begin(), x.end()));
+		assert(sserialize::is_strong_monotone_ascending(x.begin(), x.end()));
+		for(uint32_t y : x) {
+			if (y == 16800296) {
+				std::cout << "BAM" << std::endl;
+			}
+			assert(y != 16800296);
+		}
+	}
+	sserialize::ItemIndex tmp2 =  tmp.flaten();
+	for(uint32_t y : tmp2) {
+		if (y == 16800296) {
+			std::cout << "BAM" << std::endl;
+		}
+		assert(y != 16800296);
+	}
+	return tmp;
 }
 
 sserialize::CellQueryResult AdvancedCellOpTree::CalcBase::calcCompassOp(liboscar::AdvancedCellOpTree::Node* node, const sserialize::CellQueryResult& cqr) {
