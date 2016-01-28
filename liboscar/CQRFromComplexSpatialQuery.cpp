@@ -655,6 +655,9 @@ sserialize::CellQueryResult CQRFromComplexSpatialQuery::compassOp(const sseriali
 	}
 	else {
 		createPolygon(geoHierarchy().regionBoundary(myRegion->ghId()), direction, pp);
+		if (!pp.size()) {
+			return sserialize::CellQueryResult();
+		}
 		sserialize::ItemIndex tmp(m_cqrfp.fullMatches(sserialize::spatial::GeoPolygon(std::move(pp)), liboscar::CQRFromPolygon::AC_POLYGON_CELL_BBOX));
 		tmp = tmp - idxStore().at(m_cqrfp.geoHierarchy().regionCellIdxPtr(myRegion->ghId()));
 		return sserialize::CellQueryResult(tmp, geoHierarchy(), idxStore());
