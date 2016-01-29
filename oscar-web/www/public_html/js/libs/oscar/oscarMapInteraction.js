@@ -848,6 +848,11 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                             break;
                         }
                     }
+
+                    if(state.visualizationActive){
+                        tree.refresh(regionId);
+                    }
+
                 },
                 defErrorCB
             );
