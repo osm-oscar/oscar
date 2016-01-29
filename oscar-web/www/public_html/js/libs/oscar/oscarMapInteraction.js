@@ -1066,9 +1066,13 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 tree.visualizeDAG(state.DAG.at(0xFFFFFFFF), state);
             });
 
-            $('#close a').click(function () {
+            $('#closeTree a').click(function () {
                 state.visualizationActive = false;
                 $('#tree').css("display", "none");
+            });
+
+            $('#closeFlickr a').click(function () {
+                $("#flickr").hide("slide", {direction: "right"}, config.styles.slide.speed);
             });
 
             $("#searchModi input").switchButton({

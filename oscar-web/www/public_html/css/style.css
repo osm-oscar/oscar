@@ -359,3 +359,16 @@ text {
 #showCategories {
     float: left;
 }
+
+#closeFlickr{
+    float: right;
+}
+
+#flickrHead a{
+    float: left;
+}
+
+#flickrHead{
+    height: 25px;
+}
+

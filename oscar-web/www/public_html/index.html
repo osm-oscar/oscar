@@ -16,9 +16,9 @@
     <link rel="stylesheet" href="js/libs/switch-button/jquery.switchButton.css">
     <link rel="stylesheet" href="js/libs/slimbox/css/slimbox2.css" type="text/css" media="screen"/>
     <link rel="stylesheet" href="css/loadingspinner.css">
-    <link rel='stylesheet' href='css/MarkerCluster.css' />
-    <link rel='stylesheet'href='css/MarkerCluster.Default.css' />
-    <link rel='stylesheet' href="css/font-awesome.min.css" />
+    <link rel='stylesheet' href='css/MarkerCluster.css'/>
+    <link rel='stylesheet' href='css/MarkerCluster.Default.css'/>
+    <link rel='stylesheet' href="css/font-awesome.min.css"/>
     <link rel="stylesheet" href="css/leaflet-sidebar.css"/>
     <link rel="stylesheet" href="css/bootstrap-tokenfield.min.css"/>
 </head>
@@ -26,15 +26,20 @@
 <body>
 
 <div class="sidebar" id="flickr">
-    <a href="https://s.yimg.com/pw/images/goodies/white-small-chiclet.png" rel="lightbox"><img
-            src="https://s.yimg.com/pw/images/goodies/white-small-chiclet.png"/></a>
+    <div id="flickrHead">
+        <a href="https://s.yimg.com/pw/images/goodies/white-small-chiclet.png" rel="lightbox"><img
+                src="https://s.yimg.com/pw/images/goodies/white-small-chiclet.png"/></a>
+
+        <div id="closeFlickr"><a href="#"><i class="remove glyphicon glyphicon-remove-sign glyphicon-black"></i></a>
+        </div>
+    </div>
     <hr/>
     <div id="flickr_images"></div>
 </div>
 
 <div id="loader"></div>
 <div id="tree">
-    <div id="close"><a href="#"><i class="remove glyphicon glyphicon-remove-sign glyphicon-black"></i></a></div>
+    <div id="closeTree"><a href="#"><i class="remove glyphicon glyphicon-remove-sign glyphicon-black"></i></a></div>
     <svg id="dag"></svg>
 </div>
 <div id="content_container">
