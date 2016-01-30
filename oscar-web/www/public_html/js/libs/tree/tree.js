@@ -22,12 +22,7 @@ define(["dagre-d3", "d3", "jquery"], function (dagreD3, d3, $) {
 
             // build the graph from current DAG
             this._recursiveAddToGraph(root, this.graph);
-            this.graph.nodes().forEach(function (v) {
-                var node = tree.graph.node(v);
-                // Round the corners of the nodes
-                node.rx = node.ry = 5;
-            });
-
+            this._roundedNodes();
             $("#tree").css("display", "block");
             // Set up an SVG group so that we can translate the final graph.
             $("#dag").empty();
@@ -88,7 +83,16 @@ define(["dagre-d3", "d3", "jquery"], function (dagreD3, d3, $) {
             tree.state.regionHandler({rid: id, draw: true});
         },
 
+        _roundedNodes:function(){
+            this.graph.nodes().forEach(function (v) {
+                var node = tree.graph.node(v);
+                node.rx = node.ry = 5;
+            });
+        },
+
         refresh: function(id){
+            // ugly hack: attributes for nodes cannot be changed, once set (or they will not be recognized). so we have
+            // to remove the node & create a new one with the wished properties
             var parents = this.graph.inEdges(id);
             this.graph.removeNode(id);
             d3.select("svg").select("g").call(this.renderer, this.graph);
@@ -97,13 +101,11 @@ define(["dagre-d3", "d3", "jquery"], function (dagreD3, d3, $) {
                 this.graph.setEdge(parents[i].v, id, {lineInterpolate: 'basis'});
             }
 
+            // update the subtree of the clicked node
             this._recursiveAddToGraph(tree.state.DAG.at(id), this.graph);
-            this.graph.nodes().forEach(function (v) {
-                var node = tree.graph.node(v);
-                // Round the corners of the nodes
-                node.rx = node.ry = 5;
-            });
+            this._roundedNodes();
             d3.select("svg").select("g").call(this.renderer, this.graph);
+            d3.selectAll(".type-LOADABLE").on("click", this._nodeOnClick);
         }
 
     };
