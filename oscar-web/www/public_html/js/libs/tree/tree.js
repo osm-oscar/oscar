@@ -10,11 +10,11 @@ define(["dagre-d3", "d3", "jquery"], function (dagreD3, d3, $) {
             // Create the input graph
             this.graph = new dagreD3.graphlib.Graph()
                 .setGraph({
-                    nodesep: 25,
-                    ranksep: 25,
-                    rankdir: "LR",
-                    marginx: 15,
-                    marginy: 15
+                    nodesep: 15,
+                    ranksep: 75,
+                    rankdir: "TB",
+                    marginx: 10,
+                    marginy: 10
                 })
                 .setDefaultEdgeLabel(function () {
                     return {};
@@ -22,7 +22,6 @@ define(["dagre-d3", "d3", "jquery"], function (dagreD3, d3, $) {
 
             // build the graph from current DAG
             this._recursiveAddToGraph(root, this.graph);
-
             this.graph.nodes().forEach(function (v) {
                 var node = tree.graph.node(v);
                 // Round the corners of the nodes
