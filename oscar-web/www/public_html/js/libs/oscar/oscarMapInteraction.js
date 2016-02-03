@@ -124,7 +124,13 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
         // load template files
         $.Mustache.load('template/itemListEntryTemplate.mst');
         $.Mustache.load('template/treeTemplate.mst');
-        $("#help").load('template/help.html');
+        $("#help").load('template/help.html', function(){
+            $('.example-query-string').on('click', function () {
+                $("#search_text").tokenfield('createToken', {value:  this.firstChild.data, label: this.firstChild.data});
+                state.sidebar.open("search");
+            });
+        });
+
         menu.displayCategories();
 
         // init the map and sidebar
@@ -1195,11 +1201,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                     }
                 }
                 resetPathQuery();
-            });
-
-            //setup help
-            $('.example-query-string').on('click', function () {
-                $('#search_text').val(this.firstChild.data);
             });
 
             //setup search field
