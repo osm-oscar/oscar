@@ -789,7 +789,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                     var node;
                     state.items.clusters.drawn.erase(regionId);
 
-                    // manage items -> kill old items if there are too many of them and show clsuters again
+                    // manage items -> kill old items if there are too many of them and show clusters again
                     if (state.items.listview.drawn.size() + items.length > config.maxBufferedItems) {
                         for (var i in state.items.listview.drawn.values()) {
                             node = state.DAG.at(i);
@@ -818,7 +818,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                     }
 
                     var isInitNecessary = $('#tabs')[0].children.length;
-                    var tab = "<li><a href='#tab-" + regionId + "'>" + state.DAG.at(regionId).name + "</a></li>";
+                    var tab = "<li><a href='#tab-" + regionId + "'>" + state.DAG.at(regionId).name + " [" + items.length + "]" + "</a></li>";
                     $('#tabs').append(tab);
                     if (isInitNecessary == 0) {
                         $('#items_parent').tabs();
