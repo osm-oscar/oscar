@@ -51,7 +51,7 @@ define({
             select: 10000
         }
     },
-    overlap: 0.45,
+    overlap: 0.6,
     maxBufferedItems: 250,
     spinnerOpts: {
         lines: 13 // The number of lines to draw
