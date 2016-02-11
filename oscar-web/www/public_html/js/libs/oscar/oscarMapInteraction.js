@@ -676,25 +676,27 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                         var itemMap = {}, node, item, itemId, marker;
 
                         // modify DAG
-                        if (!(parentCount < oscar.maxFetchItems)) {
-                            for (var i in items) {
-                                item = items[i];
-                                itemId = item.id();
-                                itemMap[itemId] = item;
-                                // is the item part of the path or is it a child of the target-region of the path
-                                if ($.inArray(itemId, cqr.ohPath()) != -1 || parentRid == cqr.ohPath()[cqr.ohPath().length - 1] || context.dynamic) {
-                                    node = parentNode.addChild(itemId);
-                                    node.count = regionChildrenApxItemsMap[itemId];
-                                    node.bbox = item.bbox();
-                                    node.name = item.name();
-                                    marker = L.marker(item.centerPoint());
-                                    marker.count = regionChildrenApxItemsMap[item.id()];
-                                    marker.rid = item.id();
-                                    marker.name = item.name();
-                                    marker.bbox = item.bbox();
-                                    decorateMarker(marker);
-                                    node.marker = marker;
-                                    state.DAG.insert(itemId, node);
+                        if (!(parentCount < oscar.maxFetchItems) || !context.dynamic) {
+                            if (!(parentCount < oscar.maxFetchItems) || cqr.ohPath()[cqr.ohPath().length - 1] != context.rid) {
+                                for (var i in items) {
+                                    item = items[i];
+                                    itemId = item.id();
+                                    itemMap[itemId] = item;
+                                    // is the item part of the path or is it a child of the target-region of the path
+                                    if ($.inArray(itemId, cqr.ohPath()) != -1 || parentRid == cqr.ohPath()[cqr.ohPath().length - 1] || context.dynamic) {
+                                        node = parentNode.addChild(itemId);
+                                        node.count = regionChildrenApxItemsMap[itemId];
+                                        node.bbox = item.bbox();
+                                        node.name = item.name();
+                                        marker = L.marker(item.centerPoint());
+                                        marker.count = regionChildrenApxItemsMap[item.id()];
+                                        marker.rid = item.id();
+                                        marker.name = item.name();
+                                        marker.bbox = item.bbox();
+                                        decorateMarker(marker);
+                                        node.marker = marker;
+                                        state.DAG.insert(itemId, node);
+                                    }
                                 }
                             }
                         }
@@ -914,8 +916,12 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                             state.map.fitWorld();
                         }
                         state.map.on("zoomend dragend", function () {
-                            drawClusters(state.DAG.at(0xFFFFFFFF));
-                        });
+                            if (this.path && this.path.length) {
+                                drawClusters(state.DAG.at(this.path[this.path.length - 1]));
+                            } else {
+                                drawClusters(state.DAG.at(0xFFFFFFFF));
+                            }
+                        }.bind(this));
                     }
                 }
             };
@@ -930,7 +936,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                     removeMarker(markerCluster);
                     state.items.clusters.drawn.erase(a.children[child].id);
                 } else if (markerItem !== undefined) {
-                    state.markers.removeLayer(markerItem);
+                    state.markers.removeLayer(a.children[child].marker);
                     state.items.shapes.drawn.erase(a.children[child].id);
                 }
                 recursiveRemoveChildrenFromMap(a.children[child]);
@@ -938,18 +944,13 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
         }
 
         function drawClusters(node) {
-
-            //var drawParent = true;
             var childNode;
-            //var childrenNeedsRefinement = {};
             var marker;
 
             if (node.children.length) {
                 for (var child in node.children) {
                     childNode = node.children[child];
                     if (tools.percentOfOverlap(state.map, childNode.bbox) >= config.overlap) {
-                        //drawParent = false;
-                        //childrenNeedsRefinement[childNode.id] = childNode;
                         if (state.items.clusters.drawn.count(childNode.id)) {
                             removeMarker(state.DAG.at(childNode.id).marker);
                             state.items.clusters.drawn.erase(childNode.id);

@@ -80,7 +80,7 @@ define(["dagre-d3", "d3", "jquery"], function (dagreD3, d3, $) {
             }
             tree.state.markers.removeLayer(marker);
             tree.state.items.clusters.drawn.erase(id);
-            tree.state.regionHandler({rid: id, draw: true});
+            tree.state.regionHandler({rid: id, draw: true, dynamic: true});
         },
 
         _roundedNodes:function(){
