@@ -571,7 +571,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 );
                 oscar.getItem(itemId,
                     function (item) {
-                        state.map.fitBounds(item.bbox());
+                        //state.map.fitBounds(item.bbox());
                     }, defErrorCB);
             }
         }
@@ -943,14 +943,16 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             });
 
             marker.on("mouseover", function (e) {
-                if (oscar.isShapeInCache(e.target.rid)) {
+                /*if (oscar.isShapeInCache(e.target.rid)) {
                     oscar.getShape(e.target.rid, function (shape) {
                         var leafletItem = oscar.leafletItemFromShape(shape);
                         leafletItem.setStyle(config.styles.shapes['regions']['normal']);
                         e.target.shape = leafletItem;
                         state.map.addLayer(leafletItem);
                     }, defErrorCB);
-                }
+                }*/
+                e.target.rect = L.rectangle(e.target.bbox);
+                e.target.rect.addTo(state.map);
 
                 L.popup({offset: new L.Point(0, -10)})
                     .setLatLng(e.latlng)
@@ -961,6 +963,9 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 closePopups();
                 if (e.target.shape) {
                     state.map.removeLayer(e.target.shape);
+                }
+                if(e.target.rect){
+                    state.map.removeLayer(e.target.rect);
                 }
             });
         }

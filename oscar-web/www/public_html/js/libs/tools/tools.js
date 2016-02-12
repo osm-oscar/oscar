@@ -80,14 +80,14 @@ define(function () {
                     x11 = d0.x,
                     y11 = d0.y,
                     x12 = d0.x + w0,
-                    y12 = d0.y + h0,
+                    y12 = d0.y - h0,
                     x21 = d1.x,
                     y21 = d1.y,
                     x22 = d1.x + w1,
-                    y22 = d1.y + h1,
+                    y22 = d1.y - h1,
 
                     xOverlap = Math.max(0, Math.min(x12, x22) - Math.max(x11, x21)),
-                    yOverlap = Math.max(0, Math.max(y12, y22) - Math.min(y11, y21)),
+                    yOverlap = Math.max(0, Math.min(y11, y21) - Math.max(y12, y22)),
                     totalOverlap = xOverlap * yOverlap;
 
                 return totalOverlap / (w0 * h0); // compare the overlap to the size of the viewport
