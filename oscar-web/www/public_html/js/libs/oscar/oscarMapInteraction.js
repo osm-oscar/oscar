@@ -52,6 +52,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             DAG: tools.SimpleHash(),
             markers: L.markerClusterGroup(),
             sidebar: undefined,
+            handler: undefined,
             items: {
                 shapes: {
                     promised: {},//referenced by id
@@ -453,6 +454,9 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             $('#relativesList').empty();
             $('#relativesList_counter').empty();
             $('#relativesList_itemId').empty();
+            if (state.handler !== undefined) {
+                state.map.off("zoomend dragend", state.handler);
+            }
             state.map.removeLayer(state.markers);
             delete state.markers;
             state.markers = L.markerClusterGroup();
@@ -676,27 +680,94 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                         var itemMap = {}, node, item, itemId, marker;
 
                         // modify DAG
-                        if (!(parentCount < oscar.maxFetchItems) || !context.dynamic) {
-                            if (!(parentCount < oscar.maxFetchItems) || cqr.ohPath()[cqr.ohPath().length - 1] != context.rid) {
+                        /*if (!(parentCount < oscar.maxFetchItems) || !context.dynamic) {
+                         if (!(parentCount < oscar.maxFetchItems) || cqr.ohPath()[cqr.ohPath().length - 1] != context.rid) {
+                         for (var i in items) {
+                         item = items[i];
+                         itemId = item.id();
+                         itemMap[itemId] = item;
+                         // is the item part of the path or is it a child of the target-region of the path
+                         if ($.inArray(itemId, cqr.ohPath()) != -1 || parentRid == cqr.ohPath()[cqr.ohPath().length - 1] || context.dynamic || !cqr.ohPath().length) {
+                         node = parentNode.addChild(itemId);
+                         node.count = regionChildrenApxItemsMap[itemId];
+                         node.bbox = item.bbox();
+                         node.name = item.name();
+                         marker = L.marker(item.centerPoint());
+                         marker.count = regionChildrenApxItemsMap[item.id()];
+                         marker.rid = item.id();
+                         marker.name = item.name();
+                         marker.bbox = item.bbox();
+                         decorateMarker(marker);
+                         node.marker = marker;
+                         state.DAG.insert(itemId, node);
+                         }
+                         }
+                         }
+                         }*/
+
+                        /*if (parentCount > oscar.maxFetchItems || $.inArray(parentRid, cqr.ohPath()) != -1) {
+                         for (var i in items) {
+                         item = items[i];
+                         itemId = item.id();
+                         itemMap[itemId] = item;
+                         // is the item part of the path or is it a child of the target-region of the path
+                         if ($.inArray(itemId, cqr.ohPath()) != -1 || parentRid == cqr.ohPath()[cqr.ohPath().length - 1] || context.dynamic || !cqr.ohPath().length) {
+                         node = parentNode.addChild(itemId);
+                         node.count = regionChildrenApxItemsMap[itemId];
+                         node.bbox = item.bbox();
+                         node.name = item.name();
+                         marker = L.marker(item.centerPoint());
+                         marker.count = regionChildrenApxItemsMap[item.id()];
+                         marker.rid = item.id();
+                         marker.name = item.name();
+                         marker.bbox = item.bbox();
+                         decorateMarker(marker);
+                         node.marker = marker;
+                         state.DAG.insert(itemId, node);
+                         }
+                         }
+                         }*/
+
+                        if (cqr.ohPath().length && !context.dynamic) {
+                            for (var i in items) {
+                                item = items[i];
+                                itemId = item.id();
+                                itemMap[itemId] = item;
+                                // is the item part of the path or is it a child of the target-region of the path
+                                if ($.inArray(itemId, cqr.ohPath()) != -1 || (parentRid == cqr.ohPath()[cqr.ohPath().length - 1] && parentCount > oscar.maxFetchItems)) {
+                                    node = parentNode.addChild(itemId);
+                                    node.count = regionChildrenApxItemsMap[itemId];
+                                    node.bbox = item.bbox();
+                                    node.name = item.name();
+                                    marker = L.marker(item.centerPoint());
+                                    marker.count = regionChildrenApxItemsMap[item.id()];
+                                    marker.rid = item.id();
+                                    marker.name = item.name();
+                                    marker.bbox = item.bbox();
+                                    decorateMarker(marker);
+                                    node.marker = marker;
+                                    state.DAG.insert(itemId, node);
+                                }
+                            }
+                        } else {
+                            if (parentCount > oscar.maxFetchItems) {
                                 for (var i in items) {
                                     item = items[i];
                                     itemId = item.id();
                                     itemMap[itemId] = item;
-                                    // is the item part of the path or is it a child of the target-region of the path
-                                    if ($.inArray(itemId, cqr.ohPath()) != -1 || parentRid == cqr.ohPath()[cqr.ohPath().length - 1] || context.dynamic) {
-                                        node = parentNode.addChild(itemId);
-                                        node.count = regionChildrenApxItemsMap[itemId];
-                                        node.bbox = item.bbox();
-                                        node.name = item.name();
-                                        marker = L.marker(item.centerPoint());
-                                        marker.count = regionChildrenApxItemsMap[item.id()];
-                                        marker.rid = item.id();
-                                        marker.name = item.name();
-                                        marker.bbox = item.bbox();
-                                        decorateMarker(marker);
-                                        node.marker = marker;
-                                        state.DAG.insert(itemId, node);
-                                    }
+
+                                    node = parentNode.addChild(itemId);
+                                    node.count = regionChildrenApxItemsMap[itemId];
+                                    node.bbox = item.bbox();
+                                    node.name = item.name();
+                                    marker = L.marker(item.centerPoint());
+                                    marker.count = regionChildrenApxItemsMap[item.id()];
+                                    marker.rid = item.id();
+                                    marker.name = item.name();
+                                    marker.bbox = item.bbox();
+                                    decorateMarker(marker);
+                                    node.marker = marker;
+                                    state.DAG.insert(itemId, node);
                                 }
                             }
                         }
@@ -726,8 +797,8 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                                 state.items.clusters.drawn.erase(parentRid);
 
                                 // just load regionShapes into the cache
-                                oscar.getShapes(regions, function (res) {
-                                }, defErrorCB);
+                                //oscar.getShapes(regions, function (res) {
+                                //}, defErrorCB);
 
                                 var j;
                                 for (var i in regions) {
@@ -915,13 +986,16 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                         } else {
                             state.map.fitWorld();
                         }
-                        state.map.on("zoomend dragend", function () {
+                        state.handler = function () {
                             if (this.path && this.path.length) {
+                                // start at the target region (last element of ohPath)
                                 drawClusters(state.DAG.at(this.path[this.path.length - 1]));
                             } else {
+                                // start at Node "World"
                                 drawClusters(state.DAG.at(0xFFFFFFFF));
                             }
-                        }.bind(this));
+                        }.bind(this);
+                        state.map.on("zoomend dragend", state.handler);
                     }
                 }
             };
@@ -929,21 +1003,27 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
 
         function recursiveRemoveChildrenFromMap(a) {
             var markerCluster, markerItem;
+            var node;
+
             for (var child in a.children) {
-                markerCluster = state.items.clusters.drawn.at(a.children[child].id);
-                markerItem = state.items.shapes.drawn.at(a.children[child].id);
+                node = a.children[child];
+                markerCluster = state.items.clusters.drawn.at(node.id);
+                markerItem = state.items.shapes.drawn.at(node.id);
                 if (markerCluster !== undefined) {
                     removeMarker(markerCluster);
-                    state.items.clusters.drawn.erase(a.children[child].id);
+                    state.items.clusters.drawn.erase(node.id);
+                    recursiveRemoveChildrenFromMap(node);
                 } else if (markerItem !== undefined) {
-                    state.markers.removeLayer(a.children[child].marker);
-                    state.items.shapes.drawn.erase(a.children[child].id);
+                    state.markers.removeLayer(node.marker);
+                    state.items.shapes.drawn.erase(node.id);
                 }
-                recursiveRemoveChildrenFromMap(a.children[child]);
             }
         }
 
         function drawClusters(node) {
+            if (!node) {
+                return;
+            }
             var childNode;
             var marker;
 
@@ -952,52 +1032,23 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                     childNode = node.children[child];
                     if (tools.percentOfOverlap(state.map, childNode.bbox) >= config.overlap) {
                         if (state.items.clusters.drawn.count(childNode.id)) {
-                            removeMarker(state.DAG.at(childNode.id).marker);
+                            removeMarker(childNode.marker);
                             state.items.clusters.drawn.erase(childNode.id);
                         }
                         drawClusters(childNode);
                     } else {
-                        if (!state.items.clusters.drawn.count(childNode.id)) {
-                            marker = state.DAG.at(childNode.id).marker;
-                            if (marker !== undefined) {
-                                state.items.clusters.drawn.insert(childNode.id, marker);
-                                state.markers.addLayer(marker);
-                            }
+                        marker = childNode.marker;
+                        if (!state.items.clusters.drawn.count(childNode.id) && childNode.count) {
+                            state.items.clusters.drawn.insert(childNode.id, marker);
+                            state.markers.addLayer(marker);
+                            recursiveRemoveChildrenFromMap(childNode);
+                        } else if (!state.items.shapes.drawn.count(childNode.id)) {
+                            state.items.shapes.drawn.insert(childNode.id, marker);
+                            state.markers.addLayer(marker);
                         }
-                        recursiveRemoveChildrenFromMap(childNode);
                     }
                 }
-
-                /*if (drawParent) {
-                 if (!state.items.clusters.drawn.count(node.id)) {
-                 marker = state.DAG.at(node.id).marker;
-                 if (marker !== undefined) {
-                 state.items.clusters.drawn.insert(node.id, marker);
-                 state.markers.addLayer(marker);
-                 }
-                 }
-                 recursiveRemoveChildrenFromMap(node);
-                 } else {
-                 for (var child in node.children) {
-                 childNode = node.children[child];
-                 if (childrenNeedsRefinement[childNode.id] !== undefined) {
-                 if (state.items.clusters.drawn.at(childNode.id)) {
-                 removeMarker(childNode.marker);
-                 }
-                 drawClusters(childNode);
-                 } else {
-                 if (!state.items.clusters.drawn.count(childNode.id)) {
-                 marker = state.DAG.at(childNode.id).marker;
-                 if (marker !== undefined) {
-                 state.items.clusters.drawn.insert(childNode.id, marker);
-                 state.markers.addLayer(marker);
-                 }
-                 }
-                 }
-                 }
-                 }*/
-
-            } else {
+            } else if (node.count) {
                 state.regionHandler({rid: node.id, draw: true, dynamic: true});
             }
 
@@ -1011,62 +1062,12 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             root.count = cqr.rootRegionApxItemCount();
             root.name = "World";
             state.DAG.insert(0xFFFFFFFF, root);
+
             if (cqr.ohPath().length) {
                 state.regionHandler({rid: 0xFFFFFFFF, draw: false, pathProcessor: process});
             } else {
                 state.regionHandler({rid: 0xFFFFFFFF, draw: true, pathProcessor: process});
             }
-
-            //state.map.on("zoomend dragend", function () {
-            //var clusterMarker;
-            // after zooming/dragging: check the overlap of the viewport with the
-            /*for (var cluster in state.items.clusters.drawn.values()) {
-             clusterMarker = state.items.clusters.drawn.at(cluster);
-             if (tools.percentOfOverlap(state.map, clusterMarker.bbox) >= config.overlap) {
-             removeMarker(clusterMarker);
-             state.regionHandler({rid: clusterMarker.rid, draw: true, bbox: clusterMarker.bbox});
-             }
-             }*/
-            //   drawClusters(state.DAG.at(0xFFFFFFFF));
-
-
-            /*state.markers.eachLayer(function (marker) {
-             // first step: get all markers currently shown in the viewport
-             var bounds = state.map.getBounds();
-             if (bounds.contains(marker.getLatLng()) && marker.rid) {
-             // second step: we iterate only "leaf"-markers, so there could be a merged cluster viewed -> check whether the
-             // marker has a cluster-parent for the current zoom-level
-             var parent = marker.__parent;
-             while (parent && parent._zoom >= state.map.getZoom()) {
-             // found a locally present cluster -> skip loading additional data
-             if (parent._zoom == state.map.getZoom()) {
-             return;
-             }
-             parent = parent.__parent;
-             }
-             // third step: calculate the overlap of the bbox and the viewport. If it is bigger
-             // than the config-value -> load additional data
-             var node = state.DAG.at(marker.rid);
-             var pos = state.map.project(marker.getLatLng());
-
-             var viewport = state.map.getBounds();
-             var width = (state.map.project(viewport.getNorthEast()).x - state.map.project(viewport.getSouthWest()).x);
-             var height = (state.map.project(viewport.getSouthWest()).y - state.map.project(viewport.getNorthEast()).y);
-             var midpointX = state.map.project(viewport.getSouthWest()).x + (width / 2);
-             var midpointY = state.map.project(viewport.getNorthEast()).y + (height / 2);
-             var kernelWidthX = width / 1.75;
-             var kernelWidthY = height / 1.75;
-             // use formula for full width at half maximum to set up gaussian: https://en.wikipedia.org/wiki/Gaussian_function
-             var gauss = tools.gaussian(1, midpointX, midpointY, kernelWidthX / 2.35482, kernelWidthY / 2.35482);
-
-             var percent = tools.percentOfOverlap(state.map, node.bbox) * gauss(pos.x, pos.y);
-             if (!(marker instanceof L.MarkerCluster) && percent >= config.overlap) {
-             removeMarker(marker);
-             state.regionHandler({rid: marker.rid, draw: true, bbox: node.bbox});
-             }
-             }
-             });*/
-            //});
         }
 
         function removeMarker(marker) {
@@ -1081,7 +1082,8 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             if ($("#search_text").val() === state.queries.lastQuery) {
                 return;
             }
-
+            /*state.map.off("zoomend", "**");
+             state.map.off("dragend", "**");*/
             if ($('#searchModi input').is(":checked")) {
                 //TODO: wrong placement of markers if clsutering is aktive. Cause: region midpoint is outside of search rectangle
                 addSingleQueryStatementToQuery("$geo:" + state.map.getBounds().getSouthWest().lng
