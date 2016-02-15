@@ -1018,6 +1018,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 }
                 try {
                     $('#items_parent').tabs("refresh");
+                    $("#items_parent").tabs("option", "active", 0);
                 } catch (exception) {
                 }
 
@@ -1134,6 +1135,9 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
         }
 
         $(document).ready(function () {
+
+            $('#tree').resizable()
+
             $("#search_form").click(function () {
                 if (!$('#categories').is(":visible")) {
                     $("#showCategories a").click();
