@@ -748,8 +748,8 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                                 state.items.clusters.drawn.erase(parentRid);
 
                                 // just load regionShapes into the cache
-                                //oscar.getShapes(regions, function (res) {
-                                //}, defErrorCB);
+                                oscar.getShapes(regions, function (res) {
+                                }, defErrorCB);
 
                                 var j;
                                 for (var i in regions) {
@@ -889,14 +889,14 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             });
 
             marker.on("mouseover", function (e) {
-                /*if (oscar.isShapeInCache(e.target.rid)) {
+                if (oscar.isShapeInCache(e.target.rid)) {
                  oscar.getShape(e.target.rid, function (shape) {
                  var leafletItem = oscar.leafletItemFromShape(shape);
                  leafletItem.setStyle(config.styles.shapes['regions']['normal']);
                  e.target.shape = leafletItem;
                  state.map.addLayer(leafletItem);
                  }, defErrorCB);
-                 }*/
+                 }
                 //e.target.rect = L.rectangle(e.target.bbox);
                 //e.target.rect.addTo(state.map);
 
@@ -1001,7 +1001,9 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                             recursiveRemoveChildrenFromMap(childNode);
                         } else if (!state.items.shapes.drawn.count(childNode.id) && !childNode.count) {
                             state.items.shapes.drawn.insert(childNode.id, marker);
-                            state.markers.addLayer(marker);
+                            if(marker) { // TODO: WHY?
+                                state.markers.addLayer(marker);
+                            }
                             if (!$("a[href='#tab-" + childNode.parents[0].id + "']").length) {
                                 var tab = "<li><a href='#tab-" + childNode.parents[0].id + "'>" + state.DAG.at(childNode.parents[0].id).name + " [" + childNode.parents[0].count + "]" + "</a></li>";
                                 $('#tabs').append(tab);
