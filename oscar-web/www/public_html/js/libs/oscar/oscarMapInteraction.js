@@ -24,7 +24,7 @@ requirejs.config({
         "menu": "menu/menu",
         "flickr": "flickr/flickr",
         "manager": "connection/manager.min",
-        "switch": "switch-button/jquery.switchButton.min",
+        "switch": "switch-button/jquery.switchButton",
         "d3": "dagre-d3/d3.min",
         "dagre-d3": "dagre-d3/dagre-d3.min",
         "tree": "tree/tree",
