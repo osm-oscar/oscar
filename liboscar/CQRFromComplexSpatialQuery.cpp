@@ -458,7 +458,8 @@ createPolygon(
 	}
 	case liboscar::CQRFromComplexSpatialQuery::UO_WEST_OF:
 	{
-		double minLon = minLon - lonDist*inDirectionScale;
+		
+		double minLon = rect.minLon() - lonDist*inDirectionScale;
 		double maxLon = rect.minLon() + lonDist/2.0;
 		pp.emplace_back(rect.minLat()-latDist*orthoToDirectionScale, minLon);//lower left
 		pp.emplace_back(rect.maxLat()+latDist*orthoToDirectionScale, minLon); //upper left
