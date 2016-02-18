@@ -28,22 +28,28 @@
                     }
                 }
 
-                /*if (count == 1) {
-                 return new L.Icon.Default();
-                 }*/
+                // only true for real items
+                if (cluster.getAllChildMarkers().length == 1 && !cluster.getAllChildMarkers()[0].bbox) {
+                    return new L.Icon.Default();
+                }
 
                 var c = 'marker-cluster-';
+                var size;
+
                 if (count < 10) {
                     c += 'small';
+                    size = 30;
                 } else if (count < 100) {
                     c += 'medium';
+                    size = 50;
                 } else {
                     c += 'large';
+                    size = 70;
                 }
                 return new L.DivIcon({
                     html: '<div><span>' + count + '</span></div>',
                     className: 'marker-cluster ' + c,
-                    iconSize: new L.Point(40, 40)
+                    iconSize: new L.Point(size, size)
                 })
             },
 

@@ -7,7 +7,7 @@ requirejs.config({
         "jquery": "jquery/jquery.min",
         "spin": "spin/spin.min",
         "leaflet": "leaflet/leaflet.0.7.2",
-        "leafletCluster": "leaflet/leaflet.markercluster.min",
+        "leafletCluster": "leaflet/leaflet.markercluster-src",
         "sidebar": "leaflet/leaflet-sidebar.min",
         "jdataview": "jdataview/jdataview",
         "jbinary": "jbinary/jbinary",
@@ -36,7 +36,6 @@ requirejs.config({
         'sidebar': {deps: ['leaflet', 'jquery']},
         'mustacheLoader': {deps: ['jquery']},
         'slimbox': {deps: ['jquery']},
-        'switch': {deps: ['jquery']}
     },
     waitSeconds: 20
 });
@@ -582,10 +581,10 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 return;
             }
             var itemId = item.id();
-            if (state[shapeSrcType].listview.drawn.count(itemId)) {
-                return;
-            }
-            state[shapeSrcType].listview.drawn.insert(itemId, item);
+            /*if (state[shapeSrcType].listview.drawn.count(itemId)) {
+             return;
+             }*/
+            state[shapeSrcType].listview.drawn.insertOrIncrement(itemId, item);
 
             var itemTemplateData = resultListTemplateDataFromItem(item, shapeSrcType);
             var rendered = $.Mustache.render('itemListEntryHtmlTemplate', itemTemplateData);
@@ -686,27 +685,31 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                                 itemId = item.id();
                                 itemMap[itemId] = item;
                                 if ($.inArray(itemId, cqr.ohPath()) != -1 || (parentRid == cqr.ohPath()[cqr.ohPath().length - 1] && parentCount > oscar.maxFetchItems)) {
-                                    node = parentNode.addChild(itemId);
-                                    node.count = regionChildrenApxItemsMap[itemId];
-                                    node.bbox = item.bbox();
-                                    node.name = item.name();
-                                    marker = L.marker(item.centerPoint());
-                                    marker.count = regionChildrenApxItemsMap[item.id()];
-                                    marker.rid = item.id();
-                                    marker.name = item.name();
-                                    marker.bbox = item.bbox();
-                                    decorateMarker(marker);
-                                    node.marker = marker;
-                                    state.DAG.insert(itemId, node);
+                                    if (!state.DAG.count(itemId)) {
+                                        node = parentNode.addChild(itemId);
+                                        node.count = regionChildrenApxItemsMap[itemId];
+                                        node.bbox = item.bbox();
+                                        node.name = item.name();
+                                        marker = L.marker(item.centerPoint());
+                                        marker.count = regionChildrenApxItemsMap[item.id()];
+                                        marker.rid = item.id();
+                                        marker.name = item.name();
+                                        marker.bbox = item.bbox();
+                                        decorateMarker(marker);
+                                        node.marker = marker;
+                                        state.DAG.insert(itemId, node);
+                                    } else {
+                                        state.DAG.at(itemId).parents.push(parentNode);
+                                        parentNode.children.push(state.DAG.at(itemId));
+                                    }
                                 }
                             }
-                        } else {
-                            if (parentCount > oscar.maxFetchItems) {
-                                for (var i in items) {
-                                    item = items[i];
-                                    itemId = item.id();
-                                    itemMap[itemId] = item;
-
+                        } else if (parentCount > oscar.maxFetchItems) {
+                            for (var i in items) {
+                                item = items[i];
+                                itemId = item.id();
+                                itemMap[itemId] = item;
+                                if (!state.DAG.count(itemId)) {
                                     node = parentNode.addChild(itemId);
                                     node.count = regionChildrenApxItemsMap[itemId];
                                     node.bbox = item.bbox();
@@ -719,59 +722,79 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                                     decorateMarker(marker);
                                     node.marker = marker;
                                     state.DAG.insert(itemId, node);
+                                } else {
+                                    state.DAG.at(itemId).parents.push(parentNode);
+                                    parentNode.children.push(state.DAG.at(itemId));
                                 }
                             }
                         }
 
                         // download locations, if end of hierarchy is reached or the region counts less than maxFetchItems
                         if (!items.length || (parentCount < oscar.maxFetchItems)) {
-                            if (!context.draw && cqr.ohPath().length && cqr.ohPath()[cqr.ohPath().length - 1] != context.rid) {
-
-                            } else {
+                            if (context.draw || !cqr.ohPath().length || cqr.ohPath()[cqr.ohPath().length - 1] == parentRid) {
                                 $("#left_menu_parent").css("display", "block");
-                                state.items.listview.selectedRegionId = context.rid;
-                                state.cqr.regionItemIds(state.items.listview.selectedRegionId,
-                                    getItemIds,
-                                    defErrorCB,
-                                    0 // offset
-                                );
-                            }
-                        } else if (context.draw) {
-                            cqr.getMaximumIndependetSet(parentRid, 0, function (regions) {
-                                for (var i in items) {
-                                    if ($.inArray(items[i].id(), regions) == -1 && state.DAG.at(items[i].id()) !== undefined) {
-                                        state.DAG.at(items[i].id()).kill();
-                                        delete state.DAG.at(items[i]);
-                                        state.DAG.erase(items[i].id());
-                                    }
-                                }
-                                state.items.clusters.drawn.erase(parentRid);
 
-                                // just load regionShapes into the cache
-                                oscar.getShapes(regions, function (res) {
-                                }, defErrorCB);
-
-                                var j;
-                                for (var i in regions) {
-                                    j = itemMap[regions[i]];
-
-                                    if (!state.items.clusters.drawn.count(j.id())) {
-                                        marker = state.DAG.at(j.id()).marker;
-                                        state.items.clusters.drawn.insert(j.id(), marker);
-                                        state.markers.addLayer(marker);
-                                        if (state.DAG.at(marker.rid) !== undefined) {
-                                            state.DAG.at(marker.rid).marker = marker;
-                                        } else {
-                                            console.log("FAIL: no marker!");
+                                if (cqr.ohPath().length) {
+                                    state.items.listview.selectedRegionId = parentRid;
+                                    state.cqr.regionItemIds(state.items.listview.selectedRegionId,
+                                        getItemIds,
+                                        defErrorCB,
+                                        0 // offset
+                                    );
+                                } else {
+                                    if (state.DAG.at(parentRid).children.length == 0) {
+                                        state.items.listview.selectedRegionId = parentRid;
+                                        state.cqr.regionItemIds(state.items.listview.selectedRegionId,
+                                            getItemIds,
+                                            defErrorCB,
+                                            0 // offset
+                                        );
+                                    } else {
+                                        for (var child in state.DAG.at(parentRid).children) {
+                                            state.items.listview.selectedRegionId = state.DAG.at(parentRid).children[child].id;
+                                            state.cqr.regionItemIds(state.items.listview.selectedRegionId,
+                                                getItemIds,
+                                                defErrorCB,
+                                                0 // offset
+                                            );
                                         }
                                     }
                                 }
+                            }
+                        } else if (context.draw) {
+                            //cqr.getMaximumIndependetSet(parentRid, 100, function (regions) {
+                            /*for (var i in items) {
+                             if ($.inArray(items[i].id(), regions) == -1 && state.DAG.at(items[i].id()) !== undefined) {
+                             state.DAG.at(items[i].id()).kill();
+                             delete state.DAG.at(items[i]);
+                             state.DAG.erase(items[i].id());
+                             }
+                             }*/
+                            state.items.clusters.drawn.erase(parentRid);
 
-                                if (state.visualizationActive) {
-                                    tree.refresh(parentRid);
+                            var j;
+                            var regions = [];
+                            for (var i in items) {
+                                j = itemMap[items[i].id()];
+
+                                if (!state.items.clusters.drawn.count(j.id())) {
+                                    regions.push(j.id());
+                                    marker = state.DAG.at(j.id()).marker;
+                                    state.items.clusters.drawn.insert(j.id(), marker);
+                                    state.markers.addLayer(marker);
+                                    state.DAG.at(marker.rid).marker = marker;
                                 }
+                            }
 
+                            // just load regionShapes into the cache
+                            oscar.getShapes(regions, function (res) {
                             }, defErrorCB);
+
+                            if (state.visualizationActive) {
+                                tree.refresh(parentRid);
+                            }
+
+                            //}, defErrorCB);
                         }
 
                         if (context.pathProcessor) {
@@ -850,7 +873,12 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                         var item = items[i];
                         var itemId = item.id();
                         if (state.items.listview.promised.count(itemId)) {
-                            state.DAG.insert(itemId, state.DAG.at(regionId).addChild(itemId));
+                            if (!state.DAG.count(itemId)) {
+                                state.DAG.insert(itemId, state.DAG.at(regionId).addChild(itemId));
+                            } else {
+                                state.DAG.at(regionId).children.push(state.DAG.at(itemId));
+                                state.DAG.at(itemId).parents.push(state.DAG.at(regionId));
+                            }
                             appendItemToListView(item, "items", parentElement);
                             state.items.listview.promised.erase(itemId);
                         }
@@ -890,13 +918,13 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
 
             marker.on("mouseover", function (e) {
                 if (oscar.isShapeInCache(e.target.rid)) {
-                 oscar.getShape(e.target.rid, function (shape) {
-                 var leafletItem = oscar.leafletItemFromShape(shape);
-                 leafletItem.setStyle(config.styles.shapes['regions']['normal']);
-                 e.target.shape = leafletItem;
-                 state.map.addLayer(leafletItem);
-                 }, defErrorCB);
-                 }
+                    oscar.getShape(e.target.rid, function (shape) {
+                        var leafletItem = oscar.leafletItemFromShape(shape);
+                        leafletItem.setStyle(config.styles.shapes['regions']['normal']);
+                        e.target.shape = leafletItem;
+                        state.map.addLayer(leafletItem);
+                    }, defErrorCB);
+                }
                 //e.target.rect = L.rectangle(e.target.bbox);
                 //e.target.rect.addTo(state.map);
 
@@ -938,12 +966,13 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                             state.map.fitWorld();
                         }
                         state.handler = function () {
+                            var drawn = tools.SimpleHash();
                             if (this.path && this.path.length) {
                                 // start at the target region (last element of ohPath)
-                                drawClusters(state.DAG.at(this.path[this.path.length - 1]));
+                                drawClusters(state.DAG.at(this.path[this.path.length - 1]), drawn);
                             } else {
                                 // start at Node "World"
-                                drawClusters(state.DAG.at(0xFFFFFFFF));
+                                drawClusters(state.DAG.at(0xFFFFFFFF), drawn);
                             }
                         }.bind(this);
                         state.map.on("zoomend dragend", state.handler);
@@ -952,32 +981,54 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             };
         }
 
-        function recursiveRemoveChildrenFromMap(a) {
+        function removeChildrenOfNodeFromMap(node, drawn) {
             var markerCluster, markerItem;
-            var node;
+            var childNode;
 
-            for (var child in a.children) {
-                node = a.children[child];
-                markerCluster = state.items.clusters.drawn.at(node.id);
-                markerItem = state.items.shapes.drawn.at(node.id);
+            for (var child in node.children) {
+                childNode = node.children[child];
+                if (drawn.count(childNode.id)) {
+                    continue;
+                }
+                markerCluster = state.items.clusters.drawn.at(childNode.id);
+                markerItem = state.items.shapes.drawn.at(childNode.id);
                 if (markerCluster !== undefined) {
                     removeMarker(markerCluster);
-                    state.items.clusters.drawn.erase(node.id);
-                    recursiveRemoveChildrenFromMap(node);
+                    state.items.clusters.drawn.erase(childNode.id);
+                    removeChildrenOfNodeFromMap(childNode, drawn);
                 } else if (markerItem !== undefined) {
-                    if ($("a[href='#tab-" + node.parents[0].id + "']").length) {
-                        $("a[href='#tab-" + node.parents[0].id + "']").parent().remove();
-                        $("#tab-" + node.parents[0].id).remove();
-                        $('#items_parent').tabs("refresh");
+                    for (var parent in childNode.parents) {
+                        if (childNode.parents[parent].id == node.id && $("a[href='#tab-" + childNode.parents[parent].id + "']").length) {
+                            $("a[href='#tab-" + childNode.parents[parent].id + "']").parent().remove();
+                            $("#tab-" + childNode.parents[parent].id).remove();
+                        }
                     }
-                    state.markers.removeLayer(node.marker);
-                    state.items.shapes.drawn.erase(node.id);
-                    state.items.listview.drawn.erase(node.id);
+                    $('#items_parent').tabs("refresh");
+                    if (childNode.marker) {
+                        state.markers.removeLayer(childNode.marker); // Overlap: marker kann schon entfernt worden sein, in an derer region, die sich mit dieser überlappt
+                    }
+                    state.items.shapes.drawn.erase(childNode.id);
+                    state.items.listview.drawn.eraseOrDecrease(childNode.id);
+                } else {
+                    for (var parent in childNode.parents) {
+                        if (childNode.parents[parent].id == node.id && $("a[href='#tab-" + childNode.parents[parent].id + "']").length) {
+                            $("a[href='#tab-" + childNode.parents[parent].id + "']").parent().remove();
+                            $("#tab-" + childNode.parents[parent].id).remove();
+                        }
+                    }
+                    $('#items_parent').tabs("refresh");
+                    state.items.listview.drawn.eraseOrDecrease(childNode.id);
                 }
             }
         }
 
-        function drawClusters(node) {
+        /*function removeChildrenofMultipleNodesFromMap(nodes){
+         for(var node in nodes){
+         removeChildrenOfNodeFromMap(nodes[node]);
+         }
+         }*/
+
+        function drawClusters(node, drawn) {
             if (!node) {
                 return;
             }
@@ -992,29 +1043,35 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                             removeMarker(childNode.marker);
                             state.items.clusters.drawn.erase(childNode.id);
                         }
-                        drawClusters(childNode);
+                        drawClusters(childNode, drawn);
                     } else {
                         marker = childNode.marker;
-                        if (!state.items.clusters.drawn.count(childNode.id) && childNode.count) {
-                            state.items.clusters.drawn.insert(childNode.id, marker);
-                            state.markers.addLayer(marker);
-                            recursiveRemoveChildrenFromMap(childNode);
-                        } else if (!state.items.shapes.drawn.count(childNode.id) && !childNode.count) {
-                            state.items.shapes.drawn.insert(childNode.id, marker);
-                            if(marker) { // TODO: WHY?
+                        if (childNode.count) {
+                            drawn.insert(childNode.id, childNode.id);
+                            if (!state.items.clusters.drawn.count(childNode.id)) {
+                                state.items.clusters.drawn.insert(childNode.id, marker);
                                 state.markers.addLayer(marker);
                             }
-                            if (!$("a[href='#tab-" + childNode.parents[0].id + "']").length) {
-                                var tab = "<li><a href='#tab-" + childNode.parents[0].id + "'>" + state.DAG.at(childNode.parents[0].id).name + " [" + childNode.parents[0].count + "]" + "</a></li>";
-                                $('#tabs').append(tab);
+                            removeChildrenOfNodeFromMap(childNode, drawn);
+                        } else if (!childNode.count) {
+                            drawn.insert(childNode.id, childNode.id);
+                            if (!state.items.shapes.drawn.count(childNode.id)) {
+                                state.items.shapes.drawn.insert(childNode.id, marker);
+                                if (marker) { // TODO: WHY?
+                                    state.markers.addLayer(marker);
+                                }
+                                if (!$("a[href='#tab-" + childNode.parents[0].id + "']").length) {
+                                    var tab = "<li><a href='#tab-" + childNode.parents[0].id + "'>" + state.DAG.at(childNode.parents[0].id).name + " [" + childNode.parents[0].count + "]" + "</a></li>";
+                                    $('#tabs').append(tab);
+                                }
+                                if (!$("#tab-" + childNode.parents[0].id).length) {
+                                    var regionDiv = "<div id='tab-" + childNode.parents[0].id + "'></div>";
+                                    $('#itemsList').append(regionDiv);
+                                }
+                                oscar.getItem(childNode.id, function (item) {
+                                    appendItemToListView(item, "items", $("#tab-" + childNode.parents[0].id));
+                                }, defErrorCB);
                             }
-                            if (!$("#tab-" + childNode.parents[0].id).length) {
-                                var regionDiv = "<div id='tab-" + childNode.parents[0].id + "'></div>";
-                                $('#itemsList').append(regionDiv);
-                            }
-                            oscar.getItem(childNode.id, function (item) {
-                                appendItemToListView(item, "items", $("#tab-" + childNode.parents[0].id));
-                            }, defErrorCB);
                         }
                     }
                 }
@@ -1027,6 +1084,16 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             } else if (node.count) {
                 state.regionHandler({rid: node.id, draw: true, dynamic: true});
             }
+
+            /*if(cqr.ohPath().length){
+             if(node.id == cqr.ohPath()[cqr.ohPath().length - 1]){
+
+             }
+             }else{
+             if(node.id == 0xFFFFFFFF){
+
+             }
+             }*/
 
         }
 
