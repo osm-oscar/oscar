@@ -66,6 +66,7 @@ void Config::printHelp() {
 -ds which\tprint stats: all,idxstore,completer,db,geo,tag \n \
 -dpsdb file\tprint db paper stats, file sets the interesting tags \n \
 -dpsgh file\tprint gh paper stats, file is outfile \n \
+-dcns <num>\tprint cell neighbor distance stats \n \
 -dctcs file\tprint ctc stats to file \n \
 -dctcss (exact|prefix|suffix|substring)\tprint selective ctc storage stats \n \
 -dcqrds str\tprint cqr data size for string str \n \
@@ -222,6 +223,10 @@ int Config::parseSingleArg(int argc, char ** argv, int & i, int & printNumResult
 	}
 	else if (arg == "-dpsdb" && i+1 < argc) {
 		workItems.emplace_back(WorkItem::PRINT_PAPER_STATS_DB, new WD_PrintPaperStatsDb(std::string(argv[i+1])) );
+		i++;
+	}
+	else if (arg == "-dcns" && i+1 < argc) {
+		workItems.emplace_back(WorkItem::PRINT_CELL_NEIGHBOR_STATS, new WD_PrintCellNeighborStats(std::string(argv[i+1])) );
 		i++;
 	}
 	else if (arg == "-dpsgh" && i+1 < argc) {

@@ -113,6 +113,9 @@ int main(int argc, char **argv) {
 			case Config::WorkItem::PRINT_STATS:
 				worker.printStats(*workItem.data->as<WD_PrintStats>());
 				break;
+			case Config::WorkItem::PRINT_CELL_NEIGHBOR_STATS:
+				worker.printCellNeighborStats(*workItem.data->as<WD_PrintCellNeighborStats>());
+				break;
 			case Config::WorkItem::PRINT_PAPER_STATS_DB:
 				worker.printPaperStatsDb(*workItem.data->as<WD_PrintPaperStatsDb>());
 				break;

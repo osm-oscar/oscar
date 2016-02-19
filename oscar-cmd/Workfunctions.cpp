@@ -6,6 +6,8 @@
 #include "LiveCompleter.h"
 #include <sserialize/strings/unicode_case_functions.h>
 #include <sserialize/stats/ProgressInfo.h>
+#include <sserialize/stats/statfuncs.h>
+#include <sserialize/spatial/LatLonCalculations.h>
 
 namespace oscarcmd {
 
@@ -391,6 +393,118 @@ void Worker::printPaperStatsGh(const WD_PrintPaperStatsGh& data) {
 		outFile << x.first << ";" << x.second << "\n";
 	}
 	outFile.close();
+}
+
+void Worker::printCellNeighborStats(const WD_PrintCellNeighborStats& data) {
+	const auto & gh = completer.store().geoHierarchy();
+	const auto & ra = completer.store().regionArrangement();
+	const auto & cg = completer.store().cellGraph();
+	const auto & cm = completer.store().cellCenterOfMass();
+	const auto & tds = ra.tds();
+
+	uint32_t maxFactor = std::atoi(data.value.c_str());
+	
+	//number of neighbors a cell has within a radius of first*cellDiameter
+	std::map<uint32_t, std::vector<uint32_t> > cnCount;
+	
+	for(uint32_t i(0); i < maxFactor; ++i) {
+		cnCount[i] = std::vector<uint32_t>(cg.size(), 0);
+	}
+	
+	uint32_t cgSize = cg.size();
+	sserialize::ProgressInfo pinfo;
+	
+	pinfo.begin(cgSize);
+	uint32_t pCounter = 0;
+	#pragma omp parallel for schedule(dynamic, 1)
+	for(uint32_t cellId = 0; cellId < cgSize; ++cellId) {
+		sserialize::spatial::GeoPoint cellCM( cm.at(cellId) );
+		sserialize::spatial::GeoRect cellRect( gh.cellBoundary(cellId) );
+		auto ccm = cm.at(cellId);
+		double cellDiag = cellRect.diagInM();
+		double maxDist = cellDiag * maxFactor;
+		
+		std::unordered_set<uint32_t> neighborCells;
+		tds.explore(ra.faceIdFromCellId(cellId), [&neighborCells, &tds, &ccm, &ra, &maxDist](const sserialize::Static::spatial::Triangulation::Face & face) -> bool {
+			neighborCells.insert(ra.cellIdFromFaceId(face.id()));
+			auto fc = face.centroid();
+			return std::abs<double>( sserialize::spatial::distanceTo(fc.lat(), fc.lon(), ccm.lat(), ccm.lon()) ) < maxDist;
+		});
+		//now sort the cells by their distance
+		std::vector<double> cellDistances;
+		cellDistances.reserve(neighborCells.size());
+		for(uint32_t ncId : neighborCells) {
+			auto nccm = cm.at(ncId);
+			cellDistances.push_back(
+				std::abs<double>(
+					sserialize::spatial::distanceTo(nccm.lat(), nccm.lon(), ccm.lat(), ccm.lon())
+				)
+			);
+		}
+		std::sort(cellDistances.begin(), cellDistances.end());
+		
+		std::map<uint32_t, std::vector<uint32_t> >::iterator dIt(cnCount.begin()), dEnd(cnCount.end());
+		std::vector<double>::const_iterator cdIt(cellDistances.begin()), cdEnd(cellDistances.end());
+		uint32_t count = 0;
+		for(; dIt != dEnd && cdIt != cdEnd; ) {
+			if (*cdIt/cellDiag < dIt->first) {
+				++count;
+				++cdIt;
+			}
+			else { //flush
+				dIt->second.at(cellId) = count;
+				++dIt;
+			}
+		}
+		#pragma omp atomic
+		++pCounter;
+		#pragma omp critical
+		{
+			pinfo(pCounter);
+		}
+	}
+	pinfo.end();
+	
+	struct StatsEntry {
+		uint32_t factor;
+		uint32_t min;
+		uint32_t max;
+		uint32_t mean;
+		uint32_t median;
+	};
+	std::vector<StatsEntry> stats;
+	
+	for(const auto & x : cnCount) {
+		if (!x.second.size()) {
+			continue;
+		}
+		StatsEntry se;
+		
+		se.factor = x.first;
+		se.min = *std::min_element(x.second.begin(), x.second.end());
+		se.max = *std::max_element(x.second.begin(), x.second.end());
+		se.mean = sserialize::statistics::mean(x.second.begin(), x.second.end(), 0);
+		se.median = sserialize::statistics::median(x.second.begin(), x.second.end(), 0);
+		
+		stats.push_back(se);
+	}
+
+	char sep;
+#define PRINT_STATS(__DESC, __VAR) \
+	std::cout << __DESC << ":"; \
+	sep = ' '; \
+	for(const StatsEntry & se : stats) { \
+		std::cout << sep << se.__VAR; \
+		sep = ','; \
+	} \
+	std::cout << std::endl; \
+
+	PRINT_STATS("Factor", factor)
+	PRINT_STATS("Min", min)
+	PRINT_STATS("Max", max)
+	PRINT_STATS("Mean", mean)
+	PRINT_STATS("Median", median)
+#undef PRINT_STATS
 }
 
 void Worker::dumpAllItemTagsWithInheritedTags(const WD_DumpAllItemTagsWithInheritedTags& data) {

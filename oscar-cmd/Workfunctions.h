@@ -20,6 +20,7 @@ struct Worker {
 	
 	void printPaperStatsDb(const WD_PrintPaperStatsDb & data);
 	void printPaperStatsGh(const WD_PrintPaperStatsGh & data);
+	void printCellNeighborStats(const WD_PrintCellNeighborStats & data);
 	void dumpAllItemTagsWithInheritedTags(const WD_DumpAllItemTagsWithInheritedTags & data);
 	void printCTCSelectiveStorageStats(const WD_PrintCTCSelectiveStorageStats & data);
 	void printCTCStorageStats(const WD_PrintCTCStorageStats & data);
