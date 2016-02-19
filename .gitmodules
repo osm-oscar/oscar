@@ -1,6 +1,3 @@
-[submodule "vendor/sserialize"]
-	path = vendor/sserialize
-	url = https://github.com/dbahrdt/sserialize.git
 [submodule "vendor/libosmtools"]
 	path = vendor/libosmtools
 	url = https://github.com/dbahrdt/libosmtools.git
