@@ -12,7 +12,7 @@
 /** The AdvancedCellOpTree supports the following query language:
   *
   *
-  * Q := FM_CONVERSION Q | DILATION_OP Q | COMPASS_OP Q | Q BETWEEN_OP Q | Q BINARY_OP Q
+  * Q := FM_CONVERSION Q | DILATION Q | COMPASS Q | Q BETWEEN_OP Q | Q BINARY_OP Q
   * Q := (Q) | Q Q
   * Q := ITEM | GEO_RECT | GEO_PATH | REGION | CELL
   * FM_CONVERSION := %

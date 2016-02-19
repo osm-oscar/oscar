@@ -86,7 +86,6 @@ NO_OPTIMIZE void addScore(OsmKeyValueRawItem & item, ScoreCreator & scoreCreator
 			}
 		}
 	}
-	
 }
 
 bool OsmKeyValueObjectStore::SaveDirector::saveItem(OsmKeyValueRawItem& item) const {
