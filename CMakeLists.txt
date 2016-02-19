@@ -1,13 +1,19 @@
 cmake_minimum_required(VERSION 2.8)
-set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_SOURCE_DIR}/vendor/sserialize/cmake/)
+set(CMAKE_MODULE_PATH
+	${CMAKE_SOURCE_DIR}/cmake
+	${CMAKE_SOURCE_DIR}/liboscar/vendor/sserialize/cmake/
+	${CMAKE_SOURCE_DIR}/vendor/sserialize/cmake/
+)
+
 include_directories(
 	${CMAKE_SOURCE_DIR}
 	${CMAKE_CURRENT_BINARY_DIR}
 	${CMAKE_CURRENT_SOURCE_DIR}
 	${CMAKE_CURRENT_SOURCE_DIR}/vendor/osmpbf
 	${CMAKE_CURRENT_SOURCE_DIR}/vendor/osmpbf/osmpbf/include
-	${CMAKE_CURRENT_SOURCE_DIR}/vendor/sserialize/include
 	${CMAKE_CURRENT_SOURCE_DIR}/vendor/libosmtools/include
+	${CMAKE_CURRENT_SOURCE_DIR}/liboscar/include
+	${CMAKE_CURRENT_SOURCE_DIR}/liboscar/vendor/sserialize/include
 )
 
 PROJECT(oscar-meta)
@@ -31,15 +37,17 @@ IF(CMAKE_CROSSCOMPILING OR ANDROID)
 		set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -llog")
 		set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -llog")
 	ENDIF(ANDROID)
-	add_subdirectory(vendor/sserialize sserialize)
 	add_subdirectory(liboscar liboscar)
 	add_subdirectory(oscar-cmd oscar-cmd)
 ELSE (CMAKE_CROSSCOMPILING OR ANDROID)
+	add_subdirectory(liboscar liboscar) #contains sserialize
+
+	#oscar-create
 	add_subdirectory(vendor/osmpbf osmpbf)
-	add_subdirectory(vendor/sserialize sserialize)
 	add_subdirectory(vendor/libosmtools libosmtools)
-	add_subdirectory(liboscar liboscar)
 	add_subdirectory(oscar-create oscar-create)
+	
+	#these only need liboscar
 	add_subdirectory(oscar-cmd oscar-cmd)
 	add_subdirectory(oscar-web oscar-web)
 	add_subdirectory(oscar-gui oscar-gui)
