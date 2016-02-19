@@ -908,11 +908,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 closePopups();
                 state.items.clusters.drawn.erase(e.target.rid);
                 removeMarker(e.target);
-                /*state.regionHandler({
-                 rid: e.target.rid,
-                 draw: true,
-                 bbox: state.DAG.at(e.target.rid).bbox
-                 });*/
                 drawClusters(state.DAG.at(e.target.rid), tools.SimpleHash());
             });
 
@@ -925,8 +920,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                         state.map.addLayer(leafletItem);
                     }, defErrorCB);
                 }
-                //e.target.rect = L.rectangle(e.target.bbox);
-                //e.target.rect.addTo(state.map);
 
                 L.popup({offset: new L.Point(0, -10)})
                     .setLatLng(e.latlng)
@@ -938,9 +931,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 if (e.target.shape) {
                     state.map.removeLayer(e.target.shape);
                 }
-                /*if(e.target.rect){
-                 state.map.removeLayer(e.target.rect);
-                 }*/
             });
         }
 
@@ -999,14 +989,15 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 if (markerCluster !== undefined) {
                     removeClusterMarker(childNode);
                     removeChildrenOfNodeFromMap(childNode, drawn);
-                } else {
+                } else if (markerItem !== undefined) {
                     removeParentTabs(childNode, node);
-                    if (markerItem !== undefined) {
-                        if (childNode.marker) {
-                            removeItemMarker(childNode);// Overlap: marker kann schon entfernt worden sein, in an derer region, die sich mit dieser überlappt
-                        }
+                    if (childNode.marker) {
+                        removeItemMarker(childNode);// Overlap: marker kann schon entfernt worden sein, in an derer region, die sich mit dieser überlappt
                     }
                     state.items.listview.drawn.eraseOrDecrease(childNode.id);
+                } else {
+                    removeParentTabs(childNode, node);
+                    removeChildrenOfNodeFromMap(childNode, drawn);
                 }
             }
         }
@@ -1016,7 +1007,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 return;
             }
 
-            var childNode;
+            var childNode, timer;
 
             if (node.children.length) {
                 for (var child in node.children) {
@@ -1032,7 +1023,9 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                             if (!state.items.clusters.drawn.count(childNode.id)) {
                                 addClusterMarker(childNode);// TODO: try/Benchmark bulk insert method
                             }
+                            timer = tools.timer("childrenRemoval");
                             removeChildrenOfNodeFromMap(childNode, drawn);
+                            timer.stop();
                         } else if (!childNode.count) {
                             drawn.insert(childNode.id, childNode.id);
                             if (!state.items.shapes.drawn.count(childNode.id)) {
