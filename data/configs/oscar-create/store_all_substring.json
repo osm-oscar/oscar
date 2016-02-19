@@ -24,7 +24,7 @@
 		"latCount" : 100,
 		"lonCount" : 100,
 		"readBoundaries" : true,
-		"maxTriangPerCell" : 10000000,
+		"maxTriangPerCell" : 10000,
 		"maxTriangCentroidDist" : 1000000000.0,
 		"regionFilter" : {
 			"keys" : "lists/k_region_inherit_tags.txt",
