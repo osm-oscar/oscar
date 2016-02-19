@@ -1,23 +1,11 @@
-
 WARNINGS:
 -Wshorten-64-to-32 as default
 
-
-LONGTERM: (WIP)
-Out of memory creation
+HIGH IMPORTANCE:
+minilzo is licensed under GPL? If that really is the case, then we have to get rid of it (use xz?)
 
 LONGTERM:
 xz compression (complete abstract compression)
-
-LONGTERM:
-Multiple set operation polcies for cells and items so it's possible to do:
-a=rohrdommel
-b=marabu
-c=intersect(a,b, cells, unite items)
-
-LONGTERM: 
-Query Language improvements:
-improve query refinement options: +-/^ neben dem key/value sodass man den key/value z.b. abziehen kann
 
 LONGTERM:
 Re-order treed-cqr set operations
@@ -38,39 +26,22 @@ LONGTERM:
 full support for relations
 
 LONGTERM:
-Split regions into their subregions
-
-LONGTERM:
-anderer zwischen-bla-blub query der die hierarchie nutzt.
-
-LONGTERM:
 use builtin overflow (debian stable does not have gcc5)
 
-HIGH IMPORTANCE: (done, unchecked)
+HIGH IMPORTANCE: (done, unchecked, not needed anymore, make it optional)
 neighbor-pointers in GeoHierarchy
-
-HIGH IMPORTANCE:
-manually add an extra level to specify continents (do this with a config)
-
-HIGH IMPORTANCE:
-dynamic polygon simplification
 
 HIGH IMPORTANCE:
 fix TextSearchTraits bug (maybe this should be done two layers deeper)
 
-HIGH IMPORTANCE:
-abstract GeoShape to have different backends 
+HIGH IMPORTANCE: refactor geo architecture:
+abstract GeoShape to have different backends
+	-> manually add an extra level to specify continents (do this with a config)
+	-> dynamic polygon simplification
+	-> Split regions into their subregions
+
 
 HIGH IMPORTANCE:
 oscar-web: improve support for geoobjects: just add a reference in the query string and add ability to change polygon/paths/rectangles
 So a query would look like that: $rect:1 + $poly:1 + $path:2 - $path:1
 the ids would be replaced before sending to the server (needs some extra work to do the parsing of the uri)
-
-NOW:
-scoring is broken
-
-NOW:
-polygon query is broken? are cells split? such that they are connected?
-
-NOW:
-between query
