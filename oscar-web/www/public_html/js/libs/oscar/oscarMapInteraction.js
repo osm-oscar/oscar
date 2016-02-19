@@ -913,7 +913,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                  draw: true,
                  bbox: state.DAG.at(e.target.rid).bbox
                  });*/
-                drawClusters(state.DAG.at(e.target.rid));
+                drawClusters(state.DAG.at(e.target.rid), tools.SimpleHash());
             });
 
             marker.on("mouseover", function (e) {
@@ -987,90 +987,57 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
 
             for (var child in node.children) {
                 childNode = node.children[child];
+
                 if (drawn.count(childNode.id)) {
+                    // if the node is contained in 'drawn', it was drawn in this cycle => don't remove
                     continue;
                 }
+
                 markerCluster = state.items.clusters.drawn.at(childNode.id);
                 markerItem = state.items.shapes.drawn.at(childNode.id);
+
                 if (markerCluster !== undefined) {
-                    removeMarker(markerCluster);
-                    state.items.clusters.drawn.erase(childNode.id);
+                    removeClusterMarker(childNode);
                     removeChildrenOfNodeFromMap(childNode, drawn);
-                } else if (markerItem !== undefined) {
-                    for (var parent in childNode.parents) {
-                        if (childNode.parents[parent].id == node.id && $("a[href='#tab-" + childNode.parents[parent].id + "']").length) {
-                            $("a[href='#tab-" + childNode.parents[parent].id + "']").parent().remove();
-                            $("#tab-" + childNode.parents[parent].id).remove();
-                        }
-                    }
-                    $('#items_parent').tabs("refresh");
-                    if (childNode.marker) {
-                        state.markers.removeLayer(childNode.marker); // Overlap: marker kann schon entfernt worden sein, in an derer region, die sich mit dieser überlappt
-                    }
-                    state.items.shapes.drawn.erase(childNode.id);
-                    state.items.listview.drawn.eraseOrDecrease(childNode.id);
                 } else {
-                    for (var parent in childNode.parents) {
-                        if (childNode.parents[parent].id == node.id && $("a[href='#tab-" + childNode.parents[parent].id + "']").length) {
-                            $("a[href='#tab-" + childNode.parents[parent].id + "']").parent().remove();
-                            $("#tab-" + childNode.parents[parent].id).remove();
+                    removeParentTabs(childNode, node);
+                    if (markerItem !== undefined) {
+                        if (childNode.marker) {
+                            removeItemMarker(childNode);// Overlap: marker kann schon entfernt worden sein, in an derer region, die sich mit dieser überlappt
                         }
                     }
-                    $('#items_parent').tabs("refresh");
                     state.items.listview.drawn.eraseOrDecrease(childNode.id);
                 }
             }
         }
 
-        /*function removeChildrenofMultipleNodesFromMap(nodes){
-         for(var node in nodes){
-         removeChildrenOfNodeFromMap(nodes[node]);
-         }
-         }*/
-
         function drawClusters(node, drawn) {
             if (!node) {
                 return;
             }
+
             var childNode;
-            var marker;
 
             if (node.children.length) {
                 for (var child in node.children) {
                     childNode = node.children[child];
                     if (tools.percentOfOverlap(state.map, childNode.bbox) >= config.overlap) {
                         if (state.items.clusters.drawn.count(childNode.id)) {
-                            removeMarker(childNode.marker);
-                            state.items.clusters.drawn.erase(childNode.id);
+                            removeClusterMarker(childNode);
                         }
                         drawClusters(childNode, drawn);
                     } else {
-                        marker = childNode.marker;
                         if (childNode.count) {
                             drawn.insert(childNode.id, childNode.id);
                             if (!state.items.clusters.drawn.count(childNode.id)) {
-                                state.items.clusters.drawn.insert(childNode.id, marker);
-                                state.markers.addLayer(marker);
+                                addClusterMarker(childNode);// TODO: try/Benchmark bulk insert method
                             }
                             removeChildrenOfNodeFromMap(childNode, drawn);
                         } else if (!childNode.count) {
                             drawn.insert(childNode.id, childNode.id);
                             if (!state.items.shapes.drawn.count(childNode.id)) {
-                                state.items.shapes.drawn.insert(childNode.id, marker);
-                                if (marker) { // TODO: WHY?
-                                    state.markers.addLayer(marker);
-                                }
-                                if (!$("a[href='#tab-" + childNode.parents[0].id + "']").length) {
-                                    var tab = "<li><a href='#tab-" + childNode.parents[0].id + "'>" + state.DAG.at(childNode.parents[0].id).name + " [" + childNode.parents[0].count + "]" + "</a></li>";
-                                    $('#tabs').append(tab);
-                                }
-                                if (!$("#tab-" + childNode.parents[0].id).length) {
-                                    var regionDiv = "<div id='tab-" + childNode.parents[0].id + "'></div>";
-                                    $('#itemsList').append(regionDiv);
-                                }
-                                oscar.getItem(childNode.id, function (item) {
-                                    appendItemToListView(item, "items", $("#tab-" + childNode.parents[0].id));
-                                }, defErrorCB);
+                                addItemMarker(childNode);
+                                setupTabsForItemAndAddToListView(childNode);
                             }
                         }
                     }
@@ -1084,17 +1051,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             } else if (node.count) {
                 state.regionHandler({rid: node.id, draw: true, dynamic: true});
             }
-
-            /*if(cqr.ohPath().length){
-             if(node.id == cqr.ohPath()[cqr.ohPath().length - 1]){
-
-             }
-             }else{
-             if(node.id == 0xFFFFFFFF){
-
-             }
-             }*/
-
         }
 
         function displayCqr(cqr) {
@@ -1119,6 +1075,52 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             }
             state.markers.removeLayer(marker);
             closePopups();
+        }
+
+        function removeClusterMarker(node) {
+            removeMarker(node.marker);
+            state.items.clusters.drawn.erase(node.id);
+        }
+
+        function addClusterMarker(node) {
+            state.items.clusters.drawn.insert(node.id, node.marker);
+            state.markers.addLayer(node.marker);
+        }
+
+        function removeItemMarker(node) {
+            state.markers.removeLayer(node.marker);
+            state.items.shapes.drawn.erase(node.id);
+        }
+
+        function addItemMarker(node) {
+            state.items.shapes.drawn.insert(node.id, node.marker);
+            state.markers.addLayer(node.marker);
+        }
+
+        function setupTabsForItemAndAddToListView(node) {
+            for (var parent in node.parents) {
+                if (!$("a[href='#tab-" + node.parents[parent].id + "']").length) {
+                    var tab = "<li><a href='#tab-" + node.parents[parent].id + "'>" + state.DAG.at(node.parents[parent].id).name + " [" + node.parents[parent].count + "]" + "</a></li>";
+                    $('#tabs').append(tab);
+                }
+                if (!$("#tab-" + node.parents[parent].id).length) {
+                    var regionDiv = "<div id='tab-" + node.parents[parent].id + "'></div>";
+                    $('#itemsList').append(regionDiv);
+                }
+                oscar.getItem(node.id, function (item) {
+                    appendItemToListView(item, "items", $("#tab-" + node.parents[parent].id));
+                }, defErrorCB);
+            }
+        }
+
+        function removeParentTabs(childNode, parentNode) {
+            for (var parent in childNode.parents) {
+                if (childNode.parents[parent].id == parentNode.id && $("a[href='#tab-" + childNode.parents[parent].id + "']").length) {
+                    $("a[href='#tab-" + childNode.parents[parent].id + "']").parent().remove();
+                    $("#tab-" + childNode.parents[parent].id).remove();
+                }
+            }
+            $('#items_parent').tabs("refresh");
         }
 
         function doCompletion() {
