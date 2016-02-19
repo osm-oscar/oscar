@@ -4,3 +4,6 @@
 [submodule "vendor/osmpbf"]
 	path = vendor/osmpbf
 	url = https://github.com/inphos42/osmpbf.git
+[submodule "liboscar"]
+	path = liboscar
+	url = https://github.com/dbahrdt/liboscar.git
