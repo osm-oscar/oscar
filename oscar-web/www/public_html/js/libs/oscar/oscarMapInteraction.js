@@ -97,6 +97,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 searchResultsCounter: undefined
             },
             spinner: new spinner(config.spinnerOpts),
+            benchcnt: 0
         };
 
         // show names of subregions of a cluster in a popup
@@ -908,7 +909,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 closePopups();
                 state.items.clusters.drawn.erase(e.target.rid);
                 removeMarker(e.target);
-                drawClusters(state.DAG.at(e.target.rid), tools.SimpleHash());
+                drawClusters(state.DAG.at(e.target.rid), tools.SimpleHash(), tools.SimpleHash());
             });
 
             marker.on("mouseover", function (e) {
@@ -957,12 +958,31 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                         }
                         state.handler = function () {
                             var drawn = tools.SimpleHash();
+                            var currentItemMarkers = state.items.shapes.drawn.values();
+                            var currentClusterMarker = state.items.clusters.drawn.values();
+
+                            for (var item in currentItemMarkers) {
+                                drawn.insert(item, false);
+                                //removeItemMarker(state.DAG.at(item));
+                            }
+
+                            for (var cluster in currentClusterMarker) {
+                                removeClusterMarker(state.DAG.at(cluster));
+                            }
+
                             if (this.path && this.path.length) {
                                 // start at the target region (last element of ohPath)
                                 drawClusters(state.DAG.at(this.path[this.path.length - 1]), drawn);
                             } else {
                                 // start at Node "World"
                                 drawClusters(state.DAG.at(0xFFFFFFFF), drawn);
+                            }
+
+                            for(var item in drawn.values()) {
+                                if (drawn.at(item) == false) {
+                                    removeItemMarker(state.DAG.at(item));
+                                    removeParentsTabs(state.DAG.at(item));
+                                }
                             }
                         }.bind(this);
                         state.map.on("zoomend dragend", state.handler);
@@ -971,10 +991,10 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             };
         }
 
-        function removeChildrenOfNodeFromMap(node, drawn) {
+        /*function removeChildrenOfNodeFromMap(node, drawn, removed) {
             var markerCluster, markerItem;
             var childNode;
-
+            state.benchcnt++;
             for (var child in node.children) {
                 childNode = node.children[child];
 
@@ -988,49 +1008,61 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
 
                 if (markerCluster !== undefined) {
                     removeClusterMarker(childNode);
-                    removeChildrenOfNodeFromMap(childNode, drawn);
+                    if (!removed.count(childNode.id)) {
+                        removed.insert(childNode.id, childNode.id);
+                        removeChildrenOfNodeFromMap(childNode, drawn, removed);
+                    }
                 } else if (markerItem !== undefined) {
-                    removeParentTabs(childNode, node);
+                    removeParentTab(childNode, node);
                     if (childNode.marker) {
                         removeItemMarker(childNode);// Overlap: marker kann schon entfernt worden sein, in an derer region, die sich mit dieser überlappt
                     }
                     state.items.listview.drawn.eraseOrDecrease(childNode.id);
                 } else {
-                    removeParentTabs(childNode, node);
-                    removeChildrenOfNodeFromMap(childNode, drawn);
+                    removeParentTab(childNode, node);
+                    if (!removed.count(childNode.id)) {
+                        removed.insert(childNode.id, childNode.id);
+                        removeChildrenOfNodeFromMap(childNode, drawn, removed);
+                    }
                 }
             }
-        }
+        }*/
 
         function drawClusters(node, drawn) {
             if (!node) {
                 return;
             }
 
-            var childNode, timer;
-
+            var childNode, timerRemoval, timerDraw;
+            state.benchcnt = 0;
             if (node.children.length) {
                 for (var child in node.children) {
                     childNode = node.children[child];
                     if (tools.percentOfOverlap(state.map, childNode.bbox) >= config.overlap) {
-                        if (state.items.clusters.drawn.count(childNode.id)) {
-                            removeClusterMarker(childNode);
-                        }
+                        /*if (state.items.clusters.drawn.count(childNode.id)) {
+                         removeClusterMarker(childNode);
+                         }*/
+                        //timerDraw = tools.timer("draw");
                         drawClusters(childNode, drawn);
+                        //timerDraw.stop();
                     } else {
                         if (childNode.count) {
-                            drawn.insert(childNode.id, childNode.id);
-                            if (!state.items.clusters.drawn.count(childNode.id)) {
-                                addClusterMarker(childNode);// TODO: try/Benchmark bulk insert method
-                            }
-                            timer = tools.timer("childrenRemoval");
-                            removeChildrenOfNodeFromMap(childNode, drawn);
-                            timer.stop();
+                            //drawn.insert(childNode.id, childNode.id);
+                            //if (!state.items.clusters.drawn.count(childNode.id)) {
+                            addClusterMarker(childNode);// TODO: try/Benchmark bulk insert method
+                            //}
+                            /*timerRemoval = tools.timer("childrenRemoval");
+                             if (!removed.count(childNode.id)) {
+                             removed.insert(childNode.id, childNode.id);
+                             removeChildrenOfNodeFromMap(childNode, drawn, removed);
+                             }
+                             timerRemoval.stop();*/
                         } else if (!childNode.count) {
-                            drawn.insert(childNode.id, childNode.id);
-                            if (!state.items.shapes.drawn.count(childNode.id)) {
+                            if (!drawn.count(childNode.id)) {
                                 addItemMarker(childNode);
                                 setupTabsForItemAndAddToListView(childNode);
+                            }else{
+                                drawn.insert(childNode.id, true);
                             }
                         }
                     }
@@ -1106,7 +1138,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             }
         }
 
-        function removeParentTabs(childNode, parentNode) {
+        function removeParentTab(childNode, parentNode) {
             for (var parent in childNode.parents) {
                 if (childNode.parents[parent].id == parentNode.id && $("a[href='#tab-" + childNode.parents[parent].id + "']").length) {
                     $("a[href='#tab-" + childNode.parents[parent].id + "']").parent().remove();
@@ -1114,6 +1146,12 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 }
             }
             $('#items_parent').tabs("refresh");
+        }
+
+        function removeParentsTabs(childNode){
+            for(var parent in childNode.parents){
+                removeParentTab(childNode, childNode.parents[parent]);
+            }
         }
 
         function doCompletion() {
