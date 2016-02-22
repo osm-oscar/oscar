@@ -97,7 +97,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 searchResultsCounter: undefined
             },
             spinner: new spinner(config.spinnerOpts),
-            benchcnt: 0
         };
 
         // show names of subregions of a cluster in a popup
@@ -860,7 +859,9 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
 
                     var isInitNecessary = $('#tabs')[0].children.length;
                     var tab = "<li><a href='#tab-" + regionId + "'>" + state.DAG.at(regionId).name + " [" + items.length + "]" + "</a></li>";
-                    $('#tabs').append(tab);
+                    if (!$("a[href='#tab-" + regionId + "']").length) {
+                        $('#tabs').append(tab);
+                    }
                     if (isInitNecessary == 0) {
                         $('#items_parent').tabs();
                     } else {
@@ -868,7 +869,9 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                     }
 
                     var regionDiv = "<div id='tab-" + regionId + "'></div>";
-                    $('#itemsList').append(regionDiv);
+                    if (!$("#tab-" + regionId).length) {
+                        $('#itemsList').append(regionDiv);
+                    }
                     var parentElement = $('#tab-' + regionId);
                     for (var i in items) {
                         var item = items[i];
@@ -963,7 +966,6 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
 
                             for (var item in currentItemMarkers) {
                                 drawn.insert(item, false);
-                                //removeItemMarker(state.DAG.at(item));
                             }
 
                             for (var cluster in currentClusterMarker) {
@@ -978,7 +980,8 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                                 drawClusters(state.DAG.at(0xFFFFFFFF), drawn);
                             }
 
-                            for(var item in drawn.values()) {
+                            // remove all markers (and tabs) that are redundant
+                            for (var item in drawn.values()) {
                                 if (drawn.at(item) == false) {
                                     removeItemMarker(state.DAG.at(item));
                                     removeParentsTabs(state.DAG.at(item));
@@ -991,82 +994,31 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             };
         }
 
-        /*function removeChildrenOfNodeFromMap(node, drawn, removed) {
-            var markerCluster, markerItem;
-            var childNode;
-            state.benchcnt++;
-            for (var child in node.children) {
-                childNode = node.children[child];
-
-                if (drawn.count(childNode.id)) {
-                    // if the node is contained in 'drawn', it was drawn in this cycle => don't remove
-                    continue;
-                }
-
-                markerCluster = state.items.clusters.drawn.at(childNode.id);
-                markerItem = state.items.shapes.drawn.at(childNode.id);
-
-                if (markerCluster !== undefined) {
-                    removeClusterMarker(childNode);
-                    if (!removed.count(childNode.id)) {
-                        removed.insert(childNode.id, childNode.id);
-                        removeChildrenOfNodeFromMap(childNode, drawn, removed);
-                    }
-                } else if (markerItem !== undefined) {
-                    removeParentTab(childNode, node);
-                    if (childNode.marker) {
-                        removeItemMarker(childNode);// Overlap: marker kann schon entfernt worden sein, in an derer region, die sich mit dieser überlappt
-                    }
-                    state.items.listview.drawn.eraseOrDecrease(childNode.id);
-                } else {
-                    removeParentTab(childNode, node);
-                    if (!removed.count(childNode.id)) {
-                        removed.insert(childNode.id, childNode.id);
-                        removeChildrenOfNodeFromMap(childNode, drawn, removed);
-                    }
-                }
-            }
-        }*/
-
         function drawClusters(node, drawn) {
             if (!node) {
                 return;
             }
 
-            var childNode, timerRemoval, timerDraw;
-            state.benchcnt = 0;
+            var childNode;
             if (node.children.length) {
                 for (var child in node.children) {
                     childNode = node.children[child];
                     if (tools.percentOfOverlap(state.map, childNode.bbox) >= config.overlap) {
-                        /*if (state.items.clusters.drawn.count(childNode.id)) {
-                         removeClusterMarker(childNode);
-                         }*/
-                        //timerDraw = tools.timer("draw");
                         drawClusters(childNode, drawn);
-                        //timerDraw.stop();
                     } else {
                         if (childNode.count) {
-                            //drawn.insert(childNode.id, childNode.id);
-                            //if (!state.items.clusters.drawn.count(childNode.id)) {
                             addClusterMarker(childNode);// TODO: try/Benchmark bulk insert method
-                            //}
-                            /*timerRemoval = tools.timer("childrenRemoval");
-                             if (!removed.count(childNode.id)) {
-                             removed.insert(childNode.id, childNode.id);
-                             removeChildrenOfNodeFromMap(childNode, drawn, removed);
-                             }
-                             timerRemoval.stop();*/
                         } else if (!childNode.count) {
                             if (!drawn.count(childNode.id)) {
                                 addItemMarker(childNode);
                                 setupTabsForItemAndAddToListView(childNode);
-                            }else{
+                            } else {
                                 drawn.insert(childNode.id, true);
                             }
                         }
                     }
                 }
+
                 try {
                     $('#items_parent').tabs("refresh");
                     $("#items_parent").tabs("option", "active", 0);
@@ -1148,8 +1100,8 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             $('#items_parent').tabs("refresh");
         }
 
-        function removeParentsTabs(childNode){
-            for(var parent in childNode.parents){
+        function removeParentsTabs(childNode) {
+            for (var parent in childNode.parents) {
                 removeParentTab(childNode, childNode.parents[parent]);
             }
         }
