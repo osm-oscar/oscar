@@ -153,6 +153,29 @@ bool ConsistencyChecker::checkGh(const liboscar::Static::OsmKeyValueObjectStore&
 	std::cout << "Found " << invalidItemsInRegions << " items having non-intersecting region\n";
 	return allOk;
 }
+
+bool ConsistencyChecker::checkTriangulation(const liboscar::Static::OsmKeyValueObjectStore& store) {
+	if (!store.regionArrangement().tds().selfCheck()) {
+		return false;
+	}
+	auto ra = store.regionArrangement();
+	auto gr = ra.grid();
+	auto tds = gr.tds();
+	for(uint32_t i(0), s(tds.faceCount()); i < s; ++i) {
+		auto f = tds.face(i);
+		auto cn = f.centroid();
+		if (gr.faceHint(cn) < s) {
+			std::cout << "Gridlocator returns invalid face hint" << std::endl;
+			return false;
+		}
+		if (gr.faceId(cn) != f.id()) {
+			std::cout << "Triangulation returns wrong face" << std::endl;
+			return false;
+		}
+	}
+	return true;
+}
+
 bool ConsistencyChecker::checkStore(const liboscar::Static::OsmKeyValueObjectStore & store) {
 	sserialize::ProgressInfo pinfo;
 	uint32_t keyCount = store.keyStringTable().size();

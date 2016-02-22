@@ -7,6 +7,7 @@ namespace oscarcmd {
 struct ConsistencyChecker {
 	static bool checkIndex(const sserialize::Static::ItemIndexStore& indexStore);
 	static bool checkGh(const liboscar::Static::OsmKeyValueObjectStore& store, const sserialize::Static::ItemIndexStore& indexStore);
+	static bool checkTriangulation(const liboscar::Static::OsmKeyValueObjectStore& store);
 	static bool checkStore(const liboscar::Static::OsmKeyValueObjectStore & store);
 };
 

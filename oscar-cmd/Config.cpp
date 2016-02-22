@@ -88,7 +88,7 @@ void Config::printHelp() {
 -dgh file\tdump gh as dot file to file \n \
 -dghr storeid\tdump gh region \n \
 -dghc id\tdump gh cell \n \
---check type\tcheck type=(index|store|gh) \n \
+--check type\tcheck type=(index|store|gh|tds) \n \
 --benchmark\tdo a benchmark \n";
 }
 

@@ -615,6 +615,14 @@ void Worker::consistencyCheck(WD_ConsistencyCheck & d) {
 			std::cout << "GeoHierarchy is OK" << std::endl;
 		}
 	}
+	else if (d.value == "tds") {
+		if (!ConsistencyChecker::checkTriangulation(completer.store())) {
+			std::cout << "Triangulation is BROKEN" << std::endl;
+		}
+		else {
+			std::cout << "Triangulation is OK" << std::endl;
+		}
+	}
 }
 
 void Worker::ghId2StoreId(WD_GhId2StoreId& d) {
