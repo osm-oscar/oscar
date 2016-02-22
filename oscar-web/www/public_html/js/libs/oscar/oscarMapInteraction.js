@@ -912,7 +912,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 closePopups();
                 state.items.clusters.drawn.erase(e.target.rid);
                 removeMarker(e.target);
-                drawClusters(state.DAG.at(e.target.rid), tools.SimpleHash(), tools.SimpleHash());
+                state.regionHandler({rid: e.target.rid, draw: true, dynamic: true});
             });
 
             marker.on("mouseover", function (e) {
@@ -1010,7 +1010,9 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                             addClusterMarker(childNode);// TODO: try/Benchmark bulk insert method
                         } else if (!childNode.count) {
                             if (!drawn.count(childNode.id)) {
-                                addItemMarker(childNode);
+                                if (childNode.marker !== undefined) { // TODO: WHY?
+                                    addItemMarker(childNode);
+                                }
                                 setupTabsForItemAndAddToListView(childNode);
                             } else {
                                 drawn.insert(childNode.id, true);
