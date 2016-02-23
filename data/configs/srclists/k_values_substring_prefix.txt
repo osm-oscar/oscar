@@ -1,3 +1,4 @@
 .*_name.*
 name.*
 addr:.*
+postal_code:.*
