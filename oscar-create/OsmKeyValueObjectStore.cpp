@@ -70,7 +70,7 @@ void inflateValues(const std::string& value, std::set< std::string >& destinatio
 }
 
 ///thread-safe
-NO_OPTIMIZE void addScore(OsmKeyValueRawItem & item, ScoreCreator & scoreCreator) {
+void addScore(OsmKeyValueRawItem & item, ScoreCreator & scoreCreator) {
 	if (item.data.osmIdType.id() == 2812851) {
 		std::cout << "Landkreis Esslingen get score" << std::endl;
 		scoreCreator.dump(std::cout);
