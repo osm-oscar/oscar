@@ -164,12 +164,12 @@ bool ConsistencyChecker::checkTriangulation(const liboscar::Static::OsmKeyValueO
 	for(uint32_t i(0), s(tds.faceCount()); i < s; ++i) {
 		auto f = tds.face(i);
 		auto cn = f.centroid();
-		if (gr.faceHint(cn) < s) {
-			std::cout << "Gridlocator returns invalid face hint" << std::endl;
-			return false;
-		}
 		if (gr.faceId(cn) != f.id()) {
 			std::cout << "Triangulation returns wrong face" << std::endl;
+			return false;
+		}
+		if (gr.faceHint(cn) < s) { //but a face is there, otheriwse the call above would have returned already
+			std::cout << "Gridlocator returns invalid face hint" << std::endl;
 			return false;
 		}
 	}
