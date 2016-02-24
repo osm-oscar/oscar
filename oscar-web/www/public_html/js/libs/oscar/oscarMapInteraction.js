@@ -181,8 +181,8 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
         L.MarkerCluster.prototype.on("mouseout", function (e) {
             if (e.target.merged) {
                 state.map.removeLayer(e.target.merged);
-            }else if(e.target.polygons && e.target.polygons.length){
-                for(var polygon in e.target.polygons){
+            } else if (e.target.polygons && e.target.polygons.length) {
+                for (var polygon in e.target.polygons) {
                     state.map.removeLayer(e.target.polygons[polygon]);
                 }
             }
@@ -1034,6 +1034,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                             var drawn = tools.SimpleHash();
                             var currentItemMarkers = state.items.shapes.drawn.values();
                             var currentClusterMarker = state.items.clusters.drawn.values();
+                            var bulkMarkerBuffer = [];
 
                             for (var item in currentItemMarkers) {
                                 drawn.insert(item, false);
@@ -1045,11 +1046,13 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
 
                             if (this.path && this.path.length) {
                                 // start at the target region (last element of ohPath)
-                                drawClusters(state.DAG.at(this.path[this.path.length - 1]), drawn);
+                                drawClusters(state.DAG.at(this.path[this.path.length - 1]), drawn, bulkMarkerBuffer);
                             } else {
                                 // start at Node "World"
-                                drawClusters(state.DAG.at(0xFFFFFFFF), drawn);
+                                drawClusters(state.DAG.at(0xFFFFFFFF), drawn, bulkMarkerBuffer);
                             }
+
+                            state.markers.addLayers(bulkMarkerBuffer);
 
                             // remove all markers (and tabs) that are redundant
                             for (var item in drawn.values()) {
@@ -1065,7 +1068,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             };
         }
 
-        function drawClusters(node, drawn) {
+        function drawClusters(node, drawn, markerBuffer) {
             if (!node) {
                 return;
             }
@@ -1075,10 +1078,10 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 for (var child in node.children) {
                     childNode = node.children[child];
                     if (tools.percentOfOverlap(state.map, childNode.bbox) >= config.overlap) {
-                        drawClusters(childNode, drawn);
+                        drawClusters(childNode, drawn, markerBuffer);
                     } else {
                         if (childNode.count) {
-                            addClusterMarker(childNode);// TODO: try/Benchmark bulk insert method
+                            addClusterMarker(childNode);
                         } else if (!childNode.count) {
                             if (!drawn.count(childNode.id)) {
                                 if (childNode.marker !== undefined) { // TODO: WHY?
@@ -1132,9 +1135,13 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             state.items.clusters.drawn.erase(node.id);
         }
 
-        function addClusterMarker(node) {
+        function addClusterMarker(node, buffer) {
             state.items.clusters.drawn.insert(node.id, node.marker);
-            state.markers.addLayer(node.marker);
+            if (buffer) {
+                buffer.push(node.marker)
+            } else {
+                state.markers.addLayer(node.marker);
+            }
         }
 
         function removeItemMarker(node) {
@@ -1142,9 +1149,13 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             state.items.shapes.drawn.erase(node.id);
         }
 
-        function addItemMarker(node) {
+        function addItemMarker(node, buffer) {
             state.items.shapes.drawn.insert(node.id, node.marker);
-            state.markers.addLayer(node.marker);
+            if (buffer) {
+                buffer.push(node.marker);
+            } else {
+                state.markers.addLayer(node.marker);
+            }
         }
 
         function setupTabsForItemAndAddToListView(node) {
