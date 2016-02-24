@@ -99,7 +99,8 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 searchResultsCounter: undefined
             },
             spinner: new spinner(config.spinnerOpts),
-            turfCache: tools.SimpleHash()
+            turfCache: tools.SimpleHash(),
+            boundariesInProcessing: tools.SimpleHash()
         };
 
         // show names of subregions of a cluster in a popup
@@ -119,7 +120,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 if (mergedRegion) {
                     e.target.merged = mergedRegion;
                     mergedRegion.addTo(state.map);
-                } else if(children.length){
+                } else if (children.length && !state.boundariesInProcessing.count(key)) {
                     oscar.getShapes(children, function (shapes) {
                         // collect all boundaries of sub-clusters and convert to GeoJSON
                         var boundaries = [];
@@ -127,22 +128,18 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                             leafletItem = oscar.leafletItemFromShape(shapes[shape]);
                             boundaries.push(oscar.leafletItemFromShape(shapes[shape]).toGeoJSON());
                         }
-                        // merge them
-                        //merged = turf.merge(turf.featurecollection(boundaries));
 
-                        // put on the map and cache the computed region
-                        //e.target.merged = L.geoJson(merged);
-                        //e.target.merged.setStyle(config.styles.shapes['regions']['normal']);
-                        //state.turfCache.insert(key, e.target.merged);
-                        //e.target.merged.addTo(state.map);
+                        // merge them in a background-job
                         var worker = new Worker('js/libs/oscar/polygonMerger.js');
-                        worker.addEventListener('message', function(e) {
+                        worker.addEventListener('message', function (e) {
                             e.target.merged = L.geoJson(e.data.merged);
                             e.target.merged.setStyle(config.styles.shapes['regions']['normal']);
                             state.turfCache.insert(key, e.target.merged);
-                            //e.target.merged.addTo(state.map);
+                            state.boundariesInProcessing.erase(key);
                         }, false);
-                        worker.postMessage({"shapes" : turf.featurecollection(boundaries)}); // Send data to our worker.
+                        state.boundariesInProcessing.insert(key, key);
+                        worker.postMessage({"shapes": turf.featurecollection(boundaries)});
+
                     }, defErrorCB);
                 }
             }
