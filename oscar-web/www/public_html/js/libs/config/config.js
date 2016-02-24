@@ -53,6 +53,7 @@ define({
     },
     overlap: 0.40,
     maxBufferedItems: 350,
+    maxNumPolygonEdges: 15000,
     spinnerOpts: {
         lines: 13 // The number of lines to draw
         , length: 5 // The length of each line

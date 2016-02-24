@@ -108,7 +108,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             // merge the region boundaries of sub-clusters
             if (e.target.getChildCount() > 1) {
                 var children = [];
-                var leafletItem, merged, key = "", mergedRegion;
+                var leafletItem, key = "", mergedRegion;
                 for (var i in e.target.getAllChildMarkers()) {
                     if (e.target.getAllChildMarkers()[i].rid) {
                         children.push(e.target.getAllChildMarkers()[i].rid);
@@ -124,21 +124,36 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                     oscar.getShapes(children, function (shapes) {
                         // collect all boundaries of sub-clusters and convert to GeoJSON
                         var boundaries = [];
+                        var edges = 0;
                         for (var shape in shapes) {
                             leafletItem = oscar.leafletItemFromShape(shapes[shape]);
                             boundaries.push(oscar.leafletItemFromShape(shapes[shape]).toGeoJSON());
                         }
 
-                        // merge them in a background-job
-                        var worker = new Worker('js/libs/oscar/polygonMerger.js');
-                        worker.addEventListener('message', function (e) {
-                            e.target.merged = L.geoJson(e.data.merged);
-                            e.target.merged.setStyle(config.styles.shapes['regions']['normal']);
-                            state.turfCache.insert(key, e.target.merged);
-                            state.boundariesInProcessing.erase(key);
-                        }, false);
-                        state.boundariesInProcessing.insert(key, key);
-                        worker.postMessage({"shapes": turf.featurecollection(boundaries)});
+                        for (var boundary in boundaries) {
+                            /*if(boundaries[boundary].geometry.type == "Polygon"){
+                             edges += boundaries[boundary].geometry.coordinates[0].length;
+                             }else if(boundaries[boundary].geometry.type == "MultiPolygon"){*/
+                            for (var coordinate in boundaries[boundary].geometry.coordinates) {
+                                edges += boundaries[boundary].geometry.coordinates[coordinate][0].length;
+                            }
+                            //}
+                        }
+
+                        if (edges < config.maxNumPolygonEdges) {
+                            // merge them in a background-job
+                            var worker = new Worker('js/libs/oscar/polygonMerger.js');
+                            worker.addEventListener('message', function (e) {
+                                e.target.merged = L.geoJson(e.data.merged);
+                                e.target.merged.setStyle(config.styles.shapes['regions']['normal']);
+                                state.turfCache.insert(key, e.target.merged);
+                                state.boundariesInProcessing.erase(key);
+                            }, false);
+                            state.boundariesInProcessing.insert(key, key);
+                            worker.postMessage({"shapes": turf.featurecollection(boundaries)});
+                        } else {
+                            // TODO: Show the regions boundaries without merging
+                        }
 
                     }, defErrorCB);
                 }
