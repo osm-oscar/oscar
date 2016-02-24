@@ -54,7 +54,7 @@
             },
 
             spiderfyOnMaxZoom: true,
-            showCoverageOnHover: true,
+            showCoverageOnHover: false,
             zoomToBoundsOnClick: true,
             singleMarkerMode: true,
 

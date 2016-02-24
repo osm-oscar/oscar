@@ -28,7 +28,8 @@ requirejs.config({
         "d3": "dagre-d3/d3.min",
         "dagre-d3": "dagre-d3/dagre-d3.min",
         "tree": "tree/tree",
-        "tokenfield": "tokenfield/bootstrap-tokenfield.min"
+        "tokenfield": "tokenfield/bootstrap-tokenfield.min",
+        "turf": "turf/turf.min"
     },
     shim: {
         'bootstrap': {deps: ['jquery']},
@@ -40,8 +41,8 @@ requirejs.config({
     waitSeconds: 20
 });
 
-requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jqueryui", "leafletCluster", "spin", "sidebar", "mustacheLoader", "tools", "conf", "menu", "tokenfield", "switch", "tree", "flickr"],
-    function (oscar, L, jQuery, bootstrap, jbinary, mustache, jqueryui, leafletCluster, spinner, sidebar, mustacheLoader, tools, config, menu, tokenfield, switchButton, tree, flickr) {
+requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jqueryui", "leafletCluster", "spin", "sidebar", "mustacheLoader", "tools", "conf", "menu", "tokenfield", "switch", "tree", "flickr", "turf"],
+    function (oscar, L, jQuery, bootstrap, jbinary, mustache, jqueryui, leafletCluster, spinner, sidebar, mustacheLoader, tools, config, menu, tokenfield, switchButton, tree, flickr, turf) {
         //main entry point
 
         var osmAttr = '&copy; <a target="_blank" href="http://www.openstreetmap.org">OpenStreetMap</a>';
@@ -97,10 +98,44 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 searchResultsCounter: undefined
             },
             spinner: new spinner(config.spinnerOpts),
+            turfCache: tools.SimpleHash()
         };
 
         // show names of subregions of a cluster in a popup
         L.MarkerCluster.prototype.on("mouseover", function (e) {
+            // merge the region boundaries of sub-clusters
+            if (e.target.getChildCount() > 1) {
+                var children = [];
+                var leafletItem, merged, key = "", mergedRegion;
+                for (var i in e.target.getAllChildMarkers()) {
+                    children.push(e.target.getAllChildMarkers()[i].rid);
+                    key += e.target.rid;
+                }
+
+                mergedRegion = e.target.merged || state.turfCache.at(key);
+                if (mergedRegion) {
+                    e.target.merged = mergedRegion;
+                    mergedRegion.addTo(state.map);
+                } else {
+                    oscar.getShapes(children, function (shapes) {
+                        // collect all boundaries of sub-clusters and convert to GeoJSON
+                        var boundaries = [];
+                        for (var shape in shapes) {
+                            leafletItem = oscar.leafletItemFromShape(shapes[shape]);
+                            boundaries.push(oscar.leafletItemFromShape(shapes[shape]).toGeoJSON());
+                        }
+                        // merge them
+                        merged = turf.merge(turf.featurecollection(boundaries));
+
+                        // put on the map and cache the computed region
+                        e.target.merged = L.geoJson(merged);
+                        e.target.merged.setStyle(config.styles.shapes['regions']['normal']);
+                        state.turfCache.insert(key, e.target.merged);
+                        e.target.merged.addTo(state.map);
+                    }, defErrorCB);
+                }
+            }
+
             var names = e.target.getChildClustersNames();
             var text = "";
             if (names.length > 1) {
@@ -115,6 +150,9 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
         });
 
         L.MarkerCluster.prototype.on("mouseout", function (e) {
+            if (e.target.merged) {
+                state.map.removeLayer(e.target.merged);
+            }
             closePopups();
         });
 
