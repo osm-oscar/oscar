@@ -131,19 +131,17 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                         }
 
                         for (var boundary in boundaries) {
-                            /*if(boundaries[boundary].geometry.type == "Polygon"){
-                             edges += boundaries[boundary].geometry.coordinates[0].length;
-                             }else if(boundaries[boundary].geometry.type == "MultiPolygon"){*/
                             for (var coordinate in boundaries[boundary].geometry.coordinates) {
                                 edges += boundaries[boundary].geometry.coordinates[coordinate][0].length;
                             }
-                            //}
                         }
 
                         if (edges < config.maxNumPolygonEdges) {
                             // merge them in a background-job
                             var worker = new Worker('js/libs/oscar/polygonMerger.js');
+                            var timer = tools.timer("Polygon-Merge");
                             worker.addEventListener('message', function (e) {
+                                timer.stop();
                                 e.target.merged = L.geoJson(e.data.merged);
                                 e.target.merged.setStyle(config.styles.shapes['regions']['normal']);
                                 state.turfCache.insert(key, e.target.merged);
@@ -153,6 +151,14 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                             worker.postMessage({"shapes": turf.featurecollection(boundaries)});
                         } else {
                             // TODO: Show the regions boundaries without merging
+                            e.target.polygons = [];
+                            var regionBoundary;
+                            for (var boundary in boundaries) {
+                                regionBoundary = L.geoJson(boundaries[boundary]);
+                                regionBoundary.setStyle(config.styles.shapes['regions']['normal']);
+                                e.target.polygons.push(regionBoundary);
+                                regionBoundary.addTo(state.map);
+                            }
                         }
 
                     }, defErrorCB);
@@ -175,6 +181,10 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
         L.MarkerCluster.prototype.on("mouseout", function (e) {
             if (e.target.merged) {
                 state.map.removeLayer(e.target.merged);
+            }else if(e.target.polygons && e.target.polygons.length){
+                for(var polygon in e.target.polygons){
+                    state.map.removeLayer(e.target.polygons[polygon]);
+                }
             }
             closePopups();
         });
@@ -315,7 +325,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
             else {
                 state.loadingtasks -= 1;
             }
-        };
+        }
 
         function clearGeoQueryMapShape() {
             if (state.geoquery.mapshape !== undefined) {
