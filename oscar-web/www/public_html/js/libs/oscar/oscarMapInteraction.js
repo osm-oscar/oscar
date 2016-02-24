@@ -108,15 +108,17 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                 var children = [];
                 var leafletItem, merged, key = "", mergedRegion;
                 for (var i in e.target.getAllChildMarkers()) {
-                    children.push(e.target.getAllChildMarkers()[i].rid);
-                    key += e.target.rid;
+                    if (e.target.getAllChildMarkers()[i].rid) {
+                        children.push(e.target.getAllChildMarkers()[i].rid);
+                        key += e.target.getAllChildMarkers()[i].rid;
+                    }
                 }
 
                 mergedRegion = e.target.merged || state.turfCache.at(key);
                 if (mergedRegion) {
                     e.target.merged = mergedRegion;
                     mergedRegion.addTo(state.map);
-                } else {
+                } else if(children.length){
                     oscar.getShapes(children, function (shapes) {
                         // collect all boundaries of sub-clusters and convert to GeoJSON
                         var boundaries = [];
@@ -138,7 +140,7 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
 
             var names = e.target.getChildClustersNames();
             var text = "";
-            if (names.length > 1) {
+            if (names.length > 0) {
                 for (var i in names) {
                     text += names[i];
                     if (i < names.length - 1) {
