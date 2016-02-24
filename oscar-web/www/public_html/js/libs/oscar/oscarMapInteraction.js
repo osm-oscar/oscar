@@ -29,7 +29,8 @@ requirejs.config({
         "dagre-d3": "dagre-d3/dagre-d3.min",
         "tree": "tree/tree",
         "tokenfield": "tokenfield/bootstrap-tokenfield.min",
-        "turf": "turf/turf.min"
+        "turf": "turf/turf.min",
+        "merger": "oscar/polygonMerger"
     },
     shim: {
         'bootstrap': {deps: ['jquery']},
@@ -41,8 +42,8 @@ requirejs.config({
     waitSeconds: 20
 });
 
-requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jqueryui", "leafletCluster", "spin", "sidebar", "mustacheLoader", "tools", "conf", "menu", "tokenfield", "switch", "tree", "flickr", "turf"],
-    function (oscar, L, jQuery, bootstrap, jbinary, mustache, jqueryui, leafletCluster, spinner, sidebar, mustacheLoader, tools, config, menu, tokenfield, switchButton, tree, flickr, turf) {
+requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jqueryui", "leafletCluster", "spin", "sidebar", "mustacheLoader", "tools", "conf", "menu", "tokenfield", "switch", "tree", "flickr", "turf", "merger"],
+    function (oscar, L, jQuery, bootstrap, jbinary, mustache, jqueryui, leafletCluster, spinner, sidebar, mustacheLoader, tools, config, menu, tokenfield, switchButton, tree, flickr, turf, merger) {
         //main entry point
 
         var osmAttr = '&copy; <a target="_blank" href="http://www.openstreetmap.org">OpenStreetMap</a>';
@@ -127,13 +128,21 @@ requirejs(["oscar", "leaflet", "jquery", "bootstrap", "jbinary", "mustache", "jq
                             boundaries.push(oscar.leafletItemFromShape(shapes[shape]).toGeoJSON());
                         }
                         // merge them
-                        merged = turf.merge(turf.featurecollection(boundaries));
+                        //merged = turf.merge(turf.featurecollection(boundaries));
 
                         // put on the map and cache the computed region
-                        e.target.merged = L.geoJson(merged);
-                        e.target.merged.setStyle(config.styles.shapes['regions']['normal']);
-                        state.turfCache.insert(key, e.target.merged);
-                        e.target.merged.addTo(state.map);
+                        //e.target.merged = L.geoJson(merged);
+                        //e.target.merged.setStyle(config.styles.shapes['regions']['normal']);
+                        //state.turfCache.insert(key, e.target.merged);
+                        //e.target.merged.addTo(state.map);
+                        var worker = new Worker('js/libs/oscar/polygonMerger.js');
+                        worker.addEventListener('message', function(e) {
+                            e.target.merged = L.geoJson(e.data.merged);
+                            e.target.merged.setStyle(config.styles.shapes['regions']['normal']);
+                            state.turfCache.insert(key, e.target.merged);
+                            //e.target.merged.addTo(state.map);
+                        }, false);
+                        worker.postMessage({"shapes" : turf.featurecollection(boundaries)}); // Send data to our worker.
                     }, defErrorCB);
                 }
             }
