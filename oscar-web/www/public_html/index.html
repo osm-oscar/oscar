@@ -648,7 +648,7 @@
                     }
                 };
                 var itemListEntryTemplateString = jQuery('#itemListEntryHtmlTemplate').html();
-                state.map = leaflet.map('map').setView([48.74568, 9.1047], 17);
+                state.map = leaflet.map('map', {'minZoom' : 0, 'maxZoom' : 19}).setView([48.74568, 9.1047], 17);
                 leaflet.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: osmAttr}).addTo(state.map);
                 var defErrorCB = function(textStatus, errorThrown) {
                                                 console.log("xmlhttprequest error textstatus=" + textStatus + "; errorThrown="+errorThrown);
