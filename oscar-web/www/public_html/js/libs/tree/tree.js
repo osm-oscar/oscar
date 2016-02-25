@@ -72,7 +72,7 @@ define(["dagre-d3", "d3", "jquery"], function (dagreD3, d3, $) {
                         this.graph.setNode(node.children[child].id, attr);
                         this.graph.setEdge(node.id, node.children[child].id, {
                             lineInterpolate: 'basis',
-                            class: "origin-" + node.id, arrowheadClass: 'arrowhead'
+                            class: "origin-" + node.id
                         });
                         this._recursiveAddToGraph(node.children[child], graph)
                     }
@@ -116,7 +116,6 @@ define(["dagre-d3", "d3", "jquery"], function (dagreD3, d3, $) {
                 this.graph.setEdge(parents[i].v, id, {
                     lineInterpolate: 'basis',
                     class: "origin-" + parents[i].v,
-                    arrowheadClass: 'arrowhead'
                 });
             }
 
@@ -124,12 +123,6 @@ define(["dagre-d3", "d3", "jquery"], function (dagreD3, d3, $) {
             this._recursiveAddToGraph(tree.state.DAG.at(id), this.graph);
             this._roundedNodes();
             d3.select("svg").select("g").call(this.renderer, this.graph);
-            // more dirty hacks: rerendering seems to destroy marker-ends. in the marker-end url are two "#" instead of one
-            // so: replace all "##" by "#" in marker-end urls
-            // TODO: research whether this is a bug in dagred3 or this code
-            $.each($("path[marker-end*='##']"), function (key, val) {
-                $(val).attr("marker-end", $(val).attr("marker-end").replace(/##/, "#"))
-            });
             d3.selectAll(".type-LOADABLE").on("click", this._nodeOnClick);
             d3.selectAll(".node").on("mouseover", this._hoverNode.bind(this));
             d3.selectAll(".node").on("mouseout", this._deHoverNode.bind(this));
