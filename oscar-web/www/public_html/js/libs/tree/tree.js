@@ -2,7 +2,7 @@ define(["dagre-d3", "d3", "jquery"], function (dagreD3, d3, $) {
     var tree = {
         graph: undefined, // the graph
         state: undefined, // contains tree-datastructure
-        renderer : new dagreD3.render(),
+        renderer: new dagreD3.render(),
         visualizeDAG: function (root, state) {
             state.visualizationActive = true;
             this.state = state;
@@ -36,12 +36,16 @@ define(["dagre-d3", "d3", "jquery"], function (dagreD3, d3, $) {
             });
             svg.call(zoom);
 
+            this.graph.graph().transition = function (selection) {
+                return selection.transition().duration(500);
+            };
             // draw graph
             svgGroup.call(this.renderer, this.graph);
 
             // make the region, which are also drawn on the map, interactive
             d3.selectAll(".type-LOADABLE").on("click", this._nodeOnClick);
-
+            d3.selectAll(".node").on("mouseover", this._hoverNode.bind(this));
+            d3.selectAll(".node").on("mouseout", this._deHoverNode.bind(this));
             // Center the graph
             var xCenterOffset = ($("#tree").width() - this.graph.graph().width) / 2;
             svgGroup.attr("transform", "translate(" + xCenterOffset + ", 20)");
@@ -66,7 +70,10 @@ define(["dagre-d3", "d3", "jquery"], function (dagreD3, d3, $) {
                             };
                         }
                         this.graph.setNode(node.children[child].id, attr);
-                        this.graph.setEdge(node.id, node.children[child].id, {lineInterpolate: 'basis'});
+                        this.graph.setEdge(node.id, node.children[child].id, {
+                            lineInterpolate: 'basis',
+                            class: "origin-" + node.id, arrowheadClass: 'arrowhead'
+                        });
                         this._recursiveAddToGraph(node.children[child], graph)
                     }
                 }
@@ -83,29 +90,49 @@ define(["dagre-d3", "d3", "jquery"], function (dagreD3, d3, $) {
             tree.state.regionHandler({rid: id, draw: true, dynamic: true});
         },
 
-        _roundedNodes:function(){
+        _hoverNode: function (id) {
+            d3.selectAll(".origin-" + id).selectAll("path").style("stroke", "red");
+        },
+
+        _deHoverNode: function (id) {
+            d3.selectAll(".origin-" + id).selectAll("path").style("stroke", "black");
+        },
+
+        _roundedNodes: function () {
             this.graph.nodes().forEach(function (v) {
                 var node = tree.graph.node(v);
                 node.rx = node.ry = 5;
             });
         },
 
-        refresh: function(id){
+        refresh: function (id) {
             // ugly hack: attributes for nodes cannot be changed, once set (or they will not be recognized). so we have
             // to remove the node & create a new one with the wished properties
             var parents = this.graph.inEdges(id);
             this.graph.removeNode(id);
             d3.select("svg").select("g").call(this.renderer, this.graph);
             this.graph.setNode(id, {label: tree.state.DAG.at(id).name.toString(), labelStyle: "color: white"});
-            for(var i in parents){
-                this.graph.setEdge(parents[i].v, id, {lineInterpolate: 'basis'});
+            for (var i in parents) {
+                this.graph.setEdge(parents[i].v, id, {
+                    lineInterpolate: 'basis',
+                    class: "origin-" + parents[i].v,
+                    arrowheadClass: 'arrowhead'
+                });
             }
 
             // update the subtree of the clicked node
             this._recursiveAddToGraph(tree.state.DAG.at(id), this.graph);
             this._roundedNodes();
             d3.select("svg").select("g").call(this.renderer, this.graph);
+            // more dirty hacks: rerendering seems to destroy marker-ends. in the marker-end url are two "#" instead of one
+            // so: replace all "##" by "#" in marker-end urls
+            // TODO: research whether this is a bug in dagred3 or this code
+            $.each($("path[marker-end*='##']"), function (key, val) {
+                $(val).attr("marker-end", $(val).attr("marker-end").replace(/##/, "#"))
+            });
             d3.selectAll(".type-LOADABLE").on("click", this._nodeOnClick);
+            d3.selectAll(".node").on("mouseover", this._hoverNode.bind(this));
+            d3.selectAll(".node").on("mouseout", this._deHoverNode.bind(this));
         }
 
     };
