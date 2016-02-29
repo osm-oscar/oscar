@@ -19,6 +19,11 @@ SET(OSCAR_LINK_LIBS
 	${liboscar_BINARY_DIR}/libliboscar.so
 	${sserialize_BINARY_DIR}/libsserialize.a
 	${LIBRT_LIBRARIES}
+	"CGAL"
+	"mpfr"
+	"gmp"
+	"boost_thread"
+	"boost_system"
 )
 
 add_executable(${PROJECT_NAME} ${OSCAR_SOURCES_CPP})
@@ -28,7 +33,6 @@ target_link_libraries(${PROJECT_NAME} ${OSCAR_LINK_LIBS})
 
 add_target_properties(sserialize COMPILE_FLAGS "-fopenmp -DCGAL_HAS_THREADS")
 add_target_properties(sserialize LINK_FLAGS "-DCGAL_HAS_THREADS -fopenmp")
-
 
 add_target_properties(liboscar COMPILE_FLAGS "-fopenmp -DCGAL_HAS_THREADS")
 add_target_properties(liboscar LINK_FLAGS "-DCGAL_HAS_THREADS -fopenmp")
