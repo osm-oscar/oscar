@@ -4,7 +4,7 @@
 #include <sserialize/stats/TimeMeasuerer.h>
 #include <sserialize/stats/statfuncs.h>
 #include <sserialize/stats/ProgressInfo.h>
-#include <liboscar/CellOpTree.h>
+#include <liboscar/AdvancedCellOpTree.h>
 #include <limits>
 #include <algorithm>
 #include <fstream>
@@ -138,6 +138,9 @@ coldCache(false)
 			if (realOpts[1] == "geocell") {
 				ct = CT_GEOCELL;
 			}
+			else if (realOpts[1] == "tgeocell") {
+				ct = CT_GEOCELL_TREED;
+			}
 			else if (realOpts[1] == "items") {
 				ct = CT_ITEMS;
 			}
@@ -153,7 +156,7 @@ coldCache(false)
 	}
 }
 
-void Benchmarker::doGeocellBench(const std::vector<std::string> & strs, bool coldCache, std::ostream & out) {
+void Benchmarker::doGeocellBench(const std::vector<std::string> & strs, bool coldCache, bool treedCQR, std::ostream & out) {
 	if (!m_completer.textSearch().hasSearch(liboscar::TextSearch::Type::GEOCELL)) {
 		throw std::runtime_error("No support fo clustered completion available");
 		return;
@@ -172,7 +175,6 @@ void Benchmarker::doGeocellBench(const std::vector<std::string> & strs, bool col
 	
 	
 	for(const std::string & str : strs) {
-		liboscar::CellOpTree<sserialize::CellQueryResult> opTree(cmp, true);
 		if (coldCache) {
 			::sync();
 			sleep(5);
@@ -182,9 +184,8 @@ void Benchmarker::doGeocellBench(const std::vector<std::string> & strs, bool col
 			::sync();
 			sleep(5);
 		}
-		opTree.parse(str);
 		tm.begin();
-		sserialize::CellQueryResult r(opTree.calc());
+		sserialize::CellQueryResult r(m_completer.cqrComplete(str, treedCQR));
 		tm.end();
 		cqrTime = tm.elapsedUseconds();
 		tm.begin();
@@ -214,7 +215,10 @@ void Benchmarker::benchmark(const Benchmarker::Config & config) {
 	}
 	
 	if (config.ct == Config::CT_GEOCELL) {
-		doGeocellBench(strs, config.coldCache, outFile);
+		doGeocellBench(strs, config.coldCache, false, outFile);
+	}
+	else if (config.ct == Config::CT_GEOCELL_TREED) {
+		doGeocellBench(strs, config.coldCache, true, outFile);
 	}
 }
 

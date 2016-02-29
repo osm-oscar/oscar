@@ -50,12 +50,12 @@ struct BenchmarkStats {
 /**
   * A simple benchmark class
   * Config accepts the following config string:
-  * i=inputFileName,o=outputFileName,t=(geocell|items),cc=(true|false)
+  * i=inputFileName,o=outputFileName,t=(tgeocell|geocell|items),cc=(true|false)
   */
 class Benchmarker final {
 public:
 	struct Config {
-		typedef enum {CT_INVALID, CT_ITEMS, CT_GEOCELL} CompleterType;
+		typedef enum {CT_INVALID, CT_ITEMS, CT_GEOCELL, CT_GEOCELL_TREED} CompleterType;
 		CompleterType ct;
 		bool coldCache;
 		std::string completionStringsFileName;
@@ -66,7 +66,7 @@ public:
 private:
 	liboscar::Static::OsmCompleter m_completer;
 private:
-	void doGeocellBench(const std::vector< std::string >& strs, bool coldCache, std::ostream& out);
+	void doGeocellBench(const std::vector< std::string >& strs, bool coldCache, bool treedCQR, std::ostream& out);
 public:
 	Benchmarker(const liboscar::Static::OsmCompleter & completer) : m_completer(completer) {}
 	~Benchmarker() {}
