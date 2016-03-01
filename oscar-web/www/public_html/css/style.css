@@ -372,3 +372,8 @@ text {
     height: 25px;
 }
 
+.treeNodeSub{
+    color: black;
+    display: block;
+    margin-top: 5px;
+}

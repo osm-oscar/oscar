@@ -1,6 +1,10 @@
-define(function () {
+define(["jquery"], function ($) {
     var tools = {
-
+        /**
+         * Represents a small API for a hashmap
+         *
+         * @returns {{}} hashmap-object
+         */
         SimpleHash: function () {
             return {
                 m_size: 0,
@@ -52,6 +56,13 @@ define(function () {
             };
         },
 
+        /**
+         * Represents a Treenode, which can be used to model directed-acylic graphs.
+         *
+         * @param id of the node
+         * @param parent one parent of the node
+         * @returns
+         */
         TreeNode: function (id, parent) {
             var parents = [];
             parents.push(parent);
@@ -81,6 +92,13 @@ define(function () {
             };
         },
 
+        /**
+         * Calculates the overlap of the viewport and a bbox. Returns the percentage of overlap.
+         *
+         * @param map contains the viewport coordinates
+         * @param bbox
+         * @returns {number} defines the overlap (0 <= overlap <= 1)
+         */
         percentOfOverlap: function (map, bbox) {
             if (bbox) {
                 // basic version: http://math.stackexchange.com/questions/99565/simplest-way-to-calculate-the-intersect-area-of-two-rectangles
@@ -112,16 +130,43 @@ define(function () {
             }
         },
 
-        timer: function(name) {
+        /**
+         * Timer-utility for benchmarking, logs on the console.
+         *
+         * @param name of the timer
+         * @returns {{stop: Function} stops the timer}
+         */
+        timer: function (name) {
             var start = new Date();
             return {
-                stop: function() {
-                    var end  = new Date();
+                stop: function () {
+                    var end = new Date();
                     var time = end.getTime() - start.getTime();
                     console.log('Timer:', name, 'finished in', time, 'ms');
                 }
             }
+        },
+
+        /**
+         * adds a string to the search input
+         *
+         * @param qstr the string that should be added
+         */
+        addSingleQueryStatementToQuery: function (qstr) {
+            var searchInput = $('#search_text');
+            qstr = searchInput.val() + " " + qstr.replace(' ', '\\ ');
+            searchInput.val(qstr);
+            searchInput.change();
+        },
+
+        //https://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
+        getParameterByName: function (name) {
+            name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+            var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+                results = regex.exec(location.search);
+            return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
         }
+
     };
 
     return tools;

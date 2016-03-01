@@ -1,4 +1,4 @@
-define(["dagre-d3", "d3", "jquery"], function (dagreD3, d3, $) {
+define(["dagre-d3", "d3", "jquery", "oscar"], function (dagreD3, d3, $, oscar) {
     var tree = {
         graph: undefined, // the graph
         state: undefined, // contains tree-datastructure
@@ -36,14 +36,14 @@ define(["dagre-d3", "d3", "jquery"], function (dagreD3, d3, $) {
             });
             svg.call(zoom);
 
-            this.graph.graph().transition = function (selection) {
-                return selection.transition().duration(500);
-            };
+            /*this.graph.graph().transition = function (selection) {
+             return selection.transition().duration(500);
+             };*/
             // draw graph
             svgGroup.call(this.renderer, this.graph);
 
             // make the region, which are also drawn on the map, interactive
-            d3.selectAll(".type-LOADABLE").on("click", this._nodeOnClick);
+            //d3.selectAll(".type-LOADABLE").on("click", this._nodeOnClick);
             d3.selectAll(".node").on("mouseover", this._hoverNode.bind(this));
             d3.selectAll(".node").on("mouseout", this._deHoverNode.bind(this));
             // Center the graph
@@ -56,7 +56,12 @@ define(["dagre-d3", "d3", "jquery"], function (dagreD3, d3, $) {
             if (node.name) {
                 var attr = {label: node.name.toString()};
                 if (this.state.items.clusters.drawn.count(node.id)) {
-                    attr = {label: node.name.toString(), class: "type-LOADABLE", labelStyle: "color: white"};
+                    attr = {
+                        labelType: "html",
+                        label: "<div class='treeNode'><div class='treeNodeName'>" + node.name.toString() + "</div><a class='treeNodeSub' href='javascript:requirejs(\"tree\").loadSub(" + node.id + ")'>Load Subhierarchy</a></div>",
+                        class: "type-LOADABLE",
+                        labelStyle: "color: white"
+                    };
                 }
                 this.graph.setNode(node.id, attr);
                 for (var child in node.children) {
@@ -78,6 +83,46 @@ define(["dagre-d3", "d3", "jquery"], function (dagreD3, d3, $) {
                     }
                 }
             }
+        },
+
+        loadSub: function (rid) {
+            tree.state.cqr.regionChildrenInfo(rid, function (regionChildrenInfo) {
+                var children = [];
+                var regionChildrenApxItemsMap = {};
+
+                for (var i in regionChildrenInfo) {
+                    var ci = regionChildrenInfo[i];
+                    regionChildrenApxItemsMap[ci['id']] = ci['apxitems'];
+                    children.push(ci['id']);
+                }
+
+                oscar.getItems(children, function (items) {
+                        var itemId, item, node, parentNode, marker;
+                        parentNode = tree.state.DAG.at(rid);
+
+                        for(var i in items){
+                            item = items[i];
+                            itemId = item.id();
+                            if (!tree.state.DAG.count(itemId)) {
+                                node = parentNode.addChild(itemId);
+                                node.count = regionChildrenApxItemsMap[itemId];
+                                node.bbox = item.bbox();
+                                node.name = item.name();
+                                marker = L.marker(item.centerPoint());
+                                marker.count = regionChildrenApxItemsMap[item.id()];
+                                marker.rid = item.id();
+                                marker.name = item.name();
+                                marker.bbox = item.bbox();
+                                //tree.state.decorateMarker(marker);
+                                node.marker = marker;
+                                tree.state.DAG.insert(itemId, node);
+                            }
+                        }
+                    }, function () {
+                    }
+                )
+            }, function () {
+            });
         },
 
         _nodeOnClick: function (id) {
