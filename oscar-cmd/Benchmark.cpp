@@ -162,7 +162,18 @@ void Benchmarker::doGeocellBench(const std::vector<std::string> & strs, bool col
 		return;
 	}
 	//out << "#Query;Time for set operations;Time for subgraph creation;Number of cells;Number of items\n";
-	sserialize::Static::CellTextCompleter cmp( m_completer.textSearch().get<liboscar::TextSearch::Type::GEOCELL>() );
+	sserialize::Static::CellTextCompleter cmp;
+	if (m_completer.textSearch().hasSearch(liboscar::TextSearch::Type::GEOCELL)) {
+		cmp = m_completer.textSearch().get<liboscar::TextSearch::Type::GEOCELL>();
+	}
+	else if (m_completer.textSearch().hasSearch(liboscar::TextSearch::Type::OOMGEOCELL)) {
+		cmp = m_completer.textSearch().get<liboscar::TextSearch::Type::OOMGEOCELL>();
+	}
+	sserialize::Static::CQRDilator cqrd(m_completer.store().cellCenterOfMass(), m_completer.store().cellGraph());
+	liboscar::CQRFromPolygon cqrfp(m_completer.store(), m_completer.indexStore());
+	sserialize::spatial::GeoHierarchySubSetCreator ghs(m_completer.store().geoHierarchy(), sserialize::spatial::GeoHierarchySubSetCreator::T_PASS_THROUGH);
+	liboscar::CQRFromComplexSpatialQuery csq(ghs, cqrfp);
+	liboscar::AdvancedCellOpTree opTree(cmp, cqrd, csq);
 	sserialize::TimeMeasurer tm;
 	long int cqrTime, subsetTime;
 	int fd = -1;
@@ -172,7 +183,6 @@ void Benchmarker::doGeocellBench(const std::vector<std::string> & strs, bool col
 			throw std::runtime_error("Could not open proc for dropping caches");
 		}
 	}
-	
 	
 	for(const std::string & str : strs) {
 		if (coldCache) {
@@ -184,8 +194,16 @@ void Benchmarker::doGeocellBench(const std::vector<std::string> & strs, bool col
 			::sync();
 			sleep(5);
 		}
+		sserialize::CellQueryResult r;
 		tm.begin();
-		sserialize::CellQueryResult r(m_completer.cqrComplete(str, treedCQR));
+		if (!treedCQR) {
+			opTree.parse(str);
+			r = opTree.calc<sserialize::CellQueryResult>();
+		}
+		else {
+			opTree.parse(str);
+			r = opTree.calc<sserialize::TreedCellQueryResult>().toCQR();
+		}
 		tm.end();
 		cqrTime = tm.elapsedUseconds();
 		tm.begin();
@@ -195,7 +213,6 @@ void Benchmarker::doGeocellBench(const std::vector<std::string> & strs, bool col
 		out << str << ";" << cqrTime << ";" << subsetTime << ";" << r.cellCount() << ";" << r.flaten().size() << "\n";
 	}
 }
-
 
 void Benchmarker::benchmark(const Benchmarker::Config & config) {
 	std::vector<std::string> strs;
