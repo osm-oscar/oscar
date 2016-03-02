@@ -39,7 +39,7 @@ define(["state", "oscar", "tools", "conf", "turf"], function(state, oscar, tools
 
                     if (edges < config.maxNumPolygonEdges) {
                         // merge them in a background-job
-                        var worker = new Worker('js/libs/oscar/polygonMerger.js'); // TODO: path anpassen
+                        var worker = new Worker('js/libs/polygonMerger/polygonMerger.js');
                         var timer = tools.timer("Polygon-Merge");
                         worker.addEventListener('message', function (e) {
                             timer.stop();
