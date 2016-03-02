@@ -314,7 +314,7 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
             /*if (state[shapeSrcType].listview.drawn.count(itemId)) {
              return;
              }*/
-            state[shapeSrcType].listview.drawn.insertOrIncrement(itemId, item);
+            state[shapeSrcType].listview.drawn.insert(itemId, item);
 
             var itemTemplateData = state.resultListTemplateDataFromItem(item, shapeSrcType);
             var rendered = $.Mustache.render('itemListEntryHtmlTemplate', itemTemplateData);
