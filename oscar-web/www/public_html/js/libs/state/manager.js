@@ -51,6 +51,8 @@ define(["jquery", "mustache", "tools", "leaflet", "spin","conf", "leafletCluster
             searchResultsCounter: undefined
         },
         spinner: new spinner(config.spinnerOpts),
+        turfCache: tools.SimpleHash(),
+        boundariesInProcessing: tools.SimpleHash(),
 
         clearListAndShapes: function (shapeSrcType) {
             $('#' + shapeSrcType + 'List').empty();

@@ -1,4 +1,4 @@
-define(["state", "oscar", "tools"], function(state, oscar, tools){
+define(["state", "oscar", "tools", "conf", "turf"], function(state, oscar, tools, config, turf){
     /**
      * Extend MarkerCluster:
      * 1) show names of subregions of a cluster in a popup
