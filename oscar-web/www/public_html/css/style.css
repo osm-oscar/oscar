@@ -320,15 +320,6 @@ a .glyphicon-black {
     font-size: 1.5em;
 }
 
-g.type-LOADABLE > rect {
-    fill: #007fff;
-    cursor: pointer;
-}
-
-g.type-LOADABLE .label{
-    cursor: pointer;
-}
-
 text {
     font-weight: 300;
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serf;
@@ -376,4 +367,8 @@ text {
     color: black;
     display: block;
     margin-top: 5px;
+}
+
+g.node > rect{
+    fill: #007fff;
 }

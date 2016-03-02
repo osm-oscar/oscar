@@ -1,4 +1,4 @@
-define(["state", "jquery", "conf", "oscar", "flickr", "tools", "bootstrap"], function (state, $, config, oscar, flickr, tools) {
+define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstrap"], function (state, $, config, oscar, flickr, tools, tree) {
     return map = {
         /**
          * displays the spinner
@@ -637,11 +637,52 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "bootstrap"], fun
             );
         },
 
+        loadSub: function (rid) {
+            state.cqr.regionChildrenInfo(rid, function (regionChildrenInfo) {
+                var children = [];
+                var regionChildrenApxItemsMap = {};
+
+                for (var i in regionChildrenInfo) {
+                    var ci = regionChildrenInfo[i];
+                    regionChildrenApxItemsMap[ci['id']] = ci['apxitems'];
+                    children.push(ci['id']);
+                }
+
+                oscar.getItems(children, function (items) {
+                        var itemId, item, node, parentNode, marker;
+                        parentNode = state.DAG.at(rid);
+
+                        for (var i in items) {
+                            item = items[i];
+                            itemId = item.id();
+                            if (!state.DAG.count(itemId)) {
+                                node = parentNode.addChild(itemId);
+                                node.count = regionChildrenApxItemsMap[itemId];
+                                node.bbox = item.bbox();
+                                node.name = item.name();
+                                marker = L.marker(item.centerPoint());
+                                marker.count = regionChildrenApxItemsMap[item.id()];
+                                marker.rid = item.id();
+                                marker.name = item.name();
+                                marker.bbox = item.bbox();
+                                map.decorateMarker(marker);
+                                node.marker = marker;
+                                state.DAG.insert(itemId, node);
+                            }
+                        }
+                        tree.refresh(rid);
+                    }, function () {
+                    }
+                );
+            }, function () {
+            });
+        },
+
         decorateMarker: function (marker) {
             marker.on("click", function (e) {
                 map.closePopups();
                 state.items.clusters.drawn.erase(e.target.rid);
-                removeMarker(e.target);
+                map.removeMarker(e.target);
                 state.regionHandler({rid: e.target.rid, draw: true, dynamic: true});
             });
 

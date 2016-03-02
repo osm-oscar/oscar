@@ -1,4 +1,4 @@
-define(["dagre-d3", "d3", "jquery", "oscar"], function (dagreD3, d3, $, oscar) {
+define(["dagre-d3", "d3", "jquery", "oscar", "state"], function (dagreD3, d3, $, oscar, state) {
     var tree = {
         graph: undefined, // the graph
         state: undefined, // contains tree-datastructure
@@ -54,11 +54,14 @@ define(["dagre-d3", "d3", "jquery", "oscar"], function (dagreD3, d3, $, oscar) {
 
         _recursiveAddToGraph: function (node, graph) {
             if (node.name) {
-                var attr = {label: node.name.toString()};
+                var attr = {
+                    labelType: "html",
+                    label: "<div class='treeNode'><div class='treeNodeName'>" + node.name.toString() + "</div></div>"
+                };
                 if (this.state.items.clusters.drawn.count(node.id)) {
                     attr = {
                         labelType: "html",
-                        label: "<div class='treeNode'><div class='treeNodeName'>" + node.name.toString() + "</div><a class='treeNodeSub' href='javascript:requirejs(\"tree\").loadSub(" + node.id + ")'>Load Subhierarchy</a></div>",
+                        label: "<div class='treeNode'><div class='treeNodeName'>" + node.name.toString() + "</div><a class='treeNodeSub' href='javascript:requirejs(\"map\").loadSub(" + node.id + ")'>Load Subhierarchy</a></div>",
                         class: "type-LOADABLE",
                         labelStyle: "color: white"
                     };
@@ -66,10 +69,14 @@ define(["dagre-d3", "d3", "jquery", "oscar"], function (dagreD3, d3, $, oscar) {
                 this.graph.setNode(node.id, attr);
                 for (var child in node.children) {
                     if (node.children[child].name) {
-                        attr = {label: node.children[child].name.toString()};
+                        attr = {
+                            labelType: "html",
+                            label: "<div class='treeNode'><div class='treeNodeName'>" + node.children[child].name.toString() + "</div></div>"
+                        };
                         if (this.state.items.clusters.drawn.count(node.children[child].id)) {
                             attr = {
-                                label: node.children[child].name.toString(),
+                                labelType: "html",
+                                label: "<div class='treeNode'><div class='treeNodeName'>" + node.children[child].name.toString() + "</div></div>",
                                 class: "type-LOADABLE",
                                 labelStyle: "color: white"
                             };
@@ -85,46 +92,6 @@ define(["dagre-d3", "d3", "jquery", "oscar"], function (dagreD3, d3, $, oscar) {
             }
         },
 
-        loadSub: function (rid) {
-            tree.state.cqr.regionChildrenInfo(rid, function (regionChildrenInfo) {
-                var children = [];
-                var regionChildrenApxItemsMap = {};
-
-                for (var i in regionChildrenInfo) {
-                    var ci = regionChildrenInfo[i];
-                    regionChildrenApxItemsMap[ci['id']] = ci['apxitems'];
-                    children.push(ci['id']);
-                }
-
-                oscar.getItems(children, function (items) {
-                        var itemId, item, node, parentNode, marker;
-                        parentNode = tree.state.DAG.at(rid);
-
-                        for(var i in items){
-                            item = items[i];
-                            itemId = item.id();
-                            if (!tree.state.DAG.count(itemId)) {
-                                node = parentNode.addChild(itemId);
-                                node.count = regionChildrenApxItemsMap[itemId];
-                                node.bbox = item.bbox();
-                                node.name = item.name();
-                                marker = L.marker(item.centerPoint());
-                                marker.count = regionChildrenApxItemsMap[item.id()];
-                                marker.rid = item.id();
-                                marker.name = item.name();
-                                marker.bbox = item.bbox();
-                                //tree.state.decorateMarker(marker);
-                                node.marker = marker;
-                                tree.state.DAG.insert(itemId, node);
-                            }
-                        }
-                    }, function () {
-                    }
-                )
-            }, function () {
-            });
-        },
-
         _nodeOnClick: function (id) {
             var marker = tree.state.DAG.at(id).marker;
             if (marker.shape) {
@@ -136,7 +103,7 @@ define(["dagre-d3", "d3", "jquery", "oscar"], function (dagreD3, d3, $, oscar) {
         },
 
         _hoverNode: function (id) {
-            d3.selectAll(".origin-" + id).selectAll("path").style("stroke", "red");
+            d3.selectAll(".origin-" + id).selectAll("path").style("stroke", "#007fff");
         },
 
         _deHoverNode: function (id) {

@@ -21,22 +21,6 @@ define(["jquery"], function ($) {
                     }
                     this.m_values[key] = value;
                 },
-                insertOrIncrement: function (key, value) {
-                    var currentValue = this.at(key);
-                    if (currentValue) {
-                        this.insert(key, currentValue + 1);
-                    } else {
-                        this.insert(key, value);
-                    }
-                },
-                eraseOrDecrease: function (key) {
-                    var value = this.at(key);
-                    if (value) {
-                        this.insert(key, value - 1);
-                    } else {
-                        this.erase(key);
-                    }
-                },
                 count: function (key) {
                     return this.m_values[key] !== undefined;
                 },
