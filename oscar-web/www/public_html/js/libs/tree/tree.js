@@ -75,7 +75,7 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state"], function (dagreD3, d3, $,
                 if (this.state.items.clusters.drawn.count(node.id)) {
                     attr = {
                         labelType: "html",
-                        label: "<div class='treeNode'><div class='treeNodeName'>" + node.name.toString() + "</div><a id='" + node.id + "' class='treeNodeSub' href='#'>Load Subhierarchy</a></div>",
+                        label: "<div class='treeNode'><div class='treeNodeName'>" + node.name.toString() + "</div><a id='" + node.id + "' class='treeNodeSub' href='#'>Show Children</a></div>",
                         class: "type-LOADABLE",
                         labelStyle: "color: white"
                     };

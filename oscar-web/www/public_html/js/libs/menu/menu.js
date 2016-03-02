@@ -1,5 +1,8 @@
 define(["jquery"], function ($) {
     return {
+        /**
+         * Displays the main-categories
+         */
         displayCategories: function () {
             var c = $("#categories");
             if (c.is(":empty")) {
@@ -12,6 +15,11 @@ define(["jquery"], function ($) {
             }
         },
 
+        /**
+         * Shows all sub-categories for a main-category
+         *
+         * @param e a main-category
+         */
         displaySubCategories: function (e) {
             var category = $(e.target.children[0]).attr("category");
             var c = $("#subCategories");
@@ -27,11 +35,19 @@ define(["jquery"], function ($) {
             c.append(container);
         },
 
+        /**
+         * Appends a string to the current search-string
+         *
+         * @param e a string that should be appended
+         */
         appendToSearchString: function (e) {
             var el = $(e.target);
             $("#search_text").tokenfield('createToken', {value:  "@" + el.attr("key") + ":" + el.attr("value"), label:  el.attr("value")});
         },
 
+        /**
+         * all main-categories and their sub-categories
+         */
         categories: {
             food: {
                 key: "cuisine",

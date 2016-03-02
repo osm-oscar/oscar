@@ -2,6 +2,14 @@ define(["jquery", "jqueryui", "slimbox", "conf"], function ($, jqueryui, slimbox
     return {
         _api_key: "46f7a6dce46471b81aa7c1592fcc9733",
 
+        /**
+         * Queries the flickr-service to find available images for a location
+         *
+         * @param text name of the location
+         * @param geopos GPS coordinate
+         * @param callback handles image-URLs, when they are available
+         * @private
+         */
         _query: function (text, geopos, callback) {
             var urls = [];
             var service = 'https://api.flickr.com/services/rest/?method=flickr.photos.search'
@@ -27,10 +35,23 @@ define(["jquery", "jqueryui", "slimbox", "conf"], function ($, jqueryui, slimbox
             });
         },
 
+        /**
+         * Queries the flickr-service to find available images for a location and shows them in frontend.
+         *
+         * @param name the name of the location
+         * @param geopos GPS coordinate
+         */
         getImagesForLocation: function (name, geopos) {
             this._query(name, geopos, this._showImagesForLocation.bind(this));
         },
 
+        /**
+         * Sets the link for a thumbnail to the "normal"-sized photo (the biggest available resolution is chosen).
+         *
+         * @param photo_id the flickr photo-ID
+         * @param el the HTML element
+         * @private
+         */
         _setPhotoUrl: function (photo_id, el) {
             var service = "https://api.flickr.com/services/rest/?method=flickr.photos.getSizes"
             service += "&format=json"
@@ -49,6 +70,12 @@ define(["jquery", "jqueryui", "slimbox", "conf"], function ($, jqueryui, slimbox
             });
         },
 
+        /**
+         * makes the retrieved image-URLs visible in frontend
+         *
+         * @param urls contains the image-URLS retrieved from flickr-service
+         * @private
+         */
         _showImagesForLocation: function (urls) {
             var flickr_img = $('#flickr_images').empty();
 

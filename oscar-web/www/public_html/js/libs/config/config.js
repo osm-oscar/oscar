@@ -51,9 +51,9 @@ define({
             select: 10000
         }
     },
-    overlap: 0.40,
-    maxBufferedItems: 350,
-    maxNumPolygonEdges: 15000,
+    overlap: 0.40, // threshold for overlap of a bbox with viewport
+    maxBufferedItems: 350, // buffered locations
+    maxNumPolygonEdges: 15000, // max number of edges that can be merged by turf in "real-time"
     spinnerOpts: {
         lines: 13 // The number of lines to draw
         , length: 5 // The length of each line
