@@ -36,9 +36,9 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state"], function (dagreD3, d3, $,
             });
             svg.call(zoom);
 
-            /*this.graph.graph().transition = function (selection) {
+            this.graph.graph().transition = function (selection) {
              return selection.transition().duration(500);
-             };*/
+             };
             // draw graph
             svgGroup.call(this.renderer, this.graph);
 
@@ -50,6 +50,22 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state"], function (dagreD3, d3, $,
             var xCenterOffset = ($("#tree").width() - this.graph.graph().width) / 2;
             svgGroup.attr("transform", "translate(" + xCenterOffset + ", 20)");
             svg.attr("height", this.graph.graph().height + 40);
+            this._addClickToSubhierarchy();
+        },
+
+        _addClickToSubhierarchy: function () {
+            $(".treeNodeSub").each(function (key, value) {
+                $(value).on("click", function(){
+                    var id= $(this).attr("id");
+                    var marker = tree.state.DAG.at(id).marker;
+                    /*if (marker.shape) {
+                        tree.state.map.removeLayer(marker.shape);
+                    }*/
+                    tree.state.markers.removeLayer(marker);
+                    tree.state.items.clusters.drawn.erase(id);
+                    map.loadSub(id);
+                });
+            });
         },
 
         _recursiveAddToGraph: function (node, graph) {
@@ -61,7 +77,7 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state"], function (dagreD3, d3, $,
                 if (this.state.items.clusters.drawn.count(node.id)) {
                     attr = {
                         labelType: "html",
-                        label: "<div class='treeNode'><div class='treeNodeName'>" + node.name.toString() + "</div><a class='treeNodeSub' href='javascript:requirejs(\"map\").loadSub(" + node.id + ")'>Load Subhierarchy</a></div>",
+                        label: "<div class='treeNode'><div class='treeNodeName'>" + node.name.toString() + "</div><a id='" + node.id + "' class='treeNodeSub' href='#'>Load Subhierarchy</a></div>",
                         class: "type-LOADABLE",
                         labelStyle: "color: white"
                     };
@@ -135,9 +151,10 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state"], function (dagreD3, d3, $,
             this._recursiveAddToGraph(tree.state.DAG.at(id), this.graph);
             this._roundedNodes();
             d3.select("svg").select("g").call(this.renderer, this.graph);
-            d3.selectAll(".type-LOADABLE").on("click", this._nodeOnClick);
+            //d3.selectAll(".type-LOADABLE").on("click", this._nodeOnClick);
             d3.selectAll(".node").on("mouseover", this._hoverNode.bind(this));
             d3.selectAll(".node").on("mouseout", this._deHoverNode.bind(this));
+            this._addClickToSubhierarchy();
         }
 
     };

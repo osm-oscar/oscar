@@ -668,6 +668,7 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
                                 map.decorateMarker(marker);
                                 node.marker = marker;
                                 state.DAG.insert(itemId, node);
+                                map.addClusterMarker(state.DAG.at(itemId));
                             }
                         }
                         tree.refresh(rid);
