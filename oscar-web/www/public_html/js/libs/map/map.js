@@ -1,4 +1,4 @@
-define(["state", "jquery", "conf", "oscar", "flickr", "tools"], function (state, $, config, oscar, flickr, tools) {
+define(["state", "jquery", "conf", "oscar", "flickr", "tools", "bootstrap"], function (state, $, config, oscar, flickr, tools) {
     return map = {
         /**
          * displays the spinner
@@ -277,7 +277,7 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools"], function (state,
             }
             if (state[shapeSrcType].shapes.drawn.count(itemId)) { //this already on the map, change the style
                 var lfi = state[shapeSrcType].shapes.drawn.at(itemId);
-                map.clearHighlightedShapes(shapeSrcType);
+                state.clearHighlightedShapes(shapeSrcType);
                 state[shapeSrcType].shapes.highlighted[itemId] = lfi;
                 lfi.setStyle(config.styles.shapes[shapeSrcType]['highlight']);
                 state.map.fitBounds(lfi.getBounds());
@@ -290,7 +290,7 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools"], function (state,
                         if ((state[shapeSrcType].shapes.promised[itemId] === undefined) || (state[shapeSrcType].shapes.drawn[itemId] !== undefined)) {
                             return;
                         }
-                        map.clearHighlightedShapes(shapeSrcType);
+                        state.clearHighlightedShapes(shapeSrcType);
                         var leafLetItem = oscar.leafletItemFromShape(shape);
                         leafLetItem.setStyle(config.styles.shapes[shapeSrcType]['highlight']);
                         state[shapeSrcType].shapes.highlighted[itemId] = itemId;
