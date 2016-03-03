@@ -107,7 +107,7 @@ requirejs(["leaflet", "jquery", "mustache", "jqueryui", "sidebar", "mustacheLoad
             });
 
             $('#graph').click(function () {
-                tree.visualizeDAG(state.DAG.at(0xFFFFFFFF), state);
+                tree.visualizeDAG(state.DAG.at(0xFFFFFFFF));
             });
 
             $('#closeTree a').click(function () {

@@ -1,11 +1,15 @@
 define(["dagre-d3", "d3", "jquery", "oscar", "state"], function (dagreD3, d3, $, oscar, state) {
     var tree = {
         graph: undefined, // the graph
-        state: undefined, // contains tree-datastructure
         renderer: new dagreD3.render(),
-        visualizeDAG: function (root, state) {
+
+        /**
+         * visualizes the DAG
+         *
+         * @param root
+         */
+        visualizeDAG: function (root) {
             state.visualizationActive = true;
-            this.state = state;
 
             // Create the input graph
             this.graph = new dagreD3.graphlib.Graph()
@@ -54,48 +58,72 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state"], function (dagreD3, d3, $,
             this._addClickToSubhierarchy();
         },
 
+        /**
+         * adds a click event to all "Show Children" links, which loads the sub-hierarchy
+         *
+         * @private
+         */
         _addClickToSubhierarchy: function () {
             $(".treeNodeSub").each(function (key, value) {
                 $(value).on("click", function () {
                     var id = $(this).attr("id");
-                    var marker = tree.state.DAG.at(id).marker;
-                    tree.state.markers.removeLayer(marker);
-                    tree.state.items.clusters.drawn.erase(id);
+                    var marker = state.DAG.at(id).marker;
+                    state.markers.removeLayer(marker);
+                    state.items.clusters.drawn.erase(id);
                     map.loadSub(id);
                 });
             });
         },
 
         _recursiveAddToGraph: function (node, graph) {
-            if (node.name) {
-                var attr = {
-                    labelType: "html",
-                    label: "<div class='treeNode'><div class='treeNodeName'>" + node.name.toString() + "</div></div>"
-                };
-                if (this.state.items.clusters.drawn.count(node.id)) {
-                    attr = {
+            /**
+             * returns the label for a leaf in the tree
+             *
+             * @param name of the node
+             * @returns {string} label-string
+             */
+            function leafLabel(name) {
+                return "<div class='treeNode'><div class='treeNodeName'>" + name + "</div></div>";
+            }
+
+            /**
+             * returns the label for a node (non-leaf) in the tree
+             *
+             * @param name of the node
+             * @param id of the node
+             * @returns {string} label-string
+             */
+            function nodeLabel(name, id) {
+                return "<div class='treeNode'><div class='treeNodeName'>" + name + "</div><a id='" + id + "' class='treeNodeSub' href='#'>Show Children</a></div>";
+            }
+
+            /**
+             * returns the attributes for a node
+             *
+             * @param node TreeNode instance
+             * @returns {*} attributes for the node
+             */
+            function nodeAttr(node){
+                if(state.items.clusters.drawn.count(node.id)){
+                    return {
                         labelType: "html",
-                        label: "<div class='treeNode'><div class='treeNodeName'>" + node.name.toString() + "</div><a id='" + node.id + "' class='treeNodeSub' href='#'>Show Children</a></div>",
+                        label: nodeLabel(node.name.toString(), node.id),
                         class: "type-LOADABLE",
                         labelStyle: "color: white"
                     };
+                }else{
+                    return {
+                        labelType: "html",
+                        label: leafLabel(node.name.toString())
+                    }
                 }
-                this.graph.setNode(node.id, attr);
+            }
+
+            if (node.name) {
+                this.graph.setNode(node.id, nodeAttr(node));
                 for (var child in node.children) {
                     if (node.children[child].name) {
-                        attr = {
-                            labelType: "html",
-                            label: "<div class='treeNode'><div class='treeNodeName'>" + node.children[child].name.toString() + "</div></div>"
-                        };
-                        if (this.state.items.clusters.drawn.count(node.children[child].id)) {
-                            attr = {
-                                labelType: "html",
-                                label: "<div class='treeNode'><div class='treeNodeName'>" + node.children[child].name.toString() + "</div></div>",
-                                class: "type-LOADABLE",
-                                labelStyle: "color: white"
-                            };
-                        }
-                        this.graph.setNode(node.children[child].id, attr);
+                        this.graph.setNode(node.children[child].id);
                         this.graph.setEdge(node.id, node.children[child].id, {
                             lineInterpolate: 'basis',
                             class: "origin-" + node.id
@@ -106,14 +134,31 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state"], function (dagreD3, d3, $,
             }
         },
 
+        /**
+         * mouseover effect for nodes in the tree
+         *
+         * @param id node-id
+         * @private
+         */
         _hoverNode: function (id) {
             d3.selectAll(".origin-" + id).selectAll("path").style("stroke", "#007fff");
         },
 
+        /**
+         * mouseout effect for nodes in the tree
+         *
+         * @param id node-id
+         * @private
+         */
         _deHoverNode: function (id) {
             d3.selectAll(".origin-" + id).selectAll("path").style("stroke", "black");
         },
 
+        /**
+         * rounds the edges of nodes
+         *
+         * @private
+         */
         _roundedNodes: function () {
             this.graph.nodes().forEach(function (v) {
                 var node = tree.graph.node(v);
@@ -121,13 +166,18 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state"], function (dagreD3, d3, $,
             });
         },
 
+        /**
+         * refreshs/redraws the tree, the node-id defines a node, which subtree changed
+         *
+         * @param id node-id
+         */
         refresh: function (id) {
             // ugly hack: attributes for nodes cannot be changed, once set (or they will not be recognized). so we have
             // to remove the node & create a new one with the wished properties
             var parents = this.graph.inEdges(id);
             this.graph.removeNode(id);
             d3.select("svg").select("g").call(this.renderer, this.graph);
-            this.graph.setNode(id, {label: tree.state.DAG.at(id).name.toString(), labelStyle: "color: white"});
+            this.graph.setNode(id, {label: state.DAG.at(id).name.toString(), labelStyle: "color: white"});
             for (var i in parents) {
                 this.graph.setEdge(parents[i].v, id, {
                     lineInterpolate: 'basis',
@@ -136,7 +186,7 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state"], function (dagreD3, d3, $,
             }
 
             // update the subtree of the clicked node
-            this._recursiveAddToGraph(tree.state.DAG.at(id), this.graph);
+            this._recursiveAddToGraph(state.DAG.at(id), this.graph);
             this._roundedNodes();
             d3.select("svg").select("g").call(this.renderer, this.graph);
             d3.selectAll(".node").on("mouseover", this._hoverNode.bind(this));
@@ -147,4 +197,5 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state"], function (dagreD3, d3, $,
     };
 
     return tree;
-});
+})
+;
