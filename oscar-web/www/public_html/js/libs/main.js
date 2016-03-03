@@ -12,7 +12,7 @@ requirejs.config({
         "jdataview": "jdataview/jdataview",
         "jbinary": "jbinary/jbinary",
         "sserialize": "sserialize/sserialize.min",
-        //"bootstrap": "twitter-bootstrap/js/bootstrap.min",
+        "bootstrap": "twitter-bootstrap/js/bootstrap.min",
         "oscar": "oscar/oscar",
         "moment": "moment/moment.min",
         "mustache": "mustache/mustache.min",
@@ -36,7 +36,7 @@ requirejs.config({
         "state": "state/manager"
     },
     shim: {
-        //'bootstrap': {deps: ['jquery']},
+        'bootstrap': {deps: ['jquery']},
         'leafletCluster': {deps: ['leaflet', 'jquery']},
         'sidebar': {deps: ['leaflet', 'jquery']},
         'mustacheLoader': {deps: ['jquery']},
@@ -107,12 +107,6 @@ requirejs(["leaflet", "jquery", "mustache", "jqueryui", "sidebar", "mustacheLoad
             });
 
             $('#graph').click(function () {
-                $( "#rewind" ).button({
-                    text: false,
-                    icons: {
-                        primary: "ui-icon-seek-prev"
-                    }
-                });
                 $("#onePath").button();
                 tree.visualizeDAG(state.DAG.at(0xFFFFFFFF));
             });

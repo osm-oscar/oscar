@@ -1,4 +1,4 @@
-define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree"], function (state, $, config, oscar, flickr, tools, tree) {
+define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstrap"], function (state, $, config, oscar, flickr, tools, tree) {
     return map = {
         /**
          * displays the spinner
@@ -588,7 +588,7 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree"], function
                     }
 
                     var isInitNecessary = $('#tabs')[0].children.length;
-                    var tab = "<li><a href='#tab-" + regionId + "'>" + state.DAG.at(regionId).name +  "</a><span class='badge'>" + items.length + "</span></li>";
+                    var tab = "<li><a href='#tab-" + regionId + "'>" + state.DAG.at(regionId).name + "</a><span class='badge'>" + items.length + "</span></li>";
                     if (!$("a[href='#tab-" + regionId + "']").length) {
                         $('#tabs').append(tab);
                     }
@@ -679,7 +679,7 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree"], function
             });
         },
 
-        loadItems: function(rid){
+        loadItems: function (rid) {
             state.items.listview.selectedRegionId = rid;
             state.cqr.regionItemIds(state.items.listview.selectedRegionId,
                 map.getItemIds,
@@ -871,7 +871,7 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree"], function
         setupTabsForItemAndAddToListView: function (node) {
             for (var parent in node.parents) {
                 if (!$("a[href='#tab-" + node.parents[parent].id + "']").length) {
-                    var tab = "<li><a href='#tab-" + node.parents[parent].id + "'>" + state.DAG.at(node.parents[parent].id).name + " [" + node.parents[parent].count + "]" + "</a></li>";
+                    var tab = "<li><a href='#tab-" + node.parents[parent].id + "'>" + state.DAG.at(node.parents[parent].id).name + "</a><span class='badge'>" + node.parents[parent].count + "</span></li>";
                     $('#tabs').append(tab);
                 }
                 if (!$("#tab-" + node.parents[parent].id).length) {
