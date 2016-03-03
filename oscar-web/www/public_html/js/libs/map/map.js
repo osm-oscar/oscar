@@ -671,6 +671,11 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
                                 map.addClusterMarker(state.DAG.at(itemId));
                             }
                         }
+
+                        if($("#onePath").is(':checked')){
+                            tree.onePath(parentNode);
+                        }
+
                         tree.refresh(rid);
                     }, function () {
                     }

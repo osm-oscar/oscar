@@ -212,6 +212,36 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state"], function (dagreD3, d3, $,
             d3.selectAll(".node").on("mouseout", this._deHoverNode.bind(this));
             this._addClickToLoadSubHierarchy();
             this._addClickToLoadItems();
+        },
+
+        onePath: function (node) {
+
+            function removeSiblingsAndSubTrees(node){
+                var parentNode, siblingNode;
+                for(var parent in node.parents){
+                    parentNode = node.parents[parent];
+                    for(var child in parentNode.children){
+                        siblingNode = parentNode.children[child];
+                        if(siblingNode.id != node.id){
+                            removeChildren(siblingNode);
+                            tree.graph.removeNode(siblingNode.id);
+                        }
+                    }
+                }
+            }
+
+            function removeChildren(node){
+                var childNode;
+                for(var child in node.children){
+                    childNode = node.children[child];
+                    if(childNode.children.length){
+                        removeChildren(childNode);
+                    }
+                    tree.graph.removeNode(childNode.id);
+                }
+            }
+
+            removeSiblingsAndSubTrees(node);
         }
 
     };
