@@ -1,4 +1,4 @@
-define(["dagre-d3", "d3", "jquery", "oscar", "state"], function (dagreD3, d3, $, oscar, state) {
+define(["dagre-d3", "d3", "jquery", "oscar", "state", "tools"], function (dagreD3, d3, $, oscar, state, tools) {
     var tree = {
         graph: undefined, // the graph
         renderer: new dagreD3.render(),
@@ -92,7 +92,9 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state"], function (dagreD3, d3, $,
              * @returns {string} label-string
              */
             function leafLabel(node) {
-                return "<div class='treeNode'><div class='treeNodeName'>" + node.name.toString() + "<span class='badge'>" + node.count + "</span></div><a id='" + node.id + "' class='treeNodeItems' href='#'>Load Items</a></div>";
+                return "<div class='treeNode'><div class='treeNodeName'>" + node.name.toString()
+                    + "<span class='badge'>" + node.count + "</span></div><a id='"
+                    + node.id + "' class='treeNodeItems' href='#'>Load Items</a></div>";
             }
 
             /**
@@ -103,7 +105,10 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state"], function (dagreD3, d3, $,
              * @returns {string} label-string
              */
             function nodeLabel(node) {
-                return "<div class='treeNode'><div class='treeNodeName'>" + node.name.toString() + "<span class='badge'>" + node.count + "</span></div><a id='" + node.id + "' class='treeNodeSub' href='#'>Show Children</a><a id='" + node.id + "' class='treeNodeItems' href='#'>Load Items</a></div>";
+                return "<div class='treeNode'><div class='treeNodeName'>" + node.name.toString()
+                    + "<span class='badge'>" + node.count + "</span></div><a id='" + node.id
+                    + "' class='treeNodeSub' href='#'>Show Children</a><a id='" + node.id
+                    + "' class='treeNodeItems' href='#'>Load Items</a></div>";
             }
 
             /**
@@ -215,36 +220,48 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state"], function (dagreD3, d3, $,
         },
 
         onePath: function (node) {
+            var walkerCounter = tools.SimpleHash();
+            var onPath = tools.SimpleHash();
 
-            function removeSiblingsAndSubTrees(node){
-                var parentNode, siblingNode;
-                for(var parent in node.parents){
+            function walker(node) {
+                var parentNode;
+                for (var parent in node.parents) {
                     parentNode = node.parents[parent];
-                    for(var child in parentNode.children){
-                        siblingNode = parentNode.children[child];
-                        if(siblingNode.id != node.id){
-                            removeChildren(siblingNode);
-                            tree.graph.removeNode(siblingNode.id);
-                        }
+                    if(!parentNode){continue;}
+                    if (walkerCounter.count(parentNode.id)) {
+                        walkerCounter.insert(parentNode.id, walkerCounter.at(parentNode.id) + 1);
+                    } else {
+                        walkerCounter.insert(parentNode.id, 1);
                     }
+                    walker(parentNode);
                 }
             }
 
-            function removeChildren(node){
-                var childNode;
-                for(var child in node.children){
-                    childNode = node.children[child];
-                    if(childNode.children.length){
-                        removeChildren(childNode);
+            walker(node);
+
+            var currentNode = state.DAG.at(0xFFFFFFFF); // root
+            var childNode, nextNode, mostWalkers = 0;
+
+            while (currentNode.id != node.id) {
+                for (var child in currentNode.children) {
+                    childNode = currentNode.children[child];
+                    if (walkerCounter.at(childNode.id) > mostWalkers) {
+                        nextNode = childNode;
+                        mostWalkers = walkerCounter.at(childNode.id);
+                    }else if(childNode.id == node.id){
+                        nextNode = childNode;
                     }
-                    tree.graph.removeNode(childNode.id);
                 }
+                onPath.insert(currentNode.id, currentNode);
+                currentNode = nextNode;
+                mostWalkers = 0;
             }
 
-
-
-            removeSiblingsAndSubTrees(node);
-
+            $.each(tree.graph.nodes(), function (key, value) {
+                if (!onPath.count(value) && value != node.id) {
+                    tree.graph.removeNode(value)
+                }
+            });
         }
 
     };
