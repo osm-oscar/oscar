@@ -369,6 +369,12 @@ text {
     margin-top: 5px;
 }
 
+.treeNodeItems{
+    color: black;
+    display: block;
+    margin-top: 5px;
+}
+
 g.node > rect{
     fill: #007fff;
 }

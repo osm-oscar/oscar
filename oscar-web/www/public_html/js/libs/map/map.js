@@ -637,7 +637,7 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
             );
         },
 
-        loadSub: function (rid) {
+        loadSubhierarchy: function (rid) {
             state.cqr.regionChildrenInfo(rid, function (regionChildrenInfo) {
                 var children = [];
                 var regionChildrenApxItemsMap = {};
@@ -677,6 +677,15 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
                 );
             }, function () {
             });
+        },
+
+        loadItems: function(rid){
+            state.items.listview.selectedRegionId = rid;
+            state.cqr.regionItemIds(state.items.listview.selectedRegionId,
+                map.getItemIds,
+                map.defErrorCB,
+                0 // offset
+            );
         },
 
         decorateMarker: function (marker) {

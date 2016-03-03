@@ -27,7 +27,9 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state"], function (dagreD3, d3, $,
             // build the graph from current DAG
             this._recursiveAddToGraph(root, this.graph);
             this._roundedNodes();
+
             $("#tree").css("display", "block");
+
             // Set up an SVG group so that we can translate the final graph.
             $("#dag").empty();
             var svg = d3.select("svg"),
@@ -47,15 +49,12 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state"], function (dagreD3, d3, $,
             // draw graph
             svgGroup.call(this.renderer, this.graph);
 
-            // make the region, which are also drawn on the map, interactive
-            d3.selectAll(".node").on("mouseover", this._hoverNode.bind(this));
-            d3.selectAll(".node").on("mouseout", this._deHoverNode.bind(this));
             // Center the graph
             var xCenterOffset = ($("#tree").width() - this.graph.graph().width) / 2;
             svgGroup.attr("transform", "translate(" + xCenterOffset + ", 20)");
             svg.attr("height", this.graph.graph().height + 40);
 
-            this._addClickToSubhierarchy();
+            this._addInteractions();
         },
 
         /**
@@ -63,14 +62,24 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state"], function (dagreD3, d3, $,
          *
          * @private
          */
-        _addClickToSubhierarchy: function () {
+        _addClickToLoadSubHierarchy: function () {
             $(".treeNodeSub").each(function (key, value) {
                 $(value).on("click", function () {
                     var id = $(this).attr("id");
                     var marker = state.DAG.at(id).marker;
                     state.markers.removeLayer(marker);
                     state.items.clusters.drawn.erase(id);
-                    map.loadSub(id);
+                    map.loadSubhierarchy(id);
+                });
+            });
+        },
+
+        _addClickToLoadItems: function () {
+            $("#left_menu_parent").css("display", "block");
+            $(".treeNodeItems").each(function (key, value) {
+                $(value).on("click", function () {
+                    var id = $(this).attr("id");
+                    map.loadItems(id);
                 });
             });
         },
@@ -82,8 +91,8 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state"], function (dagreD3, d3, $,
              * @param name of the node
              * @returns {string} label-string
              */
-            function leafLabel(name) {
-                return "<div class='treeNode'><div class='treeNodeName'>" + name + "</div></div>";
+            function leafLabel(node) {
+                return "<div class='treeNode'><div class='treeNodeName'>" + node.name.toString() + " [" + node.count + "]</div><a id='" + node.id + "' class='treeNodeItems' href='#'>Load Items</a></div>";
             }
 
             /**
@@ -93,8 +102,8 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state"], function (dagreD3, d3, $,
              * @param id of the node
              * @returns {string} label-string
              */
-            function nodeLabel(name, id) {
-                return "<div class='treeNode'><div class='treeNodeName'>" + name + "</div><a id='" + id + "' class='treeNodeSub' href='#'>Show Children</a></div>";
+            function nodeLabel(node) {
+                return "<div class='treeNode'><div class='treeNodeName'>" + node.name.toString() + " [" + node.count + "]</div><a id='" + node.id + "' class='treeNodeSub' href='#'>Show Children</a><a id='" + node.id + "' class='treeNodeItems' href='#'>Load Items</a></div>";
             }
 
             /**
@@ -103,18 +112,18 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state"], function (dagreD3, d3, $,
              * @param node TreeNode instance
              * @returns {*} attributes for the node
              */
-            function nodeAttr(node){
-                if(state.items.clusters.drawn.count(node.id)){
+            function nodeAttr(node) {
+                if (state.items.clusters.drawn.count(node.id)) {
                     return {
                         labelType: "html",
-                        label: nodeLabel(node.name.toString(), node.id),
+                        label: nodeLabel(node),
                         class: "type-LOADABLE",
                         labelStyle: "color: white"
                     };
-                }else{
+                } else {
                     return {
                         labelType: "html",
-                        label: leafLabel(node.name.toString())
+                        label: leafLabel(node)
                     }
                 }
             }
@@ -189,9 +198,22 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state"], function (dagreD3, d3, $,
             this._recursiveAddToGraph(state.DAG.at(id), this.graph);
             this._roundedNodes();
             d3.select("svg").select("g").call(this.renderer, this.graph);
+            this._addInteractions();
+        },
+
+        /**
+         * adds interactions to the graph-visualization
+         * 1) mouseover effects
+         * 2) mouseout effects
+         * 3) possibility to load subhierarchy of nodes
+         *
+         * @private
+         */
+        _addInteractions: function () {
             d3.selectAll(".node").on("mouseover", this._hoverNode.bind(this));
             d3.selectAll(".node").on("mouseout", this._deHoverNode.bind(this));
-            this._addClickToSubhierarchy();
+            this._addClickToLoadSubHierarchy();
+            this._addClickToLoadItems();
         }
 
     };
