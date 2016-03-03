@@ -12,7 +12,7 @@ requirejs.config({
         "jdataview": "jdataview/jdataview",
         "jbinary": "jbinary/jbinary",
         "sserialize": "sserialize/sserialize.min",
-        "bootstrap": "twitter-bootstrap/js/bootstrap.min",
+        //"bootstrap": "twitter-bootstrap/js/bootstrap.min",
         "oscar": "oscar/oscar",
         "moment": "moment/moment.min",
         "mustache": "mustache/mustache.min",
@@ -36,7 +36,7 @@ requirejs.config({
         "state": "state/manager"
     },
     shim: {
-        'bootstrap': {deps: ['jquery']},
+        //'bootstrap': {deps: ['jquery']},
         'leafletCluster': {deps: ['leaflet', 'jquery']},
         'sidebar': {deps: ['leaflet', 'jquery']},
         'mustacheLoader': {deps: ['jquery']},
@@ -51,6 +51,7 @@ requirejs(["leaflet", "jquery", "mustache", "jqueryui", "sidebar", "mustacheLoad
 
         // mustache-template-loader needs this
         window.Mustache = mustache;
+
         // load template files
         $.Mustache.load('template/itemListEntryTemplate.mst');
         $.Mustache.load('template/treeTemplate.mst');
@@ -71,8 +72,7 @@ requirejs(["leaflet", "jquery", "mustache", "jqueryui", "sidebar", "mustacheLoad
         L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: osmAttr}).addTo(state.map);
 
         $(document).ready(function () {
-            $('#tree').resizable()
-
+            $("#tree").resizable();
             $("#search_form").click(function () {
                 if (!$('#categories').is(":visible")) {
                     $("#showCategories a").click();
@@ -107,6 +107,13 @@ requirejs(["leaflet", "jquery", "mustache", "jqueryui", "sidebar", "mustacheLoad
             });
 
             $('#graph').click(function () {
+                $( "#rewind" ).button({
+                    text: false,
+                    icons: {
+                        primary: "ui-icon-seek-prev"
+                    }
+                });
+                $("#onePath").button();
                 tree.visualizeDAG(state.DAG.at(0xFFFFFFFF));
             });
 

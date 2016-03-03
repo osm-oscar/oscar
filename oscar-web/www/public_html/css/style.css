@@ -303,7 +303,7 @@ body {
 }
 
 #dag {
-    height: 100%;
+    height: 90%;
     width: 100%;
 }
 
@@ -377,4 +377,15 @@ text {
 
 g.node > rect{
     fill: #007fff;
+}
+
+#toolbar {
+    padding: 4px;
+    display: inline-block;
+    margin: 5px;
+}
+
+.badge{
+    margin-top: 7px;
+    margin-right: 2px;
 }

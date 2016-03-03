@@ -92,7 +92,7 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state"], function (dagreD3, d3, $,
              * @returns {string} label-string
              */
             function leafLabel(node) {
-                return "<div class='treeNode'><div class='treeNodeName'>" + node.name.toString() + " [" + node.count + "]</div><a id='" + node.id + "' class='treeNodeItems' href='#'>Load Items</a></div>";
+                return "<div class='treeNode'><div class='treeNodeName'>" + node.name.toString() + "<span class='badge'>" + node.count + "</span></div><a id='" + node.id + "' class='treeNodeItems' href='#'>Load Items</a></div>";
             }
 
             /**
@@ -103,7 +103,7 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state"], function (dagreD3, d3, $,
              * @returns {string} label-string
              */
             function nodeLabel(node) {
-                return "<div class='treeNode'><div class='treeNodeName'>" + node.name.toString() + " [" + node.count + "]</div><a id='" + node.id + "' class='treeNodeSub' href='#'>Show Children</a><a id='" + node.id + "' class='treeNodeItems' href='#'>Load Items</a></div>";
+                return "<div class='treeNode'><div class='treeNodeName'>" + node.name.toString() + "<span class='badge'>" + node.count + "</span></div><a id='" + node.id + "' class='treeNodeSub' href='#'>Show Children</a><a id='" + node.id + "' class='treeNodeItems' href='#'>Load Items</a></div>";
             }
 
             /**
@@ -113,12 +113,10 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state"], function (dagreD3, d3, $,
              * @returns {*} attributes for the node
              */
             function nodeAttr(node) {
-                if (state.items.clusters.drawn.count(node.id)) {
+                if (!node.children.length || (node.children.length && !node.children[0].count)) {
                     return {
                         labelType: "html",
-                        label: nodeLabel(node),
-                        class: "type-LOADABLE",
-                        labelStyle: "color: white"
+                        label: nodeLabel(node)
                     };
                 } else {
                     return {

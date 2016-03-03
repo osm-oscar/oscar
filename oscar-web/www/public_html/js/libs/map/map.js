@@ -1,4 +1,4 @@
-define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstrap"], function (state, $, config, oscar, flickr, tools, tree) {
+define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree"], function (state, $, config, oscar, flickr, tools, tree) {
     return map = {
         /**
          * displays the spinner
@@ -588,7 +588,7 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
                     }
 
                     var isInitNecessary = $('#tabs')[0].children.length;
-                    var tab = "<li><a href='#tab-" + regionId + "'>" + state.DAG.at(regionId).name + " [" + items.length + "]" + "</a></li>";
+                    var tab = "<li><a href='#tab-" + regionId + "'>" + state.DAG.at(regionId).name +  "</a><span class='badge'>" + items.length + "</span></li>";
                     if (!$("a[href='#tab-" + regionId + "']").length) {
                         $('#tabs').append(tab);
                     }
