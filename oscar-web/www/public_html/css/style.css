@@ -389,3 +389,7 @@ g.node > rect{
     margin-top: 7px;
     margin-right: 2px;
 }
+
+label{
+    margin-bottom: 0px;
+}

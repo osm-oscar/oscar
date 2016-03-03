@@ -241,7 +241,10 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state"], function (dagreD3, d3, $,
                 }
             }
 
+
+
             removeSiblingsAndSubTrees(node);
+
         }
 
     };
