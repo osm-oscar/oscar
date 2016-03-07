@@ -66,10 +66,15 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state", "tools"], function (dagreD
             $(".treeNodeSub").each(function (key, value) {
                 $(value).on("click", function () {
                     var id = $(this).attr("id");
-                    var marker = state.DAG.at(id).marker;
+                    var node = state.DAG.at(id);
+                    var marker = node.marker;
                     state.markers.removeLayer(marker);
                     state.items.clusters.drawn.erase(id);
-                    map.loadSubhierarchy(id);
+                    map.loadSubhierarchy(id, function () {
+                        //state.map.off("zoomend dragend", state.handler);
+                        //state.map.fitBounds(node.bbox);
+                        //state.map.on("zoomend dragend", state.handler);
+                    });
                 });
             });
         },
@@ -140,7 +145,7 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state", "tools"], function (dagreD
                             lineInterpolate: 'basis',
                             class: "origin-" + node.id
                         });
-                        this._recursiveAddToGraph(node.children[child], graph)
+                        this._recursiveAddToGraph(node.children[child], graph);
                     }
                 }
             }
@@ -186,14 +191,15 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state", "tools"], function (dagreD
         refresh: function (id) {
             // ugly hack: attributes for nodes cannot be changed, once set (or they will not be recognized). so we have
             // to remove the node & create a new one with the wished properties
+            var pathtimer = tools.timer("refresh");
             var parents = this.graph.inEdges(id);
             this.graph.removeNode(id);
-            d3.select("svg").select("g").call(this.renderer, this.graph);
+            //d3.select("svg").select("g").call(this.renderer, this.graph);
             this.graph.setNode(id, {label: state.DAG.at(id).name.toString(), labelStyle: "color: white"});
             for (var i in parents) {
                 this.graph.setEdge(parents[i].v, id, {
                     lineInterpolate: 'basis',
-                    class: "origin-" + parents[i].v,
+                    class: "origin-" + parents[i].v
                 });
             }
 
@@ -202,6 +208,7 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state", "tools"], function (dagreD
             this._roundedNodes();
             d3.select("svg").select("g").call(this.renderer, this.graph);
             this._addInteractions();
+            pathtimer.stop();
         },
 
         /**
@@ -219,6 +226,10 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state", "tools"], function (dagreD
             this._addClickToLoadItems();
         },
 
+        /**
+         *
+         * @param node to which should be found one path to the root
+         */
         onePath: function (node) {
             var walkerCounter = tools.SimpleHash();
             var onPath = tools.SimpleHash();
@@ -227,7 +238,9 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state", "tools"], function (dagreD
                 var parentNode;
                 for (var parent in node.parents) {
                     parentNode = node.parents[parent];
-                    if(!parentNode){continue;}
+                    if (!parentNode) {
+                        continue;
+                    }
                     if (walkerCounter.count(parentNode.id)) {
                         walkerCounter.insert(parentNode.id, walkerCounter.at(parentNode.id) + 1);
                     } else {
@@ -245,11 +258,12 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state", "tools"], function (dagreD
             while (currentNode.id != node.id) {
                 for (var child in currentNode.children) {
                     childNode = currentNode.children[child];
-                    if (walkerCounter.at(childNode.id) > mostWalkers) {
+                    if (childNode.id == node.id) {
+                        nextNode = childNode;
+                        break;
+                    } else if (walkerCounter.at(childNode.id) > mostWalkers) {
                         nextNode = childNode;
                         mostWalkers = walkerCounter.at(childNode.id);
-                    }else if(childNode.id == node.id){
-                        nextNode = childNode;
                     }
                 }
                 onPath.insert(currentNode.id, currentNode);
@@ -259,9 +273,17 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state", "tools"], function (dagreD
 
             $.each(tree.graph.nodes(), function (key, value) {
                 if (!onPath.count(value) && value != node.id) {
-                    tree.graph.removeNode(value)
+                    tree.graph.removeNode(value);
                 }
             });
+        },
+
+        hideChildren: function (node) {
+            var childNode;
+            for (var child in node.children) {
+                childNode = node.children[child];
+                tree.graph.removeNode(childNode.id);
+            }
         }
 
     };

@@ -47,8 +47,6 @@ requirejs.config({
 
 requirejs(["leaflet", "jquery", "mustache", "jqueryui", "sidebar", "mustacheLoader", "conf", "menu", "tokenfield", "switch", "state", "map", "tree", "prototype"],
     function (L, jQuery, mustache, jqueryui, sidebar, mustacheLoader, config, menu, tokenfield, switchButton, state, map, tree) {
-        //main entry point
-
         // mustache-template-loader needs this
         window.Mustache = mustache;
 
@@ -61,7 +59,9 @@ requirejs(["leaflet", "jquery", "mustache", "jqueryui", "sidebar", "mustacheLoad
                 state.sidebar.open("search");
             });
         });
+
         menu.displayCategories();
+
         // init the map and sidebar
         state.map = L.map('map', {
             zoomControl: true
@@ -147,31 +147,6 @@ requirejs(["leaflet", "jquery", "mustache", "jqueryui", "sidebar", "mustacheLoad
 
             $('#search_text').tokenfield({minWidth: 250, delimiter: "|"});
             $($('#search_form')[0].children).css("width", "100%");
-            // TODO: parent area example
-            $('#show_item_relatives_checkbox').bind('change',
-                function () {
-                    var helpOn = $('#show_help_checkbox').is(':checked');
-                    var relativesOn = $('#show_item_relatives_checkbox').is(':checked');
-                    if (relativesOn) {
-                        $('#relatives_parent').removeClass('hidden');
-                        //fetch parents of currently selected item
-                        for (var i in state.items.shapes.highlighted) {
-                            map.showItemRelatives(i);
-                            break;
-                        }
-                    }
-                    else {
-                        $('#relatives_parent').addClass('hidden');
-                        map.clearHighlightedShapes('relatives');
-                    }
-                    if (helpOn || relativesOn) {
-                        $('#right_menu_parent').removeClass('hidden');
-                    }
-                    else {
-                        $('#right_menu_parent').addClass('hidden');
-                    }
-                }
-            );
 
             $('#geoquery_selectbutton').click(function () {
                 if (state.geoquery.active) {
@@ -247,8 +222,7 @@ requirejs(["leaflet", "jquery", "mustache", "jqueryui", "sidebar", "mustacheLoad
             });
 
             //setup search field
-            $('#search_text').bind('change', map.delayedCompletion);
-            $('#search_text').bind('keyup', map.delayedCompletion);
+            $('#search_text').bind('change', map.delayedCompletion).bind('keyup', map.delayedCompletion);
             $('#search_form').bind('submit', function (e) {
                 e.preventDefault();
                 map.instantCompletion();

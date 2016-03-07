@@ -87,15 +87,6 @@ body {
     display: none;
 }
 
-#right_menu_parent {
-    left: auto;
-    right: 5%;
-    top: 30%;
-    width: auto;
-    height: 60%;
-    padding-top: 0;
-}
-
 #options_menu_parent {
     /*position: fixed;
     bottom: auto;*/
@@ -113,20 +104,6 @@ body {
     padding: 0 0 0 0;
     background-color: #FFFFFF;
     overflow-y: auto;
-}
-
-#right_menu_movehandle {
-    width: 100%;
-    height: 10px;
-/ / needs matching #right_menu_scroll_area . height
-}
-
-#right_menu_scroll_area {
-    width: 100%;
-    height: calc(100% - 10px);
-    padding: 0 0 0 0;
-    background-color: #FFFFFF;
-    overflow-y: scroll;
 }
 
 #help_parent {
@@ -212,10 +189,6 @@ body {
 
 .results-panel-title:hover a {
     color: white;
-}
-
-#right_menu_parent .name-has-matched-tag {
-    color: #ff0000;
 }
 
 .matched-key-color {

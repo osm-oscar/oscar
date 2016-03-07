@@ -137,8 +137,7 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
             $('#geoquery_acceptbutton').removeClass('btn-info');
             state.geoquery.clickcount = 0;
             state.geoquery.active = true;
-            $('#geoquery_selectbutton').addClass("btn-info");
-            $('#geoquery_selectbutton').html('Clear rectangle');
+            $('#geoquery_selectbutton').addClass("btn-info").html('Clear rectangle');
             $('[data-class="geoquery_min_coord"]').addClass('bg-info');
             state.map.on('click', map.geoQuerySelect);
             state.timers.geoquery = setTimeout(map.endGeoQuerySelect, config.timeouts.geoquery_select);
@@ -148,19 +147,18 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
             if (state.timers.pathquery !== undefined) {
                 clearTimeout(state.timers.pathquery);
             }
-            state.map.removeEventListener('click', pathQuerySelect);
+            state.map.removeEventListener('click', map.pathQuerySelect);
             state.map.removeLayer(state.pathquery.mapshape);
             state.pathquery.mapshape = undefined;
             state.pathquery.selectButtonState = 'select';
             $('#pathquery_acceptbutton').removeClass("btn-info");
-            $('#pathquery_selectbutton').removeClass("btn-info");
-            $('#pathquery_selectbutton').html('Select path');
+            $('#pathquery_selectbutton').removeClass("btn-info").html('Select path');
         },
 
         pathQuerySelect: function (e) {
             if (state.timers.pathquery !== undefined) {
                 clearTimeout(state.timers.pathquery);
-                state.timers.pathquery = setTimeout(endPathQuery, config.timeouts.pathquery.select);
+                state.timers.pathquery = setTimeout(map.endPathQuery, config.timeouts.pathquery.select);
             }
             if (state.pathquery.mapshape === undefined) {
                 state.pathquery.mapshape = L.polyline([], config.styles.shapes.pathquery.highlight).addTo(state.map);
@@ -174,8 +172,7 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
             }
             state.map.removeEventListener('click', map.pathQuerySelect);
             $('#pathquery_acceptbutton').addClass("btn-info");
-            $('#pathquery_selectbutton').removeClass("btn-info");
-            $('#pathquery_selectbutton').html('Clear path');
+            $('#pathquery_selectbutton').removeClass("btn-info").html('Clear path');
             state.pathquery.selectButtonState = 'clear';
         },
 
@@ -185,8 +182,7 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
             }
             state.pathquery.points = []
             $('#pathquery_acceptbutton').removeClass("btn-info");
-            $('#pathquery_selectbutton').addClass("btn-info");
-            $('#pathquery_selectbutton').html("Finish path");
+            $('#pathquery_selectbutton').addClass("btn-info").html("Finish path");
             state.pathquery.selectButtonState = 'finish';
             state.map.on('click', map.pathQuerySelect);
             state.timers.pathquery = setTimeout(map.endPathQuery, config.timeouts.pathquery.select);
@@ -206,7 +202,6 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
                         }
                     );
                     $(itemDetailsId).collapse('show');
-                    map.showItemRelatives(itemId);
                     //var container = $('#'+ shapeSrcType +'_parent');
                     var container = $(".sidebar-content");
                     var itemPanelRootDiv = $(itemPanelRootId);
@@ -218,7 +213,6 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
                         container.animate({scrollTop: scrollPos});
                         //container.animate({scrollTop: $(itemsDetailsId).offset().top});
                     }
-                    //highlightShape(itemId, shapeSrcType);
                 });
             }
         },
@@ -271,49 +265,12 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
             }, map.defErrorCB);
         },
 
-        highlightShape: function (itemId, shapeSrcType) {
-            if (state[shapeSrcType].shapes.highlighted[itemId] !== undefined) {//already highlighted
-                return;
-            }
-            if (state[shapeSrcType].shapes.drawn.count(itemId)) { //this already on the map, change the style
-                var lfi = state[shapeSrcType].shapes.drawn.at(itemId);
-                state.clearHighlightedShapes(shapeSrcType);
-                state[shapeSrcType].shapes.highlighted[itemId] = lfi;
-                lfi.setStyle(config.styles.shapes[shapeSrcType]['highlight']);
-                state.map.fitBounds(lfi.getBounds());
-            }
-            else {
-                state[shapeSrcType].shapes.promised = {};
-                state[shapeSrcType].shapes.promised[itemId] = itemId;
-                oscar.getShape(itemId,
-                    function (shape) {
-                        if ((state[shapeSrcType].shapes.promised[itemId] === undefined) || (state[shapeSrcType].shapes.drawn[itemId] !== undefined)) {
-                            return;
-                        }
-                        state.clearHighlightedShapes(shapeSrcType);
-                        var leafLetItem = oscar.leafletItemFromShape(shape);
-                        leafLetItem.setStyle(config.styles.shapes[shapeSrcType]['highlight']);
-                        state[shapeSrcType].shapes.highlighted[itemId] = itemId;
-                        map.addShapeToMap(leafLetItem, itemId, shapeSrcType);
-                    },
-                    map.defErrorCB
-                );
-                oscar.getItem(itemId,
-                    function (item) {
-                        //state.map.fitBounds(item.bbox());
-                    }, map.defErrorCB);
-            }
-        },
-
         appendItemToListView: function (item, shapeSrcType, parentElement) {
             if (item === undefined) {
                 console.log("Undefined item displayed");
                 return;
             }
             var itemId = item.id();
-            /*if (state[shapeSrcType].listview.drawn.count(itemId)) {
-             return;
-             }*/
             state[shapeSrcType].listview.drawn.insert(itemId, item);
 
             var itemTemplateData = state.resultListTemplateDataFromItem(item, shapeSrcType);
@@ -321,11 +278,14 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
             var inserted = $($(rendered).appendTo(parentElement));
             $('#' + shapeSrcType + 'NameLink' + itemId, inserted).click(
                 function () {
-                    map.highlightShape(itemId, shapeSrcType);
-                    if (shapeSrcType !== "relatives") {
-                        map.showItemRelatives(itemId);
-                    }
-
+                    state.map.fitBounds(state.items.shapes.drawn.at(itemId).getBounds());
+                    $('#' + shapeSrcType + "List").find('.panel-collapse').each(
+                        function () {
+                            if ($(this).hasClass('in')) {
+                                $(this).collapse('hide');
+                            }
+                        }
+                    );
                     var geopos;
                     var itemShape = state.items.shapes.drawn.at(itemId);
                     if (itemShape instanceof L.MultiPolygon) {
@@ -362,31 +322,12 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
 
             $('#' + shapeSrcType + 'Details' + itemId + " .item-detail-key", inserted).click(itemDetailQuery);
             $('#' + shapeSrcType + 'Details' + itemId + " .item-detail-value", inserted).click(itemDetailQuery);
-            $('#' + shapeSrcType + 'List_counter').empty().append("(" + state[shapeSrcType].listview.drawn.size() + ")");
-        },
-
-        showItemRelatives: function (itemId) {
-            if (!$('#show_item_relatives_checkbox').is(":checked")) {
-                return;
-            }
-            oscar.getItemsRelativesIds(itemId, function (relativesIds) {
-                oscar.getItems(relativesIds, function (relatives) {
-                    map.clearListAndShapes("relatives");
-                    for (var i in relatives) {
-                        map.appendItemToListView(relatives[i], "relatives");
-                    }
-                    {
-                        var tmp = $('#relativesList_itemId');
-                        tmp.empty();
-                        tmp.append("" + itemId);
-                    }
-                }, map.defErrorCB);
-            }, map.defErrorCB);
         },
 
         closePopups: function () {
-            if ($(".leaflet-popup-close-button")[0] !== undefined) {
-                $(".leaflet-popup-close-button")[0].click();
+            var closeElement = $(".leaflet-popup-close-button")[0];
+            if (closeElement !== undefined) {
+                closeElement.click();
             }
         },
 
@@ -570,17 +511,10 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
                             }
                             if (node.marker) {
                                 state.markers.removeLayer(node.marker);
-                            } else {
-                                for (var parent in node.parents) {
-                                    if (!state.items.clusters.drawn.at(node.parents[parent].id)) {
-                                        console.log("Undefined marker!"); // this shouldn't happen => displayed search results would get killed
-                                    }
-                                }
                             }
                             node.kill();
                             delete node;
                         }
-                        //clearListAndShapes("items");
                         $('#itemsList').empty();
                         $('#tabs').empty();
                         state.items.listview.drawn.clear();
@@ -621,13 +555,6 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
 
                     map.visualizeResultListItems();
 
-                    if (state.items.listview.drawn.size() === 1) {
-                        for (var i in state.items.listview.drawn.values()) {
-                            $('#itemsNameLink' + i).click();
-                            break;
-                        }
-                    }
-
                     if (state.visualizationActive) {
                         tree.refresh(regionId);
                     }
@@ -637,7 +564,7 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
             );
         },
 
-        loadSubhierarchy: function (rid) {
+        loadSubhierarchy: function (rid, finish) {
             state.cqr.regionChildrenInfo(rid, function (regionChildrenInfo) {
                 var children = [];
                 var regionChildrenApxItemsMap = {};
@@ -675,7 +602,7 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
                         if($("#onePath").is(':checked')){
                             tree.onePath(parentNode);
                         }
-
+                        finish();
                         tree.refresh(rid);
                     }, function () {
                     }
@@ -732,7 +659,7 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
                     var draw;
                     if (this.i < this.path.length) {
                         if (this.i != this.path.length - 1) {
-                            draw: false;
+                            draw = false;
                         } else {
                             draw = true;
                         }
@@ -746,6 +673,7 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
                             state.map.fitWorld();
                         }
                         state.handler = function () {
+                            var timer = tools.timer("draw");
                             var drawn = tools.SimpleHash();
                             var currentItemMarkers = state.items.shapes.drawn.values();
                             var currentClusterMarker = state.items.clusters.drawn.values();
@@ -776,6 +704,8 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
                                     map.removeParentsTabs(state.DAG.at(item));
                                 }
                             }
+
+                            timer.stop();
                         }.bind(this);
                         state.map.on("zoomend dragend", state.handler);
                     }

@@ -10,7 +10,6 @@ define(["jquery", "mustache", "tools", "leaflet", "spin","conf", "leafletCluster
             shapes: {
                 promised: {},//referenced by id
                 drawn: tools.SimpleHash(),//id -> marker
-                highlighted: {}//id -> id (stored in drawn)
             },
             listview: {
                 promised: tools.SimpleHash(),//referenced by id
@@ -51,29 +50,12 @@ define(["jquery", "mustache", "tools", "leaflet", "spin","conf", "leafletCluster
             searchResultsCounter: undefined
         },
         spinner: new spinner(config.spinnerOpts),
-        turfCache: tools.SimpleHash(),
+        turfCache: tools.SimpleHash(), // caches merged regions
         boundariesInProcessing: tools.SimpleHash(),
-
-        clearListAndShapes: function (shapeSrcType) {
-            $('#' + shapeSrcType + 'List').empty();
-            state.map.removeLayer(state.markers);
-            for (var i in state[shapeSrcType].shapes.drawn.values()) {
-                state.markers.removeLayer(state[shapeSrcType].shapes.drawn.at(i));
-                //state.markers.removeLayer(state.items.shapes.drawn.at(i));
-                state[shapeSrcType].shapes.drawn.erase(i);
-            }
-            state.map.addLayer(state.markers);
-            state[shapeSrcType].listview.drawn.clear();
-            //state[shapeSrcType].listview.promised.clear();
-            state[shapeSrcType].shapes.highlighted = {};
-            state[shapeSrcType].shapes.promised = {};
-
-        },
 
         isMatchedTag: function (key, value) {
             var testString = key + ":" + value;
-            var res = state.cqrRegExp.test(testString);
-            return res;
+            return state.cqrRegExp.test(testString);
         },
 
         resultListTemplateDataFromItem: function (item, shapeSrcType) {
@@ -148,9 +130,6 @@ define(["jquery", "mustache", "tools", "leaflet", "spin","conf", "leafletCluster
         clearViews: function () {
             $('#itemsList').empty();
             $('#tabs').empty();
-            $('#relativesList').empty();
-            $('#relativesList_counter').empty();
-            $('#relativesList_itemId').empty();
             if (state.handler !== undefined) {
                 state.map.off("zoomend dragend", state.handler);
             }
@@ -161,7 +140,6 @@ define(["jquery", "mustache", "tools", "leaflet", "spin","conf", "leafletCluster
             state.items.listview.drawn.clear();
             state.items.listview.promised.clear();
             state.items.listview.selectedRegionId = undefined;
-            state.items.shapes.highlighted = {};
             state.items.shapes.promised = {};
 
             for (var i in state.items.shapes.drawn.values()) {
@@ -172,23 +150,7 @@ define(["jquery", "mustache", "tools", "leaflet", "spin","conf", "leafletCluster
                 state.map.removeLayer(state.items.clusters.drawn.at(i));
                 state.items.clusters.drawn.erase(i);
             }
-            state.DAG = tools.SimpleHash(); // TODO: kill whole Tree?
-            $('<ul>', {'id': "MyTree", 'class': "tree", 'role': "tree"}).appendTo('#fuelux_tree_parent');
-            $('#MyTree').append($.Mustache.render('tree_template', null));
-            $('#search_results_counter').empty();
-        },
-
-        clearHighlightedShapes: function (shapeSrcType) {
-            for (var i in state[shapeSrcType].shapes.highlighted) {
-                if (state[shapeSrcType].shapes.drawn.at(i) === undefined) {
-                    state.map.removeLayer(state[shapeSrcType].shapes.drawn.at(i));
-                    state[shapeSrcType].shapes.drawn.erase(i);
-                }
-                else {
-                    state[shapeSrcType].shapes.drawn.at(i).setStyle(config.styles.shapes[shapeSrcType]['normal']);
-                }
-            }
-            state[shapeSrcType].shapes.highlighted = {};
+            state.DAG = tools.SimpleHash();
         }
     };
 
