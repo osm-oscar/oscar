@@ -1,60 +1,7 @@
-define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstrap"], function (state, $, config, oscar, flickr, tools, tree) {
+define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstrap", "spinner"], function (require, state, $, config, oscar, flickr, tools, tree) {
+    spinner = require("spinner");
+
     return map = {
-        /**
-         * displays the spinner
-         */
-        displayLoadingSpinner: function () {
-            if (state.timers.loadingSpinner !== undefined) {
-                clearTimeout(state.timers.loadingSpinner);
-                state.timers.loadingSpinner = undefined;
-            }
-            if (state.loadingtasks > 0) {
-                var target = document.getElementById('loader'); // TODO: use jquery
-                state.spinner.spin(target);
-            }
-        },
-
-        /**
-         * start the loading spinner, which displays after a timeout the spinner
-         */
-        startLoadingSpinner: function () {
-            if (state.timers.loadingSpinner === undefined) {
-                state.timers.loadingSpinner = setTimeout(map.displayLoadingSpinner, config.timeouts.loadingSpinner);
-            }
-            state.loadingtasks += 1;
-        },
-
-        /**
-         * ends a spinner instance
-         */
-        endLoadingSpinner: function () {
-            if (state.loadingtasks === 1) {
-                state.loadingtasks = 0;
-                if (state.timers.loadingSpinner !== undefined) {
-                    clearTimeout(state.timers.loadingSpinner);
-                    state.timers.loadingSpinner = undefined;
-                }
-                state.spinner.stop();
-            }
-            else {
-                state.loadingtasks -= 1;
-            }
-        },
-
-        /**
-         * Error-function used for interaction with the server
-         *
-         * @param textStatus
-         * @param errorThrown
-         */
-        defErrorCB: function (textStatus, errorThrown) {
-            map.endLoadingSpinner();
-            console.log("xmlhttprequest error textstatus=" + textStatus + "; errorThrown=" + errorThrown);
-            if (confirm("Error occured. Refresh automatically?")) {
-                location.reload();
-            }
-        },
-
         addShapeToMap: function (leafletItem, itemId, shapeSrcType) {
             var itemDetailsId = '#' + shapeSrcType + 'Details' + itemId;
             var itemPanelRootId = '#' + shapeSrcType + 'PanelRoot' + itemId;
@@ -94,9 +41,9 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
                 }
             }
 
-            map.startLoadingSpinner();
+            spinner.startLoadingSpinner();
             oscar.getShapes(itemsToDraw, function (shapes) {
-                map.endLoadingSpinner();
+                spinner.endLoadingSpinner();
 
                 var marker;
                 for (var i in itemsToDraw) {
@@ -129,7 +76,7 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
                     state.DAG.at(itemId).marker = marker;
                     map.addShapeToMap(marker, itemId, "items");
                 }
-            }, map.defErrorCB);
+            }, oscar.defErrorCB);
         },
 
         appendItemToListView: function (item, shapeSrcType, parentElement) {
@@ -189,13 +136,6 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
 
             $('#' + shapeSrcType + 'Details' + itemId + " .item-detail-key", inserted).click(itemDetailQuery);
             $('#' + shapeSrcType + 'Details' + itemId + " .item-detail-value", inserted).click(itemDetailQuery);
-        },
-
-        closePopups: function () {
-            var closeElement = $(".leaflet-popup-close-button")[0];
-            if (closeElement !== undefined) {
-                closeElement.click();
-            }
         },
 
         flatCqrTreeDataSource: function (cqr) {
@@ -276,7 +216,7 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
                                     state.items.listview.selectedRegionId = parentRid;
                                     state.cqr.regionItemIds(state.items.listview.selectedRegionId,
                                         map.getItemIds,
-                                        map.defErrorCB,
+                                        oscar.defErrorCB,
                                         0 // offset
                                     );
                                 } else {
@@ -284,7 +224,7 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
                                         state.items.listview.selectedRegionId = parentRid;
                                         state.cqr.regionItemIds(state.items.listview.selectedRegionId,
                                             map.getItemIds,
-                                            map.defErrorCB,
+                                            oscar.defErrorCB,
                                             0 // offset
                                         );
                                     } else {
@@ -292,7 +232,7 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
                                             state.items.listview.selectedRegionId = state.DAG.at(parentRid).children[child].id;
                                             state.cqr.regionItemIds(state.items.listview.selectedRegionId,
                                                 map.getItemIds,
-                                                map.defErrorCB,
+                                                oscar.defErrorCB,
                                                 0 // offset
                                             );
                                         }
@@ -318,7 +258,7 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
 
                             // just load regionShapes into the cache
                             oscar.getShapes(regions, function (res) {
-                            }, map.defErrorCB);
+                            }, oscar.defErrorCB);
 
                             if (state.visualizationActive) {
                                 tree.refresh(parentRid);
@@ -330,37 +270,19 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
                         }
 
                     },
-                    map.defErrorCB
+                    oscar.defErrorCB
                 );
             }
 
             return function (context) {
-                map.startLoadingSpinner();
+                spinner.startLoadingSpinner();
                 cqr.regionChildrenInfo(context.rid, function (regionChildrenInfo) {
-                        map.endLoadingSpinner()
+                        spinner.endLoadingSpinner()
                         getItems(regionChildrenInfo, context);
                     },
-                    map.defErrorCB
+                    oscar.defErrorCB
                 );
             };
-        },
-
-        refreshTabs: function () {
-            if ($('#items_parent').data("ui-tabs")) {
-                $('#items_parent').tabs("refresh");
-            }
-        },
-
-        initTabs: function () {
-            if (!$('#items_parent').data("ui-tabs")) {
-                $('#items_parent').tabs();
-            }
-        },
-
-        destroyTabs: function () {
-            if ($('#items_parent').data("ui-tabs")) {
-                $('#items_parent').tabs("destroy");
-            }
         },
 
         getItemIds: function (regionId, itemIds) {
@@ -408,7 +330,6 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
                     }
 
                     var regionDiv = "<div id='tab-" + regionId + "'></div>";
-                    var regionTab = $("#tab-" + regionId);
                     if (!$("#tab-" + regionId).length) {
                         $('#itemsList').append(regionDiv);
                     }
@@ -435,7 +356,7 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
                     }
 
                 },
-                map.defErrorCB
+                oscar.defErrorCB
             );
         },
 
@@ -490,40 +411,9 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
             state.items.listview.selectedRegionId = rid;
             state.cqr.regionItemIds(state.items.listview.selectedRegionId,
                 map.getItemIds,
-                map.defErrorCB,
+                oscar.defErrorCB,
                 0 // offset
             );
-        },
-
-        decorateMarker: function (marker) {
-            marker.on("click", function (e) {
-                map.closePopups();
-                state.items.clusters.drawn.erase(e.target.rid);
-                map.removeMarker(e.target);
-                state.regionHandler({rid: e.target.rid, draw: true, dynamic: true});
-            });
-
-            marker.on("mouseover", function (e) {
-                if (oscar.isShapeInCache(e.target.rid)) {
-                    oscar.getShape(e.target.rid, function (shape) {
-                        var leafletItem = oscar.leafletItemFromShape(shape);
-                        leafletItem.setStyle(config.styles.shapes['regions']['normal']);
-                        e.target.shape = leafletItem;
-                        state.map.addLayer(leafletItem);
-                    }, map.defErrorCB);
-                }
-
-                L.popup({offset: new L.Point(0, -10)})
-                    .setLatLng(e.latlng)
-                    .setContent(e.target.name).openOn(state.map);
-            });
-
-            marker.on("mouseout", function (e) {
-                map.closePopups();
-                if (e.target.shape) {
-                    state.map.removeLayer(e.target.shape);
-                }
-            });
         },
 
         pathProcessor: function (cqr) {
@@ -618,12 +508,7 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
                 state.regionHandler({rid: node.id, draw: true, dynamic: true});
             }
 
-            try {
-                map.refreshTabs();
-                $("#items_parent").tabs("option", "active", 0);
-            } catch (exception) {
-            }
-
+            map.refreshTabs();
         },
 
         displayCqr: function (cqr) {
@@ -641,7 +526,67 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
                 state.regionHandler({rid: 0xFFFFFFFF, draw: true, pathProcessor: process});
             }
         },
+        
+        refreshTabs: function () {
+            var tabs = $('#items_parent');
+            if (tabs.data("ui-tabs")) {
+                tabs.tabs("refresh");
+                tabs.tabs("option", "active", 0);
+            }
+        },
 
+        initTabs: function () {
+            var tabs = $('#items_parent');
+            if (!tabs.data("ui-tabs")) {
+                tabs.tabs();
+            }
+        },
+
+        destroyTabs: function () {
+            var tabs = $('#items_parent');
+            if (tabs.data("ui-tabs")) {
+                tabs.tabs("destroy");
+            }
+        },
+
+        closePopups: function () {
+            var closeElement = $(".leaflet-popup-close-button")[0];
+            if (closeElement !== undefined) {
+                closeElement.click();
+            }
+        },
+
+        decorateMarker: function (marker) {
+            marker.on("click", function (e) {
+                map.closePopups();
+                state.items.clusters.drawn.erase(e.target.rid);
+                map.removeMarker(e.target);
+                state.regionHandler({rid: e.target.rid, draw: true, dynamic: true});
+            });
+
+            marker.on("mouseover", function (e) {
+                if (oscar.isShapeInCache(e.target.rid)) {
+                    oscar.getShape(e.target.rid, function (shape) {
+                        var leafletItem = oscar.leafletItemFromShape(shape);
+                        leafletItem.setStyle(config.styles.shapes['regions']['normal']);
+                        e.target.shape = leafletItem;
+                        state.map.addLayer(leafletItem);
+                    }, oscar.defErrorCB);
+                }
+
+                L.popup({offset: new L.Point(0, -10)})
+                    .setLatLng(e.latlng)
+                    .setContent(e.target.name).openOn(state.map);
+            });
+
+            marker.on("mouseout", function (e) {
+                map.closePopups();
+                if (e.target.shape) {
+                    state.map.removeLayer(e.target.shape);
+                }
+            });
+        },
+        
         removeMarker: function (marker) {
             if (marker.shape) {
                 state.map.removeLayer(marker.shape);
@@ -691,7 +636,7 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
                 }
                 oscar.getItem(node.id, function (item) {
                     map.appendItemToListView(item, "items", $("#tab-" + node.parents[parent].id));
-                }, map.defErrorCB);
+                }, oscar.defErrorCB);
             }
         },
 

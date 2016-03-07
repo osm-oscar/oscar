@@ -1,5 +1,5 @@
 /*the config has to have a property named url defining the url to the completer*/
-define(['jquery', 'sserialize', 'leaflet', 'module'], function (jQuery, sserialize, L, module) {
+define(['jquery', 'sserialize', 'leaflet', 'module', 'spinner'], function (jQuery, sserialize, L, module, spinner) {
 
     /** Code from http://www.artandlogic.com/blog/2013/11/jquery-ajax-blobs-and-array-buffers/
      * Register ajax transports for blob send/recieve and array buffer send/receive via XMLHttpRequest Level 2
@@ -101,6 +101,20 @@ define(['jquery', 'sserialize', 'leaflet', 'module'], function (jQuery, sseriali
             '=': '!'
         }, //*(|.^$)[]-+?{}=!,
         cqrEscapesRegExp: new RegExp("^[\*\(\|\.\^\$\)\[\]\-\+\?\{\}\=\!\,]$"),
+
+        /**
+         * Error-function used for interaction with the server
+         *
+         * @param textStatus
+         * @param errorThrown
+         */
+        defErrorCB: function (textStatus, errorThrown) {
+            spinner.endLoadingSpinner();
+            console.log("xmlhttprequest error textstatus=" + textStatus + "; errorThrown=" + errorThrown);
+            if (confirm("Error occured. Refresh automatically?")) {
+                location.reload();
+            }
+        },
 
         Item: function (d) {
 

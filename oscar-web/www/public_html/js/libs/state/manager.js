@@ -49,7 +49,6 @@ define(["jquery", "mustache", "tools", "leaflet", "spin","conf", "leafletCluster
         domcache: {
             searchResultsCounter: undefined
         },
-        spinner: new spinner(config.spinnerOpts),
         turfCache: tools.SimpleHash(), // caches merged regions
         boundariesInProcessing: tools.SimpleHash(),
 

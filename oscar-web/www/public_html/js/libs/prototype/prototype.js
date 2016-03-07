@@ -62,7 +62,7 @@ define(["state", "oscar", "tools", "conf", "turf"], function(state, oscar, tools
                         }
                     }
 
-                }, tools.defErrorCB);
+                }, oscar.defErrorCB);
             }
         }
 

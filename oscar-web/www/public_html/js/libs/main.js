@@ -6,6 +6,7 @@ requirejs.config({
     paths: {
         "jquery": "jquery/jquery.min",
         "spin": "spin/spin.min",
+        "spinner": "spin/spinner",
         "leaflet": "leaflet/leaflet.0.7.2",
         "leafletCluster": "leaflet/leaflet.markercluster-src",
         "sidebar": "leaflet/leaflet-sidebar.min",
