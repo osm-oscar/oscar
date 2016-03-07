@@ -8,6 +8,11 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
             if (config.functionality.shapes.highlightListItemOnClick[shapeSrcType]) {
                 leafletItem.on('click', function () {
                     state.sidebar.open("search");
+                    // open a tab, that contains the element
+                    var parentId = state.DAG.at(itemId).parents[0].id;
+                    var index = $("#tabs a[href='#tab-" + parentId + "']").parent().index();
+                    $("#items_parent").tabs("option", "active", index);
+
                     $('#' + shapeSrcType + "List").find('.panel-collapse').each(
                         function () {
                             if ($(this).hasClass('in')) {
@@ -92,7 +97,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
             var inserted = $($(rendered).appendTo(parentElement));
             $('#' + shapeSrcType + 'NameLink' + itemId, inserted).click(
                 function () {
-                    state.map.fitBounds(state.items.shapes.drawn.at(itemId).getBounds());
+                    state.map.fitBounds(state[shapeSrcType].shapes.drawn.at(itemId).getBounds());
                     $('#' + shapeSrcType + "List").find('.panel-collapse').each(
                         function () {
                             if ($(this).hasClass('in')) {
