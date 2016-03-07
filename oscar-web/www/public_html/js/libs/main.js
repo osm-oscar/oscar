@@ -33,7 +33,8 @@ requirejs.config({
         "merger": "oscar/polygonMerger",
         "map": "map/map",
         "prototype": "prototype/prototype",
-        "state": "state/manager"
+        "state": "state/manager",
+        "query": "query/query"
     },
     shim: {
         'bootstrap': {deps: ['jquery']},
@@ -45,8 +46,8 @@ requirejs.config({
     waitSeconds: 20
 });
 
-requirejs(["leaflet", "jquery", "mustache", "jqueryui", "sidebar", "mustacheLoader", "conf", "menu", "tokenfield", "switch", "state", "map", "tree", "prototype"],
-    function (L, jQuery, mustache, jqueryui, sidebar, mustacheLoader, config, menu, tokenfield, switchButton, state, map, tree) {
+requirejs(["leaflet", "jquery", "mustache", "jqueryui", "sidebar", "mustacheLoader", "conf", "menu", "tokenfield", "switch", "state", "map", "tree", "prototype", "query"],
+    function (L, jQuery, mustache, jqueryui, sidebar, mustacheLoader, config, menu, tokenfield, switchButton, state, map, tree, query) {
         // mustache-template-loader needs this
         window.Mustache = mustache;
 
@@ -73,10 +74,20 @@ requirejs(["leaflet", "jquery", "mustache", "jqueryui", "sidebar", "mustacheLoad
 
         $(document).ready(function () {
             $("#tree").resizable();
-            $("#search_form").click(function () {
+
+            var search_form = $("#search_form");
+            var search_text = $('#search_text');
+            search_form.click(function () {
                 if (!$('#categories').is(":visible")) {
                     $("#showCategories a").click();
                 }
+            });
+            search_text.tokenfield({minWidth: 250, delimiter: "|"});
+            $(search_form[0].children).css("width", "100%");
+            search_text.bind('change', map.delayedCompletion).bind('keyup', map.delayedCompletion);
+            search_form.bind('submit', function (e) {
+                e.preventDefault();
+                map.instantCompletion();
             });
 
             $("#showCategories a").click(function () {
@@ -128,10 +139,6 @@ requirejs(["leaflet", "jquery", "mustache", "jqueryui", "sidebar", "mustacheLoad
                 off_label: 'Global'
             });
 
-            if (!$('#results_tree_parent').is(':checked')) {
-                $('#results_tree_parent').hide();
-            }
-
             $('#show_tree').click(function () {
                 $('#results_tree_parent').toggle();
             });
@@ -145,15 +152,12 @@ requirejs(["leaflet", "jquery", "mustache", "jqueryui", "sidebar", "mustacheLoad
                 }
             });
 
-            $('#search_text').tokenfield({minWidth: 250, delimiter: "|"});
-            $($('#search_form')[0].children).css("width", "100%");
-
             $('#geoquery_selectbutton').click(function () {
                 if (state.geoquery.active) {
-                    map.clearGeoQuerySelect();
+                    query.clearGeoQuerySelect();
                 }
                 else {
-                    map.startGeoQuerySelect();
+                    query.startGeoQuerySelect();
                 }
             });
 
@@ -165,7 +169,7 @@ requirejs(["leaflet", "jquery", "mustache", "jqueryui", "sidebar", "mustacheLoad
                 var maxlon = parseFloat($('#geoquery_maxlon').val());
 
                 //end the geoquery
-                map.clearGeoQuerySelect();
+                query.clearGeoQuerySelect();
 
                 var tmp;
                 if (minlat > maxlat) {
@@ -183,27 +187,27 @@ requirejs(["leaflet", "jquery", "mustache", "jqueryui", "sidebar", "mustacheLoad
                 st.val(st.val() + " " + q);
                 st.change();
 
-                map.clearGeoQueryMapShape();
+                query.clearGeoQueryMapShape();
             });
 
             $('#geoquery_minlat, #geoquery_maxlat, #geoquery_minlon, #geoquery_maxlon').change(function (e) {
-                map.updateGeoQueryMapShape();
+                query.updateGeoQueryMapShape();
             });
 
             $('#pathquery_selectbutton').click(function () {
                 if (state.pathquery.selectButtonState === 'select') {
-                    map.startPathQuery();
+                    query.startPathQuery();
                 }
                 else if (state.pathquery.selectButtonState === 'finish') {
-                    map.endPathQuery();
+                    query.endPathQuery();
                 }
                 else {
-                    map.resetPathQuery();
+                    query.resetPathQuery();
                 }
             });
 
             $('#pathquery_acceptbutton').click(function () {
-                map.endPathQuery();
+                query.endPathQuery();
                 if (state.pathquery.mapshape !== undefined) {
                     var latLngs = state.pathquery.mapshape.getLatLngs();
                     if (latLngs.length) {
@@ -218,14 +222,7 @@ requirejs(["leaflet", "jquery", "mustache", "jqueryui", "sidebar", "mustacheLoad
                         st.change();
                     }
                 }
-                map.resetPathQuery();
-            });
-
-            //setup search field
-            $('#search_text').bind('change', map.delayedCompletion).bind('keyup', map.delayedCompletion);
-            $('#search_form').bind('submit', function (e) {
-                e.preventDefault();
-                map.instantCompletion();
+                query.resetPathQuery();
             });
 
             $(window).bind('popstate', function (e) {
@@ -234,6 +231,5 @@ requirejs(["leaflet", "jquery", "mustache", "jqueryui", "sidebar", "mustacheLoad
 
             //check if there's a query in our location string
             map.queryFromSearchLocation();
-
         });
     });

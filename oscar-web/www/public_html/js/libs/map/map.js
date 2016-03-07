@@ -55,139 +55,6 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
             }
         },
 
-        clearGeoQueryMapShape: function () {
-            if (state.geoquery.mapshape !== undefined) {
-                state.map.removeLayer(state.geoquery.mapshape);
-                state.geoquery.mapshape = undefined;
-            }
-        },
-
-        clearGeoQuerySelect: function () {
-            map.endGeoQuerySelect();
-            $('#geoquery_acceptbutton').removeClass('btn-info');
-            $('#geoquery_selectbutton').html('Select rectangle');
-            state.geoquery.active = false;
-            map.clearGeoQueryMapShape();
-        },
-
-        updateGeoQueryMapShape: function () {
-            map.clearGeoQueryMapShape();
-            var sampleStep = 1.0 / config.geoquery.samplecount;
-            var sampleCount = config.geoquery.samplecount;
-            var pts = [];
-
-            function fillPts(sLat, sLng, tLat, tLng) {
-                var latDiff = (tLat - sLat) * sampleStep;
-                var lngDiff = (tLng - sLng) * sampleStep;
-                for (var i = 0; i < sampleCount; ++i) {
-                    pts.push(L.latLng(sLat, sLng));
-                    sLat += latDiff;
-                    sLng += lngDiff;
-                }
-            }
-
-            var minLat = parseFloat($('#geoquery_minlat').val());
-            var maxLat = parseFloat($('#geoquery_maxlat').val());
-            var minLng = parseFloat($('#geoquery_minlon').val());
-            var maxLng = parseFloat($('#geoquery_maxlon').val());
-
-            fillPts(minLat, minLng, minLat, maxLng);
-            fillPts(minLat, maxLng, maxLat, maxLng);
-            fillPts(maxLat, maxLng, maxLat, minLng);
-            fillPts(maxLat, minLng, minLat, minLng);
-
-            state.geoquery.mapshape = L.polygon(pts, config.styles.shapes.geoquery.normal);
-            state.map.addLayer(state.geoquery.mapshape);
-
-        },
-
-        geoQuerySelect: function (e) {
-            if (state.geoquery.clickcount === 0) {
-                $('#geoquery_minlat').val(e.latlng.lat);
-                $('#geoquery_minlon').val(e.latlng.lng);
-                $('[data-class="geoquery_min_coord"]').removeClass('bg-info');
-                $('[data-class="geoquery_max_coord"]').addClass('bg-info');
-                state.geoquery.clickcount = 1;
-            }
-            else if (state.geoquery.clickcount === 1) {
-                $('#geoquery_maxlat').val(e.latlng.lat);
-                $('#geoquery_maxlon').val(e.latlng.lng);
-                state.geoquery.clickcount = 2;
-                map.endGeoQuerySelect();
-            }
-        },
-
-        endGeoQuerySelect: function () {
-            if (state.timers.geoquery !== undefined) {
-                clearTimeout(state.timers.geoquery);
-                state.timers.geoquery = undefined;
-            }
-            $('#geoquery_selectbutton').removeClass("btn-info");
-            $('[data-class="geoquery_min_coord"]').removeClass('bg-info');
-            $('[data-class="geoquery_max_coord"]').removeClass('bg-info');
-            state.map.removeEventListener('click', map.geoQuerySelect);
-            $('#geoquery_acceptbutton').addClass('btn-info');
-            map.updateGeoQueryMapShape();
-        },
-
-        startGeoQuerySelect: function () {
-            if (state.timers.geoquery !== undefined) {
-                clearTimeout(state.timers.geoquery);
-            }
-            $('#geoquery_acceptbutton').removeClass('btn-info');
-            state.geoquery.clickcount = 0;
-            state.geoquery.active = true;
-            $('#geoquery_selectbutton').addClass("btn-info").html('Clear rectangle');
-            $('[data-class="geoquery_min_coord"]').addClass('bg-info');
-            state.map.on('click', map.geoQuerySelect);
-            state.timers.geoquery = setTimeout(map.endGeoQuerySelect, config.timeouts.geoquery_select);
-        },
-
-        resetPathQuery: function () {
-            if (state.timers.pathquery !== undefined) {
-                clearTimeout(state.timers.pathquery);
-            }
-            state.map.removeEventListener('click', map.pathQuerySelect);
-            state.map.removeLayer(state.pathquery.mapshape);
-            state.pathquery.mapshape = undefined;
-            state.pathquery.selectButtonState = 'select';
-            $('#pathquery_acceptbutton').removeClass("btn-info");
-            $('#pathquery_selectbutton').removeClass("btn-info").html('Select path');
-        },
-
-        pathQuerySelect: function (e) {
-            if (state.timers.pathquery !== undefined) {
-                clearTimeout(state.timers.pathquery);
-                state.timers.pathquery = setTimeout(map.endPathQuery, config.timeouts.pathquery.select);
-            }
-            if (state.pathquery.mapshape === undefined) {
-                state.pathquery.mapshape = L.polyline([], config.styles.shapes.pathquery.highlight).addTo(state.map);
-            }
-            state.pathquery.mapshape.addLatLng(e.latlng);
-        },
-
-        endPathQuery: function () {
-            if (state.timers.pathquery !== undefined) {
-                clearTimeout(state.timers.pathquery);
-            }
-            state.map.removeEventListener('click', map.pathQuerySelect);
-            $('#pathquery_acceptbutton').addClass("btn-info");
-            $('#pathquery_selectbutton').removeClass("btn-info").html('Clear path');
-            state.pathquery.selectButtonState = 'clear';
-        },
-
-        startPathQuery: function () {
-            if (state.timers.pathquery !== undefined) {
-                clearTimeout(state.timers.pathquery);
-            }
-            state.pathquery.points = []
-            $('#pathquery_acceptbutton').removeClass("btn-info");
-            $('#pathquery_selectbutton').addClass("btn-info").html("Finish path");
-            state.pathquery.selectButtonState = 'finish';
-            state.map.on('click', map.pathQuerySelect);
-            state.timers.pathquery = setTimeout(map.endPathQuery, config.timeouts.pathquery.select);
-        },
-
         addShapeToMap: function (leafletItem, itemId, shapeSrcType) {
             var itemDetailsId = '#' + shapeSrcType + 'Details' + itemId;
             var itemPanelRootId = '#' + shapeSrcType + 'PanelRoot' + itemId;
@@ -401,7 +268,7 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
                         }
 
                         // download locations, if end of hierarchy is reached or the region counts less than maxFetchItems
-                        if (!items.length || (parentCount < oscar.maxFetchItems)) {
+                        if (!items.length || (parentCount <= oscar.maxFetchItems)) {
                             if (context.draw || !cqr.ohPath().length || cqr.ohPath()[cqr.ohPath().length - 1] == parentRid) {
                                 $("#left_menu_parent").css("display", "block");
 
@@ -433,14 +300,6 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
                                 }
                             }
                         } else if (context.draw) {
-                            //cqr.getMaximumIndependetSet(parentRid, 100, function (regions) {
-                            /*for (var i in items) {
-                             if ($.inArray(items[i].id(), regions) == -1 && state.DAG.at(items[i].id()) !== undefined) {
-                             state.DAG.at(items[i].id()).kill();
-                             delete state.DAG.at(items[i]);
-                             state.DAG.erase(items[i].id());
-                             }
-                             }*/
                             state.items.clusters.drawn.erase(parentRid);
 
                             var j;
@@ -464,13 +323,12 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
                             if (state.visualizationActive) {
                                 tree.refresh(parentRid);
                             }
-
-                            //}, defErrorCB);
                         }
 
                         if (context.pathProcessor) {
                             context.pathProcessor.process();
                         }
+
                     },
                     map.defErrorCB
                 );
@@ -485,6 +343,24 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
                     map.defErrorCB
                 );
             };
+        },
+
+        refreshTabs: function () {
+            if ($('#items_parent').data("ui-tabs")) {
+                $('#items_parent').tabs("refresh");
+            }
+        },
+
+        initTabs: function () {
+            if (!$('#items_parent').data("ui-tabs")) {
+                $('#items_parent').tabs();
+            }
+        },
+
+        destroyTabs: function () {
+            if ($('#items_parent').data("ui-tabs")) {
+                $('#items_parent').tabs("destroy");
+            }
         },
 
         getItemIds: function (regionId, itemIds) {
@@ -521,18 +397,18 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
                         state.items.shapes.drawn.clear();
                     }
 
-                    var isInitNecessary = $('#tabs')[0].children.length;
+                    var tabsInitialized = $('#items_parent').data("ui-tabs");
                     var tab = "<li><a href='#tab-" + regionId + "'>" + state.DAG.at(regionId).name + "</a><span class='badge'>" + items.length + "</span></li>";
                     if (!$("a[href='#tab-" + regionId + "']").length) {
                         $('#tabs').append(tab);
                     }
-                    if (isInitNecessary == 0) {
+
+                    if (!tabsInitialized) {
                         $('#items_parent').tabs();
-                    } else {
-                        $('#items_parent').tabs("refresh");
                     }
 
                     var regionDiv = "<div id='tab-" + regionId + "'></div>";
+                    var regionTab = $("#tab-" + regionId);
                     if (!$("#tab-" + regionId).length) {
                         $('#itemsList').append(regionDiv);
                     }
@@ -551,8 +427,7 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
                             state.items.listview.promised.erase(itemId);
                         }
                     }
-                    $('#items_parent').tabs("refresh");
-
+                    map.refreshTabs();
                     map.visualizeResultListItems();
 
                     if (state.visualizationActive) {
@@ -599,7 +474,7 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
                             }
                         }
 
-                        if($("#onePath").is(':checked')){
+                        if ($("#onePath").is(':checked')) {
                             tree.onePath(parentNode);
                         }
                         finish();
@@ -675,6 +550,7 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
                         state.handler = function () {
                             var timer = tools.timer("draw");
                             var drawn = tools.SimpleHash();
+                            var removedParents = tools.SimpleHash();
                             var currentItemMarkers = state.items.shapes.drawn.values();
                             var currentClusterMarker = state.items.clusters.drawn.values();
                             var bulkMarkerBuffer = [];
@@ -701,7 +577,7 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
                             for (var item in drawn.values()) {
                                 if (drawn.at(item) == false) {
                                     map.removeItemMarker(state.DAG.at(item));
-                                    map.removeParentsTabs(state.DAG.at(item));
+                                    map.removeParentsTabs(state.DAG.at(item), removedParents);
                                 }
                             }
 
@@ -729,9 +605,7 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
                             map.addClusterMarker(childNode);
                         } else if (!childNode.count) {
                             if (!drawn.count(childNode.id)) {
-                                if (childNode.marker !== undefined) { // TODO: WHY?
-                                    map.addItemMarker(childNode);
-                                }
+                                map.addItemMarker(childNode);
                                 map.setupTabsForItemAndAddToListView(childNode);
                             } else {
                                 drawn.insert(childNode.id, true);
@@ -740,15 +614,16 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
                     }
                 }
 
-                try {
-                    $('#items_parent').tabs("refresh");
-                    $("#items_parent").tabs("option", "active", 0);
-                } catch (exception) {
-                }
-
             } else if (node.count) {
                 state.regionHandler({rid: node.id, draw: true, dynamic: true});
             }
+
+            try {
+                map.refreshTabs();
+                $("#items_parent").tabs("option", "active", 0);
+            } catch (exception) {
+            }
+
         },
 
         displayCqr: function (cqr) {
@@ -804,6 +679,7 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
         },
 
         setupTabsForItemAndAddToListView: function (node) {
+            map.initTabs();
             for (var parent in node.parents) {
                 if (!$("a[href='#tab-" + node.parents[parent].id + "']").length) {
                     var tab = "<li><a href='#tab-" + node.parents[parent].id + "'>" + state.DAG.at(node.parents[parent].id).name + "</a><span class='badge'>" + node.parents[parent].count + "</span></li>";
@@ -819,19 +695,26 @@ define(["state", "jquery", "conf", "oscar", "flickr", "tools", "tree", "bootstra
             }
         },
 
-        removeParentTab: function (childNode, parentNode) {
-            for (var parent in childNode.parents) {
-                if (childNode.parents[parent].id == parentNode.id && $("a[href='#tab-" + childNode.parents[parent].id + "']").length) {
-                    $("a[href='#tab-" + childNode.parents[parent].id + "']").parent().remove();
-                    $("#tab-" + childNode.parents[parent].id).remove();
-                }
+        removeParentTab: function (childNode, parentNode, removedParents) {
+            if ($("a[href='#tab-" + parentNode.id + "']").length) {
+                removedParents.insert(parentNode.id, parentNode.id);
+                $("a[href='#tab-" + parentNode.id + "']").parent().remove();
+                $("#tab-" + parentNode.id).remove();
             }
-            $('#items_parent').tabs("refresh");
+
         },
 
-        removeParentsTabs: function (childNode) {
+        removeParentsTabs: function (childNode, removedParents) {
             for (var parent in childNode.parents) {
-                map.removeParentTab(childNode, childNode.parents[parent]);
+                if (!removedParents.count(childNode.parents[parent].id)) {
+                    map.removeParentTab(childNode, childNode.parents[parent], removedParents);
+                }
+            }
+
+            if ($("#tabs").children().length > 0) {
+                map.refreshTabs();
+            } else {
+                map.destroyTabs();
             }
         },
 

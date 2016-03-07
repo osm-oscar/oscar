@@ -53,12 +53,12 @@ define(["jquery", "mustache", "tools", "leaflet", "spin","conf", "leafletCluster
         turfCache: tools.SimpleHash(), // caches merged regions
         boundariesInProcessing: tools.SimpleHash(),
 
-        isMatchedTag: function (key, value) {
-            var testString = key + ":" + value;
-            return state.cqrRegExp.test(testString);
-        },
-
         resultListTemplateDataFromItem: function (item, shapeSrcType) {
+            function isMatchedTag(key, value) {
+                var testString = key + ":" + value;
+                return state.cqrRegExp.test(testString);
+            }
+
             var itemKv = [];
             var itemUrls = [];
             var wikiLink = undefined;
@@ -101,7 +101,7 @@ define(["jquery", "mustache", "tools", "leaflet", "spin","conf", "leafletCluster
                 }
                 else {
                     var tmp = {"k": itemKey, "v": itemValue};
-                    if (state.isMatchedTag(itemKey, itemValue)) {
+                    if (isMatchedTag(itemKey, itemValue)) {
                         tmp["kc"] = "matched-key-color";
                         tmp["vc"] = "matched-value-color";
                         hasMatchingTag = true;
