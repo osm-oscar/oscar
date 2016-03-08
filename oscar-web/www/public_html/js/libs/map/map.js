@@ -7,6 +7,22 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
             var itemPanelRootId = '#' + shapeSrcType + 'PanelRoot' + itemId;
             if (config.functionality.shapes.highlightListItemOnClick[shapeSrcType]) {
                 leafletItem.on('click', function () {
+
+                    if ($('#show_flickr').is(':checked')) {
+                        var geopos;
+
+                        if (this instanceof L.MultiPolygon) {
+                            geopos = this.getLatLngs()[0][0];
+                        } else if (this instanceof L.Polygon) {
+                            geopos = this.getLatLngs()[0];
+                        } else if (this instanceof L.Polyline) {
+                            geopos = this.getLatLngs()[0];
+                        } else {
+                            geopos = this.getLatLng();
+                        }
+                        flickr.getImagesForLocation($.trim(state.DAG.at(itemId).name), geopos);
+                    }
+
                     state.sidebar.open("search");
                     // open a tab, that contains the element
                     var parentId = state.DAG.at(itemId).parents[0].id;
@@ -350,6 +366,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                                 state.DAG.at(regionId).children.push(state.DAG.at(itemId));
                                 state.DAG.at(itemId).parents.push(state.DAG.at(regionId));
                             }
+                            state.DAG.at(itemId).name = item.name();
                             map.appendItemToListView(item, "items", parentElement);
                             state.items.listview.promised.erase(itemId);
                         }
@@ -660,9 +677,10 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
         },
 
         removeParentTab: function (childNode, parentNode, removedParents) {
-            if ($("a[href='#tab-" + parentNode.id + "']").length) {
+            var parentTab = $("a[href='#tab-" + parentNode.id + "']");
+            if (parentTab.length) {
                 removedParents.insert(parentNode.id, parentNode.id);
-                $("a[href='#tab-" + parentNode.id + "']").parent().remove();
+                parentTab.parent().remove();
                 $("#tab-" + parentNode.id).remove();
             }
 
