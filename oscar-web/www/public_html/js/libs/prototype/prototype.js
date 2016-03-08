@@ -7,7 +7,7 @@ define(["state", "oscar", "tools", "conf", "turf"], function(state, oscar, tools
      */
     L.MarkerCluster.prototype.on("mouseover", function (e) {
         // merge the region boundaries of sub-clusters
-        if (e.target.getChildCount() > 1 && e.target.getChildCount() < 8) {
+        if (e.target.getChildCount() > 1 && e.target.getChildCount() <= config.maxNumSubClusters) {
             var children = [];
             var leafletItem, key = "", mergedRegion;
             for (var i in e.target.getAllChildMarkers()) {

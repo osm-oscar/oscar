@@ -97,7 +97,7 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state", "tools"], function (dagreD
             if (node.name) {
                 this.graph.setNode(node.id, tree._nodeAttr(node));
                 for (var child in node.children) {
-                    if (node.children[child].name) {
+                    if (node.children[child].count) {
                         this.graph.setNode(node.children[child].id);
                         this.graph.setEdge(node.id, node.children[child].id, {
                             lineInterpolate: 'basis',

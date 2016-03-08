@@ -138,7 +138,7 @@ define(["jquery", "mustache", "tools", "leaflet", "spin","conf", "leafletCluster
             }
             state.map.removeLayer(state.markers);
             delete state.markers;
-            state.markers = L.markerClusterGroup();
+            state.initMarkers();
             state.map.addLayer(state.markers);
             state.items.listview.drawn.clear();
             state.items.listview.promised.clear();
@@ -154,6 +154,13 @@ define(["jquery", "mustache", "tools", "leaflet", "spin","conf", "leafletCluster
                 state.items.clusters.drawn.erase(i);
             }
             state.DAG = tools.SimpleHash();
+        },
+
+        initMarkers: function(){
+            state.markers = L.markerClusterGroup();
+            state.markers.on('clusterclick', function (a) {
+                a.layer.zoomToBounds();
+            });
         }
     };
 
