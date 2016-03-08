@@ -129,6 +129,10 @@ define(["jquery", "mustache", "tools", "leaflet", "spin","conf", "leafletCluster
         clearViews: function () {
             $('#itemsList').empty();
             $('#tabs').empty();
+            var tabs = $('#items_parent');
+            if (tabs.data("ui-tabs")) {
+                tabs.tabs("destroy");
+            }
             if (state.handler !== undefined) {
                 state.map.off("zoomend dragend", state.handler);
             }

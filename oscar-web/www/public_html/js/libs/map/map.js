@@ -11,6 +11,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                     // open a tab, that contains the element
                     var parentId = state.DAG.at(itemId).parents[0].id;
                     var index = $("#tabs a[href='#tab-" + parentId + "']").parent().index();
+
                     $("#items_parent").tabs("option", "active", index);
 
                     $('#' + shapeSrcType + "List").find('.panel-collapse').each(
@@ -402,9 +403,11 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
 
                         if ($("#onePath").is(':checked')) {
                             tree.onePath(parentNode);
+                        }else{
+                            tree.refresh(rid);
                         }
+
                         finish();
-                        tree.refresh(rid);
                     }, function () {
                     }
                 );
@@ -531,7 +534,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                 state.regionHandler({rid: 0xFFFFFFFF, draw: true, pathProcessor: process});
             }
         },
-        
+
         refreshTabs: function () {
             var tabs = $('#items_parent');
             if (tabs.data("ui-tabs")) {
@@ -558,6 +561,16 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
             var closeElement = $(".leaflet-popup-close-button")[0];
             if (closeElement !== undefined) {
                 closeElement.click();
+            }
+        },
+
+        removeBoundaries: function (e) {
+            if (e.merged) {
+                state.map.removeLayer(e.merged);
+            } else if (e.polygons && e.polygons.length) {
+                for (var polygon in e.polygons) {
+                    state.map.removeLayer(e.polygons[polygon]);
+                }
             }
         },
 
@@ -591,7 +604,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                 }
             });
         },
-        
+
         removeMarker: function (marker) {
             if (marker.shape) {
                 state.map.removeLayer(marker.shape);
@@ -603,6 +616,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
         removeClusterMarker: function (node) {
             map.removeMarker(node.marker);
             state.items.clusters.drawn.erase(node.id);
+            map.removeBoundaries(node.marker);
         },
 
         addClusterMarker: function (node, buffer) {

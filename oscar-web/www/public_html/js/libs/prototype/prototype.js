@@ -7,7 +7,7 @@ define(["state", "oscar", "tools", "conf", "turf"], function(state, oscar, tools
      */
     L.MarkerCluster.prototype.on("mouseover", function (e) {
         // merge the region boundaries of sub-clusters
-        if (e.target.getChildCount() > 1) {
+        if (e.target.getChildCount() > 1 && e.target.getChildCount() < 8) {
             var children = [];
             var leafletItem, key = "", mergedRegion;
             for (var i in e.target.getAllChildMarkers()) {
@@ -51,7 +51,6 @@ define(["state", "oscar", "tools", "conf", "turf"], function(state, oscar, tools
                         state.boundariesInProcessing.insert(key, key);
                         worker.postMessage({"shapes": turf.featurecollection(boundaries)});
                     } else {
-                        // TODO: Show the regions boundaries without merging
                         e.target.polygons = [];
                         var regionBoundary;
                         for (var boundary in boundaries) {
@@ -83,13 +82,7 @@ define(["state", "oscar", "tools", "conf", "turf"], function(state, oscar, tools
      * Extend Markercluster: close popups and remove region-boundaries of sub-clusters
      */
     L.MarkerCluster.prototype.on("mouseout", function (e) {
-        if (e.target.merged) {
-            state.map.removeLayer(e.target.merged);
-        } else if (e.target.polygons && e.target.polygons.length) {
-            for (var polygon in e.target.polygons) {
-                state.map.removeLayer(e.target.polygons[polygon]);
-            }
-        }
+        map.removeBoundaries(e.target);
         map.closePopups();
     });
 

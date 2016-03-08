@@ -1,4 +1,4 @@
-define(["jquery", "state", "map"], function($, state, map){
+define(["jquery", "state", "map", "conf"], function($, state, map, config){
     return query = {
         clearGeoQueryMapShape: function () {
             if (state.geoquery.mapshape !== undefined) {
@@ -8,15 +8,15 @@ define(["jquery", "state", "map"], function($, state, map){
         },
 
         clearGeoQuerySelect: function () {
-            map.endGeoQuerySelect();
+            query.endGeoQuerySelect();
             $('#geoquery_acceptbutton').removeClass('btn-info');
             $('#geoquery_selectbutton').html('Select rectangle');
             state.geoquery.active = false;
-            map.clearGeoQueryMapShape();
+            query.clearGeoQueryMapShape();
         },
 
         updateGeoQueryMapShape: function () {
-            map.clearGeoQueryMapShape();
+            query.clearGeoQueryMapShape();
             var sampleStep = 1.0 / config.geoquery.samplecount;
             var sampleCount = config.geoquery.samplecount;
             var pts = [];
@@ -58,7 +58,7 @@ define(["jquery", "state", "map"], function($, state, map){
                 $('#geoquery_maxlat').val(e.latlng.lat);
                 $('#geoquery_maxlon').val(e.latlng.lng);
                 state.geoquery.clickcount = 2;
-                map.endGeoQuerySelect();
+                query.endGeoQuerySelect();
             }
         },
 
@@ -72,7 +72,7 @@ define(["jquery", "state", "map"], function($, state, map){
             $('[data-class="geoquery_max_coord"]').removeClass('bg-info');
             state.map.removeEventListener('click', map.geoQuerySelect);
             $('#geoquery_acceptbutton').addClass('btn-info');
-            map.updateGeoQueryMapShape();
+            query.updateGeoQueryMapShape();
         },
 
         startGeoQuerySelect: function () {
@@ -84,15 +84,15 @@ define(["jquery", "state", "map"], function($, state, map){
             state.geoquery.active = true;
             $('#geoquery_selectbutton').addClass("btn-info").html('Clear rectangle');
             $('[data-class="geoquery_min_coord"]').addClass('bg-info');
-            state.map.on('click', map.geoQuerySelect);
-            state.timers.geoquery = setTimeout(map.endGeoQuerySelect, config.timeouts.geoquery_select);
+            state.map.on('click', query.geoQuerySelect);
+            state.timers.geoquery = setTimeout(query.endGeoQuerySelect, config.timeouts.geoquery_select);
         },
 
         resetPathQuery: function () {
             if (state.timers.pathquery !== undefined) {
                 clearTimeout(state.timers.pathquery);
             }
-            state.map.removeEventListener('click', map.pathQuerySelect);
+            state.map.removeEventListener('click', query.pathQuerySelect);
             state.map.removeLayer(state.pathquery.mapshape);
             state.pathquery.mapshape = undefined;
             state.pathquery.selectButtonState = 'select';
@@ -103,7 +103,7 @@ define(["jquery", "state", "map"], function($, state, map){
         pathQuerySelect: function (e) {
             if (state.timers.pathquery !== undefined) {
                 clearTimeout(state.timers.pathquery);
-                state.timers.pathquery = setTimeout(map.endPathQuery, config.timeouts.pathquery.select);
+                state.timers.pathquery = setTimeout(query.endPathQuery, config.timeouts.pathquery.select);
             }
             if (state.pathquery.mapshape === undefined) {
                 state.pathquery.mapshape = L.polyline([], config.styles.shapes.pathquery.highlight).addTo(state.map);
@@ -115,7 +115,7 @@ define(["jquery", "state", "map"], function($, state, map){
             if (state.timers.pathquery !== undefined) {
                 clearTimeout(state.timers.pathquery);
             }
-            state.map.removeEventListener('click', map.pathQuerySelect);
+            state.map.removeEventListener('click', query.pathQuerySelect);
             $('#pathquery_acceptbutton').addClass("btn-info");
             $('#pathquery_selectbutton').removeClass("btn-info").html('Clear path');
             state.pathquery.selectButtonState = 'clear';
@@ -129,8 +129,8 @@ define(["jquery", "state", "map"], function($, state, map){
             $('#pathquery_acceptbutton').removeClass("btn-info");
             $('#pathquery_selectbutton').addClass("btn-info").html("Finish path");
             state.pathquery.selectButtonState = 'finish';
-            state.map.on('click', map.pathQuerySelect);
-            state.timers.pathquery = setTimeout(map.endPathQuery, config.timeouts.pathquery.select);
+            state.map.on('click', query.pathQuerySelect);
+            state.timers.pathquery = setTimeout(query.endPathQuery, config.timeouts.pathquery.select);
         }
     };
 });

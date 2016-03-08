@@ -11,6 +11,31 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state", "tools"], function (dagreD
         visualizeDAG: function (root) {
             state.visualizationActive = true;
 
+            // Set up an SVG group so that we can translate the final graph.
+            $("#dag").empty();
+            var svg = d3.select("svg"),
+                svgGroup = svg.append("g");
+
+            tree._initGraph(svg, svgGroup);
+
+            // build the graph from current DAG
+            this._recursiveAddToGraph(root, this.graph);
+            this._roundedNodes();
+
+            $("#tree").css("display", "block");
+
+            // draw graph
+            svgGroup.call(this.renderer, this.graph);
+
+            // Center the graph
+            var xCenterOffset = ($("#tree").width() - this.graph.graph().width) / 2;
+            svgGroup.attr("transform", "translate(" + xCenterOffset + ", 20)");
+            svg.attr("height", this.graph.graph().height + 40);
+
+            this._addInteractions();
+        },
+
+        _initGraph: function (svg, svgGroup) {
             // Create the input graph
             this.graph = new dagreD3.graphlib.Graph()
                 .setGraph({
@@ -24,17 +49,6 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state", "tools"], function (dagreD
                     return {};
                 });
 
-            // build the graph from current DAG
-            this._recursiveAddToGraph(root, this.graph);
-            this._roundedNodes();
-
-            $("#tree").css("display", "block");
-
-            // Set up an SVG group so that we can translate the final graph.
-            $("#dag").empty();
-            var svg = d3.select("svg"),
-                svgGroup = svg.append("g");
-
             // Set up zoom support
             var zoom = d3.behavior.zoom().on("zoom", function () {
                 svgGroup.attr("transform", "translate(" + d3.event.translate + ")" +
@@ -45,16 +59,6 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state", "tools"], function (dagreD
             this.graph.graph().transition = function (selection) {
                 return selection.transition().duration(500);
             };
-
-            // draw graph
-            svgGroup.call(this.renderer, this.graph);
-
-            // Center the graph
-            var xCenterOffset = ($("#tree").width() - this.graph.graph().width) / 2;
-            svgGroup.attr("transform", "translate(" + xCenterOffset + ", 20)");
-            svg.attr("height", this.graph.graph().height + 40);
-
-            this._addInteractions();
         },
 
         /**
@@ -90,54 +94,8 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state", "tools"], function (dagreD
         },
 
         _recursiveAddToGraph: function (node, graph) {
-            /**
-             * returns the label for a leaf in the tree
-             *
-             * @param name of the node
-             * @returns {string} label-string
-             */
-            function leafLabel(node) {
-                return "<div class='treeNode'><div class='treeNodeName'>" + node.name.toString()
-                    + "<span class='badge'>" + node.count + "</span></div><a id='"
-                    + node.id + "' class='treeNodeItems' href='#'>Load Items</a></div>";
-            }
-
-            /**
-             * returns the label for a node (non-leaf) in the tree
-             *
-             * @param name of the node
-             * @param id of the node
-             * @returns {string} label-string
-             */
-            function nodeLabel(node) {
-                return "<div class='treeNode'><div class='treeNodeName'>" + node.name.toString()
-                    + "<span class='badge'>" + node.count + "</span></div><a id='" + node.id
-                    + "' class='treeNodeSub' href='#'>Show Children</a><a id='" + node.id
-                    + "' class='treeNodeItems' href='#'>Load Items</a></div>";
-            }
-
-            /**
-             * returns the attributes for a node
-             *
-             * @param node TreeNode instance
-             * @returns {*} attributes for the node
-             */
-            function nodeAttr(node) {
-                if (!node.children.length || (node.children.length && !node.children[0].count)) {
-                    return {
-                        labelType: "html",
-                        label: nodeLabel(node)
-                    };
-                } else {
-                    return {
-                        labelType: "html",
-                        label: leafLabel(node)
-                    }
-                }
-            }
-
             if (node.name) {
-                this.graph.setNode(node.id, nodeAttr(node));
+                this.graph.setNode(node.id, tree._nodeAttr(node));
                 for (var child in node.children) {
                     if (node.children[child].name) {
                         this.graph.setNode(node.children[child].id);
@@ -147,6 +105,52 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state", "tools"], function (dagreD
                         });
                         this._recursiveAddToGraph(node.children[child], graph);
                     }
+                }
+            }
+        },
+
+        /**
+         * returns the label for a leaf in the tree
+         *
+         * @param name of the node
+         * @returns {string} label-string
+         */
+        _leafLabel: function (node) {
+            return "<div class='treeNode'><div class='treeNodeName'>" + node.name.toString()
+                + "<span class='badge'>" + node.count + "</span></div><a id='"
+                + node.id + "' class='treeNodeItems' href='#'>Load Items</a></div>";
+        },
+
+        /**
+         * returns the label for a node (non-leaf) in the tree
+         *
+         * @param name of the node
+         * @param id of the node
+         * @returns {string} label-string
+         */
+        _nodeLabel: function (node) {
+            return "<div class='treeNode'><div class='treeNodeName'>" + node.name.toString()
+                + "<span class='badge'>" + node.count + "</span></div><a id='" + node.id
+                + "' class='treeNodeSub' href='#'>Show Children</a><a id='" + node.id
+                + "' class='treeNodeItems' href='#'>Load Items</a></div>";
+        },
+
+        /**
+         * returns the attributes for a node
+         *
+         * @param node TreeNode instance
+         * @returns {*} attributes for the node
+         */
+        _nodeAttr: function (node) {
+            if (!node.children.length || (node.children.length && !node.children[0].count)) {
+                return {
+                    labelType: "html",
+                    label: tree._nodeLabel(node)
+                };
+            } else {
+                return {
+                    labelType: "html",
+                    label: tree._leafLabel(node)
                 }
             }
         },
@@ -231,9 +235,6 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state", "tools"], function (dagreD
          * @param node to which should be found one path to the root
          */
         onePath: function (node) {
-            var walkerCounter = tools.SimpleHash();
-            var onPath = tools.SimpleHash();
-
             function walker(node) {
                 var parentNode;
                 for (var parent in node.parents) {
@@ -250,12 +251,22 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state", "tools"], function (dagreD
                 }
             }
 
+            $("#dag").empty();
+            var svg = d3.select("svg"),
+                svgGroup = svg.append("g");
+            tree._initGraph(svg, svgGroup);
+
+            var walkerCounter = tools.SimpleHash();
+            var onPath = tools.SimpleHash();
+
             walker(node);
 
             var currentNode = state.DAG.at(0xFFFFFFFF); // root
             var childNode, nextNode, mostWalkers = 0;
 
             while (currentNode.id != node.id) {
+                this.graph.setNode(currentNode.id, tree._nodeAttr(currentNode));
+
                 for (var child in currentNode.children) {
                     childNode = currentNode.children[child];
                     if (childNode.id == node.id) {
@@ -266,16 +277,22 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state", "tools"], function (dagreD
                         mostWalkers = walkerCounter.at(childNode.id);
                     }
                 }
+
+                this.graph.setNode(nextNode.id);
+                this.graph.setEdge(currentNode.id, nextNode.id, {
+                    lineInterpolate: 'basis',
+                    class: "origin-" + currentNode.id
+                });
+
                 onPath.insert(currentNode.id, currentNode);
                 currentNode = nextNode;
                 mostWalkers = 0;
             }
 
-            $.each(tree.graph.nodes(), function (key, value) {
-                if (!onPath.count(value) && value != node.id) {
-                    tree.graph.removeNode(value);
-                }
-            });
+            this.graph.setNode(node.id, tree._nodeAttr(node));
+            tree.refresh(node.id);
+            d3.select("svg").select("g").call(this.renderer, this.graph);
+            tree._addInteractions();
         },
 
         hideChildren: function (node) {
