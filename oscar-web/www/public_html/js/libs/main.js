@@ -78,7 +78,6 @@ requirejs(["leaflet", "jquery", "mustache", "jqueryui", "sidebar", "mustacheLoad
             $("#tree").resizable();
 
             $('[data-toggle="tooltip"]').tooltip();
-            $('#graph').tooltip();
 
             var search_form = $("#search_form");
             var search_text = $('#search_text');

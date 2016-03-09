@@ -74,6 +74,7 @@ define(["jquery"], function ($) {
                     restaurant: {value: "restaurant", desc: "Restaurant"},
                     hotel: {key: "tourism", value: "hotel", desc: "Hotel"},
                     cafe: {value: "cafe", desc: "Café"},
+                    bar: {value: "bar", desc: "Bar"},
                     pharmacy: {value: "pharmacy", desc: "Pharmacy"},
                     hospital: {value: "hospital", desc: "Hospital"},
                     police: {value: "police", desc: "Police"},

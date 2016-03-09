@@ -96,6 +96,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                     state.markers.addLayer(marker);
                     state.items.shapes.drawn.insert(itemId, itemShape);
                     state.DAG.at(itemId).marker = marker;
+                    state.DAG.at(itemId).shape = itemShape;
                     map.addShapeToMap(marker, itemId, "items");
                 }
             }, oscar.defErrorCB);
@@ -363,6 +364,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                             if (!state.DAG.count(itemId)) {
                                 state.DAG.insert(itemId, state.DAG.at(regionId).addChild(itemId));
                             } else {
+                                //TODO: check whether regionId already contains this itemId as child
                                 state.DAG.at(regionId).children.push(state.DAG.at(itemId));
                                 state.DAG.at(itemId).parents.push(state.DAG.at(regionId));
                             }
@@ -648,10 +650,11 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
         removeItemMarker: function (node) {
             state.markers.removeLayer(node.marker);
             state.items.shapes.drawn.erase(node.id);
+            state.items.listview.drawn.erase(node.id);
         },
 
         addItemMarker: function (node, buffer) {
-            state.items.shapes.drawn.insert(node.id, node.marker);
+            state.items.shapes.drawn.insert(node.id, node.shape);
             if (buffer) {
                 buffer.push(node.marker);
             } else {
