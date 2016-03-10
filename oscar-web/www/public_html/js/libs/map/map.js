@@ -180,12 +180,12 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                         var itemMap = {}, node, item, itemId, marker;
 
                         // modify DAG
-                        if (cqr.ohPath().length && !context.dynamic) {
+                        if (!context.dynamic) {
                             for (var i in items) {
                                 item = items[i];
                                 itemId = item.id();
                                 itemMap[itemId] = item;
-                                if ($.inArray(itemId, cqr.ohPath()) != -1 || (parentRid == cqr.ohPath()[cqr.ohPath().length - 1] && parentCount > oscar.maxFetchItems)) {
+                                if (!cqr.ohPath().length || ($.inArray(itemId, cqr.ohPath()) != -1 || (parentRid == cqr.ohPath()[cqr.ohPath().length - 1] && parentCount > oscar.maxFetchItems))) {
                                     if (!state.DAG.count(itemId)) {
                                         node = parentNode.addChild(itemId);
                                         node.count = regionChildrenApxItemsMap[itemId];
