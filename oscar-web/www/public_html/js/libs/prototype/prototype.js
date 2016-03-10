@@ -1,4 +1,4 @@
-define(["state", "oscar", "tools", "conf", "turf"], function(state, oscar, tools, config, turf){
+define(["state", "oscar", "tools", "conf", "turf", "leafletCluster"], function (state, oscar, tools, config, turf) {
     /**
      * Extend MarkerCluster:
      * 1) show names of subregions of a cluster in a popup
@@ -21,6 +21,10 @@ define(["state", "oscar", "tools", "conf", "turf"], function(state, oscar, tools
             if (mergedRegion) {
                 e.target.merged = mergedRegion;
                 mergedRegion.addTo(state.map);
+            } else if (e.target.polygons) {
+                for (var polygon in e.target.polygons) {
+                    e.target.polygons[polygon].addTo(state.map);
+                }
             } else if (children.length && !state.boundariesInProcessing.count(key)) {
                 oscar.getShapes(children, function (shapes) {
                     // collect all boundaries of sub-clusters and convert to GeoJSON
