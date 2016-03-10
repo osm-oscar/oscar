@@ -230,7 +230,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                             }
                         }
 
-                        // download locations, if end of hierarchy is reached or the region counts less than maxFetchItems
+                        // DAG-modification finished, now dicide whether items should be loaded, or clusters be drawn
                         if (!items.length || (parentCount <= oscar.maxFetchItems)) {
                             if (context.draw || !cqr.ohPath().length || cqr.ohPath()[cqr.ohPath().length - 1] == parentRid) {
                                 $("#left_menu_parent").css("display", "block");
@@ -539,7 +539,6 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
         },
 
         displayCqr: function (cqr) {
-            state.clearViews();
             state.regionHandler = map.flatCqrTreeDataSource(cqr);
             var process = map.pathProcessor(cqr);
             var root = new tools.TreeNode(0xFFFFFFFF, undefined);
@@ -707,6 +706,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
             if ($("#search_text").val() === state.queries.lastQuery) {
                 return;
             }
+            state.clearViews();
 
             if ($('#searchModi input').is(":checked")) {
                 //TODO: wrong placement of markers if clsutering is aktive. Cause: region midpoint is outside of search rectangle
