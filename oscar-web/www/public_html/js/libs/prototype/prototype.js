@@ -90,4 +90,13 @@ define(["state", "oscar", "tools", "conf", "turf", "leafletCluster"], function (
         map.closePopups();
     });
 
+    /**
+     * Remove displayed region boundaries when the mouse is over a cluster-marker & the user zooms-in
+     */
+    var old = L.FeatureGroup.prototype.removeLayer;
+    L.FeatureGroup.prototype.removeLayer = function (e) {
+        map.removeBoundaries(e);
+        old.call(this, e);
+    };
+
 });
