@@ -83,6 +83,7 @@ define(['jquery', 'sserialize', 'leaflet', 'module', 'spinner'], function (jQuer
         idxCache: {},
         cellIdxIdCache: {},
         cqrOps: {'(': '(', ')': ')', '+': '+', '-': '-', '/': '/', '^': '^'},
+        cqrParseSkip : {' ' : ' ', '!' : '!', '#' : '#'},
         cqrRegExpEscapes: {
             '*': '*',
             '(': '(',
@@ -98,23 +99,10 @@ define(['jquery', 'sserialize', 'leaflet', 'module', 'spinner'], function (jQuer
             '?': '?',
             '{': '}',
             '}': '}',
-            '=': '!'
+            '=': '=',
+            '!': '!'
         }, //*(|.^$)[]-+?{}=!,
         cqrEscapesRegExp: new RegExp("^[\*\(\|\.\^\$\)\[\]\-\+\?\{\}\=\!\,]$"),
-
-        /**
-         * Error-function used for interaction with the server
-         *
-         * @param textStatus
-         * @param errorThrown
-         */
-        defErrorCB: function (textStatus, errorThrown) {
-            spinner.endLoadingSpinner();
-            console.log("xmlhttprequest error textstatus=" + textStatus + "; errorThrown=" + errorThrown);
-            if (confirm("Error occured. Refresh automatically?")) {
-                location.reload();
-            }
-        },
 
         Item: function (d) {
 
@@ -365,7 +353,7 @@ define(['jquery', 'sserialize', 'leaflet', 'module', 'spinner'], function (jQuer
                 regionItemIds: function (regionId, successCB, errorCB, resultListOffset) {
                     this.p.simpleCqrItems(this.d.query,
                         function (itemIds) {
-                            successCB(regionId, itemIds);
+                            successCB(itemIds);
                         },
                         errorCB,
                         this.p.maxFetchItems, regionId, resultListOffset);
@@ -382,7 +370,7 @@ define(['jquery', 'sserialize', 'leaflet', 'module', 'spinner'], function (jQuer
                     if (regionId === undefined) {
                         regionId = 0xFFFFFFFF;
                     }
-                    this.p.simpleCqrMaxIndependentChildren(this.d.query, successCB, errorCB, regionId, maxOverlap);
+                    this.p.simpleCqrMaxIndependentChildren(this.d.query, successCB, errorCB, regionId, maxOverlap, this.d.regionFilter);
                 },
                 //returning an array in successCB with objects={id : int, apxitems : int}
                 //returns rootRegionChildrenInfo if regionId is undefined
@@ -402,7 +390,8 @@ define(['jquery', 'sserialize', 'leaflet', 'module', 'spinner'], function (jQuer
                                 successCB(myPtr.d.regionInfo[regionId]);
                             },
                             errorCB,
-                            regionId);
+                            regionId,
+                            this.d.regionFilter);
                     }
                 },
                 hasResults: function () {
@@ -899,6 +888,10 @@ define(['jquery', 'sserialize', 'leaflet', 'module', 'spinner'], function (jQuer
             else {
                 params['oht'] = 'relative';
             }
+            if (regionFilter !== undefined) {
+                params['rf'] = regionFilter;
+            }
+            
             var qpath = this.completerBaseUrl + "/cqr/clustered/simple";
             var myPtr = this;
             var mySqId = this.cqrCounter;
@@ -912,6 +905,7 @@ define(['jquery', 'sserialize', 'leaflet', 'module', 'spinner'], function (jQuer
                 success: function( raw ) {
                     var cqr = sserialize.simpleCqrFromRaw(raw);
                     cqr.query = params['q'];
+                    cqr.regionFilter = params['rf'];
                     successCB(myPtr.SimpleCellQueryResult(cqr, myPtr, mySqId));
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
@@ -953,6 +947,9 @@ define(['jquery', 'sserialize', 'leaflet', 'module', 'spinner'], function (jQuer
             if (selectedRegion !== undefined) {
                 params['r'] = selectedRegion;
             }
+            if (regionFilter !== undefined) {
+               params['rf'] = regionFilter;
+            }
             var qpath = this.completerBaseUrl + "/cqr/clustered/children";
             jQuery.ajax({
                 type: "GET",
@@ -987,6 +984,9 @@ define(['jquery', 'sserialize', 'leaflet', 'module', 'spinner'], function (jQuer
             if (maxOverlap !== undefined) {
                 params['o'] = maxOverlap;
             }
+            if(regionFilter !== undefined) {
+                params['rf'] = regionFilter;
+            }
             var qpath = this.completerBaseUrl + "/cqr/clustered/michildren";
             jQuery.ajax({
                 type: "GET",
@@ -1007,7 +1007,7 @@ define(['jquery', 'sserialize', 'leaflet', 'module', 'spinner'], function (jQuer
             var tokenString = "";
             var qtype = 'substring';
             for (i = 0; i < query.length; ++i) {
-                while (query[i] === ' ' || this.cqrOps[query[i]] !== undefined) { //skip whitespace, ops and braces
+                while (this.cqrParseSkip[query[i]] !== undefined || this.cqrOps[query[i]] !== undefined) { //ops and braces
                     ++i;
                 }
                 if (query[i] === '?') {
