@@ -24,7 +24,7 @@
                                 <span>id</span>
                             </td>
                             <td>
-                                <span>{{itemId}}</span>
+                                <a href='#' class="item-detail-id" data-query='{{itemId}}'>{{itemId}}</a>
                             </td>
                         </tr>
                         <tr>
@@ -53,34 +53,6 @@
                         <tr>
                     </thead>
                     <tbody>
-                    {{#wikilink}}
-                        <tr>
-                            <td>
-                                <span title='Add key to query'>
-                                    <a href='#{{{shapeSrcType}}}Details{{{itemId}}}' class='item-detail-key' data-query-key='wikipedia'>wikipedia</a>
-                                </span>
-                            </td>
-                            <td>
-                                <span title='Open in new window'>
-                                    <a href='http://en.wikipedia.org/wiki/{{wikilink}}' target="_blank">{{wikilink}}</a>
-                                </span>
-                            </td>
-                        </tr>
-                    {{/wikilink}}
-                    {{#urlkvs}}
-                        <tr>
-                            <td>
-                                <span title='Add key to query'>
-                                    <a href='#{{{shapeSrcType}}}Details{{{itemId}}}' class='item-detail-key {{kc}}' data-query-key='{{k}}'>{{k}}</a>
-                                </span>
-                            </td>
-                            <td>
-                                <span title='Open in new window'>
-                                    <a href='{{v}}' target="_blank" class='{{vc}}'>{{v}}</a>
-                                </span>
-                            </td>
-                        </tr>
-                    {{/urlkvs}}
                     {{#kv}}
                         <tr>
                             <td>
@@ -89,9 +61,16 @@
                                 </span>
                             </td>
                             <td>
-                                <span title='Add key:value to query'>
-                                    <a href='#{{{shapeSrcType}}}Details{{{itemId}}}' class='item-detail-value {{vc}}' data-query-key='{{k}}' data-query-value='{{v}}'>{{v}}</a>
-                                </span>
+                                {{#link}}
+                                    <span title='Open in new window'>
+                                        <a href='{{link}}' target="_blank" class='{{vc}}'>{{v}}</a>
+                                    </span>
+                                {{/link}}
+                                {{^link}}
+                                    <span title='Add key:value to query'>
+                                        <a href='#{{{shapeSrcType}}}Details{{{itemId}}}' class='item-detail-value {{vc}}' data-query-key='{{k}}' data-query-value='{{v}}'>{{v}}</a>
+                                    </span>
+                                {{/link}}
                             </td>
                         </tr>
                     {{/kv}}
