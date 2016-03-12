@@ -582,12 +582,11 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
             }
         },
 
-        removeBoundaries: function (e) {
-            if (e.polygons && e.polygons.length) {
-                for (var polygon in e.polygons) {
-                    state.map.removeLayer(e.polygons[polygon]);
-                }
+        removeBoundaries: function () {
+            for (var boundary in state.shownBoundaries) {
+                state.map.removeLayer(state.shownBoundaries[boundary]);
             }
+            state.shownBoundaries = [];
         },
 
         decorateMarker: function (marker) {
@@ -632,7 +631,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
         removeClusterMarker: function (node) {
             map.removeMarker(node.marker);
             state.items.clusters.drawn.erase(node.id);
-            map.removeBoundaries(node.marker);
+            map.removeBoundaries();
         },
 
         addClusterMarker: function (node, buffer) {

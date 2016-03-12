@@ -49,6 +49,7 @@ define(["jquery", "mustache", "tools", "leaflet", "spin","conf", "leafletCluster
         domcache: {
             searchResultsCounter: undefined
         },
+        shownBoundaries: [],
 
         resultListTemplateDataFromItem: function (item, shapeSrcType) {
             function isMatchedTag(key, value) {

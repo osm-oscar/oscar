@@ -9,6 +9,7 @@ define(["state", "oscar", "tools", "conf", "leafletCluster"], function (state, o
         if (e.target.getChildCount() > 1 && e.target.getChildCount() <= config.maxNumSubClusters) {
             var children = [];
             var leafletItem, key = "";
+
             for (var i in e.target.getAllChildMarkers()) {
                 if (e.target.getAllChildMarkers()[i].rid) {
                     children.push(e.target.getAllChildMarkers()[i].rid);
@@ -16,17 +17,12 @@ define(["state", "oscar", "tools", "conf", "leafletCluster"], function (state, o
                 }
             }
 
-            if (e.target.polygons) {
-                for (var polygon in e.target.polygons) {
-                    e.target.polygons[polygon].addTo(state.map);
-                }
-            } else if (children.length) {
+            if (children.length) {
                 oscar.getShapes(children, function (shapes) {
-                    e.target.polygons = [];
                     for (var shape in shapes) {
                         leafletItem = oscar.leafletItemFromShape(shapes[shape]);
                         leafletItem.setStyle(config.styles.shapes['regions']['normal']);
-                        e.target.polygons.push(leafletItem);
+                        state.shownBoundaries.push(leafletItem);
                         leafletItem.addTo(state.map);
                     }
                 }, oscar.defErrorCB);
@@ -54,7 +50,7 @@ define(["state", "oscar", "tools", "conf", "leafletCluster"], function (state, o
      * Extend Markercluster: close popups and remove region-boundaries of sub-clusters
      */
     L.MarkerCluster.prototype.on("mouseout", function (e) {
-        map.removeBoundaries(e.target);
+        map.removeBoundaries();
         map.closePopups();
     });
 
@@ -63,7 +59,7 @@ define(["state", "oscar", "tools", "conf", "leafletCluster"], function (state, o
      */
     var old = L.FeatureGroup.prototype.removeLayer;
     L.FeatureGroup.prototype.removeLayer = function (e) {
-        map.removeBoundaries(e);
+        map.removeBoundaries();
         old.call(this, e);
     };
 
