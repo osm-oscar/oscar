@@ -49,8 +49,6 @@ define(["jquery", "mustache", "tools", "leaflet", "spin","conf", "leafletCluster
         domcache: {
             searchResultsCounter: undefined
         },
-        turfCache: tools.SimpleHash(), // caches merged regions
-        boundariesInProcessing: tools.SimpleHash(),
 
         resultListTemplateDataFromItem: function (item, shapeSrcType) {
             function isMatchedTag(key, value) {

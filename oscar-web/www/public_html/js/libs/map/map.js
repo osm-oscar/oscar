@@ -422,7 +422,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
 
                         if ($("#onePath").is(':checked')) {
                             tree.onePath(parentNode);
-                        }else{
+                        } else {
                             tree.refresh(rid);
                         }
 
@@ -583,9 +583,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
         },
 
         removeBoundaries: function (e) {
-            if (e.merged) {
-                state.map.removeLayer(e.merged);
-            } else if (e.polygons && e.polygons.length) {
+            if (e.polygons && e.polygons.length) {
                 for (var polygon in e.polygons) {
                     state.map.removeLayer(e.polygons[polygon]);
                 }

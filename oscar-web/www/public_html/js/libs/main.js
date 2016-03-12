@@ -30,8 +30,6 @@ requirejs.config({
         "dagre-d3": "dagre-d3/dagre-d3.min",
         "tree": "tree/tree",
         "tokenfield": "tokenfield/bootstrap-tokenfield.min",
-        "turf": "turf/turf.min",
-        "merger": "oscar/polygonMerger",
         "map": "map/map",
         "prototype": "prototype/prototype",
         "state": "state/manager",

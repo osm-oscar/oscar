@@ -1,4 +1,4 @@
-define(["state", "oscar", "tools", "conf", "turf", "leafletCluster"], function (state, oscar, tools, config, turf) {
+define(["state", "oscar", "tools", "conf", "leafletCluster"], function (state, oscar, tools, config) {
     /**
      * Extend MarkerCluster:
      * 1) show names of subregions of a cluster in a popup
@@ -6,10 +6,9 @@ define(["state", "oscar", "tools", "conf", "turf", "leafletCluster"], function (
      *    showing all sub-regions
      */
     L.MarkerCluster.prototype.on("mouseover", function (e) {
-        // merge the region boundaries of sub-clusters
         if (e.target.getChildCount() > 1 && e.target.getChildCount() <= config.maxNumSubClusters) {
             var children = [];
-            var leafletItem, key = "", mergedRegion;
+            var leafletItem, key = "";
             for (var i in e.target.getAllChildMarkers()) {
                 if (e.target.getAllChildMarkers()[i].rid) {
                     children.push(e.target.getAllChildMarkers()[i].rid);
@@ -17,54 +16,19 @@ define(["state", "oscar", "tools", "conf", "turf", "leafletCluster"], function (
                 }
             }
 
-            mergedRegion = e.target.merged || state.turfCache.at(key);
-            if (mergedRegion) {
-                e.target.merged = mergedRegion;
-                mergedRegion.addTo(state.map);
-            } else if (e.target.polygons) {
+            if (e.target.polygons) {
                 for (var polygon in e.target.polygons) {
                     e.target.polygons[polygon].addTo(state.map);
                 }
-            } else if (children.length && !state.boundariesInProcessing.count(key)) {
+            } else if (children.length) {
                 oscar.getShapes(children, function (shapes) {
-                    // collect all boundaries of sub-clusters and convert to GeoJSON
-                    var boundaries = [];
-                    var edges = 0;
+                    e.target.polygons = [];
                     for (var shape in shapes) {
                         leafletItem = oscar.leafletItemFromShape(shapes[shape]);
-                        boundaries.push(oscar.leafletItemFromShape(shapes[shape]).toGeoJSON());
+                        leafletItem.setStyle(config.styles.shapes['regions']['normal']);
+                        e.target.polygons.push(leafletItem);
+                        leafletItem.addTo(state.map);
                     }
-
-                    for (var boundary in boundaries) {
-                        for (var coordinate in boundaries[boundary].geometry.coordinates) {
-                            edges += boundaries[boundary].geometry.coordinates[coordinate][0].length;
-                        }
-                    }
-
-                    if (edges < config.maxNumPolygonEdges) {
-                        // merge them in a background-job
-                        var worker = new Worker('js/libs/polygonMerger/polygonMerger.js');
-                        var timer = tools.timer("Polygon-Merge");
-                        worker.addEventListener('message', function (e) {
-                            timer.stop();
-                            e.target.merged = L.geoJson(e.data.merged);
-                            e.target.merged.setStyle(config.styles.shapes['regions']['normal']);
-                            state.turfCache.insert(key, e.target.merged);
-                            state.boundariesInProcessing.erase(key);
-                        }, false);
-                        state.boundariesInProcessing.insert(key, key);
-                        worker.postMessage({"shapes": turf.featurecollection(boundaries)});
-                    } else {
-                        e.target.polygons = [];
-                        var regionBoundary;
-                        for (var boundary in boundaries) {
-                            regionBoundary = L.geoJson(boundaries[boundary]);
-                            regionBoundary.setStyle(config.styles.shapes['regions']['normal']);
-                            e.target.polygons.push(regionBoundary);
-                            regionBoundary.addTo(state.map);
-                        }
-                    }
-
                 }, oscar.defErrorCB);
             }
         }
