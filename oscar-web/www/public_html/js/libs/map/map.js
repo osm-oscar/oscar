@@ -654,7 +654,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
             state.items.shapes.drawn.insert(node.id, node.shape);
             if (buffer) {
                 buffer.push(node.marker);
-            } else {
+            } else if (node.marker) {
                 state.markers.addLayer(node.marker);
             }
         },
