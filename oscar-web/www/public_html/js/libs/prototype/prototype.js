@@ -37,6 +37,10 @@ define(["state", "oscar", "tools", "conf", "leafletCluster"], function (state, o
         var text = "";
         if (names.length > 0) {
             for (var i in names) {
+                if(i > config.maxNumSubClusters){
+                    text += "...";
+                    break;
+                }
                 text += names[i];
                 if (i < names.length - 1) {
                     text += ", ";
