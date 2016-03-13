@@ -135,6 +135,10 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                         geopos = itemShape.getLatLng();
                     }
 
+                    L.popup({offset: new L.Point(0, -25)})
+                        .setLatLng(geopos)
+                        .setContent($(this).text()).openOn(state.map);
+
                     if ($('#show_flickr').is(':checked')) {
                         flickr.getImagesForLocation($.trim($(this).text()), geopos);
                     }
