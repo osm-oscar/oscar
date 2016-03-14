@@ -83,35 +83,27 @@
                     <div id="categorieWrapper">
                         <div style="clear:both;"></div>
                         <div id="advancedSearch">
-                            <div class='form-group'>
-                                <button type="button" class="btn btn-default" id="pathquery_selectbutton">Select path
-                                </button>
-                        <span>
-                            Radius:
-                            <input id="pathquery_radius" type="number" value="100" min="50" max="20000" step="50"/>
-                        </span>
-                                <button type="button" class="btn btn-default" id="pathquery_acceptbutton">Accept path
-                                </button>
-                            </div>
-                            <div class='form-group'>
-                                <button type="button" class="btn btn-default" id="geoquery_selectbutton">Select
-                                    rectangle:
-                                </button>
-                        <span data-class="geoquery_min_coord">
-                            (<input id="geoquery_minlat" data-class="geoquery_min_coord" type="number" value="0"
-                                    min="-90" max="90" step="1"/>,
-                            <input id="geoquery_minlon" data-class="geoquery_min_coord" type="number" value="0"
-                                   min="-180" max="180" step="1"/>)
-                        </span>
-                                X
-                        <span data-class="geoquery_max_coord">
-                            (<input id="geoquery_maxlat" data-class="geoquery_max_coord" type="number" value="0"
-                                    min="-90" max="90" step="1"/>,
-                            <input id="geoquery_maxlon" data-class="geoquery_max_coord" type="number" value="0"
-                                   min="-180" max="180" step="1"/>)
-                        </span>
-                                <button type="button" class="btn btn-default" id="geoquery_acceptbutton">Accept</button>
-                            </div>
+							<div class='form-group'>
+								<div class="input-group">
+									<span class="input-group-btn">
+										<button type="button" class="btn btn-default" id="spatialquery_selectbutton">Create</button>
+									</span>
+									<select class='form-control' id="spatialquery_type"/>
+										<option value="rect" selected="selected">Rectangle</option>
+										<option value="poly">Polygon</option>
+										<option value="path">Path</option>
+									</select>
+									<span class="input-group-btn">
+										<button type="button" class="btn btn-default" id="spatialquery_acceptbutton">Accept</button>
+									</span>
+								</div>
+							</div>
+							<div class='form-group hidden' id="spatialquery_radius_group">
+								<div class="input-group">
+									<span class="input-group-addon">Radius:</span>
+									<input id="spatialquery_radius" type="number" value="100" min="50" max="20000" step="50"/>
+								</div>
+							</div>
                         </div>
                         <div id="categories"></div>
                         <div id="subCategories"></div>

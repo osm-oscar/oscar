@@ -46,6 +46,10 @@ define([], function() {
                 pathquery: {
                     normal: {color: '#00BFFF', stroke: true, fill: false, opacity: 0.5},
                     highlight: {color: '#00BFFF', stroke: true, fill: false, opacity: 1.0}
+                },
+                polyquery: {
+                    normal: {color: '#00BFFF', stroke: true, fill: false, opacity: 0.5},
+                    highlight: {color: '#00BFFF', stroke: true, fill: false, opacity: 1.0}
                 }
             },
             menu: {

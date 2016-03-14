@@ -1,4 +1,4 @@
-define(["jquery", "state", "map", "conf"], function($, state, map, config){
+define(["jquery", "state", "map", "conf"], function($, state, map, config) {
     return query = {
         clearSpatialQueryMapShape: function() {
             if (state.spatialquery.mapshape !== undefined) {
@@ -11,16 +11,16 @@ define(["jquery", "state", "map", "conf"], function($, state, map, config){
             //reset timers
             if (state.timers.spatialquery !== undefined) {
                 clearTimeout(state.timers.spatialquery);
-                state.timers.spatialquery = setTimeout(endSpatialQuery, myConfig.timeouts.spatialquery.select);
+                state.timers.spatialquery = setTimeout(query.endSpatialQuery, config.timeouts.spatialquery.select);
             }
             state.spatialquery.coords.push(e.latlng);
             if (state.spatialquery.type === "rect") {
                 if (state.spatialquery.coords.length === 2) {
-                    endSpatialQuery();
+                    query.endSpatialQuery();
                 }
             }
             else {
-                this.updateSpatialQueryMapShape();
+                query.updateSpatialQueryMapShape();
             }
         },
         startSpatialQuery: function() {
@@ -33,16 +33,16 @@ define(["jquery", "state", "map", "conf"], function($, state, map, config){
             $('#spatialquery_selectbutton').html("Finish");
             state.spatialquery.selectButtonState = 'finish';
             state.spatialquery.type = $('#spatialquery_type').val();
-            state.map.on('click', spatialQueryOnClick);
-            state.timers.spatialquery = setTimeout(endSpatialQuery, myConfig.timeouts.spatialquery.select);
+            state.map.on('click', query.spatialQueryOnClick);
+            state.timers.spatialquery = setTimeout(query.endSpatialQuery, config.timeouts.spatialquery.select);
         },
         endSpatialQuery: function() {
-            this.updateSpatialQueryMapShape();
+            query.updateSpatialQueryMapShape();
             if (state.timers.spatialquery !== undefined) {
                 clearTimeout(state.timers.spatialquery);
                 state.timers.spatialquery = undefined;
             }
-            state.map.removeEventListener('click', spatialQueryOnClick);
+            state.map.removeEventListener('click', query.spatialQueryOnClick);
             
             state.spatialquery.selectButtonState = 'clear';
             $('#spatialquery_selectbutton').html('Clear');
@@ -54,9 +54,9 @@ define(["jquery", "state", "map", "conf"], function($, state, map, config){
                 state.timers.spatialquery = undefined;
             }
             
-            this.clearSpatialQueryMapShape();
+            query.clearSpatialQueryMapShape();
             
-            state.map.removeEventListener('click', spatialQueryOnClick);
+            state.map.removeEventListener('click', query.spatialQueryOnClick);
             
             state.spatialquery.coords = [];
             state.spatialquery.selectButtonState = 'select';
@@ -68,7 +68,7 @@ define(["jquery", "state", "map", "conf"], function($, state, map, config){
         },
         updateSpatialQueryMapShape: function() {
             //clear old mapshape
-            this.clearSpatialQueryMapShape();
+            query.clearSpatialQueryMapShape();
             if (state.spatialquery.type === undefined) {
                 console.log("updateSpatialQueryMapShape called with undefined query type");
                 return;

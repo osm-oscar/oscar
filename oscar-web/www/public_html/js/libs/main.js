@@ -45,9 +45,10 @@ requirejs.config({
     waitSeconds: 20
 });
 
-requirejs(["leaflet", "jquery", "mustache", "jqueryui", "sidebar", "mustacheLoader", "conf", "menu", "tokenfield", "switch", "state", "map", "tree", "prototype", "query"],
+requirejs(["leaflet", "jquery", "mustache", "jqueryui", "sidebar", "mustacheLoader", "conf", "menu", "tokenfield", "switch", "state", "map", "tree", "prototype", "query", "tools"],
     function (L, jQuery, mustache, jqueryui, sidebar, mustacheLoader, config, menu, tokenfield, switchButton, state, map, tree) {
         var query = require("query");
+		var tools = require("tools");
         // mustache-template-loader needs this
         window.Mustache = mustache;
 
@@ -154,77 +155,63 @@ requirejs(["leaflet", "jquery", "mustache", "jqueryui", "sidebar", "mustacheLoad
                 }
             });
 
-            $('#geoquery_selectbutton').click(function () {
-                if (state.geoquery.active) {
-                    query.clearGeoQuerySelect();
+            $('#spatialquery_selectbutton').click(function() {
+                if (state.spatialquery.selectButtonState === 'select') {
+                    query.startSpatialQuery();
                 }
-                else {
-                    query.startGeoQuerySelect();
+                else if (state.spatialquery.selectButtonState === 'finish') {
+                    query.endSpatialQuery();
                 }
-            });
-
-            $('#geoquery_acceptbutton').click(function () {
-                //first fetch the coordinates
-                var minlat = parseFloat($('#geoquery_minlat').val());
-                var minlon = parseFloat($('#geoquery_minlon').val());
-                var maxlat = parseFloat($('#geoquery_maxlat').val());
-                var maxlon = parseFloat($('#geoquery_maxlon').val());
-
-                //end the geoquery
-                query.clearGeoQuerySelect();
-
-                var tmp;
-                if (minlat > maxlat) {
-                    tmp = maxlat;
-                    maxlat = minlat;
-                    minlat = tmp;
-                }
-                if (minlon > maxlon) {
-                    tmp = maxlon;
-                    maxlon = minlon;
-                    minlon = tmp;
-                }
-                var q = "$geo:" + minlon + "," + minlat + "," + maxlon + "," + maxlat;
-                var st = $('#search_text');
-                st.val(st.val() + " " + q);
-                st.change();
-
-                query.clearGeoQueryMapShape();
-            });
-
-            $('#geoquery_minlat, #geoquery_maxlat, #geoquery_minlon, #geoquery_maxlon').change(function (e) {
-                query.updateGeoQueryMapShape();
-            });
-
-            $('#pathquery_selectbutton').click(function () {
-                if (state.pathquery.selectButtonState === 'select') {
-                    query.startPathQuery();
-                }
-                else if (state.pathquery.selectButtonState === 'finish') {
-                    query.endPathQuery();
-                }
-                else {
-                    query.resetPathQuery();
+                else if (state.spatialquery.selectButtonState === 'clear') {
+                    query.clearSpatialQuery();
                 }
             });
-
-            $('#pathquery_acceptbutton').click(function () {
-                query.endPathQuery();
-                if (state.pathquery.mapshape !== undefined) {
-                    var latLngs = state.pathquery.mapshape.getLatLngs();
-                    if (latLngs.length) {
-                        var qStr = "$path:" + $('#pathquery_radius').val();
-
-                        for (var i in latLngs) {
-                            qStr += "," + latLngs[i].lat + "," + latLngs[i].lng;
+            $('#spatialquery_acceptbutton').click(function() {
+                if (state.spatialquery.type === undefined) {
+                    return;
+                }
+                query.endSpatialQuery();
+                var qStr = ""
+                if (state.spatialquery.type === "rect") {
+                    var minLat = Math.min(state.spatialquery.coords[0].lat, state.spatialquery.coords[1].lat);
+                    var maxLat = Math.max(state.spatialquery.coords[0].lat, state.spatialquery.coords[1].lat);
+                    var minLng = Math.min(state.spatialquery.coords[0].lng, state.spatialquery.coords[1].lng);
+                    var maxLng = Math.max(state.spatialquery.coords[0].lng, state.spatialquery.coords[1].lng);
+                    qStr = "$geo:" + minLng + "," + minLat + "," + maxLng + "," + maxLat;
+                }
+                else if (state.spatialquery.type === "path") {
+                    if (state.spatialquery.coords.length > 0) {
+                        qStr = "$path:" + jQuery('#spatialquery_radius').val();
+                        for(i in state.spatialquery.coords) {
+                            qStr += "," + state.spatialquery.coords[i].lat + "," + state.spatialquery.coords[i].lng;
                         }
-
-                        var st = $('#search_text');
-                        st.val(st.val() + " " + qStr);
-                        st.change();
                     }
                 }
-                query.resetPathQuery();
+                else if (state.spatialquery.type === "poly") {
+                    if (state.spatialquery.coords.length > 3) {
+                        qStr = "$poly";
+                        var delim = ":"
+                        for(i in state.spatialquery.coords) {
+                            qStr += delim + state.spatialquery.coords[i].lat + "," + state.spatialquery.coords[i].lng;
+                            delim = ",";
+                        }
+                    }
+                }
+                if (qStr.length) {
+                    tools.addSingleQueryStatementToQuery(qStr);
+                }
+                query.clearSpatialQuery();
+            });
+            $('#spatialquery_type').change(function(e) {
+                if (e.target.value !== state.spatialquery.type) {
+                    query.clearSpatialQuery();
+                }
+                if (e.target.value === 'path') {
+                    $('#spatialquery_radius_group').removeClass('hidden');
+                }
+                else {
+                    $('#spatialquery_radius_group').addClass('hidden');
+                }
             });
 
             $(window).bind('popstate', function (e) {
