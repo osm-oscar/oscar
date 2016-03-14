@@ -50,8 +50,9 @@
         <div class="sidebar-tabs">
             <ul role="tablist">
                 <li><a href="#search" role="tab"><i class="fa fa-search"></i></a></li>
-                <li><a href="#help" role="tab"><i class="fa fa-envelope"></i></a></li>
+                <li><a href="#help" role="tab"><i class="fa fa-question"></i></a></li>
                 <li><a href="#options" role="tab"><i class="fa fa-wrench"></i></a></li>
+                <li><a href="#items_parent" role="tab"><i class="fa fa-group"></i></a></li>
             </ul>
         </div>
 
@@ -75,7 +76,7 @@
                                style="position: absolute; left: -9999px; width: 1px; height: 1px;"
                                tabindex="-1">
                     </form>
-                    <a href="#" id="graph" class="fa fa-bar-chart" data-toggle="tooltip" data-placement="left" title="Show the region-hierarchy"></a>
+                    <a href="#" id="graph" class="fa fa-sitemap" data-toggle="tooltip" data-placement="left" title="Show the region-hierarchy"></a>
                 </div>
                 <span id="showCategories" mod="show"><a href="#">Hide categories</a></span>
 
@@ -103,6 +104,23 @@
 									<span class="input-group-addon">Radius:</span>
 									<input id="spatialquery_radius" type="number" value="100" min="50" max="20000" step="50"/>
 								</div>
+							</div>
+							<div class ="form-group">
+								<table class="table table-hover table-bordered table-condense">
+									<thead>
+										<tr>
+											<th colspan="4" class="text-center">Available spatial objects</th>
+										</tr>
+										<tr>
+											<th>Id</th>
+											<th>Type</th>
+											<th>Show</th>
+											<th>Remove</th>
+										</tr>
+									</thead>
+									<tbody id='spatial_objects_table_body'>
+									</tbody>
+								</table>
 							</div>
                         </div>
                         <div id="categories"></div>
@@ -134,16 +152,21 @@
                                 <input type="checkbox" class="checkbox" id="show_flickr" checked>Show flickr images
                             </label>
                         </div>
+                        <div class='form-group-sm'>
+							<label for='full_cqr_checkbox'>
+								<input type="checkbox" class="checkbox" id="full_cqr_checkbox">Load all at once
+							</label>
+						</div>
                         <div class='form-group'>
                             <label for='oht_checkbox'>
                                 <input type="checkbox" class="checkbox" id="oht_checkbox" checked>Global unfold ratio
                             </label>
-
                             <div class="input-group" id='ohf_spinner_group'>
                                 <span class="input-group-addon">unfold ratio</span>
                                 <input class='form-control' type="number" value='95' min='0' max='100' id='ohf_spinner'
                                        step="1"/>
                             </div>
+                            
                         </div>
                     </div>
                 </div>

@@ -36,6 +36,7 @@ define(["jquery", "mustache", "tools", "leaflet", "spin","conf", "leafletCluster
             query: undefined,
             loadingSpinner: undefined
         },
+        spatialObjects : tools.SimpleHash(), //id -> {id : int, type : "rect", "poly", "path", mapshape : L, query : string}
         spatialquery : {
             active : false,
             mapshape : undefined,
@@ -47,7 +48,21 @@ define(["jquery", "mustache", "tools", "leaflet", "spin","conf", "leafletCluster
             searchResultsCounter: undefined
         },
         shownBoundaries: [],
-
+		
+		spatialQueryTableRowTemplateDataFromSpatialObject: function(e) {
+			var t = "invalid";
+			if (e.type === "rect") {
+				t = "Rectangle";
+			}
+			else if (e.type === "poly") {
+				t = "Polygon";
+			}
+			else if (e.type === "path") {
+				t = "Path";
+			}
+			return { id : e.id, type : t};
+		},
+	   
         resultListTemplateDataFromItem: function (item, shapeSrcType) {
             function isMatchedTag(key, value) {
                 var testString = key + ":" + value;

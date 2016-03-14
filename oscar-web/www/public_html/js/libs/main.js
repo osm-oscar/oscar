@@ -54,6 +54,7 @@ requirejs(["leaflet", "jquery", "mustache", "jqueryui", "sidebar", "mustacheLoad
 
         // load template files
         $.Mustache.load('template/itemListEntryTemplate.mst');
+        $.Mustache.load('template/spatialQueryTableRowTemplate.mst');
         $.Mustache.load('template/treeTemplate.mst');
         $("#help").load('template/help.html', function () {
             $('.example-query-string').on('click', function () {
@@ -198,7 +199,14 @@ requirejs(["leaflet", "jquery", "mustache", "jqueryui", "sidebar", "mustacheLoad
                     }
                 }
                 if (qStr.length) {
-                    tools.addSingleQueryStatementToQuery(qStr);
+					var data = {
+						id : state.spatialObjects.size(),
+						type : state.spatialquery.type,
+						mapshape : state.spatialquery.mapshape,
+						query : qStr
+					};
+					state.spatialObjects.insert(data.id, data);
+					map.appendSpatialObjectToTable(data);
                 }
                 query.clearSpatialQuery();
             });

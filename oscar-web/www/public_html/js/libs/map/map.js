@@ -52,6 +52,20 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                 });
             }
         },
+		toggleSpatialObjectMapShape: function(id) {
+			if (state.spatialObjects.count(id)) {
+				var d = state.spatialObjects.at(id);
+				var active = d['active'];
+				if (active === undefined || active === false) {
+					state.map.addLayer(d.mapshape);
+					d['active'] = true;
+				}
+				else {
+					state.map.removeLayer(d.mapshape);
+					d['active'] = false;
+				}
+			}
+		},
 
         visualizeResultListItems: function () {
             state.items.shapes.promised = {};
@@ -101,7 +115,16 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                 }
             }, oscar.defErrorCB);
         },
-
+		appendSpatialObjectToTable : function(data) {
+			var id = data.id;
+			var parentElement = $('#spatial_objects_table_body');
+            var templateData = state.spatialQueryTableRowTemplateDataFromSpatialObject(data);
+            var rendered = $.Mustache.render('spatialQueryTableRowTemplate', templateData);
+            var inserted = $($(rendered).appendTo(parentElement));
+			inserted.change(function(e) {
+				map.toggleSpatialObjectMapShape(id);
+			});
+		},
         appendItemToListView: function (item, shapeSrcType, parentElement) {
             if (item === undefined) {
                 console.log("Undefined item displayed");
@@ -714,19 +737,41 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                 map.destroyTabs();
             }
         },
-
+       //replace spatial objects with the real deal
+	   replaceSpatialObjects: function(qstr) {
+			var res = "";
+			var withInExact = false;
+			for(i=0; i < qstr.length; ++i) {
+				if (qstr[i] === '"') {
+					withInExact = !withInExact;
+					res += '"';
+				}
+				else if (qstr[i] === '\\') {
+					++i;
+					if (i < qstr.length) {
+						res += '\\' + qstr[i];
+					}
+				}
+				else if (qstr[i] === '&' && !withInExact) {
+					var tmp = "";
+					for(++i; i < qstr.length && qstr[i] >= '0' && qstr[i] <= '9'; ++i) {
+						tmp += qstr[i];
+					}
+					var id = parseInt(tmp);
+					if (state.spatialObjects.count(id)) {
+						res += state.spatialObjects.at(id).query;
+					}
+				}
+				else {
+					res += qstr[i];
+				}
+			}
+	   },
         doCompletion: function () {
             if ($("#search_text").val() === state.queries.lastQuery) {
                 return;
             }
             state.clearViews();
-
-            if ($('#searchModi input').is(":checked")) {
-                //TODO: wrong placement of markers if clsutering is aktive. Cause: region midpoint is outside of search rectangle
-                tools.addSingleQueryStatementToQuery("$geo:" + state.map.getBounds().getSouthWest().lng
-                    + "," + state.map.getBounds().getSouthWest().lat + ","
-                    + state.map.getBounds().getNorthEast().lng + "," + state.map.getBounds().getNorthEast().lat);
-            }
 
             $("#showCategories a").click();
             state.sidebar.open("search");
@@ -734,6 +779,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
 
             //query has changed, ddos the server!
             var myQuery = $("#search_text").val();
+            
             state.queries.lastQuery = myQuery + "";//make sure state hold a copy
 
             var ohf = (parseInt($('#ohf_spinner').val()) / 100.0);
@@ -746,12 +792,21 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
             callFunc = function (q, scb, ecb) {
                 oscar.completeSimple(q, scb, ecb, ohf, globalOht);
             };
+			
+			var myRealQuery =  map.replaceSpatialObjects(myQuery);
+			
+            if ($('#searchModi input').is(":checked")) {
+                //TODO: wrong placement of markers if clustering is active. Cause: region midpoint is outside of search rectangle
+                myRealQuery =  "(" + myRealQuery + ") $geo:" + state.map.getBounds().getSouthWest().lng
+                    + "," + state.map.getBounds().getSouthWest().lat + ","
+                    + state.map.getBounds().getNorthEast().lng + "," + state.map.getBounds().getNorthEast().lat;
+            }
 
             //push our query as history state
-            window.history.pushState({"q": myQuery}, undefined, location.pathname + "?q=" + encodeURIComponent(myQuery));
+            window.history.pushState({"q": myRealQuery}, undefined, location.pathname + "?q=" + encodeURIComponent(myRealQuery));
 
             //lift-off
-            callFunc(myQuery,
+            callFunc(myRealQuery,
                 function (cqr) {
                     //orbit reached, iniate coupling with user
                     if (state.queries.lastReturned < myQueryCounter) {

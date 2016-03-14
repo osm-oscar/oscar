@@ -108,6 +108,6 @@ define(["jquery", "state", "map", "conf"], function($, state, map, config) {
                 state.spatialquery.mapshape = L.polyline(state.spatialquery.coords, config.styles.shapes.pathquery.highlight);
             }
             state.map.addLayer(state.spatialquery.mapshape);
-        }
+        },
     };
 });
