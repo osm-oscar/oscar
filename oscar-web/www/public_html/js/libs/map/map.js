@@ -135,6 +135,10 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                         geopos = itemShape.getLatLng();
                     }
 
+                    L.popup({offset: new L.Point(0, -25)})
+                        .setLatLng(geopos)
+                        .setContent($(this).text()).openOn(state.map);
+
                     if ($('#show_flickr').is(':checked')) {
                         flickr.getImagesForLocation($.trim($(this).text()), geopos);
                     }
@@ -422,7 +426,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
 
                         if ($("#onePath").is(':checked')) {
                             tree.onePath(parentNode);
-                        }else{
+                        } else {
                             tree.refresh(rid);
                         }
 
@@ -582,14 +586,11 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
             }
         },
 
-        removeBoundaries: function (e) {
-            if (e.merged) {
-                state.map.removeLayer(e.merged);
-            } else if (e.polygons && e.polygons.length) {
-                for (var polygon in e.polygons) {
-                    state.map.removeLayer(e.polygons[polygon]);
-                }
+        removeBoundaries: function () {
+            for (var boundary in state.shownBoundaries) {
+                state.map.removeLayer(state.shownBoundaries[boundary]);
             }
+            state.shownBoundaries = [];
         },
 
         decorateMarker: function (marker) {
@@ -634,7 +635,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
         removeClusterMarker: function (node) {
             map.removeMarker(node.marker);
             state.items.clusters.drawn.erase(node.id);
-            map.removeBoundaries(node.marker);
+            map.removeBoundaries();
         },
 
         addClusterMarker: function (node, buffer) {
@@ -656,7 +657,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
             state.items.shapes.drawn.insert(node.id, node.shape);
             if (buffer) {
                 buffer.push(node.marker);
-            } else {
+            } else if (node.marker) {
                 state.markers.addLayer(node.marker);
             }
         },
