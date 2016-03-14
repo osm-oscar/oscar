@@ -62,30 +62,68 @@
         <td>STRING or <span>?STRING?</span> or <span>?"STRING"?</span></td>
         <td>Matching elements with STRING as substring. i.e. ?"uttgar"?</td>
     </tr>
+    <tr>
+        <td>Match only items</td>
+        <td><span>!STRING-MATCH</span></td>
+        <td>Match only items with match types as specified by STRING-MATCH</td>
+    </tr>
+    <tr>
+        <td>Match only regions</td>
+        <td><span>#STRING-MATCH</span></td>
+        <td>Match only region with match types as specified by STRING-MATCH</td>
+    </tr>
     </tbody>
 </table>
 <table class="table table-hover table-bordered table-condensed">
     <tbody>
-    <tr><th colspan="3">Operations</th></tr>
+    <tr><th colspan="2">Operations</th></tr>
     <tr>
         <td>Intersection</td>
         <td>SPACE or / surrounded by spaces</td>
-        <td></td>
     </tr>
     <tr>
         <td>Union</td>
         <td>+ surrounded by spaces</td>
-        <td></td>
     </tr>
     <tr>
         <td>Difference</td>
         <td>- surrounded by spaces</td>
-        <td></td>
     </tr>
     <tr>
         <td>Symmetric-Difference</td>
         <td>^ surrounded by spaces</td>
-        <td></td>
+    </tr>
+    <tr>
+        <td>Match surrounding</td>
+        <td>% QUERY</td>
+    </tr>
+    <tr>
+        <td>Match surrounding by apx. n Meter</td>
+        <td>%n% QUERY</td>
+    </tr>
+    <tr>
+        <td>Match regions with >n% of their cells matched</td>
+        <td>%#n% QUERY</td>
+    </tr>
+    <tr>
+        <td>Match northern area</td>
+        <td>QUERY :north-of QUERY</td>
+    </tr>
+    <tr>
+        <td>Match eastern area</td>
+        <td>QUERY :east-of QUERY</td>
+    </tr>
+    <tr>
+        <td>Match southern area</td>
+        <td>QUERY :south-of QUERY</td>
+    </tr>
+    <tr>
+        <td>Match western area</td>
+        <td>QUERY :west-of QUERY</td>
+    </tr>
+    <tr>
+        <td>Match area between</td>
+        <td>QUERY &lt;-&gt; QUERY</td>
     </tr>
     </tbody>
 </table>
