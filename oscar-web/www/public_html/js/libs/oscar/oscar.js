@@ -876,7 +876,7 @@ define(['jquery', 'sserialize', 'leaflet', 'module', 'spinner'], function (jQuer
                 }
             });
         },
-        completeSimple : function(query, successCB, errorCB, ohf, globalOht) {
+        completeSimple : function(query, successCB, errorCB, ohf, globalOht, regionFilter) {
             var params = {};
             params['q'] = query;
             if (ohf !== undefined) {
@@ -941,7 +941,7 @@ define(['jquery', 'sserialize', 'leaflet', 'module', 'spinner'], function (jQuer
                 }
             });
         },
-        simpleCqrChildren: function (query, successCB, errorCB, selectedRegion) {
+        simpleCqrChildren: function (query, successCB, errorCB, selectedRegion, regionFilter) {
             var params = {};
             params['q'] = query;
             if (selectedRegion !== undefined) {
@@ -975,7 +975,7 @@ define(['jquery', 'sserialize', 'leaflet', 'module', 'spinner'], function (jQuer
                 }
             });
         },
-        simpleCqrMaxIndependentChildren: function (query, successCB, errorCB, selectedRegion, maxOverlap) {
+        simpleCqrMaxIndependentChildren: function (query, successCB, errorCB, selectedRegion, maxOverlap, regionFilter) {
             var params = {};
             params['q'] = query;
             if (selectedRegion !== undefined) {

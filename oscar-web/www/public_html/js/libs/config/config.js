@@ -24,7 +24,7 @@ define([], function() {
                     }
             }
     };
-    var = cfg {
+    var cfg = {
         styles: {
             shapes: {
                 regions: {

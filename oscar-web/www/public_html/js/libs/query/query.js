@@ -1,13 +1,13 @@
 define(["jquery", "state", "map", "conf"], function($, state, map, config){
     return query = {
-        function clearSpatialQueryMapShape() {
+        clearSpatialQueryMapShape: function() {
             if (state.spatialquery.mapshape !== undefined) {
                 state.map.removeLayer(state.spatialquery.mapshape);
                 state.spatialquery.mapshape = undefined;
             }
-        };
+        },
         //begin spatial query functions
-        function spatialQueryOnClick(e) {
+        spatialQueryOnClick: function(e) {
             //reset timers
             if (state.timers.spatialquery !== undefined) {
                 clearTimeout(state.timers.spatialquery);
@@ -22,8 +22,8 @@ define(["jquery", "state", "map", "conf"], function($, state, map, config){
             else {
                 this.updateSpatialQueryMapShape();
             }
-        };
-        function startSpatialQuery() {
+        },
+        startSpatialQuery: function() {
             if (state.timers.spatialquery !== undefined) {
                 clearTimeout(state.timers.spatialquery);
                 state.timers.spatialquery = undefined;
@@ -35,8 +35,8 @@ define(["jquery", "state", "map", "conf"], function($, state, map, config){
             state.spatialquery.type = $('#spatialquery_type').val();
             state.map.on('click', spatialQueryOnClick);
             state.timers.spatialquery = setTimeout(endSpatialQuery, myConfig.timeouts.spatialquery.select);
-        };
-        function endSpatialQuery() {
+        },
+        endSpatialQuery: function() {
             this.updateSpatialQueryMapShape();
             if (state.timers.spatialquery !== undefined) {
                 clearTimeout(state.timers.spatialquery);
@@ -47,8 +47,8 @@ define(["jquery", "state", "map", "conf"], function($, state, map, config){
             state.spatialquery.selectButtonState = 'clear';
             $('#spatialquery_selectbutton').html('Clear');
             $('#spatialquery_acceptbutton').addClass('btn-info');
-        };
-        function clearSpatialQuery() {
+        },
+        clearSpatialQuery: function() {
             if (state.timers.spatialquery !== undefined) {
                 clearTimeout(state.timers.spatialquery);
                 state.timers.spatialquery = undefined;
@@ -65,8 +65,8 @@ define(["jquery", "state", "map", "conf"], function($, state, map, config){
             $('#spatialquery_acceptbutton').removeClass("btn-info");
             $('#spatialquery_selectbutton').removeClass("btn-info");
             $('#spatialquery_selectbutton').html('Create');
-        };
-        function updateSpatialQueryMapShape() {
+        },
+        updateSpatialQueryMapShape: function() {
             //clear old mapshape
             this.clearSpatialQueryMapShape();
             if (state.spatialquery.type === undefined) {
@@ -108,6 +108,6 @@ define(["jquery", "state", "map", "conf"], function($, state, map, config){
                 state.spatialquery.mapshape = L.polyline(state.spatialquery.coords, config.styles.shapes.pathquery.highlight);
             }
             state.map.addLayer(state.spatialquery.mapshape);
-        };
+        }
     };
 });
