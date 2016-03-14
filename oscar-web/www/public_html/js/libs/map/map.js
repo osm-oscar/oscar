@@ -145,6 +145,17 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
 
                 }
             );
+			
+			function itemIdQuery(e) {
+				var me = $(this);
+				var myKey = me.attr('data-query');
+				if (myKey === undefined) {
+					return false;
+				}
+				var myQstr = "$item:" + myKey;
+				tools.addSingleQueryStatementToQuery(myQstr);
+				return false;
+			}
 
             function itemDetailQuery(e) {
                 var me = $(this);
@@ -163,6 +174,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
 
             $('#' + shapeSrcType + 'Details' + itemId + " .item-detail-key", inserted).click(itemDetailQuery);
             $('#' + shapeSrcType + 'Details' + itemId + " .item-detail-value", inserted).click(itemDetailQuery);
+			$('#' + shapeSrcType + 'Details'+itemId+" .item-detail-id", inserted).click(itemIdQuery);
         },
 
         flatCqrTreeDataSource: function (cqr) {
