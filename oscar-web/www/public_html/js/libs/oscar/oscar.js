@@ -353,7 +353,7 @@ define(['jquery', 'sserialize', 'leaflet', 'module', 'spinner'], function (jQuer
                 regionItemIds: function (regionId, successCB, errorCB, resultListOffset) {
                     this.p.simpleCqrItems(this.d.query,
                         function (itemIds) {
-                            successCB(itemIds);
+                            successCB(regionId, itemIds);
                         },
                         errorCB,
                         this.p.maxFetchItems, regionId, resultListOffset);
