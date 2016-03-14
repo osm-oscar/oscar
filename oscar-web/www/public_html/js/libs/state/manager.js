@@ -32,19 +32,16 @@ define(["jquery", "mustache", "tools", "leaflet", "spin","conf", "leafletCluster
             queryInBound: false
         },
         timers: {
-            geoquery: undefined,
-            pathquery: undefined,
+            spatialquery: undefined,
             query: undefined,
             loadingSpinner: undefined
         },
-        geoquery: {
-            active: false,
-            clickcount: 0,
-            mapshape: undefined
-        },
-        pathquery: {
-            mapshape: undefined,
-            selectButtonState: 'select'
+        spatialquery : {
+            active : false,
+            mapshape : undefined,
+            type : undefined, //one of rect, poly, path
+            coords : [],
+            selectButtonState : 'select'
         },
         domcache: {
             searchResultsCounter: undefined
@@ -59,15 +56,14 @@ define(["jquery", "mustache", "tools", "leaflet", "spin","conf", "leafletCluster
             }
 
             var itemKv = [];
-            var itemUrls = [];
             var wikiLink = undefined;
             var hasMatchingTag = false;
-            var protoRegExp = /^.*:\/\//;
             var postcode, street, city, houseNumber;
 
             for (var i = 0; i < item.size(); ++i) {
                 var itemKey = item.key(i);
                 var itemValue = item.value(i);
+                var entry = {"k" : itemKey, "v" : itemValue}
 
                 switch (itemKey) {
                     case "addr:city":
@@ -83,30 +79,15 @@ define(["jquery", "mustache", "tools", "leaflet", "spin","conf", "leafletCluster
                         houseNumber = itemValue;
                         break;
                 }
-
-                if (itemKey === "wikipedia") {
-                    if (protoRegExp.test(itemValue)) {
-                        itemUrls.push({"k": itemKey, "v": itemValue});
-                    }
-                    else {
-                        wikiLink = itemValue;
-                    }
+                if (isMatchedTag(itemKey, itemValue)) {
+                    entry["kc"] = "matched-key-color";
+                    entry["vc"] = "matched-value-color";
+                    hasMatchingTag = true;
                 }
-                else if (config.resultsview.urltags[itemKey] !== undefined) {
-                    if (!protoRegExp.test(itemValue)) {
-                        itemValue = "http://" + itemValue;
-                    }
-                    itemUrls.push({"k": itemKey, "v": itemValue});
+                if (config.resultsview.urltags[itemKey] !== undefined) {
+                    entry["link"] = config.resultsview.urltags[itemKey](itemValue);
                 }
-                else {
-                    var tmp = {"k": itemKey, "v": itemValue};
-                    if (isMatchedTag(itemKey, itemValue)) {
-                        tmp["kc"] = "matched-key-color";
-                        tmp["vc"] = "matched-value-color";
-                        hasMatchingTag = true;
-                    }
-                    itemKv.push(tmp);
-                }
+                itemKv.push(entry);
             }
             return {
                 "shapeSrcType": shapeSrcType,
@@ -120,9 +101,7 @@ define(["jquery", "mustache", "tools", "leaflet", "spin","conf", "leafletCluster
                 "street": street,
                 "housenumber": houseNumber,
                 "matchingTagClass": (hasMatchingTag ? "name-has-matched-tag" : false),
-                "wikilink": wikiLink,
-                "urlkvs": itemUrls,
-                "kv": itemKv //{k,v, kc, vc}
+                "kv": itemKv //{k,v, link, kc, vc}
             };
         },
 
