@@ -1,11 +1,11 @@
 <script id="spatialQueryTableRowTemplate" type="text/x-tmpl-mustache">
 	<tr>
-		<td>{{id}}</td>
+		<td><input type="text" class="form-control" value='{{name}}'></td>
 		<td>{{type}}</td>
 		<td><input type="checkbox" class="checkbox"></td>
 		<td>
 			<a href="#" class="fa fa-remove" title="Remove this object"
-				data-toggle="tooltip" data-placement="left" data-id='{{{id}}}'>
+				data-toggle="tooltip" data-placement="left" data-id='{{id}}'>
 			</a>
 		</td>
 	</tr>

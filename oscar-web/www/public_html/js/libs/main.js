@@ -199,14 +199,22 @@ requirejs(["leaflet", "jquery", "mustache", "jqueryui", "sidebar", "mustacheLoad
                     }
                 }
                 if (qStr.length) {
+					var id;
+					for(i=0; true; ++i) {
+						if (!state.spatialObjects.store.count(i)) {
+							id = i;
+							break;
+						}
+					}
 					var data = {
-						id : state.spatialObjects.size(),
+						name : id,
 						type : state.spatialquery.type,
 						mapshape : state.spatialquery.mapshape,
 						query : qStr
 					};
-					state.spatialObjects.insert(data.id, data);
-					map.appendSpatialObjectToTable(data);
+					state.spatialObjects.store.insert(id, data);
+					state.spatialObjects.names.insert(id, id);
+					map.appendSpatialObjectToTable(id);
                 }
                 query.clearSpatialQuery();
             });

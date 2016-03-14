@@ -36,7 +36,10 @@ define(["jquery", "mustache", "tools", "leaflet", "spin","conf", "leafletCluster
             query: undefined,
             loadingSpinner: undefined
         },
-        spatialObjects : tools.SimpleHash(), //id -> {id : int, type : "rect", "poly", "path", mapshape : L, query : string}
+        spatialObjects : {
+			store : tools.SimpleHash(), //internalId -> {mapshape : Leaflet.Shape, query : String, active : boolean}
+			names : tools.SimpleHash() // String -> internalId
+		},
         spatialquery : {
             active : false,
             mapshape : undefined,
@@ -49,6 +52,7 @@ define(["jquery", "mustache", "tools", "leaflet", "spin","conf", "leafletCluster
         },
         shownBoundaries: [],
 		
+		//e = {type : type, id : internalId, name : name}
 		spatialQueryTableRowTemplateDataFromSpatialObject: function(e) {
 			var t = "invalid";
 			if (e.type === "rect") {
@@ -60,7 +64,7 @@ define(["jquery", "mustache", "tools", "leaflet", "spin","conf", "leafletCluster
 			else if (e.type === "path") {
 				t = "Path";
 			}
-			return { id : e.id, type : t};
+			return { id : e.id, name : e.name, type : t};
 		},
 	   
         resultListTemplateDataFromItem: function (item, shapeSrcType) {

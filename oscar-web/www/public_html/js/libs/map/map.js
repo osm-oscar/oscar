@@ -52,9 +52,9 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                 });
             }
         },
-		toggleSpatialObjectMapShape: function(id) {
-			if (state.spatialObjects.count(id)) {
-				var d = state.spatialObjects.at(id);
+		toggleSpatialObjectMapShape: function(internalId) {
+			if (state.spatialObjects.store.count(internalId)) {
+				var d = state.spatialObjects.store.at(internalId);
 				var active = d['active'];
 				if (active === undefined || active === false) {
 					state.map.addLayer(d.mapshape);
@@ -66,7 +66,16 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
 				}
 			}
 		},
-
+		removeSpatialObject: function(internalId) {
+			if (state.spatialObjects.store.count(internalId)) {
+				var d = state.spatialObjects.store.at(internalId);
+				if (d.active === true) {
+					state.map.removeLayer(d.mapshape);
+				}
+				state.spatialObjects.names.erase(d.name);
+				state.spatialObjects.store.erase(internalId);
+			}
+		},
         visualizeResultListItems: function () {
             state.items.shapes.promised = {};
             var itemsToDraw = [];
@@ -115,14 +124,36 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                 }
             }, oscar.defErrorCB);
         },
-		appendSpatialObjectToTable : function(data) {
-			var id = data.id;
+	   
+		appendSpatialObjectToTable : function(name) {
+			var internalId = state.spatialObjects.names.at(name);
+			if (internalId === undefined) {
+				return;
+			}
+			var so = state.spatialObjects.store.at(internalId);
+			var data = {
+				type : so.type,
+				id : internalId,
+				name : name
+			};
 			var parentElement = $('#spatial_objects_table_body');
             var templateData = state.spatialQueryTableRowTemplateDataFromSpatialObject(data);
             var rendered = $.Mustache.render('spatialQueryTableRowTemplate', templateData);
             var inserted = $($(rendered).appendTo(parentElement));
-			inserted.change(function(e) {
-				map.toggleSpatialObjectMapShape(id);
+			$(".checkbox", inserted).change(function() {
+				map.toggleSpatialObjectMapShape(internalId);
+			});
+			$(".form-control", inserted).change(function() {
+				var me = $(this);
+				var d = state.spatialObjects.store.at(internalId);
+				var oldName = d.name;
+				d.name = me.val();
+				state.spatialObjects.names.erase(oldName);
+				state.spatialObjects.names.insert(d.name, internalId);
+			});
+			$(".fa-remove", inserted).click(function() {
+				inserted.remove();
+				map.removeSpatialObject(internalId);
 			});
 		},
         appendItemToListView: function (item, shapeSrcType, parentElement) {
@@ -741,31 +772,34 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
 	   replaceSpatialObjects: function(qstr) {
 			var res = "";
 			var withInExact = false;
-			for(i=0; i < qstr.length; ++i) {
+			for(i=0; i < qstr.length;) {
 				if (qstr[i] === '"') {
 					withInExact = !withInExact;
 					res += '"';
+					++i;
 				}
 				else if (qstr[i] === '\\') {
 					++i;
 					if (i < qstr.length) {
 						res += '\\' + qstr[i];
+						++i;
 					}
 				}
 				else if (qstr[i] === '&' && !withInExact) {
-					var tmp = "";
-					for(++i; i < qstr.length && qstr[i] >= '0' && qstr[i] <= '9'; ++i) {
-						tmp += qstr[i];
+					var name = "";
+					for(++i; i < qstr.length && qstr[i] !== ' ';) {
+						name += qstr[i];
 					}
-					var id = parseInt(tmp);
-					if (state.spatialObjects.count(id)) {
-						res += state.spatialObjects.at(id).query;
+					if (state.spatialObjects.names.count(name)) {
+						res += state.spatialObjects.store.at(state.spatialObjects.names.at(name)).query;
 					}
 				}
 				else {
 					res += qstr[i];
+					++i;
 				}
 			}
+			return res;
 	   },
         doCompletion: function () {
             if ($("#search_text").val() === state.queries.lastQuery) {
