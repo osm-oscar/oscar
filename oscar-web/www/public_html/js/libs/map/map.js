@@ -22,8 +22,10 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                         }
                         flickr.getImagesForLocation($.trim(state.DAG.at(itemId).name), geopos);
                     }
-
-                    state.sidebar.open("search");
+                    
+                    if (!$('#item_relatives').hasClass('active')) {
+						state.sidebar.open("search");
+					}
                     // open a tab, that contains the element
                     var parentId = state.DAG.at(itemId).parents[0].id;
                     var index = $("#tabs a[href='#tab-" + parentId + "']").parent().index();
@@ -38,6 +40,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                         }
                     );
                     $(itemDetailsId).collapse('show');
+					state.items.activeItem = itemId;
                     //var container = $('#'+ shapeSrcType +'_parent');
                     var container = $(".sidebar-content");
                     var itemPanelRootDiv = $(itemPanelRootId);
@@ -49,9 +52,55 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                         container.animate({scrollTop: scrollPos});
                         //container.animate({scrollTop: $(itemsDetailsId).offset().top});
                     }
+                    map.showItemRelatives();
                 });
             }
         },
+		clearHighlightedShapes: function(shapeSrcType) {
+			for(var i in state[shapeSrcType].shapes.highlighted.values()) {
+				if (!state[shapeSrcType].shapes.regular.count(i)) {//if it's not regularly drawn, remove it
+					state.map.removeLayer(state[shapeSrcType].shapes.drawn.at(i));
+					state[shapeSrcType].shapes.drawn.erase(i);
+				}
+				else {
+					state[shapeSrcType].shapes.drawn.at(i).setStyle(myConfig.styles.shapes[shapeSrcType]['normal']);
+				}
+			}
+			state[shapeSrcType].shapes.highlighted.clear();
+		},
+		highlightShape: function(itemId, shapeSrcType) {
+			if (state[shapeSrcType].shapes.highlighted.count(itemId)) {//already highlighted
+				return;
+			} 
+			if (state[shapeSrcType].shapes.drawn.count(itemId)) { //this already on the map, change the style
+				var lfi = state[shapeSrcType].shapes.drawn.at(itemId);
+				map.clearHighlightedShapes(shapeSrcType);
+				state[shapeSrcType].shapes.highlighted.set(itemId, lfi);
+				lfi.setStyle(config.styles.shapes[shapeSrcType]['highlight']);
+				state.map.fitBounds(lfi.getBounds());
+			}
+			else {
+				state[shapeSrcType].shapes.promised.clear();
+				state[shapeSrcType].shapes.promised.set(itemId, itemId);
+				oscar.getShape(itemId,
+								function(shape) {
+									if (!state[shapeSrcType].shapes.promised.count(itemId) || state[shapeSrcType].shapes.drawn.count(temId)) {
+										return;
+									}
+									map.clearHighlightedShapes(shapeSrcType);
+									var leafLetItem = oscar.leafletItemFromShape(shape);
+									leafLetItem.setStyle(config.styles.shapes[shapeSrcType]['highlight']);
+									state[shapeSrcType].shapes.highlighted.set(itemId, itemId);
+									map.addShapeToMap(leafLetItem, itemId, shapeSrcType);
+								},
+								defErrorCB
+				);
+				oscar.getItem(itemId,
+								function(item) {
+									state.map.fitBounds(item.bbox());
+								}, defErrorCB);
+			}
+		},
 		toggleSpatialObjectMapShape: function(internalId) {
 			if (state.spatialObjects.store.count(internalId)) {
 				var d = state.spatialObjects.store.at(internalId);
@@ -77,11 +126,11 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
 			}
 		},
         visualizeResultListItems: function () {
-            state.items.shapes.promised = {};
+            state.items.shapes.promised.clear();
             var itemsToDraw = [];
             for (var i in state.items.listview.drawn.values()) {
                 if (!state.items.shapes.drawn.count(i)) {
-                    state.items.shapes.promised[i] = state.items.listview.drawn.at(i);
+                    state.items.shapes.promised.set(i, state.items.listview.drawn.at(i));
                     itemsToDraw.push(i);
                 }
             }
@@ -93,16 +142,16 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                 var marker;
                 for (var i in itemsToDraw) {
                     var itemId = itemsToDraw[i];
-                    if (state.items.shapes.promised[itemId] === undefined) {
+                    if (!state.items.shapes.promised.count(itemId)) {
                         continue;
                     }
                     if (shapes[itemId] === undefined || !state.items.listview.drawn.count(itemId) ||
                         state.items.shapes.drawn.count(itemId)) {
-                        delete state.items.shapes.promised[itemId];
+                        state.items.shapes.promised.erase(itemId);
                         continue;
                     }
 
-                    delete state.items.shapes.promised[itemId];
+                    state.items.shapes.promised.erase(itemId);
                     var itemShape = oscar.leafletItemFromShape(shapes[itemId]);
                     itemShape.setStyle(config.styles.shapes.items.normal);
 
@@ -124,7 +173,33 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                 }
             }, oscar.defErrorCB);
         },
-	   
+		//shows the relatives of the currently active item if the relatives pane is active
+		showItemRelatives: function() {
+			if (!$('#item_relatives').hasClass("active") || state.items.activeItem === undefined) {
+				return;
+			}
+			var itemId = state.items.activeItem;
+			oscar.getItems([itemId], function(items) {
+				for(var i in items) {
+					map.appendToActiveItemsList(items[i]);
+				}
+			});
+			oscar.getItemsRelativesIds(itemId, function(relativesIds) {
+				if (state.items.activeItem != itemId) {
+					return;
+				}
+				var myItemId = itemId;
+				oscar.getItems(relativesIds, function(relatives) {
+					if (state.items.activeItem != myItemId) {
+						return;
+					}
+					state.clearListAndShapes("relatives");
+					for(var i in relatives) {
+						map.appendToRelativesList(relatives[i]);
+					}
+				}, oscar.defErrorCB);
+			}, oscar.defErrorCB);
+		},   
 		appendSpatialObjectToTable : function(name) {
 			var internalId = state.spatialObjects.names.at(name);
 			if (internalId === undefined) {
@@ -156,21 +231,22 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
 				map.removeSpatialObject(internalId);
 			});
 		},
-        appendItemToListView: function (item, shapeSrcType, parentElement) {
+        appendToItemsList: function (item, parentElement) {
             if (item === undefined) {
-                console.log("Undefined item displayed");
+                console.log("Trying to display undefined item");
                 return;
             }
             var itemId = item.id();
-            state[shapeSrcType].listview.drawn.insert(itemId, item);
+            state.items.listview.drawn.insert(itemId, item);
 
-            var itemTemplateData = state.resultListTemplateDataFromItem(item, shapeSrcType);
+            var itemTemplateData = state.resultListTemplateDataFromItem(item, "items");
             var rendered = $.Mustache.render('itemListEntryHtmlTemplate', itemTemplateData);
             var inserted = $($(rendered).appendTo(parentElement));
-            $('#' + shapeSrcType + 'NameLink' + itemId, inserted).click(
+            $('#itemsNameLink' + itemId, inserted).click(
                 function () {
-                    state.map.fitBounds(state[shapeSrcType].shapes.drawn.at(itemId).getBounds());
-                    $('#' + shapeSrcType + "List").find('.panel-collapse').each(
+                    state.map.fitBounds(state.items.shapes.drawn.at(itemId).getBounds());
+					state.items.activeItem = itemId;
+                    $("#itemsList").find('.panel-collapse').each(
                         function () {
                             if ($(this).hasClass('in')) {
                                 $(this).collapse('hide');
@@ -196,10 +272,64 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                     if ($('#show_flickr').is(':checked')) {
                         flickr.getImagesForLocation($.trim($(this).text()), geopos);
                     }
-
+					map.showItemRelatives();
                 }
             );
-			
+			map.addKeyValueQuery("items", itemId, inserted);
+		},
+		appendToRelativesList: function (item) {
+            if (item === undefined) {
+                console.log("Trying to display undefined item");
+                return;
+            }
+            var parentElement = $("#relativesList");
+            var itemId = item.id();
+            state.relatives.listview.drawn.insert(itemId, item);
+
+            var itemTemplateData = state.resultListTemplateDataFromItem(item, "relatives");
+            var rendered = $.Mustache.render('itemListEntryHtmlTemplate', itemTemplateData);
+            var inserted = $($(rendered).appendTo(parentElement));
+            $('#relativesNameLink' + itemId, inserted).click(
+                function () {
+                    $("#relativesList").find('.panel-collapse').each(
+                        function () {
+                            if ($(this).hasClass('in')) {
+                                $(this).collapse('hide');
+                            }
+                        }
+                    );
+					map.highlightShape(itemId, "relatives");
+                }
+            );
+			map.addKeyValueQuery("relatives", itemId, inserted);
+		},
+		appendToActiveItemsList: function (item) {
+            if (item === undefined) {
+                console.log("Trying to display undefined item");
+                return;
+            }
+            var parentElement = $("#activeItemsList");
+            var itemId = item.id();
+            state.activeItems.listview.drawn.insert(itemId, item);
+
+            var itemTemplateData = state.resultListTemplateDataFromItem(item, "activeItems");
+            var rendered = $.Mustache.render('itemListEntryHtmlTemplate', itemTemplateData);
+            var inserted = $($(rendered).appendTo(parentElement));
+            $('#activeItemsNameLink' + itemId, inserted).click(
+                function () {
+                    $("#activeItemsList").find('.panel-collapse').each(
+                        function () {
+                            if ($(this).hasClass('in')) {
+                                $(this).collapse('hide');
+                            }
+                        }
+                    );
+					map.highlightShape(itemId, "activeItems");
+                }
+            );
+			map.addKeyValueQuery("activeItems", itemId, inserted);
+		},
+		addKeyValueQuery: function(shapeSrcType, itemId, inserted) {
 			function itemIdQuery(e) {
 				var me = $(this);
 				var myKey = me.attr('data-query');
@@ -230,7 +360,6 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
             $('#' + shapeSrcType + 'Details' + itemId + " .item-detail-value", inserted).click(itemDetailQuery);
 			$('#' + shapeSrcType + 'Details'+itemId+" .item-detail-id", inserted).click(itemIdQuery);
         },
-
         flatCqrTreeDataSource: function (cqr) {
             function getItems(regionChildrenInfo, context) {
                 var regionChildrenApxItemsMap = {};
@@ -439,7 +568,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                                 state.DAG.at(itemId).parents.push(state.DAG.at(regionId));
                             }
                             state.DAG.at(itemId).name = item.name();
-                            map.appendItemToListView(item, "items", parentElement);
+                            map.appendToItemsList(item, parentElement);
                             state.items.listview.promised.erase(itemId);
                         }
                     }
@@ -740,7 +869,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                     $('#itemsList').append(regionDiv);
                 }
                 oscar.getItem(node.id, function (item) {
-                    map.appendItemToListView(item, "items", $("#tab-" + node.parents[parent].id));
+                    map.appendToItemsList(item, "items", $("#tab-" + node.parents[parent].id));
                 }, oscar.defErrorCB);
             }
         },
@@ -818,15 +947,24 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
 
             var ohf = (parseInt($('#ohf_spinner').val()) / 100.0);
             var globalOht = $('#oht_checkbox').is(':checked');
+			var regionFilter = jQuery('#region_filter').val();
             //ready for lift-off
             var myQueryCounter = state.queries.lastSubmited + 0;
             state.queries.lastSubmited += 1;
 
             var callFunc;
-            callFunc = function (q, scb, ecb) {
-                oscar.completeSimple(q, scb, ecb, ohf, globalOht);
-            };
-			
+			//call sequence starts
+			if ($("#full_cqr_checkbox").is(':checked')) {
+				callFunc = function(q, scb, ecb) {
+					oscar.completeFull(q, scb, ecb);
+				};
+			}
+			else {
+				callFunc = function(q, scb, ecb) {
+					oscar.completeSimple(q, scb, ecb, ohf, globalOht, regionFilter);  
+				};
+			}
+
 			var myRealQuery =  map.replaceSpatialObjects(myQuery);
 			
             if ($('#searchModi input').is(":checked")) {
@@ -874,7 +1012,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
         queryFromSearchLocation: function () {
             var myQ = tools.getParameterByName("q");
             if (myQ.length) {
-                $('#search_text').val(myQ);
+				tools.addSingleQueryStatementToQuery(myQ);
                 map.instantCompletion();
             }
         }

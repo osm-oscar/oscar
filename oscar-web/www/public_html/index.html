@@ -33,7 +33,6 @@
         <div id="closeFlickr"><a href="#"><i class="remove glyphicon glyphicon-remove-sign glyphicon-black"></i></a>
         </div>
     </div>
-    <hr/>
     <div id="flickr_images"></div>
 </div>
 
@@ -52,7 +51,7 @@
                 <li><a href="#search" role="tab"><i class="fa fa-search"></i></a></li>
                 <li><a href="#help" role="tab"><i class="fa fa-question"></i></a></li>
                 <li><a href="#options" role="tab"><i class="fa fa-wrench"></i></a></li>
-                <li><a href="#items_parent" role="tab"><i class="fa fa-group"></i></a></li>
+                <li><a href="#item_relatives" role="tab"><i class="fa fa-group"></i></a></li>
             </ul>
         </div>
 
@@ -164,11 +163,34 @@
                                 <input class='form-control' type="number" value='95' min='0' max='100' id='ohf_spinner'
                                        step="1"/>
                             </div>
-                            
+                        </div>
+                        <div class='form-group'>
+                            <div class="input-group" id='region_filter_group'>
+                                <span class="input-group-addon">Display</span>
+                                <select class='form-control' id="region_filter"/>
+                                    <option value="named" selected="selected">named</option>
+                                    <option value="admin_level">administrative</option>
+                                    <option value="all">all</option>
+                                    <option value="natural_landuse">natural/landuse</option>
+                                </select>
+                                <span class="input-group-addon">regions</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+			<div class="sidebar-pane" id="item_relatives">
+                <h1 class="sidebar-header">Item relatives
+                    <div class="sidebar-close"><i class="fa fa-caret-left"></i></div>
+                </h1>
+				<div id="relatives_parent">
+					<div class="panel-group" id="activeItemsList" role="tablist">
+					</div>
+					<h4>has the following relatives</h4>
+					<div class="panel-group" id="relativesList" role="tablist">
+					</div>
+				</div>
+			</div>
         </div>
     </div>
     <div id="map"></div>

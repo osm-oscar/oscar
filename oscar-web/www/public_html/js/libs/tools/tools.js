@@ -6,36 +6,39 @@ define(["jquery"], function ($) {
          * @returns {{}} hashmap-object
          */
         SimpleHash: function () {
-            return {
+            return sh = {
                 m_size: 0,
                 m_values: {},
                 values: function () {
-                    return this.m_values;
+                    return sh.m_values;
                 },
                 size: function () {
-                    return this.m_size;
+                    return sh.m_size;
                 },
                 insert: function (key, value) {
-                    if (this.m_values[key] === undefined) {
-                        this.m_size += 1;
+                    if (sh.m_values[key] === undefined) {
+                        sh.m_size += 1;
                     }
-                    this.m_values[key] = value;
+                    sh.m_values[key] = value;
                 },
+				set: function (key, value) {
+					sh.insert(key, value);
+				},
                 count: function (key) {
-                    return this.m_values[key] !== undefined;
+                    return sh.m_values[key] !== undefined;
                 },
                 at: function (key) {
-                    return this.m_values[key];
+                    return sh.m_values[key];
                 },
                 erase: function (key) {
-                    if (this.m_values[key] !== undefined) {
-                        this.m_size -= 1;
-                        delete this.m_values[key];
+                    if (sh.m_values[key] !== undefined) {
+                        sh.m_size -= 1;
+                        delete sh.m_values[key];
                     }
                 },
                 clear: function () {
-                    this.m_size = 0;
-                    this.m_values = {};
+                    sh.m_size = 0;
+                    sh.m_values = {};
                 }
             };
         },
