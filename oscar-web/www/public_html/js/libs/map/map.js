@@ -2,11 +2,12 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
     spinner = require("spinner");
 
     return map = {
-        addShapeToMap: function (leafletItem, itemId, shapeSrcType) {
+		
+		addItemMarkerToMap: function(marker, itemId, shapeSrcType) {
             var itemDetailsId = '#' + shapeSrcType + 'Details' + itemId;
             var itemPanelRootId = '#' + shapeSrcType + 'PanelRoot' + itemId;
             if (config.functionality.shapes.highlightListItemOnClick[shapeSrcType]) {
-                leafletItem.on('click', function () {
+                marker.on('click', function () {
 
                     if ($('#show_flickr').is(':checked')) {
                         var geopos;
@@ -45,7 +46,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                     var container = $(".sidebar-content");
                     var itemPanelRootDiv = $(itemPanelRootId);
                     if (itemPanelRootDiv === undefined) {
-                        console.log("addShapeToMap: undefined PanelRoot", leafletItem, itemId, shapeSrcType, state);
+                        console.log("addItemMarkerToMap: undefined PanelRoot", marker, itemId, shapeSrcType, state);
                     }
                     else {
                         var scrollPos = itemPanelRootDiv.offset().top - container.offset().top + container.scrollTop();
@@ -54,7 +55,14 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                     }
                     map.showItemRelatives();
                 });
-            }
+			}
+		},
+		
+        addShapeToMap: function (leafletItem, itemId, shapeSrcType) {
+            var itemDetailsId = '#' + shapeSrcType + 'Details' + itemId;
+            var itemPanelRootId = '#' + shapeSrcType + 'PanelRoot' + itemId;
+			state.map.addLayer(leafletItem);
+			state[shapeSrcType].shapes.drawn.insert(itemId, leafletItem);
         },
 		clearHighlightedShapes: function(shapeSrcType) {
 			for(var i in state[shapeSrcType].shapes.highlighted.values()) {
@@ -84,7 +92,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
 				state[shapeSrcType].shapes.promised.set(itemId, itemId);
 				oscar.getShape(itemId,
 								function(shape) {
-									if (!state[shapeSrcType].shapes.promised.count(itemId) || state[shapeSrcType].shapes.drawn.count(temId)) {
+									if (!state[shapeSrcType].shapes.promised.count(itemId) || state[shapeSrcType].shapes.drawn.count(itemId)) {
 										return;
 									}
 									map.clearHighlightedShapes(shapeSrcType);
@@ -93,12 +101,12 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
 									state[shapeSrcType].shapes.highlighted.set(itemId, itemId);
 									map.addShapeToMap(leafLetItem, itemId, shapeSrcType);
 								},
-								defErrorCB
+								tools.defErrorCB
 				);
 				oscar.getItem(itemId,
 								function(item) {
 									state.map.fitBounds(item.bbox());
-								}, defErrorCB);
+								}, tools.defErrorCB);
 			}
 		},
 		toggleSpatialObjectMapShape: function(internalId) {
@@ -169,9 +177,9 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                     state.items.shapes.drawn.insert(itemId, itemShape);
                     state.DAG.at(itemId).marker = marker;
                     state.DAG.at(itemId).shape = itemShape;
-                    map.addShapeToMap(marker, itemId, "items");
+                    map.addItemMarkerToMap(marker, itemId, "items");
                 }
-            }, oscar.defErrorCB);
+            }, tools.defErrorCB);
         },
 		//shows the relatives of the currently active item if the relatives pane is active
 		showItemRelatives: function() {
@@ -197,8 +205,8 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
 					for(var i in relatives) {
 						map.appendToRelativesList(relatives[i]);
 					}
-				}, oscar.defErrorCB);
-			}, oscar.defErrorCB);
+				}, tools.defErrorCB);
+			}, tools.defErrorCB);
 		},   
 		appendSpatialObjectToTable : function(name) {
 			var internalId = state.spatialObjects.names.at(name);
@@ -438,7 +446,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                                     state.items.listview.selectedRegionId = parentRid;
                                     state.cqr.regionItemIds(state.items.listview.selectedRegionId,
                                         map.getItemIds,
-                                        oscar.defErrorCB,
+                                        tools.defErrorCB,
                                         0 // offset
                                     );
                                 } else {
@@ -446,7 +454,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                                         state.items.listview.selectedRegionId = parentRid;
                                         state.cqr.regionItemIds(state.items.listview.selectedRegionId,
                                             map.getItemIds,
-                                            oscar.defErrorCB,
+                                            tools.defErrorCB,
                                             0 // offset
                                         );
                                     } else {
@@ -454,7 +462,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                                             state.items.listview.selectedRegionId = state.DAG.at(parentRid).children[child].id;
                                             state.cqr.regionItemIds(state.items.listview.selectedRegionId,
                                                 map.getItemIds,
-                                                oscar.defErrorCB,
+                                                tools.defErrorCB,
                                                 0 // offset
                                             );
                                         }
@@ -480,7 +488,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
 
                             // just load regionShapes into the cache
                             oscar.getShapes(regions, function (res) {
-                            }, oscar.defErrorCB);
+                            }, tools.defErrorCB);
 
                             if (state.visualizationActive) {
                                 tree.refresh(parentRid);
@@ -492,7 +500,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                         }
 
                     },
-                    oscar.defErrorCB
+                    tools.defErrorCB
                 );
             }
 
@@ -502,7 +510,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                         spinner.endLoadingSpinner()
                         getItems(regionChildrenInfo, context);
                     },
-                    oscar.defErrorCB
+                    tools.defErrorCB
                 );
             };
         },
@@ -580,7 +588,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                     }
 
                 },
-                oscar.defErrorCB
+                tools.defErrorCB
             );
         },
 
@@ -637,7 +645,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
             state.items.listview.selectedRegionId = rid;
             state.cqr.regionItemIds(state.items.listview.selectedRegionId,
                 map.getItemIds,
-                oscar.defErrorCB,
+                tools.defErrorCB,
                 0 // offset
             );
         },
@@ -803,7 +811,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                         leafletItem.setStyle(config.styles.shapes['regions']['normal']);
                         e.target.shape = leafletItem;
                         state.map.addLayer(leafletItem);
-                    }, oscar.defErrorCB);
+                    }, tools.defErrorCB);
                 }
 
                 L.popup({offset: new L.Point(0, -10)})
@@ -870,7 +878,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                 }
                 oscar.getItem(node.id, function (item) {
                     map.appendToItemsList(item, "items", $("#tab-" + node.parents[parent].id));
-                }, oscar.defErrorCB);
+                }, tools.defErrorCB);
             }
         },
 

@@ -42,7 +42,7 @@ define(["jquery"], function ($) {
                 }
             };
         },
-
+	   
         /**
          * Represents a Treenode, which can be used to model directed-acylic graphs.
          *
@@ -156,8 +156,14 @@ define(["jquery"], function ($) {
             var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
                 results = regex.exec(location.search);
             return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
-        }
-
+        },
+        
+        defErrorCB: function(textStatus, errorThrown) {
+			console.log("xmlhttprequest error textstatus=" + textStatus + "; errorThrown="+errorThrown);
+			if (confirm("Error occured. Refresh automatically?")) {
+				location.reload();
+			}
+		}
     };
 
     return tools;

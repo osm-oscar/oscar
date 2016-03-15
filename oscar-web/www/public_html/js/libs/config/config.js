@@ -39,6 +39,10 @@ define([], function() {
                     normal: {color: 'green', stroke: true, fill: false, opacity: 0.7},
                     highlight: {color: 'green', stroke: true, fill: false, opacity: 1.0}
                 },
+                activeItems: {
+                    normal: {color: 'blue', stroke: true, fill: false, opacity: 0.8},
+                    highlight: {color: 'red', stroke: true, fill: false, opacity: 1.0}
+                },
                 geoquery: {
                     normal: {color: '#00BFFF', stroke: true, fill: true, opacity: 0.5},
                     highlight: {color: '#00BFFF', stroke: true, fill: true, opacity: 1.0}

@@ -25,7 +25,7 @@ define(["state", "oscar", "tools", "conf", "leafletCluster"], function (state, o
                         state.shownBoundaries.push(leafletItem);
                         leafletItem.addTo(state.map);
                     }
-                }, oscar.defErrorCB);
+                }, tools.defErrorCB);
             }
         }
 
