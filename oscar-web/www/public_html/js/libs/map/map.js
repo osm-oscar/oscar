@@ -1012,7 +1012,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
         queryFromSearchLocation: function () {
             var myQ = tools.getParameterByName("q");
             if (myQ.length) {
-				tools.addSingleQueryStatementToQuery(myQ);
+				tools.setQuery(myQ);
                 map.instantCompletion();
             }
         }

@@ -6,39 +6,39 @@ define(["jquery"], function ($) {
          * @returns {{}} hashmap-object
          */
         SimpleHash: function () {
-            return sh = {
+            return {
                 m_size: 0,
                 m_values: {},
                 values: function () {
-                    return sh.m_values;
+                    return this.m_values;
                 },
                 size: function () {
-                    return sh.m_size;
+                    return this.m_size;
                 },
                 insert: function (key, value) {
-                    if (sh.m_values[key] === undefined) {
-                        sh.m_size += 1;
+                    if (this.m_values[key] === undefined) {
+                        this.m_size += 1;
                     }
-                    sh.m_values[key] = value;
+                    this.m_values[key] = value;
                 },
 				set: function (key, value) {
-					sh.insert(key, value);
+					this.insert(key, value);
 				},
                 count: function (key) {
-                    return sh.m_values[key] !== undefined;
+                    return this.m_values[key] !== undefined;
                 },
                 at: function (key) {
-                    return sh.m_values[key];
+                    return this.m_values[key];
                 },
                 erase: function (key) {
-                    if (sh.m_values[key] !== undefined) {
-                        sh.m_size -= 1;
-                        delete sh.m_values[key];
+                    if (this.m_values[key] !== undefined) {
+                        this.m_size -= 1;
+                        delete this.m_values[key];
                     }
                 },
                 clear: function () {
-                    sh.m_size = 0;
-                    sh.m_values = {};
+                    this.m_size = 0;
+                    this.m_values = {};
                 }
             };
         },
@@ -144,6 +144,11 @@ define(["jquery"], function ($) {
 			search_text.tokenfield('createToken', qstr);
 //             search_text.change();
         },
+	   
+		setQuery: function(qstr) {
+            var search_text = $('#search_text');
+			search_text.tokenfield('setTokens', [{value : qstr, label : qstr}]);
+		},
 
         //https://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
         getParameterByName: function (name) {
