@@ -9,7 +9,7 @@ requirejs.config({
         "spinner": "spin/spinner",
         "leaflet": "leaflet/leaflet.0.7.2",
         "leafletCluster": "leaflet/leaflet.markercluster-src",
-        "sidebar": "leaflet/leaflet-sidebar.min",
+        "sidebar": "leaflet/leaflet-sidebar",
         "jdataview": "jdataview/jdataview",
         "jbinary": "jbinary/jbinary",
         "sserialize": "sserialize/sserialize.min",
@@ -155,6 +155,35 @@ requirejs(["leaflet", "jquery", "mustache", "jqueryui", "sidebar", "mustacheLoad
                     flickr.show();
                 }
             });
+			
+			state.sidebar.on('tab-closed', function(e) {
+				if (e.id !== "item_relatives") {
+					return;
+				}
+				map.clearHighlightedShapes("relatives");
+				map.clearHighlightedShapes("activeItems");
+			});
+			
+			state.sidebar.on('tab-opened', function(e) {
+				if (e.id !== "item_relatives") {
+					return;
+				}
+				//check if the active item is opened, if so add its shape to the map
+				var activeItemsList = $('#activeItemsList');
+				var activeItems = activeItemsList.find("[class~='collapse'][class~='in']");
+				if (activeItems.length) {
+					var activeItem = activeItems.first();
+					var itemId = parseInt(activeItem.attr("data-item-id"));
+					map.highlightShape(itemId, "activeItems");
+				}
+				//do the same for the relatives
+				var relativesList = $('#relativesList');
+				var activeRelatives = relativesList.find("[class~='collapse'][class~='in']");
+				activeRelatives.each(function() {
+					var itemId = parseInt($(this).attr("data-item-id"));
+					map.highlightShape(itemId, "relatives");
+				});
+			});
 
             $('#spatialquery_selectbutton').click(function() {
                 if (state.spatialquery.selectButtonState === 'select') {
@@ -167,6 +196,7 @@ requirejs(["leaflet", "jquery", "mustache", "jqueryui", "sidebar", "mustacheLoad
                     query.clearSpatialQuery();
                 }
             });
+			
             $('#spatialquery_acceptbutton').click(function() {
                 if (state.spatialquery.type === undefined) {
                     return;
@@ -218,6 +248,7 @@ requirejs(["leaflet", "jquery", "mustache", "jqueryui", "sidebar", "mustacheLoad
                 }
                 query.clearSpatialQuery();
             });
+			
             $('#spatialquery_type').change(function(e) {
                 if (e.target.value !== state.spatialquery.type) {
                     query.clearSpatialQuery();
