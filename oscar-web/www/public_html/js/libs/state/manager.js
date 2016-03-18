@@ -9,9 +9,11 @@ define(["jquery", "mustache", "tools", "leaflet", "spin","conf", "leafletCluster
         items: {
             shapes: {
                 promised: tools.SimpleHash(),//referenced by id
+                cache: tools.SimpleHash(), //id -> leaflet shape
                 drawn: tools.SimpleHash(),//id -> marker
 				regular : tools.SimpleHash(),
 				highlighted : tools.SimpleHash()
+				markers: tools.SimpleHash()//id -> marker
             },
             listview: {
                 promised: tools.SimpleHash(),//referenced by id
@@ -172,6 +174,10 @@ define(["jquery", "mustache", "tools", "leaflet", "spin","conf", "leafletCluster
             for (var i in state.items.shapes.drawn.values()) {
                 state.map.removeLayer(state.items.shapes.drawn.at(i));
                 state.items.shapes.drawn.erase(i);
+            }
+			for (var i in state.items.shapes.markers.values()) {
+                state.map.removeLayer(state.items.shapes.markers.at(i));
+                state.items.shapes.markers.erase(i);
             }
             for (var i in state.items.clusters.drawn.values()) {
                 state.map.removeLayer(state.items.clusters.drawn.at(i));

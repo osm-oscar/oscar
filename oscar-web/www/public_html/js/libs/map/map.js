@@ -137,7 +137,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
             state.items.shapes.promised.clear();
             var itemsToDraw = [];
             for (var i in state.items.listview.drawn.values()) {
-                if (!state.items.shapes.drawn.count(i)) {
+                if (!state.items.shapes.cache.count(i)) {
                     state.items.shapes.promised.set(i, state.items.listview.drawn.at(i));
                     itemsToDraw.push(i);
                 }
@@ -154,7 +154,8 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                         continue;
                     }
                     if (shapes[itemId] === undefined || !state.items.listview.drawn.count(itemId) ||
-                        state.items.shapes.drawn.count(itemId)) {
+                        state.items.shapes.cache.count(itemId))
+					{
                         state.items.shapes.promised.erase(itemId);
                         continue;
                     }
@@ -174,7 +175,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                     }
 
                     state.markers.addLayer(marker);
-                    state.items.shapes.drawn.insert(itemId, itemShape);
+                    state.items.shapes.cache.insert(itemId, itemShape);
                     state.DAG.at(itemId).marker = marker;
                     state.DAG.at(itemId).shape = itemShape;
                     map.addItemMarkerToMap(marker, itemId, "items");
@@ -252,7 +253,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
             var inserted = $($(rendered).appendTo(parentElement));
             $('#itemsNameLink' + itemId, inserted).click(
                 function () {
-                    state.map.fitBounds(state.items.shapes.drawn.at(itemId).getBounds());
+                    state.map.fitBounds(state.items.shapes.cache.at(itemId).getBounds());
 					state.items.activeItem = itemId;
                     $("#itemsList").find('.panel-collapse').each(
                         function () {
@@ -262,7 +263,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                         }
                     );
                     var geopos;
-                    var itemShape = state.items.shapes.drawn.at(itemId);
+                    var itemShape = state.items.shapes.cache.at(itemId);
                     if (itemShape instanceof L.MultiPolygon) {
                         geopos = itemShape.getLatLngs()[0][0];
                     } else if (itemShape instanceof L.Polygon) {
@@ -546,7 +547,8 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                         $('#itemsList').empty();
                         $('#tabs').empty();
                         state.items.listview.drawn.clear();
-                        state.items.shapes.drawn.clear();
+                        state.items.shapes.cache.clear();
+						state.items.shapes.markers.clear();
                     }
 
                     var tabsInitialized = $('#items_parent').data("ui-tabs");
@@ -675,7 +677,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                             var timer = tools.timer("draw");
                             var drawn = tools.SimpleHash();
                             var removedParents = tools.SimpleHash();
-                            var currentItemMarkers = state.items.shapes.drawn.values();
+                            var currentItemMarkers = state.items.shapes.markers.values();
                             var currentClusterMarker = state.items.clusters.drawn.values();
                             var bulkMarkerBuffer = [];
 
@@ -852,12 +854,12 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
 
         removeItemMarker: function (node) {
             state.markers.removeLayer(node.marker);
-            state.items.shapes.drawn.erase(node.id);
+            state.items.shapes.markers.erase(node.id);
             state.items.listview.drawn.erase(node.id);
         },
 
         addItemMarker: function (node, buffer) {
-            state.items.shapes.drawn.insert(node.id, node.shape);
+            state.items.shapes.markers.insert(node.id, node.shape);
             if (buffer) {
                 buffer.push(node.marker);
             } else if (node.marker) {
