@@ -11,8 +11,8 @@ define(["jquery", "mustache", "tools", "leaflet", "spin","conf", "leafletCluster
                 promised: tools.SimpleHash(),//referenced by id
                 cache: tools.SimpleHash(), //id -> leaflet shape
                 drawn: tools.SimpleHash(),//id -> marker
-				regular : tools.SimpleHash(),
-				highlighted : tools.SimpleHash()
+				regular : tools.SimpleHash(), //id -> leaflet shape
+				highlighted : tools.SimpleHash(),
 				markers: tools.SimpleHash()//id -> marker
             },
             listview: {

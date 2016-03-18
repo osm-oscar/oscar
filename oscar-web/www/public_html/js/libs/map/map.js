@@ -8,6 +8,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
             var itemPanelRootId = '#' + shapeSrcType + 'PanelRoot' + itemId;
             if (config.functionality.shapes.highlightListItemOnClick[shapeSrcType]) {
                 marker.on('click', function () {
+					map.highlightShape(itemId, "items");
 
                     if ($('#show_flickr').is(':checked')) {
                         var geopos;
@@ -253,6 +254,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
             var inserted = $($(rendered).appendTo(parentElement));
             $('#itemsNameLink' + itemId, inserted).click(
                 function () {
+					map.highlightShape(itemId, "items");
                     state.map.fitBounds(state.items.shapes.cache.at(itemId).getBounds());
 					state.items.activeItem = itemId;
                     $("#itemsList").find('.panel-collapse').each(
