@@ -924,7 +924,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
 				}
 				else if (qstr[i] === '&' && !withInExact) {
 					var name = "";
-					for(++i; i < qstr.length && qstr[i] !== ' ';) {
+					for(++i; i < qstr.length && qstr[i] !== ' '; ++i) {
 						name += qstr[i];
 					}
 					if (state.spatialObjects.names.count(name)) {
