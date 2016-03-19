@@ -657,7 +657,7 @@
         this.unedit(focus)
       }
 
-      return false // Prevent form being submitted
+      return true // CHANGED: Don't prevent form being submitted
     }
 
   , next: function (add) {

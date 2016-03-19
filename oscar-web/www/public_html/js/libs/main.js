@@ -29,11 +29,12 @@ requirejs.config({
         "d3": "dagre-d3/d3.min",
         "dagre-d3": "dagre-d3/dagre-d3.min",
         "tree": "tree/tree",
-        "tokenfield": "tokenfield/bootstrap-tokenfield.min",
+        "tokenfield": "tokenfield/bootstrap-tokenfield",
         "map": "map/map",
         "prototype": "prototype/prototype",
         "state": "state/manager",
-        "query": "query/query"
+        "query": "query/query",
+        "search": "search/search"
     },
     shim: {
         'bootstrap': {deps: ['jquery']},
@@ -45,9 +46,11 @@ requirejs.config({
     waitSeconds: 20
 });
 
-requirejs(["leaflet", "jquery", "mustache", "jqueryui", "sidebar", "mustacheLoader", "conf", "menu", "tokenfield", "switch", "state", "map", "tree", "prototype", "query"],
+requirejs(["leaflet", "jquery", "mustache", "jqueryui", "sidebar", "mustacheLoader", "conf", "menu", "tokenfield", "switch", "state", "map", "tree", "prototype", "query", "search"],
     function (L, jQuery, mustache, jqueryui, sidebar, mustacheLoader, config, menu, tokenfield, switchButton, state, map, tree) {
         var query = require("query");
+        var search = require("search");
+
         // mustache-template-loader needs this
         window.Mustache = mustache;
 
@@ -86,10 +89,10 @@ requirejs(["leaflet", "jquery", "mustache", "jqueryui", "sidebar", "mustacheLoad
             });
             search_text.tokenfield({minWidth: 250, delimiter: "|"});
             $(search_form[0].children).css("width", "100%");
-            search_text.bind('change', map.delayedCompletion).bind('keyup', map.delayedCompletion);
+            search_text.bind('change', search.delayedCompletion).bind('keyup', search.delayedCompletion);
             search_form.bind('submit', function (e) {
                 e.preventDefault();
-                map.instantCompletion();
+                search.instantCompletion();
             });
 
             $("#showCategories a").click(function () {
@@ -228,10 +231,10 @@ requirejs(["leaflet", "jquery", "mustache", "jqueryui", "sidebar", "mustacheLoad
             });
 
             $(window).bind('popstate', function (e) {
-                map.queryFromSearchLocation();
+                search.queryFromSearchLocation();
             });
 
             //check if there's a query in our location string
-            map.queryFromSearchLocation();
+            search.queryFromSearchLocation();
         });
     });

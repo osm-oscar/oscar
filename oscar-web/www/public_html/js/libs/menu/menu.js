@@ -1,5 +1,5 @@
-define(["jquery"], function ($) {
-    return {
+define(["jquery", "search"], function ($, search) {
+    return menu = {
         /**
          * Displays the main-categories
          */
@@ -29,7 +29,7 @@ define(["jquery"], function ($) {
                 // exists a special key?
                 var key = this.categories[category]["subcategories"][subcategory].key ? this.categories[category]["subcategories"][subcategory].key : this.categories[category]["key"];
                 $("<a style='border: none' class='list-group-item' key='" + key +"' value='" + this.categories[category]["subcategories"][subcategory].value + "'>"
-                    + this.categories[category]["subcategories"][subcategory].desc + "</a>").on("click", this.appendToSearchString.bind(this)).appendTo(container);
+                    + this.categories[category]["subcategories"][subcategory].desc + "</a>").on("click", function(e){menu.appendToSearchString(e); search.doCompletion();}).appendTo(container);
             }
 
             c.append(container);
