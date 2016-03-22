@@ -7,6 +7,3 @@
 [submodule "liboscar"]
 	path = liboscar
 	url = https://github.com/dbahrdt/liboscar.git
-[submodule "oscar-web"]
-	path = oscar-web
-	url = https://github.com/dbahrdt/oscar-web.git
