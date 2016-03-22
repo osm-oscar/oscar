@@ -1154,7 +1154,7 @@ void OsmKeyValueObjectStore::applySort(oscar_create::OsmKeyValueObjectStore::Con
 			for(uint32_t i(0), s(size()); i < s; ++i) {
 				MyBaseClass::Item item(MyBaseClass::at(i));
 				uint32_t strPos = item.findKey(nameId);
-				if (strPos == MyBaseClass::Item::npos) {
+				if (strPos != MyBaseClass::Item::npos) {
 					nameValueIds.at(i) = item.valueId(strPos);
 				}
 			}
