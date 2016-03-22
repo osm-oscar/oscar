@@ -123,22 +123,39 @@ public:
 		template<typename TOutputIterator>
 		void operator()(const item_type & item, TOutputIterator out) {
 			if (T_ITEM_TYPE == TextSearchConfig::ItemType::ITEM) {
-				for(const auto & x : item.cells()) {
-					*out = x;
-					++out;
+				//this adds the region as item to the cell
+				//This may not be what we really want
+				//Since then a query to Stuttgart also yields Germany as an item of Stuttgart!
+				if (false && item.isRegion()) {
+					addFromGh(item, out);
+				}
+				else {
+					addFromItem(item, out);
 				}
 			}
 			else if (T_ITEM_TYPE == TextSearchConfig::ItemType::REGION) {
 				if (item.isRegion()) {
-					//fetch the cells from the geohierarchy
-					const auto & gh = m_state->gh;
-					uint32_t ghId = gh.storeIdToGhId(item.id());
-					uint32_t cellPtr = gh.regionCellIdxPtr(ghId);
-					sserialize::ItemIndex cells(m_state->idxStore.at(cellPtr));
-					using std::copy;
-					copy(cells.begin(), cells.end(), out);
+					addFromGh(item, out);
 				}
 			}
+		}
+	private:
+		template<typename TOutputIterator>
+		void addFromItem(const item_type & item, TOutputIterator & out) {
+			for(const auto & x : item.cells()) {
+				*out = x;
+				++out;
+			}
+		}
+		template<typename TOutputIterator>
+		void addFromGh(const item_type & item, TOutputIterator & out) {
+			//fetch the cells from the geohierarchy
+			const auto & gh = m_state->gh;
+			uint32_t ghId = gh.storeIdToGhId(item.id());
+			uint32_t cellPtr = gh.regionCellIdxPtr(ghId);
+			sserialize::ItemIndex cells(m_state->idxStore.at(cellPtr));
+			using std::copy;
+			copy(cells.begin(), cells.end(), out);
 		}
 	private:
 		std::shared_ptr<OOM_SA_CTC_TraitsState> m_state;
