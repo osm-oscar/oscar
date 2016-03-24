@@ -45,3 +45,9 @@ HIGH IMPORTANCE:
 oscar-web: improve support for geoobjects: just add a reference in the query string and add ability to change polygon/paths/rectangles
 So a query would look like that: $rect:1 + $poly:1 + $path:2 - $path:1
 the ids would be replaced before sending to the server (needs some extra work to do the parsing of the uri)
+
+BUGS:
+:^ (@highway eisenbahnstraße "aalen")
+:west-of (alexanderplatz berling)
+
+OsmKeyValueStore::geoShape/toInternalId does not check for out of bounds
