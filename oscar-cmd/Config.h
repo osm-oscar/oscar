@@ -146,14 +146,15 @@ struct WD_CompleteStringFull: public WD_CompleteStringBase {
 };
 
 struct WD_CompleteStringClustered: public WD_CompleteStringBase {
-	WD_CompleteStringClustered(const std::string & str, int printNumResults) : 
-	WD_CompleteStringBase(str, printNumResults) {}
+	WD_CompleteStringClustered(const std::string & str, int printNumResults, uint32_t threadCount) : 
+	WD_CompleteStringBase(str, printNumResults), threadCount(threadCount) {}
 	virtual ~WD_CompleteStringClustered() {}
+	uint32_t threadCount;
 };
 
 struct WD_CompleteStringClusteredTreedCqr: public WD_CompleteStringClustered {
-	WD_CompleteStringClusteredTreedCqr(const std::string & str, int printNumResults) : 
-	WD_CompleteStringClustered(str, printNumResults) {}
+	WD_CompleteStringClusteredTreedCqr(const std::string & str, int printNumResults, uint32_t threadCount) : 
+	WD_CompleteStringClustered(str, printNumResults, threadCount) {}
 	virtual ~WD_CompleteStringClusteredTreedCqr() {}
 };
 
@@ -187,14 +188,15 @@ struct WD_CompleteFromFileFull: public WD_CompleteFromFileBase {
 };
 
 struct WD_CompleteFromFileClustered: public WD_CompleteFromFileBase {
-	WD_CompleteFromFileClustered(int printNumResults, const std::string & fileName) :
-	WD_CompleteFromFileBase(printNumResults, fileName) {}
+	WD_CompleteFromFileClustered(int printNumResults, const std::string & fileName, uint32_t threadCount) :
+	WD_CompleteFromFileBase(printNumResults, fileName), threadCount(threadCount) {}
 	virtual ~WD_CompleteFromFileClustered() {}
+	uint32_t threadCount;
 };
 
 struct WD_CompleteFromFileClusteredTreedCqr: public WD_CompleteFromFileClustered {
-	WD_CompleteFromFileClusteredTreedCqr(int printNumResults, const std::string & fileName) :
-	WD_CompleteFromFileClustered(printNumResults, fileName) {}
+	WD_CompleteFromFileClusteredTreedCqr(int printNumResults, const std::string & fileName, uint32_t threadCount) :
+	WD_CompleteFromFileClustered(printNumResults, fileName, threadCount) {}
 	virtual ~WD_CompleteFromFileClusteredTreedCqr() {}
 };
 
@@ -240,7 +242,7 @@ public:
 	std::string inFileName;
 	std::vector<WorkItem> workItems;
 private:
-	int parseSingleArg(int argc, char ** argv, int & i, int & printNumResults, std::string & completionString);
+	int parseSingleArg(int argc, char ** argv, int & i, int & printNumResults, int & threadCount, std::string & completionString);
 public:
 	Config() {}
 	bool fromCommandline(int argc, char ** argv);

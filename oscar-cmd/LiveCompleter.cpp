@@ -117,18 +117,18 @@ void LiveCompletion::doPartialCompletion(const std::vector<std::string> & comple
 	completionBase(completionStrings, fn, printNumResults, CompSetUpdater(), &dataAnalyser);
 }
 
-void LiveCompletion::doClusteredComplete(const std::vector<std::string> & completionStrings, int printNumResults, bool treedCQR) {
+void LiveCompletion::doClusteredComplete(const std::vector<std::string> & completionStrings, int printNumResults, bool treedCQR, uint32_t threadCount) {
 	liboscar::Static::OsmCompleter * c = &m_completer;
-	auto cf = [&c, treedCQR](const std::string & x) -> liboscar::Static::OsmItemSet {
-		sserialize::Static::spatial::GeoHierarchy::SubSet subSet = c->clusteredComplete(x, 0, treedCQR);
+	auto cf = [&c, treedCQR, threadCount](const std::string & x) -> liboscar::Static::OsmItemSet {
+		sserialize::Static::spatial::GeoHierarchy::SubSet subSet = c->clusteredComplete(x, 0, treedCQR, threadCount);
 		sserialize::ItemIndex retIdx;
 		if (subSet.root().priv()) {
 			retIdx = subSet.idx(subSet.root());
 		}
 		return liboscar::Static::OsmItemSet(c->store(), retIdx);
 	};
-	auto uf = [&c, treedCQR](liboscar::Static::OsmItemSet & s, const std::string & str) -> void {
-		sserialize::Static::spatial::GeoHierarchy::SubSet subSet = c->clusteredComplete(str, 0, treedCQR);
+	auto uf = [&c, treedCQR, threadCount](liboscar::Static::OsmItemSet & s, const std::string & str) -> void {
+		sserialize::Static::spatial::GeoHierarchy::SubSet subSet = c->clusteredComplete(str, 0, treedCQR, threadCount);
 		sserialize::ItemIndex retIdx;
 		if (subSet.root().priv()) {
 			retIdx = subSet.idx(subSet.root());

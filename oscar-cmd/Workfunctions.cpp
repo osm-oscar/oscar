@@ -917,7 +917,7 @@ void Worker::completeStringFull(WD_CompleteStringFull& d) {
 void Worker::completeStringClustered(WD_CompleteStringClustered & d, bool treedCQR) {
 	std::vector<std::string> strs(1, d.str);
 	LiveCompletion liveCompleter(completer);
-	liveCompleter.doClusteredComplete(strs, d.printNumResults, treedCQR);
+	liveCompleter.doClusteredComplete(strs, d.printNumResults, treedCQR, d.threadCount);
 }
 
 
@@ -946,7 +946,7 @@ void Worker::completeFromFileClustered(WD_CompleteFromFileClustered & d, bool tr
 	std::vector<std::string> strs;
 	readCompletionStringsFromFile(d.fileName, std::back_insert_iterator< std::vector<std::string> >(strs));
 	LiveCompletion liveCompleter(completer);
-	liveCompleter.doClusteredComplete(strs, d.printNumResults, treedCQR);
+	liveCompleter.doClusteredComplete(strs, d.printNumResults, treedCQR, d.threadCount);
 }
 
 void Worker::symDiffCompleters(WD_SymDiffItemsCompleters& d) {

@@ -46,6 +46,7 @@ void Config::printHelp() {
 -l\tlist completers \n \
 -v num\tverbosity option, print num results (-1 for all) \n \
 -m string\tset the current completion string used in completions \n \
+-t num\tnumber of threads to use (i.e. for treedcqr flattening) \n \
 --create-completion-strings num\tcreate num completion strings from the store \n \
 -ssc ts,ct\tselect the textsearch completer ts=(items|geoh|geocell),ct=num \n \
 -sgc num\tselect geo completer \n \
@@ -92,7 +93,7 @@ void Config::printHelp() {
 --benchmark\tdo a benchmark \n";
 }
 
-int Config::parseSingleArg(int argc, char ** argv, int & i, int & printNumResults, std::string & completionString) {
+int Config::parseSingleArg(int argc, char ** argv, int & i, int & printNumResults, int & threadCount, std::string & completionString) {
 	std::string arg(argv[i]);
 	if (arg == "--help") {
 		printHelp();
@@ -113,6 +114,10 @@ int Config::parseSingleArg(int argc, char ** argv, int & i, int & printNumResult
 	}
 	else if (arg == "-m" && i+1 < argc) {
 		completionString = std::string(argv[i+1]);
+		i++;
+	}
+	else if (arg == "-t" && i+1 < argc) {
+		threadCount = atoi(argv[i+1]);
 		i++;
 	}
 	
@@ -156,10 +161,10 @@ int Config::parseSingleArg(int argc, char ** argv, int & i, int & printNumResult
 		workItems.emplace_back(Config::WorkItem::COMPLETE_STRING_FULL, new WD_CompleteStringFull(completionString, printNumResults));
 	}
 	else if (arg == "-csc") {
-		workItems.emplace_back(Config::WorkItem::COMPLETE_STRING_CLUSTERED, new WD_CompleteStringClustered(completionString, printNumResults));
+		workItems.emplace_back(Config::WorkItem::COMPLETE_STRING_CLUSTERED, new WD_CompleteStringClustered(completionString, printNumResults, threadCount));
 	}
 	else if (arg == "-csct") {
-		workItems.emplace_back(Config::WorkItem::COMPLETE_STRING_CLUSTERED_TREED_CQR, new WD_CompleteStringClusteredTreedCqr(completionString, printNumResults));
+		workItems.emplace_back(Config::WorkItem::COMPLETE_STRING_CLUSTERED_TREED_CQR, new WD_CompleteStringClusteredTreedCqr(completionString, printNumResults, threadCount));
 	}
 	//interactive complete
 	
@@ -197,11 +202,11 @@ int Config::parseSingleArg(int argc, char ** argv, int & i, int & printNumResult
 		++i;
 	}
 	else if (arg == "-cfc" && i+1 < argc) {
-		workItems.emplace_back(Config::WorkItem::COMPLETE_FROM_FILE_CLUSTERED, new WD_CompleteFromFileClustered(printNumResults, std::string(argv[i+1])));
+		workItems.emplace_back(Config::WorkItem::COMPLETE_FROM_FILE_CLUSTERED, new WD_CompleteFromFileClustered(printNumResults, std::string(argv[i+1]), threadCount));
 		++i;
 	}
 	else if (arg == "-cfct" && i+1 < argc) {
-		workItems.emplace_back(Config::WorkItem::COMPLETE_FROM_FILE_CLUSTERED_TREED_CQR, new WD_CompleteFromFileClusteredTreedCqr(printNumResults, std::string(argv[i+1])));
+		workItems.emplace_back(Config::WorkItem::COMPLETE_FROM_FILE_CLUSTERED_TREED_CQR, new WD_CompleteFromFileClusteredTreedCqr(printNumResults, std::string(argv[i+1]), threadCount));
 		++i;
 	}
 	
@@ -374,10 +379,11 @@ bool Config::fromCommandline(int argc, char ** argv) {
 	//state variables
 	int printNumResults = -1;
 	std::string completionString;
+	int threadCount = 1;
 	if (argc > 1) {
 		for(int i = 0; i < argc; i++) {
 			try {
-				int prt = parseSingleArg(argc, argv, i, printNumResults, completionString);
+				int prt = parseSingleArg(argc, argv, i, printNumResults, threadCount, completionString);
 				switch(prt) {
 				case PRT_HELP:
 					return true;
