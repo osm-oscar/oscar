@@ -49,6 +49,5 @@ ELSE (CMAKE_CROSSCOMPILING OR ANDROID)
 	
 	#these only need liboscar
 	add_subdirectory(oscar-cmd oscar-cmd)
-	add_subdirectory(oscar-web oscar-web)
 	add_subdirectory(oscar-gui oscar-gui)
 ENDIF(CMAKE_CROSSCOMPILING OR ANDROID)
