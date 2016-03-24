@@ -28,11 +28,16 @@ qt4_wrap_cpp(SOURCES_MOC_CPP ${SOURCES_MOC_H})
 
 
 SET(OSCAR_LINK_LIBS
-${liboscar_BINARY_DIR}/libliboscar.so
-${OSCAR_LINK_LIBS}
-${QT_QTCORE_LIBRARY}
-${QT_QTGUI_LIBRARY}
-"marblewidget"
+	${liboscar_BINARY_DIR}/libliboscar.so
+	${OSCAR_LINK_LIBS}
+	${QT_QTCORE_LIBRARY}
+	${QT_QTGUI_LIBRARY}
+	"marblewidget"
+	"CGAL"
+	"mpfr"
+	"gmp"
+	"boost_thread"
+	"boost_system"
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES_CPP} ${SOURCES_MOC_CPP})
