@@ -1,7 +1,7 @@
 requirejs.config({
     baseUrl: "js/libs",
     config: {
-        'oscar': {url: "http://oscar.fmi.uni-stuttgart.de/oscar"}
+        'oscar': {url: "http://oscardev.fmi.uni-stuttgart.de/oscar"}
     },
     paths: {
         "jquery": "jquery/jquery.min",
@@ -125,6 +125,7 @@ requirejs(["leaflet", "jquery", "mustache", "jqueryui", "sidebar", "mustacheLoad
             $('#graph').click(function () {
                 $("#onePath").button();
                 $("#wholeTree").button().click(function () {
+                    map.loadWholeTree();
                     tree.visualizeDAG(state.DAG.at(0xFFFFFFFF));
                 });
                 tree.visualizeDAG(state.DAG.at(0xFFFFFFFF));
