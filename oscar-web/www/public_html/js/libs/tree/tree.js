@@ -142,7 +142,7 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state", "tools"], function (dagreD
          * @returns {*} attributes for the node
          */
         _nodeAttr: function (node) {
-            if (!node.children.length || (node.children.length && !node.children[0].count)) {
+            if (node.count) {
                 return {
                     labelType: "html",
                     label: tree._nodeLabel(node)
@@ -269,20 +269,20 @@ define(["dagre-d3", "d3", "jquery", "oscar", "state", "tools"], function (dagreD
 
                 for (var child in currentNode.children) {
                     childNode = currentNode.children[child];
+                    this.graph.setNode(childNode.id, tree._nodeAttr(childNode));
+                    this.graph.setEdge(currentNode.id, childNode.id, {
+                        lineInterpolate: 'basis',
+                        class: "origin-" + currentNode.id
+                    });
                     if (childNode.id == node.id) {
                         nextNode = childNode;
-                        break;
+                        mostWalkers = Number.MAX_VALUE;
+                        //break;
                     } else if (walkerCounter.at(childNode.id) > mostWalkers) {
                         nextNode = childNode;
                         mostWalkers = walkerCounter.at(childNode.id);
                     }
                 }
-
-                this.graph.setNode(nextNode.id);
-                this.graph.setEdge(currentNode.id, nextNode.id, {
-                    lineInterpolate: 'basis',
-                    class: "origin-" + currentNode.id
-                });
 
                 onPath.insert(currentNode.id, currentNode);
                 currentNode = nextNode;

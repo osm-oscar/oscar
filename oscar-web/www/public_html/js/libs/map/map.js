@@ -398,14 +398,11 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                                 if (!cqr.ohPath().length || ($.inArray(itemId, cqr.ohPath()) != -1 || (parentRid == cqr.ohPath()[cqr.ohPath().length - 1] && parentCount > oscar.maxFetchItems))) {
                                     if (!state.DAG.count(itemId)) {
                                         node = parentNode.addChild(itemId);
-                                        node.count = regionChildrenApxItemsMap[itemId];
-                                        node.bbox = item.bbox();
-                                        node.name = item.name();
                                         marker = L.marker(item.centerPoint());
-                                        marker.count = regionChildrenApxItemsMap[item.id()];
-                                        marker.rid = item.id();
-                                        marker.name = item.name();
-                                        marker.bbox = item.bbox();
+                                        node.count = marker.count = regionChildrenApxItemsMap[itemId];
+                                        node.bbox = marker.bbox = item.bbox();
+                                        node.name = marker.name = item.name();
+                                        marker.rid = itemId;
                                         map.decorateMarker(marker);
                                         node.marker = marker;
                                         state.DAG.insert(itemId, node);
@@ -422,14 +419,11 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                                 itemMap[itemId] = item;
                                 if (!state.DAG.count(itemId)) {
                                     node = parentNode.addChild(itemId);
-                                    node.count = regionChildrenApxItemsMap[itemId];
-                                    node.bbox = item.bbox();
-                                    node.name = item.name();
                                     marker = L.marker(item.centerPoint());
-                                    marker.count = regionChildrenApxItemsMap[item.id()];
-                                    marker.rid = item.id();
-                                    marker.name = item.name();
-                                    marker.bbox = item.bbox();
+                                    node.count = marker.count = regionChildrenApxItemsMap[itemId];
+                                    node.bbox = marker.bbox =  item.bbox();
+                                    node.name = marker.name = item.name();
+                                    marker.rid = itemId;
                                     map.decorateMarker(marker);
                                     node.marker = marker;
                                     state.DAG.insert(itemId, node);
@@ -643,6 +637,74 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                 );
             }, function () {
             });
+        },
+
+        loadWholeTree: function () {
+            function fullSubSetTreeDataSource(cqr) {
+                state.DAG = tools.SimpleHash();
+                var subSet = cqr.subSet();
+                var regions = [];
+                for(var region in subSet.regions){
+                    regions.push(region);
+                }
+
+                //fetch the items
+                oscar.getItems(regions,
+                    function (items) {
+                        var marker;
+                        for (var i in items) {
+                            var item = items[i];
+                            var itemId = item.id();
+                            var regionInSubSet = subSet.regions[itemId];
+                            var node = state.DAG.at(itemId);
+
+                            if(node){
+                                marker = L.marker(item.centerPoint());
+                                marker.rid = itemId;
+                                node.name = marker.name = item.name();
+                                node.count = marker.count = regionInSubSet.apxitems;
+                                node.bbox = marker.bbox = item.bbox();
+                                map.decorateMarker(marker);
+                            }else{
+                                var newNode = new tools.TreeNode(itemId, undefined);
+                                newNode.count = regionInSubSet.apxitems;
+                                newNode.name = item.name();
+                                newNode.bbox = item.bbox();
+                                state.DAG.insert(itemId, newNode);
+                                node = newNode;
+                            }
+
+                            for(var child in regionInSubSet.children){
+                                node.addChild(regionInSubSet.children[child]);
+                            }
+                        }
+
+                        var root = state.DAG.at(0xFFFFFFFF);
+                        for(var j in subSet.rootchildren){
+                            root.children.push(state.DAG.at(subSet.rootchildren[j]));
+                        }
+                    },
+                    oscar.defErrorCB
+                );
+            }
+
+            var callFunc = function (q, scb, ecb) {
+                oscar.completeFull(q, scb, ecb);
+            };
+
+            callFunc($("#search_text").val(),
+                function (cqr) {
+                    //orbit reached, iniate coupling with user
+                    spinner.endLoadingSpinner();
+                    state.cqr = cqr;
+                    state.cqrRegExp = oscar.cqrRexExpFromQuery(cqr.query());
+                    fullSubSetTreeDataSource(cqr);
+                },
+                function (jqXHR, textStatus, errorThrown) {
+                    //BOOM!
+                    spinner.endLoadingSpinner();
+                    alert("Failed to retrieve completion results. textstatus=" + textStatus + "; errorThrown=" + errorThrown);
+                });
         },
 
         loadItems: function (rid) {
@@ -909,7 +971,6 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                 map.destroyTabs();
             }
         }
-
     };
 })
 ;

@@ -127,6 +127,7 @@ requirejs(["leaflet", "jquery", "mustache", "jqueryui", "sidebar", "mustacheLoad
             $('#graph').click(function () {
                 $("#onePath").button();
                 $("#wholeTree").button().click(function () {
+                    map.loadWholeTree();
                     tree.visualizeDAG(state.DAG.at(0xFFFFFFFF));
                 });
                 tree.visualizeDAG(state.DAG.at(0xFFFFFFFF));
