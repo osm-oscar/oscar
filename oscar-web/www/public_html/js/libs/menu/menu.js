@@ -8,8 +8,8 @@ define(["jquery", "search"], function ($, search) {
             if (c.is(":empty")) {
                 var container = $("<div class='list-group'></div>");
                 for (var category in this.categories) {
-                    $("<a style='border: none' class='list-group-item'><i class='fa fa-" + this.categories[category].img
-                        + "' category='" + category + "'></i>&nbsp; " + this.categories[category].desc + "</a>").on("click", this.displaySubCategories.bind(this)).appendTo(container);
+                    $("<a style='border: none' class='list-group-item'><i class='fa fa-" + menu.categories[category].img
+                        + "' category='" + category + "'></i>&nbsp; " + menu.categories[category].desc + "</a>").on("click", menu.displaySubCategories).appendTo(container);
                 }
                 c.append(container);
             }
@@ -25,11 +25,11 @@ define(["jquery", "search"], function ($, search) {
             var c = $("#subCategories");
             c.empty();
             var container = $("<div class='list-group'></div>");
-            for (var subcategory in this.categories[category]["subcategories"]) {
+            for (var subcategory in menu.categories[category]["subcategories"]) {
                 // exists a special key?
-                var key = this.categories[category]["subcategories"][subcategory].key ? this.categories[category]["subcategories"][subcategory].key : this.categories[category]["key"];
-                $("<a style='border: none' class='list-group-item' key='" + key +"' value='" + this.categories[category]["subcategories"][subcategory].value + "'>"
-                    + this.categories[category]["subcategories"][subcategory].desc + "</a>").on("click", function(e){menu.appendToSearchString(e); search.doCompletion();}).appendTo(container);
+                var key = menu.categories[category]["subcategories"][subcategory].key ? menu.categories[category]["subcategories"][subcategory].key : menu.categories[category]["key"];
+                $("<a style='border: none' class='list-group-item' key='" + key +"' value='" + menu.categories[category]["subcategories"][subcategory].value + "'>"
+                    + menu.categories[category]["subcategories"][subcategory].desc + "</a>").on("click", function(e){menu.appendToSearchString(e); search.doCompletion();}).appendTo(container);
             }
 
             c.append(container);
