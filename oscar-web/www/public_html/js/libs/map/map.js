@@ -192,14 +192,11 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                                 if (!cqr.ohPath().length || ($.inArray(itemId, cqr.ohPath()) != -1 || (parentRid == cqr.ohPath()[cqr.ohPath().length - 1] && parentCount > oscar.maxFetchItems))) {
                                     if (!state.DAG.count(itemId)) {
                                         node = parentNode.addChild(itemId);
-                                        node.count = regionChildrenApxItemsMap[itemId];
-                                        node.bbox = item.bbox();
-                                        node.name = item.name();
                                         marker = L.marker(item.centerPoint());
-                                        marker.count = regionChildrenApxItemsMap[item.id()];
-                                        marker.rid = item.id();
-                                        marker.name = item.name();
-                                        marker.bbox = item.bbox();
+                                        node.count = marker.count = regionChildrenApxItemsMap[itemId];
+                                        node.bbox = marker.bbox = item.bbox();
+                                        node.name = marker.name = item.name();
+                                        marker.rid = itemId;
                                         map.decorateMarker(marker);
                                         node.marker = marker;
                                         state.DAG.insert(itemId, node);
@@ -216,14 +213,11 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                                 itemMap[itemId] = item;
                                 if (!state.DAG.count(itemId)) {
                                     node = parentNode.addChild(itemId);
-                                    node.count = regionChildrenApxItemsMap[itemId];
-                                    node.bbox = item.bbox();
-                                    node.name = item.name();
                                     marker = L.marker(item.centerPoint());
-                                    marker.count = regionChildrenApxItemsMap[item.id()];
-                                    marker.rid = item.id();
-                                    marker.name = item.name();
-                                    marker.bbox = item.bbox();
+                                    node.count = marker.count = regionChildrenApxItemsMap[itemId];
+                                    node.bbox = marker.bbox =  item.bbox();
+                                    node.name = marker.name = item.name();
+                                    marker.rid = itemId;
                                     map.decorateMarker(marker);
                                     node.marker = marker;
                                     state.DAG.insert(itemId, node);
