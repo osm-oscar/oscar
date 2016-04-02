@@ -142,7 +142,9 @@ requirejs(["leaflet", "jquery", "mustache", "jqueryui", "sidebar", "mustacheLoad
                     map.loadWholeTree();
                     tree.visualizeDAG(state.DAG.at(0xFFFFFFFF));
                 });
-                tree.visualizeDAG(state.DAG.at(0xFFFFFFFF));
+                if (state.DAG.at(0xFFFFFFFF)) {
+                    tree.visualizeDAG(state.DAG.at(0xFFFFFFFF));
+                }
             });
 
             $('#closeTree a').click(function () {
