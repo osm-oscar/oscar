@@ -11,7 +11,7 @@ define(["jquery", "search"], function ($, search) {
                     $("<a style='border: none' class='list-group-item'><i class='fa fa-" + menu.categories[category].img
                         + "' category='" + category + "'></i>&nbsp; " + menu.categories[category].desc + "</a>").on("click", menu.displaySubCategories).appendTo(container);
                 }
-                $("<div class='ui-widget'><label for='tagsSearch'>Tagsearch: </label><input id='tagsSearch' placeholder='Was möchten Sie suchen?'></div>").appendTo(container);
+                $("<div class='ui-widget'><label for='tagsSearch' data-toggle='tooltip' data-placement='right' title='Search for tags not covered by the menu above'>Tagsearch: </label><input id='tagsSearch' placeholder='Was möchten Sie suchen?'></div>").appendTo(container);
                 c.append(container);
 
                 $("#tagsSearch").autocomplete({
@@ -30,6 +30,7 @@ define(["jquery", "search"], function ($, search) {
                         $("#search_text").tokenfield('createToken', {value:  ui.item.value, label:  ui.item.value});
                     }
                 });
+                $('[data-toggle="tooltip"]').tooltip();
             }
         },
 
