@@ -52,7 +52,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                     else {
                         var scrollPos = itemPanelRootDiv.offset().top - container.offset().top + container.scrollTop();
                         container.animate({scrollTop: scrollPos});
-                        //container.animate({scrollTop: $(itemsDetailsId).offset().top});
+                        //container.animate({scrollTop: itemPanelRootDiv.position().top + $("itemsList").position().top});
                     }
                     map.showItemRelatives();
                 });
@@ -421,7 +421,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                                     node = parentNode.addChild(itemId);
                                     marker = L.marker(item.centerPoint());
                                     node.count = marker.count = regionChildrenApxItemsMap[itemId];
-                                    node.bbox = marker.bbox =  item.bbox();
+                                    node.bbox = marker.bbox = item.bbox();
                                     node.name = marker.name = item.name();
                                     marker.rid = itemId;
                                     map.decorateMarker(marker);
@@ -610,14 +610,11 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                             itemId = item.id();
                             if (!state.DAG.count(itemId)) {
                                 node = parentNode.addChild(itemId);
-                                node.count = regionChildrenApxItemsMap[itemId];
-                                node.bbox = item.bbox();
-                                node.name = item.name();
                                 marker = L.marker(item.centerPoint());
-                                marker.count = regionChildrenApxItemsMap[item.id()];
+                                node.count = marker.count = regionChildrenApxItemsMap[itemId];
+                                node.bbox = marker.bbox = item.bbox();
+                                node.name = marker.name = item.name();
                                 marker.rid = item.id();
-                                marker.name = item.name();
-                                marker.bbox = item.bbox();
                                 map.decorateMarker(marker);
                                 node.marker = marker;
                                 state.DAG.insert(itemId, node);
@@ -644,7 +641,7 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                 state.DAG = tools.SimpleHash();
                 var subSet = cqr.subSet();
                 var regions = [];
-                for(var region in subSet.regions){
+                for (var region in subSet.regions) {
                     regions.push(region);
                 }
 
@@ -658,14 +655,14 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                             var regionInSubSet = subSet.regions[itemId];
                             var node = state.DAG.at(itemId);
 
-                            if(node){
+                            if (node) {
                                 marker = L.marker(item.centerPoint());
                                 marker.rid = itemId;
                                 node.name = marker.name = item.name();
                                 node.count = marker.count = regionInSubSet.apxitems;
                                 node.bbox = marker.bbox = item.bbox();
                                 map.decorateMarker(marker);
-                            }else{
+                            } else {
                                 var newNode = new tools.TreeNode(itemId, undefined);
                                 newNode.count = regionInSubSet.apxitems;
                                 newNode.name = item.name();
@@ -674,13 +671,13 @@ define(["require", "state", "jquery", "conf", "oscar", "flickr", "tools", "tree"
                                 node = newNode;
                             }
 
-                            for(var child in regionInSubSet.children){
+                            for (var child in regionInSubSet.children) {
                                 node.addChild(regionInSubSet.children[child]);
                             }
                         }
 
                         var root = state.DAG.at(0xFFFFFFFF);
-                        for(var j in subSet.rootchildren){
+                        for (var j in subSet.rootchildren) {
                             root.children.push(state.DAG.at(subSet.rootchildren[j]));
                         }
                     },

@@ -11,7 +11,26 @@ define(["jquery", "search"], function ($, search) {
                     $("<a style='border: none' class='list-group-item'><i class='fa fa-" + menu.categories[category].img
                         + "' category='" + category + "'></i>&nbsp; " + menu.categories[category].desc + "</a>").on("click", menu.displaySubCategories).appendTo(container);
                 }
+                $("<div class='ui-widget'><label for='tagsSearch' data-toggle='tooltip' data-placement='right' title='Search for tags not covered by the menu above'>Tagsearch: </label><input id='tagsSearch' placeholder='Was möchten Sie suchen?'></div>").appendTo(container);
                 c.append(container);
+
+                $("#tagsSearch").autocomplete({
+                    source: function (request, response) {
+                        var service = "http://taginfo.openstreetmap.org/api/4/tags/popular?sortname=count_all&sortorder=desc&page=1&rp=8&query=" + request['term'];
+                        var result = [];
+
+                        $.getJSON(service, function (data) {
+                            for (var suggestion in data.data) {
+                                result.push("@" + data.data[suggestion].key + ":" + data.data[suggestion].value);
+                            }
+                            response(result);
+                        });
+                    },
+                    select: function(event, ui){
+                        $("#search_text").tokenfield('createToken', {value:  ui.item.value, label:  ui.item.value});
+                    }
+                });
+                $('[data-toggle="tooltip"]').tooltip();
             }
         },
 
