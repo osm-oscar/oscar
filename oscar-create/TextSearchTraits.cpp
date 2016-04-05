@@ -61,8 +61,6 @@ FilterState::FilterState(const sserialize::Static::KeyValueObjectStore& kv, cons
 	}
 }
 
-
-
 SimpleSearchBaseTraits::SimpleSearchBaseTraits(const TextSearchConfig & tsc, const liboscar::Static::OsmKeyValueObjectStore & store) : 
 m_state(new BaseSearchTraitsState(store.kvStore(), tsc)),
 m_ies(m_state),

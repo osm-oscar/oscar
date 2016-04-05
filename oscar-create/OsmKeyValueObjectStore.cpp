@@ -548,13 +548,14 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 		}
 		polyStore.clear();
 	}
+	ct.polyStore.snapPoints();
 	ct.polyStore.setRefinerOptions(2, 2, 10000);
 	ct.polyStore.addPolygonsToRaster(10, 10);
 	ct.polyStore.printStats(std::cout);
 	std::cout << "Creating final TriangulationRegionStore" << std::endl;
 	osmtools::OsmTriangulationRegionStore::LipschitzMeshCriteria refinerBase(ct.cc->rc.triangMaxCentroidDist, &(ct.trs.tds()));
 	osmtools::OsmTriangulationRegionStore::RegionOnlyLipschitzMeshCriteria refiner(refinerBase);
-	ct.trs.init(ct.polyStore, ct.cc->numThreads, &refiner);
+	ct.trs.init(ct.polyStore, ct.cc->numThreads, &refiner, osmtools::OsmTriangulationRegionStore::MyRefineTag, true);
 	ct.trs.initGrid(ct.cc->rc.polyStoreLatCount, ct.cc->rc.polyStoreLonCount);
 	ct.trs.refineBySize(ct.cc->rc.polyStoreMaxTriangPerCell, 100, 100000, ct.cc->numThreads);
 	assert(ct.trs.selfTest());
