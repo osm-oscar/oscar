@@ -68,7 +68,7 @@ define(["state", "tools", "conf", "oscar", "map"], function(state, tools, config
 				};
 			}
 
-			var myRealQuery =  map.replaceSpatialObjects(myQuery);
+			var myRealQuery =  search.replaceSpatialObjects(myQuery);
 			
             if ($('#searchModi input').is(":checked")) {
                 //TODO: wrong placement of markers if clustering is active. Cause: region midpoint is outside of search rectangle
@@ -116,7 +116,7 @@ define(["state", "tools", "conf", "oscar", "map"], function(state, tools, config
             var myQ = tools.getParameterByName("q");
             if (myQ.length) {
 				tools.setQuery(myQ);
-                map.instantCompletion();
+                search.instantCompletion();
 			}
 		}
     };
