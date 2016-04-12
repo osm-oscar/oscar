@@ -7,10 +7,10 @@ minilzo is licensed under GPL? If that really is the case, then we have to get r
 LONGTERM:
 xz compression (complete abstract compression)
 
-LONGTERM:
+VERY LONGTERM:
 Re-order treed-cqr set operations
 
-LONGTERM:
+VERY LONGTERM:
 HierarchicalCQR:
 Based on Regions. Essential the GeoHierarchy::SubSet in a compressed form. Set-Operations can then be done on this subgraph.
 In order to make this work, the graph has to be transformed to tree. We can simply do this by following the graph in in-order and skipping processed regions.
@@ -40,14 +40,14 @@ abstract GeoShape to have different backends
 	-> dynamic polygon simplification
 	-> Split regions into their subregions
 
-
-HIGH IMPORTANCE:
-oscar-web: improve support for geoobjects: just add a reference in the query string and add ability to change polygon/paths/rectangles
-So a query would look like that: $rect:1 + $poly:1 + $path:2 - $path:1
-the ids would be replaced before sending to the server (needs some extra work to do the parsing of the uri)
-
 BUGS:
 :^ (@highway eisenbahnstraße "aalen")
 :west-of (alexanderplatz berling)
 
 OsmKeyValueStore::geoShape/toInternalId does not check for out of bounds
+
+HIGH IMPORTANCE:
+add ability to use island border to add new regions
+
+HIGH IMPORTANCE:
+visualize cells in oscar-gui
