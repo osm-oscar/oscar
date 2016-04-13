@@ -134,6 +134,9 @@ int main(int argc, char **argv) {
 			case Config::WorkItem::LIST_COMPLETERS:
 				worker.listCompleters();
 				break;
+			case Config::WorkItem::CELLS_FROM_QUERY:
+				worker.cellsFromQuery(*workItem.data->as<WD_CellsFromQuery>());
+				break;
 			case Config::WorkItem::INTERACTIVE_PARTIAL:
 				worker.interactivePartial(*workItem.data->as<WD_InteractivePartial>());
 				break;

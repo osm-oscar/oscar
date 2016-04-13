@@ -895,6 +895,21 @@ void readCompletionStringsFromFile(const std::string & fileName, T_OUTPUT_ITERAT
 	inFile.close();
 }
 
+void Worker::cellsFromQuery(WD_CellsFromQuery& d) {
+	if (!completer.textSearch().hasSearch(liboscar::TextSearch::GEOCELL)) {
+		throw sserialize::UnsupportedFeatureException("Data has no geocell text search");
+	}
+	auto cqr = completer.cqrComplete(d.value, false, d.threadCount);
+	auto tcqr = completer.cqrComplete(d.value, true, d.threadCount);
+	
+	if (cqr != tcqr) {
+		throw sserialize::BugException("cqr and tcqr differ");
+	}
+	
+	for(uint32_t i(0), s(cqr.cellCount()); i < s; ++i) {
+		std::cout << cqr.cellId(i) << ' ';
+	}
+}
 
 void Worker::completeStringPartial(WD_CompleteStringPartial & d) {
 	std::vector<std::string> strs(1, d.str);

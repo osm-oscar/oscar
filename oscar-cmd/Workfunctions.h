@@ -55,6 +55,7 @@ struct Worker {
 	void interactiveSimple(WD_InteractiveSimple & d);
 	void interactiveFull(WD_InteractiveFull & d);
 
+	void cellsFromQuery(WD_CellsFromQuery & d);
 
 	void completeStringPartial(WD_CompleteStringPartial & d);
 	void completeStringSimple(WD_CompleteStringSimple& d);

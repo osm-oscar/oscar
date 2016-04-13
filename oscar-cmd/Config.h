@@ -85,6 +85,16 @@ typedef WD_SingleValue<std::string> WD_DumpItemTags;
 typedef WD_SingleValue<bool> WD_InteractiveFull;
 typedef WD_SingleValue<std::string> WD_ConsistencyCheck;
 
+struct WD_CellsFromQuery: public WD_base {
+	WD_CellsFromQuery(const std::string & value, uint32_t threadCount) :
+	value(value),
+	threadCount(threadCount)
+	{}
+	virtual ~WD_CellsFromQuery() {}
+	std::string value;
+	uint32_t threadCount;
+};
+
 struct WD_InteractivePartial: public WD_base {
 	WD_InteractivePartial(int printNumResults, uint32_t seek) :
 	printNumResults(printNumResults), seek(seek) {}
@@ -223,6 +233,7 @@ public:
 			GH_ID_2_STORE_ID,
 			PRINT_STATS, PRINT_STATS_SINGLE, PRINT_PAPER_STATS_DB, PRINT_PAPER_STATS_GH, PRINT_CTC_STATS, PRINT_CTC_SELECTIVE_STATS, PRINT_CQR_DATA_SIZE, DUMP_ALL_ITEM_TAGS_WITH_INHERITED_TAGS, PRINT_CELL_NEIGHBOR_STATS,
 			LIST_COMPLETERS,
+			CELLS_FROM_QUERY,
 			INTERACTIVE_PARTIAL, INTERACTIVE_SIMPLE, INTERACTIVE_FULL,
 			COMPLETE_STRING_PARTIAL, COMPLETE_STRING_SIMPLE, COMPLETE_STRING_FULL, COMPLETE_STRING_CLUSTERED, COMPLETE_STRING_CLUSTERED_TREED_CQR,
 			COMPLETE_FROM_FILE_PARTIAL, COMPLETE_FROM_FILE_SIMPLE, COMPLETE_FROM_FILE_FULL, COMPLETE_FROM_FILE_CLUSTERED, COMPLETE_FROM_FILE_CLUSTERED_TREED_CQR,

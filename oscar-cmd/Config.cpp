@@ -50,6 +50,7 @@ void Config::printHelp() {
 --create-completion-strings num\tcreate num completion strings from the store \n \
 -ssc ts,ct\tselect the textsearch completer ts=(items|geoh|geocell),ct=num \n \
 -sgc num\tselect geo completer \n \
+-cfq list cqr from query\n \
 -csp num\tpartial complete string and seek num items \n \
 -css ms,mr\tsimple complete string with minStrLen=ms and maxResultSetSize=mr \n \
 -csf\tfull complete string \n \
@@ -165,6 +166,9 @@ int Config::parseSingleArg(int argc, char ** argv, int & i, int & printNumResult
 	}
 	else if (arg == "-csct") {
 		workItems.emplace_back(Config::WorkItem::COMPLETE_STRING_CLUSTERED_TREED_CQR, new WD_CompleteStringClusteredTreedCqr(completionString, printNumResults, threadCount));
+	}
+	else if (arg == "-cfq") {
+		workItems.emplace_back(Config::WorkItem::CELLS_FROM_QUERY, new WD_CellsFromQuery(completionString, threadCount));
 	}
 	//interactive complete
 	
