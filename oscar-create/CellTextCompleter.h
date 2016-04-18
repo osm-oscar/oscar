@@ -848,10 +848,6 @@ CellTextCompleter<TBaseTrieType>::create(const liboscar::Static::OsmKeyValueObje
 	count = 0;
 	#pragma omp parallel for schedule(dynamic, 1)
 	for (uint32_t i = 0; i < ghSize; ++i) {
-// 		itemStringNodes.clear();
-// 		itemStrings.clear();
-// 		assocCellIdItemCount.clear();
-		
 		typename TItemDerefer::StringsContainer itemStrings;
 		ItemStringsNodes itemStringNodes;
 		std::vector<uint32_t> cellIndex;
@@ -910,9 +906,6 @@ CellTextCompleter<TBaseTrieType>::create(const liboscar::Static::OsmKeyValueObje
 	count = 0;
 	#pragma omp parallel for schedule(dynamic, 1)
 	for (uint32_t i = 0; i < storeSize; ++i) {
-// 		itemStringNodes.clear();
-// 		cellIndex.clear();
-// 		itemStrings.clear();
 		typename TItemDerefer::StringsContainer itemStrings;
 		ItemStringsNodes itemStringNodes;
 		
@@ -961,11 +954,6 @@ CellTextCompleter<TBaseTrieType>::create(const liboscar::Static::OsmKeyValueObje
 	count = 0;
 	#pragma omp parallel for schedule(dynamic, 1)
 	for (uint32_t i = 0; i < ghSize; ++i) {
-// 		itemStringNodes.clear();
-// 		cellIndex.clear();
-// 		itemStrings.clear();
-// 		assocCellIdItemCount.clear();
-// 		assocCellIdOffset.clear();
 		typename TItemDerefer::StringsContainer itemStrings;
 		ItemStringsNodes itemStringNodes;
 		std::vector<uint32_t> cellIndex;
@@ -973,7 +961,6 @@ CellTextCompleter<TBaseTrieType>::create(const liboscar::Static::OsmKeyValueObje
 		std::unordered_map<uint32_t, uint32_t> assocCellIdOffset;//offset into cellIndex needed during inserting associated items
 		sserialize::ItemIndex regionItems, regionCells;
 		sserialize::BoundedCompactUintArray itemCells;
-
 
 		sserialize::Static::spatial::GeoHierarchy::Region r(store.geoHierarchy().regionFromStoreId(i));
 		
@@ -1121,17 +1108,6 @@ CellTextCompleter<TBaseTrieType>::create(const liboscar::Static::OsmKeyValueObje
 #if defined(DEBUG_CHECK_ALL) || defined(DEBUG_OSCAR_CREATE_CELL_TEXT_COMPLETER)
 	checkConsistency(true);
 #endif
-	{
-		std::string tmpstr("@postal_code");
-		NodePtr np = m_trie.findNode(tmpstr.cbegin(), tmpstr.cend(), false);
-		if (!np) {
-			std::cout << "Could not find @postal_code" << std::endl;
-		}
-		else {
-			np->value().dump(std::cout);
-			std::cout << std::flush;
-		}
-	}
 	return true;
 }
 
