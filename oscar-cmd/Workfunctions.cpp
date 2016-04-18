@@ -907,7 +907,7 @@ void Worker::cellsFromQuery(WD_CellsFromQuery& d) {
 	}
 	
 	for(uint32_t i(0), s(cqr.cellCount()); i < s; ++i) {
-		std::cout << cqr.cellId(i) << ' ';
+		std::cout << cqr.cellId(i) << ':' << (cqr.fullMatch(i) ? 'f' : 'p') << '\n';
 	}
 }
 
