@@ -393,7 +393,7 @@ void handleTextSearch(Config & opts, State & state) {
 	liboscar::TextSearchCreator tsCreator(dest);
 	
 	for(TextSearchConfig* x : opts.textSearchConfig) {
-		if (!x) { //skip empty
+		if (!x || !(x->enabled)) { //skip empty/disabled
 			continue;
 		}
 		tsCreator.beginRawPut(x->type);
