@@ -38,60 +38,181 @@
 			"order" : "name"
 		}
 	},
-	"textsearch" : [{
-		"type" : "oomgeocell",
-		"config" : {
-			"enabled" : true,
-			"items" : {
-				"values" : {
-					"prefix" : {
-						"enabled" : true,
-						"file" : "lists/k_values_prefix.txt",
-						"caseSensitive" : false,
-						"diacriticSensitive" : false
+	"textsearch" :
+	[
+		{
+			"type" : "oomgeocell",
+			"config" : {
+				"enabled" : false,
+				"items" : {
+					"values" : {
+						"prefix" : {
+							"enabled" : true,
+							"file" : "lists/k_values_prefix.txt",
+							"caseSensitive" : false,
+							"diacriticSensitive" : false
+						},
+						"substring" : {
+							"enabled" : true,
+							"file" : "lists/k_values_substring_prefix.txt",
+							"caseSensitive" : false,
+							"diacriticSensitive" : false
+						}
 					},
-					"substring" : {
-						"enabled" : true,
-						"file" : "lists/k_values_substring_prefix.txt",
-						"caseSensitive" : false,
-						"diacriticSensitive" : false
+					"tags" : {
+						"prefix" : {
+							"enabled" : true,
+							"file" : "lists/allkeys.txt",
+							"caseSensitive" : false,
+							"diacriticSensitive" : false
+						}
 					}
 				},
-				"tags" : {
-					"prefix" : {
-						"enabled" : true,
-						"file" : "lists/allkeys.txt",
-						"caseSensitive" : false,
-						"diacriticSensitive" : false
-					}
-				}
-			},
-			"regions" : {
-				"values" : {
-					"prefix" : {
-						"enabled" : true,
-						"file" : "lists/k_values_prefix.txt",
-						"caseSensitive" : false,
-						"diacriticSensitive" : false
+				"regions" : {
+					"values" : {
+						"prefix" : {
+							"enabled" : true,
+							"file" : "lists/k_values_prefix.txt",
+							"caseSensitive" : false,
+							"diacriticSensitive" : false
+						},
+						"substring" : {
+							"enabled" : true,
+							"file" : "lists/k_values_substring_prefix.txt",
+							"caseSensitive" : true,
+							"diacriticSensitive" : true
+						}
 					},
-					"substring" : {
-						"enabled" : true,
-						"file" : "lists/k_values_substring_prefix.txt",
-						"caseSensitive" : false,
-						"diacriticSensitive" : false
+					"tags" : {
+						"prefix" : {
+							"enabled" : true,
+							"file" : "lists/allkeys.txt",
+							"caseSensitive" : false,
+							"diacriticSensitive" : false
+						}
 					}
 				},
-				"tags" : {
-					"prefix" : {
-						"enabled" : true,
-						"file" : "lists/allkeys.txt",
-						"caseSensitive" : false,
-						"diacriticSensitive" : false
+				"threadCount" : 8,
+				"maxMemoryUsage" : 2048
+			}
+		},
+		{
+			"type" : "geocell",
+			"config" : {
+				"enabled" : false,
+				"threadCount" : 1,
+				"trieType" : "trie",
+				"mmt" : "prg",
+				"check" : false,
+				"items" : {
+					"values" : {
+						"prefix" : {
+							"enabled" : true,
+							"file" : "lists/k_values_prefix.txt",
+							"caseSensitive" : false,
+							"diacriticSensitive" : false
+						},
+						"substring" : {
+							"enabled" : true,
+							"file" : "lists/k_values_substring_prefix.txt",
+							"caseSensitive" : false,
+							"diacriticSensitive" : false
+						}
+					},
+					"tags" : {
+						"prefix" : {
+							"enabled" : true,
+							"file" : "lists/allkeys.txt",
+							"caseSensitive" : false,
+							"diacriticSensitive" : false
+						}
 					}
-				}
-			},
-			"threadCount" : 8,
-			"maxMemoryUsage" : 2048
+				},
+				"regions" : {
+					"values" : {
+						"prefix" : {
+							"enabled" : true,
+							"file" : "lists/k_values_prefix.txt",
+							"caseSensitive" : false,
+							"diacriticSensitive" : false
+						},
+						"substring" : {
+							"enabled" : true,
+							"file" : "lists/k_values_substring_prefix.txt",
+							"caseSensitive" : false,
+							"diacriticSensitive" : false
+						}
+					},
+					"tags" : {
+						"prefix" : {
+							"enabled" : true,
+							"file" : "lists/allkeys.txt",
+							"caseSensitive" : false,
+							"diacriticSensitive" : false
+						}
+					}
+				},
+				"maxMemoryUsage" : 2048
+			}
+		},
+		{
+			"type" : "geocell",
+			"config" : {
+				"enabled" : true,
+				"threadCount" : 1,
+				"trieType" : "trie",
+				"mmt" : "prg",
+				"check" : false,
+				"items" : {
+					"values" : {
+						"prefix" : {
+							"enabled" : true,
+							"file" : "lists/k_values_prefix.txt",
+							"caseSensitive" : true,
+							"diacriticSensitive" : false
+						},
+						"substring" : {
+							"enabled" : true,
+							"file" : "lists/k_values_substring_prefix.txt",
+							"caseSensitive" : true,
+							"diacriticSensitive" : false
+						}
+					},
+					"tags" : {
+						"prefix" : {
+							"enabled" : true,
+							"file" : "lists/allkeys.txt",
+							"caseSensitive" : true,
+							"diacriticSensitive" : false
+						}
+					}
+				},
+				"regions" : {
+					"values" : {
+						"prefix" : {
+							"enabled" : true,
+							"file" : "lists/k_values_prefix.txt",
+							"caseSensitive" : true,
+							"diacriticSensitive" : false
+						},
+						"substring" : {
+							"enabled" : true,
+							"file" : "lists/k_values_substring_prefix.txt",
+							"caseSensitive" : true,
+							"diacriticSensitive" : false
+						}
+					},
+					"tags" : {
+						"prefix" : {
+							"enabled" : true,
+							"file" : "lists/allkeys.txt",
+							"caseSensitive" : true,
+							"diacriticSensitive" : false
+						}
+					}
+				},
+				"maxMemoryUsage" : 2048
+			}
 		}
-	}]
+	]
 }
