@@ -9,7 +9,6 @@
 #include <liboscar/OsmKeyValueObjectStore.h>
 #include <liboscar/constants.h>
 #include <osmtools/AreaExtractor.h>
-#include "OsmPolygonStore.h"
 #include "CellCreator.h"
 #include "common.h"
 #include "AreaExtractor.h"
