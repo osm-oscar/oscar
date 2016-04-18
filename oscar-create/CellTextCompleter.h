@@ -652,7 +652,33 @@ struct SampleSuffixStringsContainer {
 		}
 		return true;
 	}
+	///@return true iff there is a suffix equal to @param str
+
+	static constexpr uint32_t npos = 0xFFFFFFFF;
+	uint32_t find(const std::string & str) const {
+		uint32_t pos = 0;
+		for(const SuffixString & sb : strings) {
+			if (sb.base.size() < str.size()) {
+				continue;
+			}
+			bool ok = true;
+			for(std::string::const_reverse_iterator strIt(str.crbegin()), strEnd(str.crend()), sIt(sb.base.crbegin()); strIt != strEnd; ++strIt, ++sIt) {
+				if (*strIt != *sIt) {
+					ok = false;
+					break;
+				}
+			}
+			if (ok) {
+				return pos;
+			}
+			++pos;
+		}
+		return npos;
+	}
 	
+	inline bool contains(const std::string & str) const {
+		return find(str) != npos;
+	}
 };
 
 template<typename TSuffixStringsContainer, typename TPrefixStringsContainer>
