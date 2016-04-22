@@ -6,3 +6,5 @@ landuse
 forest
 landuse
 cemetery
+boundary
+postal_code
