@@ -1,0 +1,41 @@
+{
+	"stats" : {
+		"print-memory-usage" : false
+	},
+	"tempdir" : {
+		"fast" : "./tempdir/fast_osmc",
+		"slow" : "./tempdir/slow_osmc"
+	},
+	"index" : {
+		"type" : "rlede",
+		"check" : false,
+		"deduplicate" : true
+	},
+	"store" : {
+		"enabled" : true,
+		"threadCount" : 8,
+		"blobFetchCount" : 5,
+		"fullRegionIndex" : false,
+		"addRegionsToCells" : false,
+		"addParentInfo" : false,
+		"nodeTableSize" : 1000000,
+		"tagFilter" : "all",
+		"itemFilter" : "all",
+		"latCount" : 100,
+		"lonCount" : 100,
+		"readBoundaries" : true,
+		"maxTriangPerCell" : 10000,
+		"maxTriangCentroidDist" : 1000000000.0,
+		"regionFilter" : {
+			"keys" : "lists/k_region_inherit_tags.txt",
+			"keyValues" : "lists/kv_region_inherit_tags.txt"
+		},
+		"splitValues" : "lists/splitValues.txt",
+		"scoring" : {
+			"config" : "lists/scores.cfg"
+		},
+		"sorting" : {
+			"order" : "name"
+		}
+	}
+}
