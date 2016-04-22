@@ -43,7 +43,7 @@
 		{
 			"type" : "oomgeocell",
 			"config" : {
-				"enabled" : false,
+				"enabled" : true,
 				"items" : {
 					"values" : {
 						"prefix" : {
@@ -79,8 +79,8 @@
 						"substring" : {
 							"enabled" : true,
 							"file" : "lists/k_values_substring_prefix.txt",
-							"caseSensitive" : true,
-							"diacriticSensitive" : true
+							"caseSensitive" : false,
+							"diacriticSensitive" : false
 						}
 					},
 					"tags" : {
@@ -158,7 +158,7 @@
 		{
 			"type" : "geocell",
 			"config" : {
-				"enabled" : true,
+				"enabled" : false,
 				"threadCount" : 1,
 				"trieType" : "trie",
 				"mmt" : "prg",
