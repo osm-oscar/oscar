@@ -171,9 +171,9 @@ void Benchmarker::doGeocellBench(const std::vector<std::string> & strs, bool col
 	}
 	sserialize::Static::CQRDilator cqrd(m_completer.store().cellCenterOfMass(), m_completer.store().cellGraph());
 	liboscar::CQRFromPolygon cqrfp(m_completer.store(), m_completer.indexStore());
-	sserialize::spatial::GeoHierarchySubSetCreator ghs(m_completer.store().geoHierarchy(), sserialize::spatial::GeoHierarchySubSetCreator::T_PASS_THROUGH);
+	sserialize::spatial::GeoHierarchySubGraph ghs(m_completer.store().geoHierarchy(), m_completer.indexStore(), sserialize::spatial::GeoHierarchySubGraph::T_PASS_THROUGH);
 	liboscar::CQRFromComplexSpatialQuery csq(ghs, cqrfp);
-	liboscar::AdvancedCellOpTree opTree(cmp, cqrd, csq);
+	liboscar::AdvancedCellOpTree opTree(cmp, cqrd, csq, ghs);
 	sserialize::TimeMeasurer tm;
 	long int cqrTime, subsetTime;
 	int fd = -1;
