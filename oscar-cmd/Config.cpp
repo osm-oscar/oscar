@@ -82,6 +82,7 @@ void Config::printHelp() {
 -dvs file\tdump value string table to file \n \
 -dit file\tdump item tags as key:value to file \n \
 -gh2sId ghId\tprint store id of region with id \n \
+-s2ghId sId\tprint gh id of region with storeId id \n \
 -dghrc ghId\tprint children regions of region with ghId (-1==root region) \n \
 -dghci cellId\tdump items of cell id \n \
 -dghri ghId\tdump items of region id \n \
@@ -271,6 +272,10 @@ int Config::parseSingleArg(int argc, char ** argv, int & i, int & printNumResult
 	//some info opts
 	else if (arg == "-gh2sId" && i+1 < argc) {
 		workItems.emplace_back(WorkItem::GH_ID_2_STORE_ID, new WD_GhId2StoreId(atoi(argv[i+1])) );
+		++i;
+	}
+	else if (arg == "-s2ghId" && i+1 < argc) {
+		workItems.emplace_back(WorkItem::STORE_ID_2_GH_ID, new WD_StoreId2GhId(atoi(argv[i+1])) );
 		++i;
 	}
 	

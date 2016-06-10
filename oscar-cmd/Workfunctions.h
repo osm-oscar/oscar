@@ -35,6 +35,7 @@ struct Worker {
 	void printSelectedGeoCompleter();
 	
 	void ghId2StoreId(WD_GhId2StoreId & d);
+	void storeId2GhId(WD_StoreId2GhId & d);
 	
 	void dumpIndex(WD_DumpIndex& d);
 	void dumpItem(WD_DumpItem & d);

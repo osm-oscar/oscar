@@ -629,6 +629,10 @@ void Worker::ghId2StoreId(WD_GhId2StoreId& d) {
 	std::cout << "GhId2storeId: " << d.value << "->" << completer.store().geoHierarchy().ghIdToStoreId(d.value) << std::endl;
 }
 
+void Worker::storeId2GhId(WD_GhId2StoreId& d) {
+	std::cout << "StoreId2ghId: " << d.value << "->" << completer.store().geoHierarchy().storeIdToGhId(d.value) << std::endl;
+}
+
 void Worker::dumpIndex(WD_DumpIndex& d) {
 	std::cout << completer.indexStore().at(d.value) << std::endl;
 }

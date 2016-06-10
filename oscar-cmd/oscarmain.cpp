@@ -68,6 +68,9 @@ int main(int argc, char **argv) {
 			case Config::WorkItem::GH_ID_2_STORE_ID:
 				worker.ghId2StoreId(*workItem.data->as<WD_GhId2StoreId>());
 				break;
+			case Config::WorkItem::STORE_ID_2_GH_ID:
+				worker.storeId2GhId(*workItem.data->as<WD_StoreId2GhId>());
+				break;
 			case Config::WorkItem::DUMP_INDEX:
 				worker.dumpIndex(*workItem.data->as<WD_DumpIndex>());
 				break;
