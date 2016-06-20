@@ -9,7 +9,7 @@
 #include <sserialize/containers/OADHashTable.h>
 #include <sserialize/containers/DirectHugeHashSet.h>
 #include <osmpbf/filter.h>
-#include <osmpbf/osmfile.h>
+#include <osmpbf/pbistream.h>
 #include <liboscar/OsmKeyValueObjectStore.h>
 #include <algorithm>
 #include <utility>
@@ -155,7 +155,7 @@ public:
 
 	struct CreationConfig {
 		uint32_t maxNodeCoordTableSize; //24 Bytes per entry + 8/hash_load_factor()
-		std::string fileName;
+		std::vector<std::string> fileNames;
 		std::string scoreConfigFileName;
 		std::shared_ptr<SaveDirector> itemSaveDirector;
 		uint64_t minNodeId; //min node id for the direct node hash
@@ -214,7 +214,7 @@ private:
 		
 		OsmKeyValueObjectStore * parent;
 		
-		osmpbf::OSMFileIn inFile;
+		osmpbf::PbiStream inFile;
 		
 		//the grt is only used temporarily and the store data will be deleted by addPolygonStoreItems
 		osmtools::OsmGridRegionTree<RegionInfo> polyStore;

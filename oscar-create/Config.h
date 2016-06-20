@@ -217,7 +217,7 @@ public:
 	
 public:
 	//Variables
-	std::string inFileName;
+	std::vector<std::string> inFileNames;
 	
 	//interaction
 	bool ask;

@@ -70,18 +70,18 @@ int main(int argc, char ** argv) {
 		state.indexFactory.setDeduplication(opts.indexStoreConfig->deduplicate);
 	}
 
-	std::string storeFileName = opts.inFileName + "/" + liboscar::toString(liboscar::FC_KV_STORE);
+	std::string storeFileName = opts.inFileNames.front() + "/" + liboscar::toString(liboscar::FC_KV_STORE);
 
 	
 	//from pbf, first create the kvstore
 	kvTime.begin();
-	if (sserialize::MmappedFile::fileExists(opts.inFileName) && !sserialize::MmappedFile::isDirectory(opts.inFileName)) {
+	if (opts.inFileNames.size() > 1 || (sserialize::MmappedFile::fileExists(opts.inFileNames.front()) && !sserialize::MmappedFile::isDirectory(opts.inFileNames.front()))) {
 		oscar_create::handleKVCreation(opts, state);
 		storeFileName = opts.getOutFileName(liboscar::FC_KV_STORE);
 	}
 	else {//get the input index and insert it into our index and open the store
-		std::string idxStoreFileName = opts.inFileName + "/" + liboscar::toString(liboscar::FC_INDEX);
-		storeFileName = opts.inFileName + "/" + liboscar::toString(liboscar::FC_KV_STORE);
+		std::string idxStoreFileName = opts.inFileNames.front() + "/" + liboscar::toString(liboscar::FC_INDEX);
+		storeFileName = opts.inFileNames.front() + "/" + liboscar::toString(liboscar::FC_KV_STORE);
 		
 		sserialize::Static::ItemIndexStore idxStore;;
 		try {
@@ -142,7 +142,7 @@ int main(int argc, char ** argv) {
 		return -1;
 	}
 	if (writeSymlink) {
-		std::string sourceStoreFileName = sserialize::MmappedFile::realPath(opts.inFileName + "/" + liboscar::toString(liboscar::FC_KV_STORE));
+		std::string sourceStoreFileName = sserialize::MmappedFile::realPath(opts.inFileNames.front() + "/" + liboscar::toString(liboscar::FC_KV_STORE));
 		std::string targetStoreFileName = opts.getOutFileDir() + "/" + liboscar::toString(liboscar::FC_KV_STORE);
 		if (!sserialize::MmappedFile::createSymlink(sourceStoreFileName, targetStoreFileName)) {
 			std::cerr << "Could not create symlink" << std::endl;

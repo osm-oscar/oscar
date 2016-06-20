@@ -1020,7 +1020,7 @@ Config::ReturnValues Config::fromCmdLineArgs(int argc, char** argv) {
 	for(int i=1; i < argc; ++i) {
 		std::string token(argv[i]);
 		if (token == "-i" && i+1 < argc) {
-			inFileName = std::string(argv[i+1]);
+			inFileNames.emplace_back(std::string(argv[i+1]));
 			++i;
 		}
 		else if (token == "-o" && i+1 < argc) {
@@ -1034,6 +1034,11 @@ Config::ReturnValues Config::fromCmdLineArgs(int argc, char** argv) {
 		else if (token == "-a") {
 			ask = true;
 		}
+	}
+	
+	if (!inFileNames.size()) {
+		std::cerr << "No input files specified" << std::endl;
+		return RV_FAILED;
 	}
 	
 	std::ifstream inFileStream;

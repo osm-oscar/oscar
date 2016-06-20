@@ -196,7 +196,7 @@ OsmKeyValueObjectStore::Context::Context(OsmKeyValueObjectStore * parent, Creati
 gphMMT(cc.incremental() ? sserialize::MM_SHARED_MEMORY : sserialize::MM_FAST_FILEBASED),
 cc(&cc),
 parent(parent),
-inFile(cc.fileName),
+inFile(cc.fileNames),
 scoreCreator(cc.scoreConfigFileName),
 cellMap(0),
 // 		nodeIdToGeoPoint(cc.minNodeId, cc.maxNodeId, gphMMT, GeoPointHashMapHashBase( OADValueStorage(gphMMT), OADTableStorage(sserialize::MM_SHARED_MEMORY) )),
@@ -340,7 +340,7 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 		osmpbf::InversionFilter::invert( ct.cc->rc.regionFilter );
 		
 		osmtools::OsmGridRegionTree<RegionInfo> polyStore;
-		ae.extract(ct.cc->fileName, [&polyStore](const std::shared_ptr<sserialize::spatial::GeoRegion> & region, osmpbf::IPrimitive & primitive) {
+		ae.extract(ct.inFile, [&polyStore](const std::shared_ptr<sserialize::spatial::GeoRegion> & region, osmpbf::IPrimitive & primitive) {
 			liboscar::OsmIdType osmIdType(primitive.id(), oscar_create::toOsmItemType(primitive.type()));
 			polyStore.push_back(*region, RegionInfo(osmIdType, region->type(), region->boundary()));
 		}, osmtools::AreaExtractor::ET_ALL_SPECIAL_BUT_BUILDINGS, myFilter, ct.cc->numThreads, "Residential area extraction");
@@ -410,7 +410,7 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 				new MyRegionFilter(&(ct.residentialRegions))
 			)
 		);
-		ae.extract(ct.cc->fileName, [&polyStore](const std::shared_ptr<sserialize::spatial::GeoRegion> & region, osmpbf::IPrimitive & primitive) {
+		ae.extract(ct.inFile, [&polyStore](const std::shared_ptr<sserialize::spatial::GeoRegion> & region, osmpbf::IPrimitive & primitive) {
 			liboscar::OsmIdType osmIdType(primitive.id(), oscar_create::toOsmItemType(primitive.type()));
 			polyStore.push_back(*region, RegionInfo(osmIdType, region->type(), region->boundary()));
 		}, osmtools::AreaExtractor::ET_ALL_SPECIAL_BUT_BUILDINGS, myFilter, ct.cc->numThreads, "Region extraction");
@@ -856,7 +856,7 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 					rwct.multiPolyItems.insert(liboscar::OsmIdType(primitive.id(), liboscar::OSMIT_RELATION));
 				}
 			};
-			ae.extract(ct.cc->fileName, wf, osmtools::AreaExtractor::ET_ALL_MULTIPOLYGONS, myRegionFilter, ct.cc->numThreads, "Fetching multipolygon items");
+			ae.extract(ct.inFile, wf, osmtools::AreaExtractor::ET_ALL_MULTIPOLYGONS, myRegionFilter, ct.cc->numThreads, "Fetching multipolygon items");
 
 			assert(wct.itemId.load() == ct.itemIdForCells.size());
 		}
@@ -969,15 +969,9 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 }
 
 bool OsmKeyValueObjectStore::populate(CreationConfig & cc) {
-	std::cout << "Parsing file: " << cc.fileName << std::endl;
-	
 	assert(cc.rc.triangMaxCentroidDist > 1);
 	
 	Context ct(this, cc);
-	if (!ct.inFile.open()) {
-		std::cout << "Failed top open " <<  cc.fileName << std::endl;
-		return false;
-	}
 	createRegionStore(ct);
 	
 	//Polygon items need to be handled before all other items

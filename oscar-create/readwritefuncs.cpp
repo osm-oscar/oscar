@@ -477,11 +477,17 @@ void handleKVCreation(oscar_create::Config & opts, State & state) {
 	}
 	std::shared_ptr<oscar_create::OsmKeyValueObjectStore::SaveDirector> itemSaveDirector(itemSaveDirectorPtr);
 
-	if (opts.inFileName.size()) {
-		const std::string & inFileName = opts.inFileName;
+	if (opts.inFileNames.size()) {
 		if (opts.kvStoreConfig->autoMaxMinNodeId) {
-			if (!oscar_create::findNodeIdBounds(inFileName, opts.kvStoreConfig->minNodeId, opts.kvStoreConfig->maxNodeId)) {
-				throw sserialize::CreationException("Finding min/max node id failed for " + inFileName + "! skipping input file...");
+			for(const std::string & inFileName : opts.inFileNames) {
+				uint64_t minNodeId, maxNodeId;
+				opts.kvStoreConfig->minNodeId = std::numeric_limits<uint64_t>::max();
+				opts.kvStoreConfig->maxNodeId = 0;
+				if (!oscar_create::findNodeIdBounds(inFileName, minNodeId, maxNodeId)) {
+					throw sserialize::CreationException("Finding min/max node id failed for " + inFileName + "! skipping input file...");
+				}
+				opts.kvStoreConfig->minNodeId = std::min(opts.kvStoreConfig->minNodeId, minNodeId);
+				opts.kvStoreConfig->maxNodeId = std::min(opts.kvStoreConfig->maxNodeId, maxNodeId);
 			}
 			std::cout << "min=" << opts.kvStoreConfig->minNodeId << ", max=" << opts.kvStoreConfig->maxNodeId << std::endl;
 		}
@@ -491,7 +497,7 @@ void handleKVCreation(oscar_create::Config & opts, State & state) {
 		}
 		
 		oscar_create::OsmKeyValueObjectStore::CreationConfig cc;
-		cc.fileName = inFileName;
+		cc.fileNames = opts.inFileNames;
 		cc.itemSaveDirector = itemSaveDirector;
 		cc.maxNodeCoordTableSize = opts.kvStoreConfig->maxNodeHashTableSize;
 		cc.maxNodeId = opts.kvStoreConfig->maxNodeId;
@@ -514,7 +520,7 @@ void handleKVCreation(oscar_create::Config & opts, State & state) {
 
 		bool parseOK = store.populate(cc);
 		if (!parseOK) {
-			throw std::runtime_error("Failed to parse: " + inFileName);
+			throw std::runtime_error("Failed to parse files");
 		}
 	}
 
