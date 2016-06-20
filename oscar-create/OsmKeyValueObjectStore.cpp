@@ -474,7 +474,7 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 		
 		//assemble the ways and put them into storage
 		ct.inFile.dataSeek(filePos);
-		#ifndef NDEBUG
+		#ifdef SSERIALIZE_CHEAP_ASSERT_ENABLED
 		uint32_t tmp =
 		#endif
 		osmpbf::parseFileCPPThreads(ct.inFile, [&ct, &wct, &trs](osmpbf::PrimitiveBlockInputAdaptor & pbi) -> void {
@@ -512,8 +512,8 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 				wct.relevantCells.set(hitCells.cbegin(), hitCells.cend());
 			}
 		}, ct.cc->numThreads, 1, false, blobsRead);
-		assert(blobsRead == tmp);
-		assert(afterFilePos == ct.inFile.dataPosition());
+		SSERIALIZE_CHEAP_ASSERT_EQUAL(blobsRead, tmp);
+		SSERIALIZE_CHEAP_ASSERT_EQUAL(afterFilePos, ct.inFile.dataPosition());
 		
 		//clear node table
 		ct.nodesToStore.clear();
