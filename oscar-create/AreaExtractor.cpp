@@ -13,6 +13,11 @@ AreaExtractor::nameFilter(const std::string & keysDefiningRegionsFile, const std
 	readKeyValuesFromFile(keyValuesDefiningRegionsFile, keyValues);
 
 	generics::RCPtr<osmpbf::AbstractTagFilter> filter;
+	if (!keys.size() && !keyValues.size()) {
+		filter.reset(new osmpbf::ConstantReturnFilter(false));
+		std::cout << "AreaExtractor::nameFilter: Warning: name-filter is empty" << std::endl;
+		return filter;
+	}
 	if (keys.size()) {
 		std::string regexString = "(";
 		for(const std::string & x : keys) {
