@@ -463,7 +463,7 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 			}
 			return ct.nodesToStore.size() < ct.cc->maxNodeCoordTableSize;
 		}, ct.cc->numThreads, ct.cc->blobFetchCount);
-		#ifndef NDEBUG
+		#ifdef SSERIALIZE_CHEAP_ASSERT_ENABLED
 		osmpbf::OffsetType afterFilePos = ct.inFile.dataPosition();
 		#endif
 		
@@ -890,7 +890,7 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 			}
 			return ct.nodesToStore.size() < ct.cc->maxNodeCoordTableSize;
 		}, ct.cc->numThreads, ct.cc->blobFetchCount);
-		#ifndef NDEBUG
+		#ifdef SSERIALIZE_CHEAP_ASSERT_ENABLED
 		osmpbf::OffsetType afterFilePos = ct.inFile.dataPosition();
 		#endif
 		
@@ -901,7 +901,7 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 		
 		//assemble the ways and put them into storage
 		ct.inFile.dataSeek(filePos);
-		#ifndef NDEBUG
+		#ifdef SSERIALIZE_CHEAP_ASSERT_ENABLED
 		uint32_t tmp =
 		#endif
 		osmpbf::parseFileCPPThreads(ct.inFile, [&ct, &wct](osmpbf::PrimitiveBlockInputAdaptor & pbi) -> void {
@@ -953,8 +953,8 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 			//flush items to store
 			ct.push_back(tmpItems.begin(), tmpItems.end(), true);
 		}, ct.cc->numThreads, 1, false, blobsRead);
-		assert(blobsRead == tmp);
-		assert(afterFilePos == ct.inFile.dataPosition());
+		SSERIALIZE_CHEAP_ASSERT_EQUAL(blobsRead, tmp);
+		SSERIALIZE_CHEAP_ASSERT_EQUAL(afterFilePos, ct.inFile.dataPosition());
 		
 		//clear node table
 		ct.nodesToStore.clear();
