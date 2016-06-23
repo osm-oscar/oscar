@@ -1047,10 +1047,10 @@ struct SortByScoreName {
 			return scoreA > scoreB;
 		}
 		if (nameValueIdA == std::numeric_limits<uint32_t>::max()) {
-			return true;
+			return false;
 		}
 		if (nameValueIdB == std::numeric_limits<uint32_t>::max()) {
-			return false;
+			return true;
 		}
 		//both have a name, sort by score 
 		if (scoreA == scoreB) {
@@ -1066,7 +1066,7 @@ struct SortByScoreName {
 struct SortByPrioStrings {
 	OsmKeyValueObjectStore * store;
 	const uint32_t * scores;
-	//maps keyids to [0..n] whre the position indicates the priority of the key
+	//maps keyids to [0..n] where the position indicates the priority of the key
 	const std::unordered_map<uint32_t, uint32_t> * stringToPrio;
 	sserialize::SimpleBitVector m_a;
 	sserialize::SimpleBitVector m_b;
