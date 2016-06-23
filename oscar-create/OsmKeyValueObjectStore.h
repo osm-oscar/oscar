@@ -362,6 +362,7 @@ void OsmKeyValueObjectStore::createCell(OsmKeyValueRawItem & item, Context & ctx
 		}
 		SSERIALIZE_CHEAP_ASSERT(tmp.size());
 		for(MyCellMap::iterator it(tmp.begin()), end(tmp.end()); it != end; ++it) {
+			//snap boundary here. All points creating the rect are snapped to the same coords anyway
 			ctx.cellMap.insert(it->first, item.data.id, it->second);
 		}
 	}
@@ -380,7 +381,6 @@ void OsmKeyValueObjectStore::createCell(OsmKeyValueRawItem & item, Context & ctx
 		for(typename MyGMP::PolygonList::const_iterator it(gmp->outerPolygons().begin()), end(gmp->outerPolygons().end()); it != end; ++it) {
 			typename MyGMP::PolygonList::const_reference gw = *it;
 			for(typename MyP::const_iterator pit(gw.cbegin()), pend(gw.cend()); pit != pend; ++pit) {
-				SSERIALIZE_NORMAL_ASSERT(pit->isSnapped());
 				uint32_t cellId = ctx.trs.cellId(*pit);
 				if (cellId == osmtools::OsmTriangulationRegionStore::InfiniteFacesCellId) {
 					continue;
@@ -395,7 +395,6 @@ void OsmKeyValueObjectStore::createCell(OsmKeyValueRawItem & item, Context & ctx
 		}
 		SSERIALIZE_CHEAP_ASSERT(tmp.size());
 		for(MyCellMap::iterator it(tmp.begin()), end(tmp.end()); it != end; ++it) {
-			SSERIALIZE_NORMAL_ASSERT(it->second.isSnapped());
 			ctx.cellMap.insert(it->first, item.data.id, it->second);
 		}
 	}

@@ -232,7 +232,10 @@ void OsmKeyValueObjectStore::Context::getNodes() {
 			for(osmpbf::INodeStream node(pbi.getNodeStream()); !node.isNull(); node.next()) {
 				int64_t nodeId = node.id();
 				if (nodesToStore.count(nodeId)) {
-					tmp.emplace_back(nodeId, RawGeoPoint(node.latd(), node.lond()));
+					tmp.emplace_back(nodeId, RawGeoPoint(
+						sserialize::spatial::GeoPoint::snapLat(node.latd()),
+						sserialize::spatial::GeoPoint::snapLon(node.lond()))
+					);
 				}
 			}
 			std::unique_lock<std::mutex> lck(tmpDsLock);
@@ -549,6 +552,12 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 		polyStore.clear();
 	}
 	ct.polyStore.snapPoints();
+	
+	//update region info due to snapped points
+	for(uint32_t i(0), s(ct.polyStore.size()); i < s; ++i) {
+		ct.polyStore.values().at(i).boundary = ct.polyStore.regions().at(i)->boundary();
+	}
+	
 	ct.polyStore.setRefinerOptions(2, 2, 10000);
 	ct.polyStore.addPolygonsToRaster(10, 10);
 	ct.polyStore.printStats(std::cout);
@@ -757,6 +766,8 @@ void OsmKeyValueObjectStore::insertItemStrings(OsmKeyValueObjectStore::Context& 
 	ct.progressInfo.end();
 }
 
+//Side note: points of relations are currently not snapped.
+//Instead we snap the boundary during insertion into the cellmap
 void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 	struct WorkContext {
 		std::mutex nodesToStoreLock;
@@ -916,7 +927,10 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 				if (ct.cc->itemSaveDirector->process(rawItem)) {
 					rawItem.data.osmIdType.id(node.id());
 					rawItem.data.osmIdType.type(liboscar::OSMIT_NODE);
-					rawItem.data.shape = new sserialize::spatial::GeoPoint(node.latd(), node.lond());
+					rawItem.data.shape = new sserialize::spatial::GeoPoint(
+						sserialize::spatial::GeoPoint::snapLat(node.latd()),
+						sserialize::spatial::GeoPoint::snapLon(node.lond())
+					);
 					rawItem.data.id = wct.itemId.fetch_add(1);
 					oscar_create::addScore(rawItem, ct.scoreCreator);
 					ct.parent->createCell<sserialize::spatial::GeoPolygon, sserialize::spatial::GeoMultiPolygon>(rawItem, ct);

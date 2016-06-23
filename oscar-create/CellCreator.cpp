@@ -39,11 +39,12 @@ CellCreator::FlatCellMap& CellCreator::FlatCellMap::operator=(CellCreator::FlatC
 
 void CellCreator::FlatCellMap::insert(uint32_t cellId, uint32_t itemId, const sserialize::spatial::GeoRect & gr) {
 	SSERIALIZE_CHEAP_ASSERT_SMALLER(cellId, m_cellCount);
-	SSERIALIZE_NORMAL_ASSERT(gr.isSnapped());
 	std::unique_lock<std::mutex> cILock(m_cellItemLock);
 	m_cellItemEntries.emplace_back(cellId, itemId);
 	sserialize::spatial::GeoRect & cb = m_cellBoundaries.at(cellId);
-	cb.enlarge(gr);
+	//snap boundary here. All points inserted into the cellmap are snapped later anyway
+	//It's easier to do this here instead of doing it in every call-site
+	cb.enlarge(gr.snapped());
 }
 
 CellCreator::CellCreator() {}
