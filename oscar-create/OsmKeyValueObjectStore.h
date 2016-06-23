@@ -260,7 +260,7 @@ private:
 		void push_back(T_IT begin, T_IT end, bool deleteShape) {
 			itemFlushLock.lock();
 			for(T_IT it(begin); it != end; ++it) {
-				assert(it->data.id < totalItemCount);
+				SSERIALIZE_CHEAP_ASSERT_SMALLER(it->data.id, totalItemCount);
 				uint32_t realItemId = itemIdForCells.size();
 				itemIdForCells.push_back(it->data.id);
 				itemScores.push_back(it->data.score);
@@ -360,7 +360,7 @@ void OsmKeyValueObjectStore::createCell(OsmKeyValueRawItem & item, Context & ctx
 				tmp[cellId] = (*pit).boundary();
 			}
 		}
-		assert(tmp.size());
+		SSERIALIZE_CHEAP_ASSERT(tmp.size());
 		for(MyCellMap::iterator it(tmp.begin()), end(tmp.end()); it != end; ++it) {
 			ctx.cellMap.insert(it->first, item.data.id, it->second);
 		}
@@ -368,7 +368,7 @@ void OsmKeyValueObjectStore::createCell(OsmKeyValueRawItem & item, Context & ctx
 	else if (dynamic_cast<const sserialize::spatial::GeoPoint*>(item.data.shape) ) {
 		const sserialize::spatial::GeoPoint * gp = static_cast<const sserialize::spatial::GeoPoint*>(item.data.shape);
 		uint32_t cellId = ctx.trs.cellId(*gp);
-		assert(cellId != osmtools::OsmTriangulationRegionStore::InfiniteFacesCellId);
+		SSERIALIZE_CHEAP_ASSERT_NOT_EQUAL(cellId, osmtools::OsmTriangulationRegionStore::InfiniteFacesCellId);
 		ctx.cellMap.insert(cellId, itemId, gp->boundary());
 	}
 	else if (dynamic_cast<const T_MultiPolygonType*>(item.data.shape)) {
@@ -380,6 +380,7 @@ void OsmKeyValueObjectStore::createCell(OsmKeyValueRawItem & item, Context & ctx
 		for(typename MyGMP::PolygonList::const_iterator it(gmp->outerPolygons().begin()), end(gmp->outerPolygons().end()); it != end; ++it) {
 			typename MyGMP::PolygonList::const_reference gw = *it;
 			for(typename MyP::const_iterator pit(gw.cbegin()), pend(gw.cend()); pit != pend; ++pit) {
+				SSERIALIZE_NORMAL_ASSERT(pit->isSnapped());
 				uint32_t cellId = ctx.trs.cellId(*pit);
 				if (cellId == osmtools::OsmTriangulationRegionStore::InfiniteFacesCellId) {
 					continue;
@@ -392,8 +393,9 @@ void OsmKeyValueObjectStore::createCell(OsmKeyValueRawItem & item, Context & ctx
 				}
 			}
 		}
-		assert(tmp.size());
+		SSERIALIZE_CHEAP_ASSERT(tmp.size());
 		for(MyCellMap::iterator it(tmp.begin()), end(tmp.end()); it != end; ++it) {
+			SSERIALIZE_NORMAL_ASSERT(it->second.isSnapped());
 			ctx.cellMap.insert(it->first, item.data.id, it->second);
 		}
 	}

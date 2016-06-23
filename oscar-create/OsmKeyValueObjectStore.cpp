@@ -6,6 +6,7 @@
 #include <osmpbf/parsehelpers.h>
 #include <sserialize/algorithm/utilfuncs.h>
 #include <sserialize/containers/SimpleBitVector.h>
+#include <sserialize/utility/assert.h>
 #include <liboscar/OsmKeyValueObjectStore.h>
 #include <liboscar/constants.h>
 #include <osmtools/AreaExtractor.h>
@@ -240,7 +241,7 @@ void OsmKeyValueObjectStore::Context::getNodes() {
 		}, cc->numThreads, cc->blobFetchCount
 	);
 // 			std::cout << "Found " << tmpDs.size() << " out of " << nodesToStore.size() << " nodes" << std::endl;
-	assert(tmpDs.size() <= nodesToStore.size());
+	SSERIALIZE_CHEAP_ASSERT_SMALLER_OR_EQUAL(tmpDs.size(), nodesToStore.size());
 	sserialize::mt_sort(tmpDs.begin(), tmpDs.end(), std::less< std::pair<int64_t, RawGeoPoint> >(), cc->numThreads);
 	nodesToStore.clear();
 	for(const std::pair<int64_t, RawGeoPoint> & x : tmpDs) {
@@ -251,7 +252,7 @@ void OsmKeyValueObjectStore::Context::getNodes() {
 uint32_t OsmKeyValueObjectStore::Context::push_back(OsmKeyValueRawItem& rawItem, bool deleteShape) {
 	uint32_t realItemId;
 	itemFlushLock.lock();
-	assert(rawItem.data.id < totalItemCount);
+	SSERIALIZE_CHEAP_ASSERT_SMALLER(rawItem.data.id, totalItemCount);
 	realItemId = itemIdForCells.size();
 	itemIdForCells.push_back(rawItem.data.id);
 	itemScores.push_back(rawItem.data.score);
@@ -420,7 +421,7 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 		trs.init(polyStore, ct.cc->numThreads);
 		trs.initGrid(ct.cc->rc.polyStoreLatCount, ct.cc->rc.polyStoreLonCount);
 		trs.makeConnected();
-		assert(ct.trs.selfTest());
+		SSERIALIZE_EXPENSIVE_ASSERT(ct.trs.selfTest());
 	}
 	//put current active regions into regionItems hash to make sure that the region is not checked with itself
 	for(uint32_t i(0), s(polyStore.size()); i < s; ++i) {
@@ -518,7 +519,7 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 		//clear node table
 		ct.nodesToStore.clear();
 		
-		assert(ct.itemIdForCells.size() == size());
+		SSERIALIZE_CHEAP_ASSERT_EQUAL(ct.itemIdForCells.size(), size());
 	}
 	ct.progressInfo.end();
 	std::cout << "Found " << wct.relevantCells.size() << " cells containing items" << std::endl;
@@ -557,7 +558,7 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 	ct.trs.init(ct.polyStore, ct.cc->numThreads, &refiner, osmtools::OsmTriangulationRegionStore::MyRefineTag, true);
 	ct.trs.initGrid(ct.cc->rc.polyStoreLatCount, ct.cc->rc.polyStoreLonCount);
 	ct.trs.refineBySize(ct.cc->rc.polyStoreMaxTriangPerCell, 100, 100000, ct.cc->numThreads);
-	assert(ct.trs.selfTest());
+	SSERIALIZE_EXPENSIVE_ASSERT(ct.trs.selfTest());
 	ct.cellMap = decltype(ct.cellMap)(ct.trs.cellCount());
 	tm.end();
 	ct.trs.printStats(std::cout);
@@ -589,7 +590,7 @@ void OsmKeyValueObjectStore::addPolyStoreItems(Context & ctx) {
 		{}
 		Worker(Worker & o) : ctx(o.ctx), wct(o.wct) { throw std::runtime_error("Illegal function call");}
 		void flush() {
-			assert(foundRegionsCounter.load() == ctx.polyStore.size());
+			SSERIALIZE_CHEAP_ASSERT_EQUAL(foundRegionsCounter.load(), ctx.polyStore.size());
 			ctx.push_back(rawItems.begin(), rawItems.end(), false);
 		}
 		void processItem(uint32_t regionId, osmpbf::IPrimitive & primitive) {
@@ -658,8 +659,8 @@ void OsmKeyValueObjectStore::addPolyStoreItems(Context & ctx) {
 			}
 		}
 	}
-	assert(size() == ctx.polyStore.size());
-	assert(ctx.itemIdForCells.size() == size());
+	SSERIALIZE_CHEAP_ASSERT_EQUAL(size(), ctx.polyStore.size());
+	SSERIALIZE_CHEAP_ASSERT_EQUAL(ctx.itemIdForCells.size(), size());
 	ctx.regionInfo = std::move(ctx.polyStore.values());
 	ctx.polyStore.clear();
 }
@@ -765,8 +766,8 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 	} wct;
 	wct.itemId.store(size());
 	
-	assert(ct.regionInfo.size() == size());
-	assert(ct.itemIdForCells.size() == size());
+	SSERIALIZE_CHEAP_ASSERT_EQUAL(ct.regionInfo.size(), size());
+	SSERIALIZE_CHEAP_ASSERT_EQUAL(ct.itemIdForCells.size(), size());
 	
 	{//handle relations
 		struct RelationWorkContext {
@@ -858,7 +859,7 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 			};
 			ae.extract(ct.inFile, wf, osmtools::AreaExtractor::ET_ALL_MULTIPOLYGONS, myRegionFilter, ct.cc->numThreads, "Fetching multipolygon items");
 
-			assert(wct.itemId.load() == ct.itemIdForCells.size());
+			SSERIALIZE_CHEAP_ASSERT_EQUAL(wct.itemId.load(), ct.itemIdForCells.size());
 		}
 	}
 	
@@ -936,7 +937,7 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 					for(osmpbf::IWayStream::RefIterator it = way.refBegin(); it != way.refEnd(); ++it) {
 						if (ct.nodeIdToGeoPoint.count(*it) > 0) {
 							const RawGeoPoint & rgp = ct.nodeIdToGeoPoint[*it];
-							assert(sserialize::spatial::GeoPoint(rgp).valid());
+							SSERIALIZE_NORMAL_ASSERT(sserialize::spatial::GeoPoint(rgp).valid());
 							gw->points().emplace_back(rgp);
 						}
 					}
@@ -959,8 +960,8 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 		//clear node table
 		ct.nodesToStore.clear();
 		
-		assert(ct.itemIdForCells.size() == wct.itemId.load());
-		assert(ct.itemIdForCells.size() == size());
+		SSERIALIZE_CHEAP_ASSERT_EQUAL(ct.itemIdForCells.size(), wct.itemId.load());
+		SSERIALIZE_CHEAP_ASSERT_EQUAL(ct.itemIdForCells.size(), size());
 	}
 	ct.progressInfo.end();
 	std::cout << "Took " << wct.roundsToProcess << " rounds to process the file" << std::endl;
@@ -969,7 +970,7 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 }
 
 bool OsmKeyValueObjectStore::populate(CreationConfig & cc) {
-	assert(cc.rc.triangMaxCentroidDist > 1);
+	SSERIALIZE_CHEAP_ASSERT_LARGER(cc.rc.triangMaxCentroidDist, 1);
 	
 	Context ct(this, cc);
 	createRegionStore(ct);
@@ -986,13 +987,13 @@ bool OsmKeyValueObjectStore::populate(CreationConfig & cc) {
 	//Polygon items need to be handled before all other items
 	std::cout << "Inserting region store items" << std::endl;
 	addPolyStoreItems(ct);
-	assert(ct.itemIdForCells.size() == ct.regionInfo.size());
+	SSERIALIZE_CHEAP_ASSERT_EQUAL(ct.itemIdForCells.size(), ct.regionInfo.size());
 
 	insertItems(ct);
 	
 	applySort(ct);
 
-	assert(ct.itemIdForCells.size() == size());
+	SSERIALIZE_CHEAP_ASSERT_EQUAL(ct.itemIdForCells.size(), size());
 	processCellMap(ct);
 	
 	return true;
@@ -1122,10 +1123,10 @@ struct SortByPrioStrings {
 };
 
 void OsmKeyValueObjectStore::applySort(oscar_create::OsmKeyValueObjectStore::Context& ctx) {
-	assert(!m_newToOldItemId.size());
-	assert(ctx.regionInfo.size() == ctx.regionItems.size());
-	assert(ctx.regionInfo.size() || !ctx.trs.cellCount());
-	assert(ctx.itemScores.size() == size());
+	SSERIALIZE_CHEAP_ASSERT(!m_newToOldItemId.size());
+	SSERIALIZE_CHEAP_ASSERT_EQUAL(ctx.regionInfo.size(), ctx.regionItems.size());
+	SSERIALIZE_CHEAP_ASSERT(ctx.regionInfo.size() || !ctx.trs.cellCount());
+	SSERIALIZE_CHEAP_ASSERT_EQUAL(ctx.itemScores.size(), size());
 	m_newToOldItemId.resize(size());
 	for(uint32_t i(0), s(size()); i < s; ++i) {
 		m_newToOldItemId[i] = i;
@@ -1184,8 +1185,8 @@ void OsmKeyValueObjectStore::applySort(oscar_create::OsmKeyValueObjectStore::Con
 }
 
 bool OsmKeyValueObjectStore::processCellMap(Context & ctx) {
-	assert(m_newToOldItemId.size() == m_data.size());
-	assert(ctx.itemIdForCells.size() == size());
+	SSERIALIZE_CHEAP_ASSERT_EQUAL(m_newToOldItemId.size(), m_data.size());
+	SSERIALIZE_CHEAP_ASSERT_EQUAL(ctx.itemIdForCells.size(), size());
 	//Let's create our Hierarchy
 	CellCreator::CellListType cellList;
 	CellCreator cc;
@@ -1222,7 +1223,7 @@ bool OsmKeyValueObjectStore::processCellMap(Context & ctx) {
 				*cIt = tmpIdToReorderedId[*cIt];
 			}
 			std::sort(cellItems.begin(), cellItems.end());
-			assert(sserialize::is_strong_monotone_ascending(cellItems.begin(), cellItems.end()));
+			SSERIALIZE_EXPENSIVE_ASSERT(sserialize::is_strong_monotone_ascending(cellItems.begin(), cellItems.end()));
 // 			cellItems.resize( std::distance(cellItems.begin(), std::unique(cellItems.begin(), cellItems.end())));
 		}
 	}
@@ -1257,7 +1258,7 @@ bool OsmKeyValueObjectStore::processCellMap(Context & ctx) {
 				*cIt = oldToNewItemId.at(*cIt);
 			}
 			std::sort(cellItems.begin(), cellItems.end());
-			assert(sserialize::is_strong_monotone_ascending(cellItems.begin(), cellItems.end()));
+			SSERIALIZE_EXPENSIVE_ASSERT(sserialize::is_strong_monotone_ascending(cellItems.begin(), cellItems.end()));
 		}
 		for(sserialize::spatial::GeoHierarchy::Region & r : m_gh.regions()) {
 			const RegionInfo & ri = ctx.regionInfo.at(r.storeId);

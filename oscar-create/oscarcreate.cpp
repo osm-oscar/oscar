@@ -102,7 +102,7 @@ int main(int argc, char ** argv) {
 			}
 		}
 		state.indexFactory.setDeduplication(opts.indexStoreConfig->deduplicate);
-		assert(idxStore.size() == state.indexFactory.size());
+		SSERIALIZE_CHEAP_ASSERT_EQUAL(idxStore.size(), state.indexFactory.size());
 	}
 	kvTime.end();
 
@@ -114,7 +114,7 @@ int main(int argc, char ** argv) {
 		std::cerr << "Failed to open store file at " << storeFileName << " with error message: "<< e.what();
 		return -1;
 	}
-	assert(state.store.size());
+	SSERIALIZE_CHEAP_ASSERT(state.store.size());
 	
 	//create searches if need be
 	searchTime.begin();

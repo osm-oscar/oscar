@@ -38,7 +38,8 @@ CellCreator::FlatCellMap& CellCreator::FlatCellMap::operator=(CellCreator::FlatC
 }
 
 void CellCreator::FlatCellMap::insert(uint32_t cellId, uint32_t itemId, const sserialize::spatial::GeoRect & gr) {
-	assert(cellId < m_cellCount);
+	SSERIALIZE_CHEAP_ASSERT_SMALLER(cellId, m_cellCount);
+	SSERIALIZE_NORMAL_ASSERT(gr.isSnapped());
 	std::unique_lock<std::mutex> cILock(m_cellItemLock);
 	m_cellItemEntries.emplace_back(cellId, itemId);
 	sserialize::spatial::GeoRect & cb = m_cellBoundaries.at(cellId);
@@ -83,9 +84,12 @@ void CellCreator::createCellList(FlatCellMap & cellMap, osmtools::OsmTriangulati
 			sserialize::spatial::GeoRect & cr = cellMap.m_cellBoundaries.at(oldCellId);
 			CellListType::Cell & c = m_d.at(oldToNewCellId.at(oldCellId)); 
 			c = CellListType::Cell(m_cellIdData.begin()+rl.offset(), rl.size(), 0, 0, cr);
-			assert(sserialize::is_strong_monotone_ascending(c.parentsBegin(), c.parentsEnd()));
+			SSERIALIZE_EXPENSIVE_ASSERT(sserialize::is_strong_monotone_ascending(c.parentsBegin(), c.parentsEnd()));
 			if (!cr.valid()) {
 				cellsWithMissingBoundary.insert(oldCellId);
+			}
+			else {
+				SSERIALIZE_NORMAL_ASSERT(cr.isSnapped());
 			}
 		}
 		
@@ -99,7 +103,9 @@ void CellCreator::createCellList(FlatCellMap & cellMap, osmtools::OsmTriangulati
 					latInfo.update(CGAL::to_double(p.x()));
 					lonInfo.update(CGAL::to_double(p.y()));
 				}
-				m_d.at(oldToNewCellId.at(fhId)).boundary().enlarge(sserialize::spatial::GeoRect(latInfo.min(), latInfo.max(), lonInfo.min(), lonInfo.max()));
+				auto & cell = m_d.at(oldToNewCellId.at(fhId));
+				cell.boundary().enlarge(sserialize::spatial::GeoRect(latInfo.min(), latInfo.max(), lonInfo.min(), lonInfo.max()));
+				SSERIALIZE_NORMAL_ASSERT(cell.boundary().isSnapped());
 			}
 		}
 	}
@@ -119,11 +125,11 @@ void CellCreator::createCellList(FlatCellMap & cellMap, osmtools::OsmTriangulati
 		
 		
 		for(const FlatCellMap::CellItemEntry & x  : cellMap.m_cellItemEntries) {
-			assert(x.cellId < m_d.size());
+			SSERIALIZE_CHEAP_ASSERT_SMALLER(x.cellId, m_d.size());
 			if (x.cellId > cellId) { //new cellId, finalize previous
-				assert(cellItemSize);
+				SSERIALIZE_CHEAP_ASSERT(cellItemSize);
 				finFunc();
-				assert(x.cellId == cellId);
+				SSERIALIZE_CHEAP_ASSERT_EQUAL(x.cellId, cellId);
 			}
 			m_cellItems.push_back(x.itemId);
 			++cellItemSize;
@@ -151,9 +157,9 @@ void CellCreator::createCellList(FlatCellMap & cellMap, osmtools::OsmTriangulati
 		for(uint32_t i(0), s(sortedCellId2newCellId.size()); i < s; ++i) {
 			tmp.at(i) = newToOldCellId.at( sortedCellId2newCellId.at(i) );
 		}
-		assert(newToOldCellId.size() == m_d.size());
+		SSERIALIZE_CHEAP_ASSERT_EQUAL(newToOldCellId.size(), m_d.size());
 		newToOldCellId = std::move(tmp);
-		assert(newToOldCellId.size() == m_d.size());
+		SSERIALIZE_CHEAP_ASSERT_EQUAL(newToOldCellId.size(), m_d.size());
 	}
 	
 	cellList = CellListType(std::move(m_cellIdData), std::move(m_cellItems), std::move(m_d));
@@ -223,7 +229,7 @@ void CellCreator::createGeoHierarchy(FlatCellList& cellList, uint32_t geoRegionC
 		}
 		geoRegionCellSplit.back() = CellsOfGeoRegion(&geoRegionCellSplitData, prevRegionOffset, geoRegionCellSplitData.size()-prevRegionOffset);
 	}
-	assert(geoRegionCellSplit.size() == geoRegionCount);
+	SSERIALIZE_CHEAP_ASSERT_EQUAL(geoRegionCellSplit.size(), geoRegionCount);
 	
 	{//calculate geoRegionGraph
 		auto geoRegionCellSizeComparer = [&geoRegionCellSplit](uint32_t x, uint32_t y) {
@@ -238,7 +244,7 @@ void CellCreator::createGeoHierarchy(FlatCellList& cellList, uint32_t geoRegionC
 		#pragma omp parallel for schedule(dynamic, 1)
 		for(uint32_t i = 0; i < geoRegionCount; ++i) {
 			const auto & myCellList = geoRegionCellSplit.at(i);
-			assert(std::is_sorted(myCellList.begin(), myCellList.end()));
+			SSERIALIZE_EXPENSIVE_ASSERT(std::is_sorted(myCellList.begin(), myCellList.end()));
 			std::set<uint32_t, decltype(geoRegionCellSizeComparer)> tmpChildRegions(geoRegionCellSizeComparer);
 			std::unordered_set<uint32_t> checkedCandidateRegions;
 			checkedCandidateRegions.insert(i);
@@ -296,7 +302,7 @@ void CellCreator::createGeoHierarchy(FlatCellList& cellList, uint32_t geoRegionC
 		}
 		info.end();
 	}//end calculate geoRegionGraph
-	assert(geoRegionGraph.size() == geoRegionCount);
+	SSERIALIZE_CHEAP_ASSERT_EQUAL(geoRegionGraph.size(), geoRegionCount);
 	
 	{//calculate the parents
 		for(uint32_t i = 0, s = geoRegionGraph.size(); i < s; ++i) {
@@ -342,11 +348,11 @@ void CellCreator::createGeoHierarchy(FlatCellList& cellList, uint32_t geoRegionC
 // 				std::cout << "Cells: " << r.cells() << std::endl;
 // 			}
 		}
-#if defined(DEBUG_CHECK_ALL)
+#ifdef SSERIALIZE_EXPENSIVE_ASSERT_ENABLED
 		for(sserialize::spatial::GeoHierarchy::Region & r : gh.regions()) {
 			for(uint32_t cellId : r.cells()) {
 				const sserialize::spatial::GeoHierarchy::Cell & c = gh.cell(cellId);
-				assert( std::find(c.parentsBegin(), c.parentsEnd(), r.storeId) != c.parentsEnd());
+				SSERIALIZE_EXPENSIVE_ASSERT( std::find(c.parentsBegin(), c.parentsEnd(), r.storeId) != c.parentsEnd());
 			}
 		}
 #endif

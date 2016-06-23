@@ -96,7 +96,8 @@ void MatchDesc::initValueContainer(uint32_t* &dataBegin, const std::pair<uint32_
 		uint32_t cellId = begin->first.cellId;
 		++curOffset;
 		uint32_t & t = begin->second;//the number of elements in this cell or a fully matched cell
-		assert(dataBegin+curOffset >= dataWindow.first && dataBegin+curOffset <= dataWindow.second);
+		SSERIALIZE_CHEAP_ASSERT_LARGER_OR_EQUAL(dataBegin+curOffset, dataWindow.first);
+		SSERIALIZE_CHEAP_ASSERT_SMALLER_OR_EQUAL(dataBegin+curOffset, dataWindow.second);
 		if (t == std::numeric_limits<uint32_t>::max()) { //a fully matched cell
 			cellIdType = (cellId << 1) | 0x1;
 		}
@@ -110,7 +111,8 @@ void MatchDesc::initValueContainer(uint32_t* &dataBegin, const std::pair<uint32_
 		}
 	}
 	dataBegin += curOffset;
-	assert(dataBegin >= dataWindow.first && dataBegin <= dataWindow.second);
+	SSERIALIZE_CHEAP_ASSERT_LARGER_OR_EQUAL(dataBegin, dataWindow.first);
+	SSERIALIZE_CHEAP_ASSERT_SMALLER_OR_EQUAL(dataBegin, dataWindow.second);
 	cellIds = Container(myDataBegin, dataBegin, dataBegin);
 }
 
@@ -266,12 +268,12 @@ sserialize::UByteArrayAdapter & operator<<(sserialize::UByteArrayAdapter & dest,
 		cto.flush();
 		#ifdef WITH_SSERIALIZE_EXPENSIVE_ASSERT
 		sserialize::RLEStream rs(tmpAdap+offsets.back());
-		assert(*rs == src.exact.fmPtr);
+		SSERIALIZE_EXPENSIVE_ASSERT_EQUAL(*rs, src.exact.fmPtr);
 		++rs;
-		assert(*rs == src.exact.pPtr);
+		SSERIALIZE_EXPENSIVE_ASSERT_EQUAL(*rs, src.exact.pPtr);
 		++rs;
 		for(auto x : src.exact.pItemsPtrs) {
-			assert(*rs == x);
+			SSERIALIZE_EXPENSIVE_ASSERT_EQUAL(*rs, x);
 			++rs;
 		}
 		#endif
@@ -282,12 +284,12 @@ sserialize::UByteArrayAdapter & operator<<(sserialize::UByteArrayAdapter & dest,
 		cto.flush();
 		#ifdef WITH_SSERIALIZE_EXPENSIVE_ASSERT
 		sserialize::RLEStream rs(tmpAdap+offsets.back());
-		assert(*rs == src.prefix.fmPtr);
+		SSERIALIZE_EXPENSIVE_ASSERT_EQUAL(*rs, src.prefix.fmPtr);
 		++rs;
-		assert(*rs == src.prefix.pPtr);
+		SSERIALIZE_EXPENSIVE_ASSERT_EQUAL(*rs, src.prefix.pPtr);
 		++rs;
 		for(auto x : src.prefix.pItemsPtrs) {
-			assert(*rs == x);
+			SSERIALIZE_EXPENSIVE_ASSERT_EQUAL(*rs, x);
 			++rs;
 		}
 		#endif
@@ -298,12 +300,12 @@ sserialize::UByteArrayAdapter & operator<<(sserialize::UByteArrayAdapter & dest,
 		cto.flush();
 		#ifdef WITH_SSERIALIZE_EXPENSIVE_ASSERT
 		sserialize::RLEStream rs(tmpAdap+offsets.back());
-		assert(*rs == src.suffix.fmPtr);
+		SSERIALIZE_EXPENSIVE_ASSERT_EQUAL(*rs, src.suffix.fmPtr);
 		++rs;
-		assert(*rs == src.suffix.pPtr);
+		SSERIALIZE_EXPENSIVE_ASSERT_EQUAL(*rs, src.suffix.pPtr);
 		++rs;
 		for(auto x : src.suffix.pItemsPtrs) {
-			assert(*rs == x);
+			SSERIALIZE_EXPENSIVE_ASSERT_EQUAL(*rs, x);
 			++rs;
 		}
 		#endif
@@ -314,12 +316,12 @@ sserialize::UByteArrayAdapter & operator<<(sserialize::UByteArrayAdapter & dest,
 		cto.flush();
 		#ifdef WITH_SSERIALIZE_EXPENSIVE_ASSERT
 		sserialize::RLEStream rs(tmpAdap+offsets.back());
-		assert(*rs == src.substr.fmPtr);
+		SSERIALIZE_EXPENSIVE_ASSERT_EQUAL(*rs, src.substr.fmPtr);
 		++rs;
-		assert(*rs == src.substr.pPtr);
+		SSERIALIZE_EXPENSIVE_ASSERT_EQUAL(*rs, src.substr.pPtr);
 		++rs;
 		for(auto x : src.substr.pItemsPtrs) {
-			assert(*rs == x);
+			SSERIALIZE_EXPENSIVE_ASSERT_EQUAL(*rs, x);
 			++rs;
 		}
 		#endif

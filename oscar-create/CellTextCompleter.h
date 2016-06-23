@@ -89,7 +89,7 @@ struct UniversalNodeStorageHashFunc {
 		}
 	}
 	inline const std::pair<uint32_t, uint32_t> & getP(uint32_t param) const {
-		assert(m_as.size() > param);
+		SSERIALIZE_CHEAP_ASSERT_LARGER(m_as.size(), param);
 		return m_as[param];
 	}
 	inline size_t operator()(const MyNodeStorageHTKey & v) const {
@@ -395,14 +395,14 @@ void
 StorageHandler::distributeStorage(TNodePtr rootNode) {
 	m_mem = sserialize::MmappedMemory<uint32_t>(m_exactStorageNeed+m_suffixStorageNeed, m_storageMMT);
 	uint32_t * exactDataPtr = m_mem.data();
-	assert(exactDataPtr);
+	SSERIALIZE_CHEAP_ASSERT(exactDataPtr);
 	uint32_t * suffixDataPtr = exactDataPtr + m_exactStorageNeed;
 	MyHashTable::iterator eIt(m_exactH.begin()), sIt(m_suffixH.begin());
 	distributeStorage(rootNode, exactDataPtr, suffixDataPtr, eIt, sIt);
-	assert(exactDataPtr == m_mem.data()+m_exactStorageNeed);
-	assert(suffixDataPtr == m_mem.data()+(m_exactStorageNeed+m_suffixStorageNeed));
-	assert(eIt == m_exactH.end());
-	assert(sIt == m_suffixH.end());
+	SSERIALIZE_CHEAP_ASSERT_EQUAL(exactDataPtr, m_mem.data()+m_exactStorageNeed);
+	SSERIALIZE_CHEAP_ASSERT_EQUAL(suffixDataPtr, m_mem.data()+(m_exactStorageNeed+m_suffixStorageNeed));
+	SSERIALIZE_CHEAP_ASSERT_EQUAL(eIt, m_exactH.end());
+	SSERIALIZE_CHEAP_ASSERT_EQUAL(sIt, m_suffixH.end());
 }
 
 template<typename TNodePtr>
