@@ -16,6 +16,11 @@ struct WD_base {
 	TCast * as() { return dynamic_cast<TCast*>(this); }
 };
 
+struct WD_Empty: public WD_base {
+	WD_Empty() {}
+	virtual ~WD_Empty() {}
+};
+
 template<typename TValue>
 struct WD_SingleValue: public WD_base {
 	WD_SingleValue() {}
@@ -69,6 +74,7 @@ typedef WD_SingleValue<std::string> WD_PrintCTCSelectiveStorageStats;
 typedef WD_SingleValue<std::string> WD_PrintPaperStatsDb;
 typedef WD_SingleValue<std::string> WD_PrintPaperStatsGh;
 typedef WD_SingleValue<std::string> WD_PrintCellNeighborStats;
+typedef WD_Empty WD_PrintCellStats;
 typedef WD_SingleValue<uint32_t> WD_DumpIndex;
 typedef WD_SingleValue<uint32_t> WD_DumpItem;
 typedef WD_SingleValue<bool> WD_DumpAllItems;
@@ -232,7 +238,7 @@ public:
 			DUMP_INDEX, DUMP_ITEM, DUMP_ALL_ITEMS, DUMP_GH_REGION, DUMP_GH_CELL, DUMP_GH_CELL_PARENTS, DUMP_GH_CELL_ITEMS, DUMP_GH_REGION_ITEMS, DUMP_GH, DUMP_GH_PATH,
 			DUMP_KEY_STRING_TABLE, DUMP_VALUE_STRING_TABLE, DUMP_ITEM_TAGS, DUMP_GH_REGION_CHILDREN,
 			GH_ID_2_STORE_ID, STORE_ID_2_GH_ID,
-			PRINT_STATS, PRINT_STATS_SINGLE, PRINT_PAPER_STATS_DB, PRINT_PAPER_STATS_GH, PRINT_CTC_STATS, PRINT_CTC_SELECTIVE_STATS, PRINT_CQR_DATA_SIZE, DUMP_ALL_ITEM_TAGS_WITH_INHERITED_TAGS, PRINT_CELL_NEIGHBOR_STATS,
+			PRINT_STATS, PRINT_CELL_STATS, PRINT_STATS_SINGLE, PRINT_PAPER_STATS_DB, PRINT_PAPER_STATS_GH, PRINT_CTC_STATS, PRINT_CTC_SELECTIVE_STATS, PRINT_CQR_DATA_SIZE, DUMP_ALL_ITEM_TAGS_WITH_INHERITED_TAGS, PRINT_CELL_NEIGHBOR_STATS,
 			LIST_COMPLETERS,
 			CELLS_FROM_QUERY,
 			INTERACTIVE_PARTIAL, INTERACTIVE_SIMPLE, INTERACTIVE_FULL,

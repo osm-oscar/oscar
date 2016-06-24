@@ -26,6 +26,7 @@ struct Worker {
 	void printCTCStorageStats(const WD_PrintCTCStorageStats & data);
 	void printStats(const WD_PrintStats & data);
 	void printStatsSingle(const WD_PrintStatsSingle & data);
+	void printCellStats(const WD_PrintCellStats & data);
 	void printCQRDataSize(const WD_PrintCQRDataSize & data);
 	void consistencyCheck(oscarcmd::WD_ConsistencyCheck& d);
 

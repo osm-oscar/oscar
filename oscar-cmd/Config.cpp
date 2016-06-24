@@ -66,6 +66,7 @@ void Config::printHelp() {
 -cfct file\tgeocell complete strings from file with treed cqr \n \
 --symdiff-items-completers c1,c2\tprint symmetric difference between completer c1 and completer c2 \n \
 -ds which\tprint stats: all,idxstore,completer,db,geo,tag \n \
+-dcs\tdump cell statistics \n \
 -dpsdb file\tprint db paper stats, file sets the interesting tags \n \
 -dpsgh file\tprint gh paper stats, file is outfile \n \
 -dcns <num>\tprint cell neighbor distance stats \n \
@@ -230,6 +231,9 @@ int Config::parseSingleArg(int argc, char ** argv, int & i, int & printNumResult
 		PrintStatsSelection p = printStatsfromString( std::string(argv[i+1]) );
 		workItems.emplace_back(WorkItem::PRINT_STATS, new WD_PrintStats(p) );
 		i++;
+	}
+	else if (arg == "-dcs") {
+		workItems.emplace_back(WorkItem::PRINT_CELL_STATS, new WD_PrintCellStats());
 	}
 	else if (arg == "-dpsdb" && i+1 < argc) {
 		workItems.emplace_back(WorkItem::PRINT_PAPER_STATS_DB, new WD_PrintPaperStatsDb(std::string(argv[i+1])) );

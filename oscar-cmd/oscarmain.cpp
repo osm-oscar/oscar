@@ -125,6 +125,9 @@ int main(int argc, char **argv) {
 			case Config::WorkItem::PRINT_PAPER_STATS_GH:
 				worker.printPaperStatsGh(*workItem.data->as<WD_PrintPaperStatsGh>());
 				break;
+			case Config::WorkItem::PRINT_CELL_STATS:
+				worker.printCellStats(*workItem.data->as<WD_PrintCellStats>());
+				break;
 			case Config::WorkItem::PRINT_CTC_STATS:
 				worker.printCTCStorageStats(*workItem.data->as<WD_PrintCTCStorageStats>());
 				break;
