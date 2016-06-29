@@ -513,13 +513,16 @@ void Worker::printCellStats(const WD_PrintCellStats& /*data*/) {
 	std::vector<uint32_t> cellDirectParents;
 	std::vector<uint32_t> cellParents;
 	std::vector<uint32_t> regionExclusiveCells;
+	std::vector<uint32_t> regionCellCounts;
 	for(uint32_t i(0), s(gh.cellSize()); i < s; ++i) {
 		cellDirectParents.emplace_back(gh.cellDirectParentsEnd(i) - gh.cellParentsBegin(i));
 		cellParents.emplace_back(gh.cellParentsSize(i));
 	}
 	for(uint32_t i(0), s(gh.regionSize()); i < s; ++i) {
-		uint32_t idxPtr = gh.regionExclusiveCellIdxPtr(i);
-		regionExclusiveCells.emplace_back(idxStore.idxSize(idxPtr));
+		uint32_t cIdxPtr = gh.regionCellIdxPtr(i);
+		uint32_t recIdxPtr = gh.regionExclusiveCellIdxPtr(i);
+		regionExclusiveCells.emplace_back(idxStore.idxSize(recIdxPtr));
+		regionCellCounts.emplace_back(idxStore.idxSize(cIdxPtr));
 	}
 	std::cout << "Cell direct parents counts:" << std::endl;
 	sserialize::statistics::StatPrinting::print(std::cout, cellDirectParents.begin(), cellDirectParents.end());
@@ -527,6 +530,9 @@ void Worker::printCellStats(const WD_PrintCellStats& /*data*/) {
 	sserialize::statistics::StatPrinting::print(std::cout, cellParents.begin(), cellParents.end());
 	std::cout << "Region exclusive cell counts: " << std::endl;
 	sserialize::statistics::StatPrinting::print(std::cout, regionExclusiveCells.begin(), regionExclusiveCells.end());
+	std::cout << "Region cell counts: " << std::endl;
+	sserialize::statistics::StatPrinting::print(std::cout, regionCellCounts.begin(), regionCellCounts.end());
+
 }
 
 void Worker::dumpAllItemTagsWithInheritedTags(const WD_DumpAllItemTagsWithInheritedTags& data) {
