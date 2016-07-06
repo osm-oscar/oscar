@@ -180,7 +180,7 @@ sserialize::ItemIndex OsmKeyValueObjectStore::select(const sserialize::ItemIndex
 		if (match(i, strIds))
 			res.push_back(i);
 	}
-	return sserialize::ItemIndex::absorb(res);
+	return sserialize::ItemIndex(std::move(res));
 }
 
 

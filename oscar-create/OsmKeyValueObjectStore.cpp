@@ -5,7 +5,6 @@
 #include <osmpbf/inode.h>
 #include <osmpbf/parsehelpers.h>
 #include <sserialize/algorithm/utilfuncs.h>
-#include <sserialize/algorithm/OutOfMemoryAlgos.h>
 #include <sserialize/containers/SimpleBitVector.h>
 #include <liboscar/OsmKeyValueObjectStore.h>
 #include <liboscar/constants.h>
