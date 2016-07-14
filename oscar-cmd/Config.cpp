@@ -69,7 +69,7 @@ void Config::printHelp() {
 -dcs\tdump cell statistics \n \
 -dpsdb file\tprint db paper stats, file sets the interesting tags \n \
 -dpsgh file\tprint gh paper stats, file is outfile \n \
--dcns <num>\tprint cell neighbor distance stats \n \
+-dcns <num>,[file]\tprint cell neighbor distance stats \n \
 -dctcs file\tprint ctc stats to file \n \
 -dctcss (exact|prefix|suffix|substring)\tprint selective ctc storage stats \n \
 -dcqrds str\tprint cqr data size for string str \n \

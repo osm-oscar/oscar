@@ -5,7 +5,7 @@
 
 namespace oscarcmd {
 
-typedef enum { PS_NONE, PS_IDX_STORE, PS_COMPLETER, PS_DB, PS_GEO, PS_TAG, PS_GH, PS_ALL } PrintStatsSelection;
+typedef enum { PS_NONE=0, PS_IDX_STORE=0x1, PS_COMPLETER=0x2, PS_DB=0x4, PS_GEO=0x8, PS_TAG=0x10, PS_GH=0x20, PS_ALL=0x2F } PrintStatsSelection;
 
 struct WD_base {
 	WD_base() {}

@@ -27,43 +27,47 @@ std::string statsFileNameSuffix(uint32_t which) {
 		return "tag";
 	case PS_GH:
 		return "gh";
+	case PS_NONE:
+		return "none";
 	default:
-		return "nix";
+		return "mix";
 	}
 }
 
 void doPrintStats(std::ostream & out, liboscar::Static::OsmCompleter & completer, uint32_t which) {
-	switch (which) {
-	case PS_ALL:
-		completer.printStats(out);
-		break;
-	case PS_IDX_STORE:
+	if (PS_DB) {
+		completer.store().printStats(out);
+		out << '\n';
+	}
+	if (which & PS_IDX_STORE) {
 		completer.indexStore().printStats(out);
-		break;
-	case PS_COMPLETER:
+		out << '\n';
+	}
+	if (PS_COMPLETER) {
 		for(uint32_t i(0), s(completer.textSearch().size(liboscar::TextSearch::ITEMS)); i < s; ++i) {
 			completer.textSearch().get<liboscar::TextSearch::ITEMS>(i).printStats(out);
+			out << '\n';
 		}
 		for(uint32_t i(0), s(completer.textSearch().size(liboscar::TextSearch::GEOHIERARCHY)); i < s; ++i) {
 			completer.textSearch().get<liboscar::TextSearch::GEOHIERARCHY>(i).printStats(out);
+			out << '\n';
 		}
 		for(uint32_t i(0), s(completer.textSearch().size(liboscar::TextSearch::GEOCELL)); i < s; ++i) {
 			completer.textSearch().get<liboscar::TextSearch::GEOCELL>(i).printStats(out);
+			out << '\n';
 		}
-		break;
-	case PS_DB:
-		completer.store().printStats(out);
-	case PS_GEO:
+	}
+	if (PS_GEO) {
 		out << completer.geoCompleter()->describe();
-		break;
-	case PS_TAG:
+		out << '\n';
+	}
+	if (PS_TAG) {
 		completer.tagStore().printStats(out);
-		break;
-	case PS_GH:
+		out << '\n';
+	}
+	if (PS_GH) {
 		completer.store().geoHierarchy().printStats(out, completer.indexStore());
-		break;
-	default:
-		break;
+		out << '\n';
 	}
 }
 
@@ -94,9 +98,9 @@ void Worker::printStats(const WD_PrintStats & data) {
 	if (data.printStats != PS_NONE) {
 		if (data.fileName.size()) {
 			std::ofstream of;
-			of.open(data.fileName + "." + statsFileNameSuffix(data.printStats) + "/stats.txt");
+			of.open(data.fileName + "." + statsFileNameSuffix(data.printStats) + ".stats");
 			if (!of.is_open()) {
-				throw std::runtime_error("Failed to open " + data.fileName + "/stats.txt");
+				throw std::runtime_error("Failed to open " + data.fileName + "stats");
 			}
 			else {
 				doPrintStats(of, completer, data.printStats);
@@ -402,7 +406,21 @@ void Worker::printCellNeighborStats(const WD_PrintCellNeighborStats& data) {
 	const auto & cm = completer.store().cellCenterOfMass();
 	const auto & tds = ra.tds();
 
-	uint32_t maxFactor = std::atoi(data.value.c_str());
+	std::ofstream outFile;
+	uint32_t maxFactor;
+	{
+		std::vector<std::string> tmp( sserialize::split< std::vector<std::string> >(data.value, (uint32_t)',') );
+		if (tmp.size() == 0) {
+			throw std::runtime_error("Invalid config option for cell neighbor stats");
+		}
+		maxFactor = std::atoi(tmp.at(0).c_str());
+		if (tmp.size() > 2) {
+			outFile.open(tmp.at(1));
+			if (!outFile.is_open()) {
+				throw std::runtime_error("Could not open file " + tmp.at(1) + " to write the cell neighbor stats");
+			}
+		}
+	}
 	
 	//number of neighbors a cell has within a radius of first*cellDiameter
 	std::map<uint32_t, std::vector<uint32_t> > cnCount;
@@ -489,15 +507,16 @@ void Worker::printCellNeighborStats(const WD_PrintCellNeighborStats& data) {
 		stats.push_back(se);
 	}
 
+	std::ostream & out = (outFile.is_open() ? outFile : std::cout);
 	char sep;
 #define PRINT_STATS(__DESC, __VAR) \
-	std::cout << __DESC << ":"; \
+	out << __DESC << ":"; \
 	sep = ' '; \
 	for(const StatsEntry & se : stats) { \
-		std::cout << sep << se.__VAR; \
+		out << sep << se.__VAR; \
 		sep = ','; \
 	} \
-	std::cout << std::endl; \
+	out << std::endl; \
 
 	PRINT_STATS("Factor", factor)
 	PRINT_STATS("Min", min)
