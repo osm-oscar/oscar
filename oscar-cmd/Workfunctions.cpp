@@ -414,7 +414,7 @@ void Worker::printCellNeighborStats(const WD_PrintCellNeighborStats& data) {
 			throw std::runtime_error("Invalid config option for cell neighbor stats");
 		}
 		maxFactor = std::atoi(tmp.at(0).c_str());
-		if (tmp.size() > 2) {
+		if (tmp.size() >= 2) {
 			outFile.open(tmp.at(1));
 			if (!outFile.is_open()) {
 				throw std::runtime_error("Could not open file " + tmp.at(1) + " to write the cell neighbor stats");
