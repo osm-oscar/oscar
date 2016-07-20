@@ -80,6 +80,7 @@ int main(int argc, char ** argv) {
 		storeFileName = opts.getOutFileName(liboscar::FC_KV_STORE);
 	}
 	else {//get the input index and insert it into our index and open the store
+		writeSymlink = true;
 		std::string idxStoreFileName = opts.inFileNames.front() + "/" + liboscar::toString(liboscar::FC_INDEX);
 		storeFileName = opts.inFileNames.front() + "/" + liboscar::toString(liboscar::FC_KV_STORE);
 		
