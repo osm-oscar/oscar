@@ -468,7 +468,7 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 			return ct.nodesToStore.size() < ct.cc->maxNodeCoordTableSize;
 		}, ct.cc->numThreads, ct.cc->blobFetchCount);
 		#ifdef SSERIALIZE_CHEAP_ASSERT_ENABLED
-		osmpbf::OffsetType afterFilePos = ct.inFile.dataPosition();
+		auto afterFilePos = ct.inFile.dataPosition();
 		#endif
 		
 		//get the needed nodes this has to be done from the start
@@ -903,7 +903,7 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 			return ct.nodesToStore.size() < ct.cc->maxNodeCoordTableSize;
 		}, ct.cc->numThreads, ct.cc->blobFetchCount);
 		#ifdef SSERIALIZE_CHEAP_ASSERT_ENABLED
-		osmpbf::OffsetType afterFilePos = ct.inFile.dataPosition();
+		auto afterFilePos = ct.inFile.dataPosition();
 		#endif
 		
 		//get the needed nodes this has to be done from the start
