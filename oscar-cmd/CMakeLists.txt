@@ -13,6 +13,7 @@ Benchmark.cpp
 LiveCompleter.cpp
 GeoHierarchyPrinter.cpp
 ConsistencyCheckers.cpp
+CairoRenderer.cpp
 )
 
 SET(OSCAR_LINK_LIBS
@@ -24,6 +25,7 @@ SET(OSCAR_LINK_LIBS
 	"gmp"
 	"boost_thread"
 	"boost_system"
+	"cairo"
 )
 
 add_executable(${PROJECT_NAME} ${OSCAR_SOURCES_CPP})

@@ -143,6 +143,9 @@ int main(int argc, char **argv) {
 			case Config::WorkItem::CELLS_FROM_QUERY:
 				worker.cellsFromQuery(*workItem.data->as<WD_CellsFromQuery>());
 				break;
+			case Config::WorkItem::CELL_IMAGE_FROM_QUERY:
+				worker.cellImageFromQuery(*workItem.data->as<WD_CellImageFromQuery>());
+				break;
 			case Config::WorkItem::INTERACTIVE_PARTIAL:
 				worker.interactivePartial(*workItem.data->as<WD_InteractivePartial>());
 				break;

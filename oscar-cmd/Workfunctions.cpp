@@ -4,6 +4,7 @@
 #include "ConsistencyCheckers.h"
 #include "GeoHierarchyPrinter.h"
 #include "LiveCompleter.h"
+#include "CairoRenderer.h"
 #include <sserialize/strings/unicode_case_functions.h>
 #include <sserialize/stats/ProgressInfo.h>
 #include <sserialize/stats/statfuncs.h>
@@ -960,6 +961,67 @@ void Worker::cellsFromQuery(WD_CellsFromQuery& d) {
 	for(uint32_t i(0), s(cqr.cellCount()); i < s; ++i) {
 		std::cout << cqr.cellId(i) << ':' << (cqr.fullMatch(i) ? 'f' : 'p') << '\n';
 	}
+}
+
+void Worker::cellImageFromQuery(WD_CellImageFromQuery& d) {
+	if (!completer.textSearch().hasSearch(liboscar::TextSearch::GEOCELL)) {
+		throw sserialize::UnsupportedFeatureException("Data has no geocell text search");
+	}
+	std::string outFile;
+	uint32_t latpix(0);
+	{
+		std::vector<std::string> tmp( sserialize::split< std::vector<std::string> >(d.cfg, ',') );
+		if (tmp.size() == 2) {
+			outFile = tmp.at(0);
+			latpix = ::atoi(tmp.at(1).c_str());
+		}
+		else {
+			throw sserialize::ConfigurationException("cellImageFromQuery", "Invalid config");
+		}
+	}
+	
+	if (latpix == 0) {
+		std::cout << "Will not create image with size of 0 pixels" << std::endl;
+		return;
+	}
+	
+	auto cqr = completer.cqrComplete(d.query);
+	
+	if (!cqr.cellCount()) {
+		std::cout << "Empty query result. Will not create image." << std::endl;
+	}
+	
+	const sserialize::Static::spatial::GeoHierarchy & gh = completer.store().geoHierarchy();
+	const sserialize::Static::spatial::TriangulationGeoHierarchyArrangement & ra = completer.store().regionArrangement();
+	
+	sserialize::spatial::GeoRect bounds(gh.cellBoundary(cqr.cellId(0)));
+	auto boundsCalculator = [&bounds](const sserialize::Static::spatial::Triangulation::Face & f) -> void {
+		for(int j=0; j < 3; ++j) {
+			bounds.enlarge(f.point(j).boundary());
+		}
+	};
+	for(uint32_t i(1), s(cqr.cellCount()); i < s; ++i) {
+		ra.cfGraph(cqr.cellId(i)).visitCB(boundsCalculator);
+	}
+	SSERIALIZE_CHEAP_ASSERT(bounds.valid());
+	
+	CairoRenderer cr;
+	CairoRenderer::Color color(255, 0, 0, 255);
+	cr.init(bounds, latpix);
+
+	auto drawVisitor = [&cr, &color](const sserialize::Static::spatial::Triangulation::Face & f) -> void {
+		cr.draw(f.point(0), f.point(1), f.point(2), color);
+	};
+
+	for(uint32_t i(0), s(cqr.cellCount()); i < s; ++i) {
+		uint32_t cellId = cqr.cellId(i);
+		color.r = (double)::rand()/INT_MAX * 128 + 127;
+		color.g = (double)::rand()/INT_MAX * 128 + 127;
+		color.b = (double)::rand()/INT_MAX * 128 + 127;
+		ra.cfGraph(cellId).visitCB(drawVisitor);
+	}
+	
+	cr.toPng(outFile);
 }
 
 void Worker::completeStringPartial(WD_CompleteStringPartial & d) {

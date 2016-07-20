@@ -58,6 +58,7 @@ struct Worker {
 	void interactiveFull(WD_InteractiveFull & d);
 
 	void cellsFromQuery(WD_CellsFromQuery & d);
+	void cellImageFromQuery(WD_CellImageFromQuery & d);
 
 	void completeStringPartial(WD_CompleteStringPartial & d);
 	void completeStringSimple(WD_CompleteStringSimple& d);
