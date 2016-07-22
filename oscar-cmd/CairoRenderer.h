@@ -15,11 +15,13 @@ public:
 		uint8_t o; //opacity
 		Color() : r(0), g(0), b(0), o(0) {}
 		Color(uint8_t r, uint8_t g, uint8_t b, uint8_t o = 255) : r(r), g(g), b(b), o(o) {}
+		void setRGB(uint8_t v);
+		void randomize();
 	};
 public:
 	CairoRenderer();
 	virtual ~CairoRenderer();
-	void init(const sserialize::spatial::GeoRect & rect, int latpix);
+	void init(const sserialize::spatial::GeoRect & rect, int lonpix);
 	void toPng(const std::string & path);
 	//Draw Triangle
 	void draw(const sserialize::spatial::GeoPoint & v1, const sserialize::spatial::GeoPoint & v2, const sserialize::spatial::GeoPoint & v3, const Color & c);

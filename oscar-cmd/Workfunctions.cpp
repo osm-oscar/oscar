@@ -969,14 +969,28 @@ void Worker::cellImageFromQuery(WD_CellImageFromQuery& d) {
 	}
 	std::string outFile;
 	uint32_t latpix(0);
+	bool heatMap  = false;
+	sserialize::spatial::GeoRect bounds;
 	{
-		std::vector<std::string> tmp( sserialize::split< std::vector<std::string> >(d.cfg, ',') );
-		if (tmp.size() == 2) {
+		std::vector<std::string> tmp( sserialize::split< std::vector<std::string> >(d.cfg, ';') );
+		if (tmp.size() < 2) {
+			throw sserialize::ConfigurationException("cellImageFromQuery", "Invalid config");
+		}
+
+		if (tmp.size() >= 2) {
 			outFile = tmp.at(0);
 			latpix = ::atoi(tmp.at(1).c_str());
 		}
-		else {
-			throw sserialize::ConfigurationException("cellImageFromQuery", "Invalid config");
+		if (tmp.size() >= 3) {
+			if (tmp.at(2) == "heat") {
+				heatMap = true;
+			}
+			else if(tmp.at(2) == "cells") {
+				heatMap = false;
+			}
+		}
+		if (tmp.size() >= 4) {
+			bounds = sserialize::spatial::GeoRect(tmp.at(3), true);
 		}
 	}
 	
@@ -994,14 +1008,22 @@ void Worker::cellImageFromQuery(WD_CellImageFromQuery& d) {
 	const sserialize::Static::spatial::GeoHierarchy & gh = completer.store().geoHierarchy();
 	const sserialize::Static::spatial::TriangulationGeoHierarchyArrangement & ra = completer.store().regionArrangement();
 	
-	sserialize::spatial::GeoRect bounds(gh.cellBoundary(cqr.cellId(0)));
-	auto boundsCalculator = [&bounds](const sserialize::Static::spatial::Triangulation::Face & f) -> void {
-		for(int j=0; j < 3; ++j) {
-			bounds.enlarge(f.point(j).boundary());
-		}
-	};
+	uint32_t largestCell = cqr.idxSize(0);
 	for(uint32_t i(1), s(cqr.cellCount()); i < s; ++i) {
-		ra.cfGraph(cqr.cellId(i)).visitCB(boundsCalculator);
+		largestCell = std::max<uint32_t>(largestCell, cqr.idxSize(i));
+	}
+	
+	if (!bounds.valid()) {
+		auto boundsCalculator = [&bounds](const sserialize::Static::spatial::Triangulation::Face & f) -> void {
+			for(int j=0; j < 3; ++j) {
+				bounds.enlarge(f.point(j).boundary());
+			}
+		};
+		bounds.enlarge(gh.cellBoundary(cqr.cellId(0)));
+		for(uint32_t i(1), s(cqr.cellCount()); i < s; ++i) {
+			largestCell = std::max<uint32_t>(largestCell, cqr.idxSize(i));
+			ra.cfGraph(cqr.cellId(i)).visitCB(boundsCalculator);
+		}
 	}
 	SSERIALIZE_CHEAP_ASSERT(bounds.valid());
 	
@@ -1012,12 +1034,15 @@ void Worker::cellImageFromQuery(WD_CellImageFromQuery& d) {
 	auto drawVisitor = [&cr, &color](const sserialize::Static::spatial::Triangulation::Face & f) -> void {
 		cr.draw(f.point(0), f.point(1), f.point(2), color);
 	};
-
+	
 	for(uint32_t i(0), s(cqr.cellCount()); i < s; ++i) {
 		uint32_t cellId = cqr.cellId(i);
-		color.r = (double)::rand()/INT_MAX * 128 + 127;
-		color.g = (double)::rand()/INT_MAX * 128 + 127;
-		color.b = (double)::rand()/INT_MAX * 128 + 127;
+		if (heatMap) {
+			color.setRGB(256 - (double)cqr.idxSize(i) / largestCell * 255);
+		}
+		else {
+			color.randomize();
+		}
 		ra.cfGraph(cellId).visitCB(drawVisitor);
 	}
 	
