@@ -121,18 +121,12 @@ void LiveCompletion::doClusteredComplete(const std::vector<std::string> & comple
 	liboscar::Static::OsmCompleter * c = &m_completer;
 	auto cf = [&c, treedCQR, threadCount](const std::string & x) -> liboscar::Static::OsmItemSet {
 		sserialize::Static::spatial::GeoHierarchy::SubSet subSet = c->clusteredComplete(x, 0, treedCQR, threadCount);
-		sserialize::ItemIndex retIdx;
-		if (subSet.root().priv()) {
-			retIdx = subSet.idx(subSet.root());
-		}
+		sserialize::ItemIndex retIdx( subSet.cqr().flaten() );
 		return liboscar::Static::OsmItemSet(c->store(), retIdx);
 	};
 	auto uf = [&c, treedCQR, threadCount](liboscar::Static::OsmItemSet & s, const std::string & str) -> void {
 		sserialize::Static::spatial::GeoHierarchy::SubSet subSet = c->clusteredComplete(str, 0, treedCQR, threadCount);
-		sserialize::ItemIndex retIdx;
-		if (subSet.root().priv()) {
-			retIdx = subSet.idx(subSet.root());
-		}
+		sserialize::ItemIndex retIdx( subSet.cqr().flaten() );
 		s = liboscar::Static::OsmItemSet(c->store(), retIdx);
 	};
 	completionBase(completionStrings, cf, printNumResults, uf);
