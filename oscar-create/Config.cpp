@@ -951,7 +951,7 @@ maxMemoryUsage(0xFFFFFFFF)
 }
 
 std::string Config::help() {
-	return std::string("[-a] -i <input.osm.pbf|input dir> -o <output dir> -c <config.json>");
+	return "[-a --ask] -i <input.osm.pbf|input dir> -o <output dir> -c <config.json>");
 }
 
 std::string Config::toString(Config::ValidationReturnValues v) {
@@ -1031,7 +1031,7 @@ Config::ReturnValues Config::fromCmdLineArgs(int argc, char** argv) {
 			configString = std::string(argv[i+1]);
 			++i;
 		}
-		else if (token == "-a") {
+		else if (token == "-a" || token == "--ask") {
 			ask = true;
 		}
 	}
