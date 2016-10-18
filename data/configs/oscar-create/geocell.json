@@ -3,8 +3,8 @@
 		"print-memory-usage" : false
 	},
 	"tempdir" : {
-		"fast" : "./tempdir/fast_osmc",
-		"slow" : "./tempdir/slow_osmc"
+		"fast" : "./tempdir/fast/osmc",
+		"slow" : "./tempdir/slow/osmc"
 	},
 	"index" : {
 		"type" : "rlede",

@@ -1,0 +1,73 @@
+{
+	"stats" : {
+		"print-memory-usage" : false
+	},
+	"tempdir" : {
+		"fast" : "./tempdir/fast/osmc",
+		"slow" : "./tempdir/slow/osmc"
+	},
+	"index" : {
+		"type" : "rlede",
+		"check" : false,
+		"deduplicate" : true
+	},
+	"textsearch" :
+	[
+		{
+			"type" : "oomgeocell",
+			"config" : {
+				"enabled" : true,
+				"items" : {
+					"values" : {
+						"prefix" : {
+							"enabled" : true,
+							"file" : "lists/k_values_prefix.txt",
+							"caseSensitive" : false,
+							"diacriticSensitive" : true
+						},
+						"substring" : {
+							"enabled" : false,
+							"file" : "lists/k_values_substring_prefix.txt",
+							"caseSensitive" : false,
+							"diacriticSensitive" : false
+						}
+					},
+					"tags" : {
+						"prefix" : {
+							"enabled" : true,
+							"file" : "lists/allkeys.txt",
+							"caseSensitive" : false,
+							"diacriticSensitive" : true
+						}
+					}
+				},
+				"regions" : {
+					"values" : {
+						"prefix" : {
+							"enabled" : true,
+							"file" : "lists/k_values_prefix.txt",
+							"caseSensitive" : false,
+							"diacriticSensitive" : true
+						},
+						"substring" : {
+							"enabled" : false,
+							"file" : "lists/k_values_substring_prefix.txt",
+							"caseSensitive" : false,
+							"diacriticSensitive" : false
+						}
+					},
+					"tags" : {
+						"prefix" : {
+							"enabled" : true,
+							"file" : "lists/allkeys.txt",
+							"caseSensitive" : false,
+							"diacriticSensitive" : true
+						}
+					}
+				},
+				"threadCount" : 8,
+				"maxMemoryUsage" : 2048
+			}
+		}
+	]
+}

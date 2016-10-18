@@ -3,8 +3,8 @@
 		"print-memory-usage" : false
 	},
 	"tempdir" : {
-		"fast" : "./tempdir/fast_osmc",
-		"slow" : "./tempdir/slow_osmc"
+		"fast" : "./tempdir/fast/osmc",
+		"slow" : "./tempdir/slow/osmc"
 	},
 	"index" : {
 		"type" : "rlede",
@@ -24,7 +24,7 @@
 		"latCount" : 100,
 		"lonCount" : 100,
 		"readBoundaries" : true,
-		"maxTriangPerCell" : 10000,
+		"maxTriangPerCell" : 1000,
 		"maxTriangCentroidDist" : 1000000000.0,
 		"regionFilter" : {
 			"keys" : "lists/k_region_inherit_tags.txt",
