@@ -951,7 +951,7 @@ maxMemoryUsage(0xFFFFFFFF)
 }
 
 std::string Config::help() {
-	return "[-a --ask] -i <input.osm.pbf|input dir> -o <output dir> -c <config.json>");
+	return "[-a --ask] -i <input.osm.pbf|input dir> -o <output dir> -c <config.json>";
 }
 
 std::string Config::toString(Config::ValidationReturnValues v) {
