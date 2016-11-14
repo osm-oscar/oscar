@@ -1,4 +1,6 @@
 {
+	"include" : "filepath1.txt",
+	"include" : [ "filepath relative to include file.txt", "/absolute/file/path.txt" ],
 	"stats" : {
 		"print-memory-usage" : false
 	},
@@ -67,6 +69,7 @@
 	},
 	"textsearch" : {
 		"type" : "items|regions|geoitems|geocell|oomgeocell",
+		"id" : "unique id string, configs with the same id get updated",
 		"config" : {
 			"enabled" : false,
 			"_comment" : "base config part, all configs need to have this",
