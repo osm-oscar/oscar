@@ -1133,6 +1133,8 @@ Config::ReturnValues Config::fromCmdLineArgs(int argc, char** argv) {
 	}
 	
 	//we just expand all include files at once in level-order?
+	//TODO: in-order would be better to do stuff like:
+	//include global params but change some in the config
 	for(std::size_t i(0); i < configFiles.size(); ++i) {
 		std::ifstream inFileStream;
 		inFileStream.open(configFiles.at(i));
@@ -1143,12 +1145,24 @@ Config::ReturnValues Config::fromCmdLineArgs(int argc, char** argv) {
 		Json::Value root;
 		inFileStream >> root;
 		
-		//TODO: file path should be relative to include file
-		
 		if (!root["include"].isNull()) {
 			Json::Value tmp = root["include"];
+			std::string basePath = sserialize::MmappedFile::dirName( configFiles.at(i) );
+			auto handleSingleInclude = [this, &configFiles, &basePath](const std::string & str) {
+				if (!str.size()) {
+					return;
+				}
+				if (sserialize::MmappedFile::isAbsolute(str)) { //absolute path
+					configFiles.push_back(str);
+				}
+				else { //relative path
+					configFiles.push_back( sserialize::MmappedFile::realPath(basePath + "/" + str) );
+				}
+			};
+			
+			
 			if (tmp.isString()) { //single include
-				configFiles.push_back(tmp.asString());
+				handleSingleInclude(tmp.asString());
 			}
 			else if (tmp.isArray()) {
 				for(Json::ArrayIndex j(0), s(tmp.size()); j < s; ++j) {
@@ -1157,15 +1171,17 @@ Config::ReturnValues Config::fromCmdLineArgs(int argc, char** argv) {
 						std::cerr << "Invalid config option in file " << configFiles.at(i) << ": include directive takes a string or an array of strings" << std::endl;
 						return RV_FAILED;
 					}
-					configFiles.push_back(tmp2.asString());
+					handleSingleInclude( tmp2.asString() );
 				}
+			}
+			else {
+				std::cerr << "Invalid config option in file " << configFiles.at(i) << ": include directive takes a string or an array of strings" << std::endl;
+				return RV_FAILED;
 			}
 		}
 		
 		configData.emplace_back(std::move(root));
 	}
-	
-	
 	
 	Json::Value tmp;
 	

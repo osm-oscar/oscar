@@ -207,6 +207,8 @@ public:
 	sserialize::OffsetType maxMemoryUsage;
 };
 
+
+//TODO: file directive should store absolute path, this way it is not necessary to create the symlinks to the lists
 class Config {
 public:
 	enum ReturnValues { RV_OK, RV_FAILED, RV_HELP};
