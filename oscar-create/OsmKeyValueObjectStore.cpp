@@ -256,7 +256,7 @@ uint32_t OsmKeyValueObjectStore::Context::push_back(OsmKeyValueRawItem& rawItem,
 	uint32_t realItemId;
 	itemFlushLock.lock();
 	SSERIALIZE_CHEAP_ASSERT_SMALLER(rawItem.data.id, totalItemCount);
-	realItemId = itemIdForCells.size();
+	realItemId = sserialize::narrow_check<uint32_t>( itemIdForCells.size() );
 	itemIdForCells.push_back(rawItem.data.id);
 	itemScores.push_back(rawItem.data.score);
 	parent->push_back(rawItem);
@@ -427,7 +427,7 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 		SSERIALIZE_EXPENSIVE_ASSERT(ct.trs.selfTest());
 	}
 	//put current active regions into regionItems hash to make sure that the region is not checked with itself
-	for(uint32_t i(0), s(polyStore.size()); i < s; ++i) {
+	for(uint32_t i(0), s((uint32_t) polyStore.size()); i < s; ++i) {
 		ct.regionItems.insert(polyStore.values().at(i).osmIdType);
 	}
 	
@@ -541,7 +541,7 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 		}
 		trs.clear();
 		
-		for(uint32_t i(0), s(polyStore.size()); i < s; ++i) {
+		for(uint32_t i(0), s((uint32_t) polyStore.size()); i < s; ++i) {
 			if (relevantRegions.isSet(i)) {
 				auto & r = polyStore.regions().at(i);
 				auto & v = polyStore.values().at(i);
@@ -554,7 +554,7 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 	ct.polyStore.snapPoints();
 	
 	//update region info due to snapped points
-	for(uint32_t i(0), s(ct.polyStore.size()); i < s; ++i) {
+	for(uint32_t i(0), s((uint32_t) ct.polyStore.size()); i < s; ++i) {
 		ct.polyStore.values().at(i).boundary = ct.polyStore.regions().at(i)->boundary();
 	}
 	
@@ -582,7 +582,7 @@ void OsmKeyValueObjectStore::addPolyStoreItems(Context & ctx) {
 		std::unordered_map<liboscar::OsmIdType, uint32_t> osmIdToRegionId;
 		WorkContext() {}
 	} wct;
-	for(uint32_t i(0), s(ctx.polyStore.values().size()); i < s; ++i) {
+	for(uint32_t i(0), s((uint32_t) ctx.polyStore.values().size()); i < s; ++i) {
 		wct.osmIdToRegionId[ctx.polyStore.values().at(i).osmIdType] = i;
 	}
 	
@@ -1120,7 +1120,7 @@ struct SortByPrioStrings {
 				}
 				
 			}
-			for(uint32_t i(0), s(stringToPrio->size()); i < s; ++i) {
+			for(uint32_t i(0), s((uint32_t) stringToPrio->size()); i < s; ++i) {
 				if (!m_a.isSet(i) && m_b.isSet(i)) { //a is smaller if any entry has a zero for a and a 1 for b
 					return true;
 				}
@@ -1152,7 +1152,7 @@ void OsmKeyValueObjectStore::applySort(oscar_create::OsmKeyValueObjectStore::Con
 	case ISO_NONE:
 		break;
 	case ISO_SCORE:
-		createNewToOldItemIdMap(m_newToOldItemId, ctx.regionInfo.size(), SortByScore(ctx.itemScores.begin()));
+		createNewToOldItemIdMap(m_newToOldItemId, (uint32_t) ctx.regionInfo.size(), SortByScore(ctx.itemScores.begin()));
 		break;
 	case ISO_SCORE_NAME:
 		if (keyStringTable().count("name")) {
@@ -1168,10 +1168,10 @@ void OsmKeyValueObjectStore::applySort(oscar_create::OsmKeyValueObjectStore::Con
 				}
 			}
 			pinfo.end();
-			createNewToOldItemIdMap(m_newToOldItemId, ctx.regionInfo.size(), SortByScoreName(ctx.itemScores.begin(), nameValueIds.begin()));
+			createNewToOldItemIdMap(m_newToOldItemId, (uint32_t) ctx.regionInfo.size(), SortByScoreName(ctx.itemScores.begin(), nameValueIds.begin()));
 		}
 		else {
-			createNewToOldItemIdMap(m_newToOldItemId, ctx.regionInfo.size(), SortByScore(ctx.itemScores.begin()));
+			createNewToOldItemIdMap(m_newToOldItemId, (uint32_t) ctx.regionInfo.size(), SortByScore(ctx.itemScores.begin()));
 		}
 		break;
 	case ISO_SCORE_PRIO_STRINGS:
@@ -1183,12 +1183,12 @@ void OsmKeyValueObjectStore::applySort(oscar_create::OsmKeyValueObjectStore::Con
 			if(keyStringTable().count(x)) {
 				uint32_t keyId = keyStringTable().at(x);
 				if (!stringToPrio.count(keyId)) {
-					uint32_t prio = stringToPrio.size();
+					uint32_t prio = (uint32_t) stringToPrio.size();
 					stringToPrio[keyId] = prio;
 				}
 			}
 		}
-		createNewToOldItemIdMap(m_newToOldItemId, ctx.regionInfo.size(), SortByPrioStrings(this, ctx.itemScores.begin(), &stringToPrio));
+		createNewToOldItemIdMap(m_newToOldItemId, (uint32_t) ctx.regionInfo.size(), SortByPrioStrings(this, ctx.itemScores.begin(), &stringToPrio));
 		break;
 	}
 	default:
@@ -1209,7 +1209,7 @@ bool OsmKeyValueObjectStore::processCellMap(Context & ctx) {
 		std::vector<uint32_t> newToOldCellId;
 		cc.createCellList(ctx.cellMap, ctx.trs, cellList, newToOldCellId);
 		std::unordered_map<uint32_t, uint32_t> oldToNewCellId;
-		for(uint32_t i(0), s(newToOldCellId.size()); i < s; ++i) {
+		for(uint32_t i(0), s((uint32_t) newToOldCellId.size()); i < s; ++i) {
 			oldToNewCellId[newToOldCellId.at(i)] = i;
 		}
 		m_ra = sserialize::UByteArrayAdapter::createCache(newToOldCellId.size()*4, sserialize::MM_FILEBASED);
@@ -1220,14 +1220,14 @@ bool OsmKeyValueObjectStore::processCellMap(Context & ctx) {
 		tracGraph = sserialize::Static::spatial::TracGraph(m_ra+tracGraphBegin);
 		ctx.trs.clear();
 	}
-	cc.createGeoHierarchy(cellList, ctx.regionInfo.size(), m_gh);
+	cc.createGeoHierarchy(cellList, (uint32_t) ctx.regionInfo.size(), m_gh);
 	//set the neighbor pointers
 	m_gh.createNeighborPointers(tracGraph);
 	m_gh.printStats(std::cout);
 	{ //remap the items in the gh to the unremapped ids
 		
 		std::vector<uint32_t> tmpIdToReorderedId(ctx.itemIdForCells.size(), 0);
-		for(uint32_t i(0), s(ctx.itemIdForCells.size()); i < s; ++i) {
+		for(uint32_t i(0), s((uint32_t) ctx.itemIdForCells.size()); i < s; ++i) {
 			uint32_t tmpItemId = ctx.itemIdForCells.at(i);
 			tmpIdToReorderedId.at(tmpItemId) = i;
 		}
@@ -1263,7 +1263,7 @@ bool OsmKeyValueObjectStore::processCellMap(Context & ctx) {
 	//apply the item reorder map, ids are unremapped ids
 	{
 		std::vector<uint32_t> oldToNewItemId(m_newToOldItemId.size());
-		for(uint32_t i(0), s(m_newToOldItemId.size()); i < s; ++i) {
+		for(uint32_t i(0), s((uint32_t) m_newToOldItemId.size()); i < s; ++i) {
 			oldToNewItemId.at(m_newToOldItemId.at(i)) = i;
 		}
 		for(uint32_t i = 0, s = m_gh.cells().size(); i < s; ++i) {
@@ -1308,7 +1308,7 @@ sserialize::spatial::GeoRect OsmKeyValueObjectStore::boundary() const {
 		return sserialize::spatial::GeoRect();
 	}
 	sserialize::spatial::GeoRect rect;
-	size_t i = 0;
+	uint32_t i = 0;
 
 	//find the first valid rect
 	for(; i < m_data.size(); i++) {

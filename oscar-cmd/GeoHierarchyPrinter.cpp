@@ -33,7 +33,7 @@ void GeoHierarchyPrinter::printNodes(std::ostream& out, const liboscar::Static::
 	sserialize::Static::spatial::GeoHierarchy::Region r;
 	liboscar::Static::OsmKeyValueObjectStore::Item item;
 	std::string name;
-	int32_t nameStrId = store.keyStringTable().find("name");
+	auto nameStrId = store.keyStringTable().find("name");
 	sserialize::ProgressInfo info;
 	info.begin(regionSize, "GeoHierarchyPrinter:: Printing nodes");
 	for(uint32_t i = 0; i < regionSize; ++i) {
@@ -41,7 +41,7 @@ void GeoHierarchyPrinter::printNodes(std::ostream& out, const liboscar::Static::
 		item = store.at(r.storeId());
 		name.clear();
 		uint32_t nameId = liboscar::Static::OsmKeyValueObjectStoreItem::npos;
-		if (nameStrId >= 0) {
+		if (nameStrId != store.keyStringTable().npos) {
 			nameId = item.findKey(static_cast<uint32_t>(nameStrId), (uint32_t)0);
 		}
 		if (nameId != liboscar::Static::OsmKeyValueObjectStoreItem::npos) {

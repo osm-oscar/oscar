@@ -156,10 +156,10 @@ void LiveCompletion::doFullCompletion(bool printStats) {
 			completionTime.end();
 			
 			dataAnalyseTime.begin();
-			for(size_t i = 0; i < compSet.size(); i++) {
+			for(uint32_t i = 0; i < compSet.size(); i++) {
 				Static::OsmKeyValueObjectStore::Item item = compSet.at(i);
 				cset_geoElementCount++;;
-				for(size_t i = 0; i < item.geoPointCount(); i++) {
+				for(uint32_t i = 0; i < item.geoPointCount(); i++) {
 					sserialize::Static::spatial::GeoPoint geop =  item.geoPointAt(i);
 					cset_positionCount++;
 				}
@@ -224,10 +224,10 @@ void LiveCompletion::doSimpleCompletion(uint32_t count, uint32_t minStrLen, bool
 			completionTime.end();
 			
 			dataAnalyseTime.begin();
-			for(size_t i = 0; i < compSet.size(); i++) {
+			for(uint32_t i = 0; i < compSet.size(); i++) {
 				Static::OsmKeyValueObjectStore::Item item = compSet.at(i);
 				cset_geoElementCount++;;
-				for(size_t i = 0; i < item.geoPointCount(); i++) {
+				for(uint32_t i = 0; i < item.geoPointCount(); i++) {
 					sserialize::Static::spatial::GeoPoint geop =  item.geoPointAt(i);
 					cset_positionCount++;
 				}
@@ -305,7 +305,7 @@ void LiveCompletion::doPartialCompletion(int count) {
 			for(int i = 0; i < count && compSet.valid(); i++) {
 				Static::OsmKeyValueObjectStore::Item item = compSet.at(i);
 				cset_geoElementCount++;;
-				for(size_t i = 0; i < item.geoPointCount(); i++) {
+				for(uint32_t i = 0; i < item.geoPointCount(); i++) {
 					sserialize::Static::spatial::GeoPoint geop =  item.geoPointAt(i);
 					cset_positionCount++;
 				}

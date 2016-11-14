@@ -67,7 +67,7 @@ void CellCreator::createCellList(FlatCellMap & cellMap, osmtools::OsmTriangulati
 		newToOldCellId.clear();
 		for(FlatCellMap::CellItemEntry & x : cellMap.m_cellItemEntries) {
 			if (oldToNewCellId.at(x.cellId) == 0xFFFFFFFF) {
-				oldToNewCellId[x.cellId] = newToOldCellId.size();
+				oldToNewCellId[x.cellId] = (uint32_t) newToOldCellId.size();
 				newToOldCellId.push_back(x.cellId);
 			}
 			x.cellId = oldToNewCellId.at(x.cellId);
@@ -140,7 +140,7 @@ void CellCreator::createCellList(FlatCellMap & cellMap, osmtools::OsmTriangulati
 	{
 		std::vector<uint32_t> sortedCellId2newCellId;
 		sortedCellId2newCellId.reserve(newToOldCellId.size());
-		for(uint32_t i(0), s(newToOldCellId.size()); i < s; ++i) {
+		for(uint32_t i(0), s((uint32_t) newToOldCellId.size()); i < s; ++i) {
 			sortedCellId2newCellId.push_back(i);
 		}
 		
@@ -155,7 +155,7 @@ void CellCreator::createCellList(FlatCellMap & cellMap, osmtools::OsmTriangulati
 		});
 		//update the new2OldCellId map
 		std::vector<uint32_t> tmp(sortedCellId2newCellId.size());
-		for(uint32_t i(0), s(sortedCellId2newCellId.size()); i < s; ++i) {
+		for(uint32_t i(0), s((uint32_t) sortedCellId2newCellId.size()); i < s; ++i) {
 			tmp.at(i) = newToOldCellId.at( sortedCellId2newCellId.at(i) );
 		}
 		SSERIALIZE_CHEAP_ASSERT_EQUAL(newToOldCellId.size(), m_d.size());
@@ -186,7 +186,7 @@ struct ChildrenOfGeoRegion {
 	const uint32_t * end() const { return u.p.m_end; }
 	const uint32_t * cbegin() const { return u.p.m_begin; }
 	const uint32_t * cend() const { return u.p.m_end; }
-	uint32_t size() const { return end()-begin(); }
+	uint32_t size() const { return (uint32_t) (end()-begin()); }
 };
 
 //BUG?: on plankton with planet: geoRegionCellSplit had a non-initialized entry which means that the cell is empty (this should have been filtered before?)
@@ -306,7 +306,7 @@ void CellCreator::createGeoHierarchy(FlatCellList& cellList, uint32_t geoRegionC
 	SSERIALIZE_CHEAP_ASSERT_EQUAL(geoRegionGraph.size(), geoRegionCount);
 	
 	{//calculate the parents
-		for(uint32_t i = 0, s = geoRegionGraph.size(); i < s; ++i) {
+		for(uint32_t i = 0, s = (uint32_t) geoRegionGraph.size(); i < s; ++i) {
 			if (geoRegionGraph.at(i).size()) {
 				for(auto childId : geoRegionGraph.at(i)) {
 					parents.emplace_back(childId, i);
@@ -325,7 +325,7 @@ void CellCreator::createGeoHierarchy(FlatCellList& cellList, uint32_t geoRegionC
 		gh.regions().clear();
 		gh.regions().regionDescriptions().reserve(geoRegionGraph.size());
 		auto parentsIt = parents.begin();
-		for(uint32_t i = 0, s = geoRegionGraph.size(); i < s; ++i) {
+		for(uint32_t i = 0, s = (uint32_t) geoRegionGraph.size(); i < s; ++i) {
 			sserialize::OffsetType off = gh.regions().regionData().size();
 			uint32_t parentsSize = 0;
 			gh.regions().regionData().push_back(geoRegionGraph.at(i).cbegin(), geoRegionGraph.at(i).cend());//children

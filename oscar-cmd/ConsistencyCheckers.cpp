@@ -178,8 +178,8 @@ bool ConsistencyChecker::checkTriangulation(const liboscar::Static::OsmKeyValueO
 
 bool ConsistencyChecker::checkStore(const liboscar::Static::OsmKeyValueObjectStore & store) {
 	sserialize::ProgressInfo pinfo;
-	uint32_t keyCount = store.keyStringTable().size();
-	uint32_t valueCount = store.valueStringTable().size();
+	sserialize::Static::StringTable::SizeType keyCount = store.keyStringTable().size();
+	sserialize::Static::StringTable::SizeType valueCount = store.valueStringTable().size();
 	uint32_t storeSize = store.size();
 	uint32_t brokenItems = 0;
 	pinfo.begin(store.size(), "ConsistencyChecker::Store: item creation");

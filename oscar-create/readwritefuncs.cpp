@@ -43,7 +43,7 @@ bool createAndWriteGrid(const oscar_create::Config& opts, State & state, sserial
 	sserialize::ProgressInfo info;
 	info.begin(state.store.size());
 	bool allOk = true;
-	for(size_t i = 0; i < state.store.size(); i++) {
+	for(uint32_t i = 0; i < state.store.size(); i++) {
 		allOk = grid.addItem(i, state.store.geoShape(i)) && allOk;
 		info(i);
 	}
@@ -181,13 +181,13 @@ struct TagStoreFilter {
 				}
 			}
 			
-			for(uint32_t i = 0, s = keyStringTable.size(); i < s; ++i) {
+			for(uint32_t i = 0, s = (uint32_t) keyStringTable.size(); i < s; ++i) {
 				std::string key = keyStringTable.at(i);
 				if (keysToId.count(key))
 					keysToId[key] = i;
 			}
 			
-			for(uint32_t i = 0, s = valueStringTable.size(); i < s; ++i) {
+			for(uint32_t i = 0, s = (uint32_t) valueStringTable.size(); i < s; ++i) {
 				std::string value = valueStringTable.at(i);
 				if (valuesToId.count(value))
 					valuesToId[value] = i;
@@ -499,7 +499,7 @@ void handleKVCreation(oscar_create::Config & opts, State & state) {
 		oscar_create::OsmKeyValueObjectStore::CreationConfig cc;
 		cc.fileNames = opts.inFileNames;
 		cc.itemSaveDirector = itemSaveDirector;
-		cc.maxNodeCoordTableSize = opts.kvStoreConfig->maxNodeHashTableSize;
+		sserialize::narrow_check_assign(cc.maxNodeCoordTableSize) = opts.kvStoreConfig->maxNodeHashTableSize;
 		cc.maxNodeId = opts.kvStoreConfig->maxNodeId;
 		cc.minNodeId = opts.kvStoreConfig->minNodeId;
 		cc.numThreads = opts.kvStoreConfig->numThreads;

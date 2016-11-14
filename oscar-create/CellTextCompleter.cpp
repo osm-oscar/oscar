@@ -59,10 +59,10 @@ void ContainerMerger::operator()(MatchDesc & a, MatchDesc & b) {
 			case 0x0: //both are not fully matched
 				{
 					m_tmpD.push_back(aIt.cellIdType());
-					uint32_t tmpSize = m_tmpD.size();
+					uint32_t tmpSize = (uint32_t) m_tmpD.size();
 					m_tmpD.push_back(0);//dummy items count
 					std::set_union(aIt.itemsBegin(), aIt.itemsEnd(), bIt.itemsBegin(), bIt.itemsEnd(), std::back_inserter<decltype(m_tmpD)>(m_tmpD));
-					m_tmpD[tmpSize] = m_tmpD.size()-(tmpSize+1);
+					m_tmpD[tmpSize] = (uint32_t) (m_tmpD.size()-(tmpSize+1));
 					if (m_tmpD[tmpSize] == cellItemCounts->at(aCellId)) { //cell is now fully matched
 						m_tmpD.resize(tmpSize);
 						m_tmpD.back() |= 0x1;
@@ -148,7 +148,7 @@ void MatchDesc::makeConsistent(std::vector<uint32_t> & tmp) {
 			std::sort( (uint32_t*) it.itemsBegin(), (uint32_t*) it.itemsEnd());
 			uint32_t * uniqueItemsEnd = std::unique( (uint32_t*) it.itemsBegin(), (uint32_t*) it.itemsEnd());
 			cellIds.push_back(it.cellIdType());
-			cellIds.push_back(uniqueItemsEnd - it.itemsBegin());
+			cellIds.push_back((uint32_t) (uniqueItemsEnd - it.itemsBegin()));
 			cellIds.push_back<const uint32_t *>(it.itemsBegin(), uniqueItemsEnd);
 		}
 	}
@@ -234,10 +234,10 @@ void testPayloadSerializer(sserialize::RLEStream::Creator & dest, const Payload:
 
 void testPayloadSerializer(sserialize::UByteArrayAdapter & dest, const Payload::ResultDesc & rd) {
 	dest.putVlPackedUint32(rd.fmPtr);
-	dest.putVlPackedInt32((int64_t)rd.fmPtr - (int64_t)rd.pPtr);
+	dest.putVlPackedInt32(sserialize::narrow_check<int32_t>((int64_t)rd.fmPtr - (int64_t)rd.pPtr));
 	int64_t prev = 0;
 	for(uint32_t x : rd.pItemsPtrs) {
-		dest.putVlPackedInt32((int64_t)x - prev);
+		dest.putVlPackedInt32(sserialize::narrow_check<int32_t>((int64_t)x - prev));
 		prev = x;
 	}
 }
@@ -263,7 +263,7 @@ sserialize::UByteArrayAdapter & operator<<(sserialize::UByteArrayAdapter & dest,
 	sserialize::UByteArrayAdapter tmpAdap(&tmpData, false);
 	sserialize::RLEStream::Creator cto(tmpAdap);
 	if (src.availableDescs & sserialize::StringCompleter::QT_EXACT) {
-		offsets.push_back(tmpAdap.size());
+		offsets.push_back(sserialize::narrow_check<uint32_t>(tmpAdap.size()));
 		testPayloadSerializer(cto, src.exact);
 		cto.flush();
 		#ifdef WITH_SSERIALIZE_EXPENSIVE_ASSERT
@@ -279,7 +279,7 @@ sserialize::UByteArrayAdapter & operator<<(sserialize::UByteArrayAdapter & dest,
 		#endif
 	}
 	if (src.availableDescs & sserialize::StringCompleter::QT_PREFIX) {
-		offsets.push_back(tmpAdap.size());
+		offsets.push_back(sserialize::narrow_check<uint32_t>( tmpAdap.size() ) );
 		testPayloadSerializer(cto, src.prefix);
 		cto.flush();
 		#ifdef WITH_SSERIALIZE_EXPENSIVE_ASSERT
@@ -295,7 +295,7 @@ sserialize::UByteArrayAdapter & operator<<(sserialize::UByteArrayAdapter & dest,
 		#endif
 	}
 	if (src.availableDescs & sserialize::StringCompleter::QT_SUFFIX) {
-		offsets.push_back(tmpAdap.size());
+		offsets.push_back(sserialize::narrow_check<uint32_t>( tmpAdap.size() ) );
 		testPayloadSerializer(cto, src.suffix);
 		cto.flush();
 		#ifdef WITH_SSERIALIZE_EXPENSIVE_ASSERT
@@ -311,7 +311,7 @@ sserialize::UByteArrayAdapter & operator<<(sserialize::UByteArrayAdapter & dest,
 		#endif
 	}
 	if (src.availableDescs & sserialize::StringCompleter::QT_SUBSTRING) {
-		offsets.push_back(tmpAdap.size());
+		offsets.push_back(sserialize::narrow_check<uint32_t>( tmpAdap.size() ) );
 		testPayloadSerializer(cto, src.substr);
 		cto.flush();
 		#ifdef WITH_SSERIALIZE_EXPENSIVE_ASSERT

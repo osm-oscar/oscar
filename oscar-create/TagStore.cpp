@@ -158,7 +158,7 @@ bool TagStore::deleteNodes(Node * curNode, std::set<uint32_t> & nodeIdsToDelete)
 			curNode->children().erase(*it);
 		}
 		
-		uint32_t curNodeId = m_nodePtrNodeIdMap.count(curNode);
+		uint32_t curNodeId = m_nodePtrNodeIdMap.at(curNode);
 		if (nodeIdsToDelete.count(curNodeId) > 0) {
 			if (curNode->children().size() == 0) {
 				delete this;
@@ -245,7 +245,7 @@ bool TagStore::getNodesInLevelOrder(std::vector< oscar_create::TagStore::Node* >
 		Node * curNode = nodesInLevelOrder[i];
 		uint32_t childCounter = 0;
 		for(Node::ConstChildIterator it = curNode->children().begin(); it != curNode->children().end(); it++) {
-			serInfo[it->second] = SerializationNodeInfo(nodesInLevelOrder.size(), childCounter);
+			serInfo[it->second] = SerializationNodeInfo((uint32_t) nodesInLevelOrder.size(), childCounter);
 			nodesInLevelOrder.push_back(it->second);
 			childCounter++;
 		}
@@ -256,9 +256,10 @@ bool TagStore::getNodesInLevelOrder(std::vector< oscar_create::TagStore::Node* >
 
 template<typename T, typename TCONTAINER>
 std::unordered_map<T, uint32_t> unordered_mapTableFromLinearContainer(const TCONTAINER & s) {
+	SSERIALIZE_CHEAP_ASSERT_SMALLER(s.size(), std::numeric_limits<uint32_t>::max());
 	std::unordered_map<T, uint32_t> r;
 	for(size_t i = 0; i < s.size(); ++i) {
-		r[ s[i] ] = i;
+		r[ s[i] ] = (uint32_t) i;
 	}
 	return r;
 }
@@ -297,14 +298,16 @@ UByteArrayAdapter& TagStore::serialize(UByteArrayAdapter& destination, ItemIndex
 	nodeInfo[0] = SerializationNodeInfo(0, 0);
 
 	UByteArrayAdapter nodeStore(new std::vector<uint8_t>(), true);
-	std::set<uint32_t> nodeOffSets;
+	std::vector<uint32_t> nodeOffSets;
 	for(size_t i = 0; i < nodesInLevelOrder.size(); i++) {
-		nodeOffSets.insert(nodeStore.tellPutPtr());
+		nodeOffSets.emplace_back(nodeStore.tellPutPtr());
 		if (!serialize(nodeStore, nodesInLevelOrder[i], nodeInfo, indexFactory)) {
 			std::cout << "failed to serialize node in TagStore" << std::endl;
 			return destination;
 		}
 	}
+	
+	SSERIALIZE_NORMAL_ASSERT( sserialize::is_strong_monotone_ascending(nodeOffSets.begin(), nodeOffSets.end()) );
 
 	if (nodeOffSets.size() != nodesInLevelOrder.size()) {
 		std::cout << "Failed to serialize all nodes in TagStore" << std::endl;
@@ -316,7 +319,7 @@ UByteArrayAdapter& TagStore::serialize(UByteArrayAdapter& destination, ItemIndex
 	
 	//now put all the data
 	destination.putUint8(0); //version
-	destination.putUint32(nodeStore.size() ); //size
+	destination.putUint32( (uint32_t) nodeStore.size() ); //size
 	destination.putData( nodeIndex );
 	destination.putData( nodeStore );
 

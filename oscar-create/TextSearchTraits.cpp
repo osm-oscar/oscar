@@ -32,7 +32,7 @@ FilterState::SingleFilter::SingleFilter(const TextSearchConfig::SearchCapabiliti
 		keysToStoreRegex = std::regex(regexString);
 	}
 	
-	for(uint32_t i = 0, s = keyStringTable.size(); i < s; ++i) {
+	for(uint32_t i = 0, s = (uint32_t) keyStringTable.size(); i < s; ++i) {
 		std::string t = keyStringTable.at(i);
 		if (std::regex_match(t, keysToStoreRegex, std::regex_constants::match_any)) {
 			this->keys.insert(i);
@@ -88,8 +88,8 @@ void SimpleSearchTraits::operator()(
 	item_type item = m_store.at(itemId);
 	m_ies(item, eIt);
 	m_iss(item, sIt);
-	for(uint32_t cellId : item.cells()) {
-		auto cell = gh.cell(cellId);
+	for(auto cellId : item.cells()) {
+		auto cell = gh.cell((uint32_t) cellId);
 		for(uint32_t i(0), s(cell.parentsSize()); i < s; ++i) {
 			uint32_t parentGhId = cell.parent(i);
 			uint32_t parentStoreId = gh.ghIdToStoreId(parentGhId);

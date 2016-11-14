@@ -143,7 +143,7 @@ public:
 		template<typename TOutputIterator>
 		void addFromItem(const item_type & item, TOutputIterator & out) {
 			for(const auto & x : item.cells()) {
-				*out = x;
+				*out = (uint32_t) x;
 				++out;
 			}
 		}

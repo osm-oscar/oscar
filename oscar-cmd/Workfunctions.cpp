@@ -124,7 +124,7 @@ void Worker::printCQRDataSize(const WD_PrintCQRDataSize& data) {
 	sserialize::ItemIndex fmIdx = idxStore.at( t.fmPtr() );
 	sserialize::ItemIndex pmIdx = idxStore.at( t.pPtr() );
 	sserialize::CellQueryResult r(fmIdx, pmIdx, t.pItemsPtrBegin(), gh, idxStore);
-	std::vector<uint32_t> idxDataSizes;
+	std::vector<sserialize::UByteArrayAdapter::SizeType> idxDataSizes;
 	std::vector<uint32_t> idxSizes;
 	idxDataSizes.reserve(r.cellCount());
 	idxSizes.reserve(r.cellCount());
@@ -336,7 +336,7 @@ void Worker::printPaperStatsDb(const WD_PrintPaperStatsDb & data) {
 		std::string key;
 		std::getline(file, key);
 		if (key.size()) {
-			keyIds.insert(completer.store().keyStringTable().find(key));
+			keyIds.insert( sserialize::narrow_check<uint32_t>( completer.store().keyStringTable().find(key) ));
 		}
 	}
 	file.close();
@@ -355,8 +355,8 @@ void Worker::printPaperStatsDb(const WD_PrintPaperStatsDb & data) {
 				rawValueSizes += vst.strSize(item.valueId(j));
 			}
 		}
-		for(uint32_t cellId : item.cells()) {
-			for(uint32_t j(gh.cellParentsBegin(cellId)), js(gh.cellParentsEnd(cellId)); j < js; ++j) {
+		for(auto cellId : item.cells()) {
+			for(uint32_t j(gh.cellParentsBegin((uint32_t) cellId)), js(gh.cellParentsEnd((uint32_t) cellId)); j < js; ++j) {
 				uint32_t regionId = gh.ghIdToStoreId(cellPtrs.at(j));
 				auto ritem = completer.store().at(regionId);
 				for(uint32_t k(0), ks(ritem.size()); k < ks; ++k) {
@@ -569,7 +569,7 @@ void Worker::dumpAllItemTagsWithInheritedTags(const WD_DumpAllItemTagsWithInheri
 			std::string key;
 			std::getline(file, key);
 			if (key.size()) {
-				keyIds.insert(completer.store().keyStringTable().find(key));
+				keyIds.insert( sserialize::narrow_check<uint32_t>( completer.store().keyStringTable().find(key) ) );
 			}
 		}
 		file.close();
@@ -587,8 +587,8 @@ void Worker::dumpAllItemTagsWithInheritedTags(const WD_DumpAllItemTagsWithInheri
 		file << "itemid:" << i;
 		regionValueIds.clear();
 		auto item = completer.store().at(i);
-		for(uint32_t cellId : item.cells()) {
-			for(uint32_t j(gh.cellParentsBegin(cellId)), js(gh.cellParentsEnd(cellId)); j < js; ++j) {
+		for(auto cellId : item.cells()) {
+			for(uint32_t j(gh.cellParentsBegin((uint32_t) cellId)), js(gh.cellParentsEnd((uint32_t) cellId)); j < js; ++j) {
 				uint32_t regionId = gh.ghIdToStoreId(cellPtrs.at(j));
 				auto ritem = completer.store().at(regionId);
 				for(uint32_t k(0), ks(ritem.size()); k < ks; ++k) {
@@ -876,11 +876,11 @@ void createCompletionStrings2(const liboscar::Static::OsmKeyValueObjectStore & d
 	sserialize::AsciiCharEscaper escaper(escapeStr.begin(), escapeStr.end());
 
 	if (qt & sserialize::StringCompleter::QT_SUBSTRING) {
-		for(size_t i = 0; i < count; i++) {
+		for(uint32_t i = 0; i < count; i++) {
 			uint32_t itemId = ((double)rand()/RAND_MAX)*db.size();
 			liboscar::Static::OsmKeyValueObjectStore::Item item( db.at(itemId) );
 			std::string str = "";
-			for(size_t j = 0; j < item.strCount(); j++) {
+			for(uint32_t j = 0; j < item.strCount(); j++) {
 				std::string s = item.strAt(j);
 				if (s.size()) {
 					if (*(s.begin()) == '\"') {
@@ -1072,7 +1072,6 @@ void Worker::completeStringClustered(WD_CompleteStringClustered & d, bool treedC
 	LiveCompletion liveCompleter(completer);
 	liveCompleter.doClusteredComplete(strs, d.printNumResults, treedCQR, d.threadCount);
 }
-
 
 void Worker::completeFromFilePartial(WD_CompleteFromFilePartial & d) {
 	std::vector<std::string> strs;

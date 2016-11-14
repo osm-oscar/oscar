@@ -20,7 +20,7 @@ int main(int argc, char ** argv) {
 	{ //init rand
 		timeval t1;
 		gettimeofday(&t1, NULL);
-		srand(t1.tv_usec * t1.tv_sec);
+		srand((unsigned int) (t1.tv_usec * t1.tv_sec));
 	}
 	std::cout.precision(10);
 	
@@ -95,7 +95,7 @@ int main(int argc, char ** argv) {
 		//switch deduplication off in case the initial store was build without it
 		state.indexFactory.setDeduplication(false);
 		std::vector<uint32_t> tmp = state.indexFactory.insert(idxStore);
-		for(uint32_t i = 0, s = tmp.size(); i < s; ++i) {
+		for(std::size_t i = 0, s = tmp.size(); i < s; ++i) {
 			if (i != tmp[i])  {
 				std::cout << "ItemIndexFactory::insert is broken" << std::endl;
 				std::cout << tmp << std::endl;

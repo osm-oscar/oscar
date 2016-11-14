@@ -261,7 +261,7 @@ private:
 			itemFlushLock.lock();
 			for(T_IT it(begin); it != end; ++it) {
 				SSERIALIZE_CHEAP_ASSERT_SMALLER(it->data.id, totalItemCount);
-				uint32_t realItemId = itemIdForCells.size();
+				uint32_t realItemId = (uint32_t) itemIdForCells.size();
 				itemIdForCells.push_back(it->data.id);
 				itemScores.push_back(it->data.score);
 				parent->push_back(*it);

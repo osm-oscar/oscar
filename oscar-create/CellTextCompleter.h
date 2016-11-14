@@ -84,8 +84,8 @@ struct UniversalNodeStorageHashFunc {
 		m_as.resize(paramsSize);
 		for(uint32_t i(0); i < paramsSize; ++i) {
 			std::pair<uint32_t, uint32_t> & t = m_as[i];
-			t.first = lrand48();
-			t.second = lrand48();
+			t.first = (uint32_t) lrand48();
+			t.second = (uint32_t) lrand48();
 		}
 	}
 	inline const std::pair<uint32_t, uint32_t> & getP(uint32_t param) const {
@@ -614,7 +614,7 @@ struct SampleSuffixStringsContainer {
 			if (it != baseEnd) {
 				std::string::const_iterator baseBegin(base.cbegin());
 				while (it != baseEnd) {
-					suffixes.push_back(it-baseBegin);
+					suffixes.push_back((uint32_t) (it-baseBegin));
 					sserialize::nextSuffixString(it, baseEnd, seps);
 				}
 			}
