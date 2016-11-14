@@ -1,6 +1,9 @@
 WARNINGS:
 -Wshorten-64-to-32 as default
 
+TESTS:
+add a base class that is the base of ALL test which sets the correct values for temp paths, uba settings etc.
+
 HIGH IMPORTANCE:
 minilzo is licensed under GPL? If that really is the case, then we have to get rid of it (use xz?)
 
@@ -8,7 +11,7 @@ LONGTERM:
 xz compression (complete abstract compression)
 
 VERY LONGTERM:
-Re-order treed-cqr set operations
+Re-order treed-cqr set operations (diplomarbeit)
 
 VERY LONGTERM:
 HierarchicalCQR:
@@ -44,10 +47,8 @@ BUGS:
 :^ (@highway eisenbahnstraße "aalen")
 :west-of (alexanderplatz berling)
 
-OsmKeyValueStore::geoShape/toInternalId does not check for out of bounds
-
 HIGH IMPORTANCE:
-add ability to use island border to add new regions
+visualize cells in oscar-gui (currently segfault in MarbleMap)
 
-HIGH IMPORTANCE:
-visualize cells in oscar-gui
+HIGH:
+add ability to use include statements in oscar-create config
