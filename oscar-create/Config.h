@@ -15,6 +15,7 @@ struct StatsConfig {
 	StatsConfig() : memUsage(false) {}
 	StatsConfig(const Json::Value & cfg);
 	bool memUsage;
+	void update(const Json::Value & cfg);
 	std::ostream & print(std::ostream & out) const;
 	bool valid() const;
 };
@@ -25,6 +26,7 @@ struct IndexStoreConfig {
 	sserialize::ItemIndex::Types type;
 	bool check;
 	bool deduplicate;
+	void update(const Json::Value & cfg);
 	std::ostream & print(std::ostream & out) const;
 	bool valid() const;
 };
@@ -34,6 +36,7 @@ struct GridConfig {
 	bool enabled;
 	uint32_t latCount;
 	uint32_t lonCount;
+	void update(const Json::Value & cfg);
 	std::ostream & print(std::ostream & out) const;
 	bool valid() const;
 };
@@ -43,6 +46,7 @@ struct RTreeConfig {
 	bool enabled;
 	uint32_t latCount;
 	uint32_t lonCount;
+	void update(const Json::Value & cfg);
 	std::ostream & print(std::ostream & out) const;
 	bool valid() const;
 };
@@ -52,6 +56,7 @@ struct TagStoreConfig {
 	bool enabled;
 	std::string tagKeys;
 	std::string tagKeyValues;
+	void update(const Json::Value & cfg);
 	std::ostream & print(std::ostream & out) const;
 	bool valid() const;
 };
@@ -59,7 +64,7 @@ struct TagStoreConfig {
 struct KVStoreConfig {
 	KVStoreConfig(const Json::Value & cfg);
 	bool enabled;
-	uint32_t maxNodeHashTableSize; 
+	uint64_t maxNodeHashTableSize; 
 	std::string keyToStoreFn;
 	std::string keyValuesToStoreFn;
 	std::string itemsSavedByKeyFn;
@@ -86,6 +91,7 @@ struct KVStoreConfig {
 	uint32_t blobFetchCount;
 	int itemSortOrder;//as defined by OsmKeyValueObjectStore::ItemSortOrder
 	std::string prioStringsFileName;
+	void update(const Json::Value & cfg);
 	std::ostream & print(std::ostream & out) const;
 	bool valid() const;
 };
@@ -106,8 +112,10 @@ public:
 public:
 	TextSearchConfig() : enabled(false), type(liboscar::TextSearch::NONE) {}
 	TextSearchConfig(const Json::Value& cfg);
+	virtual void update(const Json::Value & cfg);
 	virtual std::ostream & print(std::ostream & out) const;
-	static TextSearchConfig * parseTyped(const Json::Value& cfg);
+	///@param base update base with new info
+	static TextSearchConfig * parseTyped(const Json::Value& cfg, TextSearchConfig * base = 0);
 	virtual bool valid() const;
 	bool hasEnabled(QueryType qt) const;
 	bool hasCaseSensitive() const;
@@ -129,8 +137,11 @@ public:
 	enum class TrieType { TRIE, FULL_INDEX_TRIE, FLAT_GST, FLAT_TRIE};
 public:
 	ItemSearchConfig(const Json::Value & cfg);
-	std::ostream & print(std::ostream& out) const override;
+	virtual void update(const Json::Value & cfg) override;
+	virtual std::ostream & print(std::ostream& out) const override;
 	virtual bool valid() const override;
+private:
+	void updateSelf(const Json::Value & cfg);
 public:
 	std::unordered_set<uint32_t> suffixDelimeters;
 
@@ -170,8 +181,11 @@ public:
 	enum class TrieType { TRIE, FLAT_TRIE };
 public:
 	GeoCellConfig(const Json::Value & cfg);
+	virtual void update(const Json::Value & cfg) override;
 	virtual std::ostream & print(std::ostream & out) const override;
 	virtual bool valid() const override;
+private:
+	void updateSelf(const Json::Value & cfg);
 public:
 	uint32_t threadCount;
 	std::unordered_set<uint32_t> suffixDelimeters;
@@ -183,8 +197,11 @@ public:
 class OOMGeoCellConfig: public TextSearchConfig {
 public:
 	OOMGeoCellConfig(const Json::Value & cfg);
+	virtual void update(const Json::Value & cfg) override;
 	virtual std::ostream & print(std::ostream & out) const override;
 	virtual bool valid() const override;
+private:
+	void updateSelf(const Json::Value & cfg);
 public:
 	uint32_t threadCount;
 	sserialize::OffsetType maxMemoryUsage;

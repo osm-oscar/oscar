@@ -395,17 +395,26 @@ bool OOMGeoCellConfig::valid() const {
 
 //parse functions
 StatsConfig::StatsConfig(const Json::Value & cfg) : StatsConfig() {
+	update(cfg);
+}
+
+void StatsConfig::update(const Json::Value& cfg) {
 	Json::Value v = cfg["print-memory-usage"];
 	if (v.isBool()) {
 		memUsage = v.asBool();
 	}
 }
 
+
 IndexStoreConfig::IndexStoreConfig(const Json::Value & cfg) :
 type(sserialize::ItemIndex::T_NULL),
 check(false),
 deduplicate(true)
 {
+	update(cfg);
+}
+
+void IndexStoreConfig::update(const Json::Value & cfg) {
 	Json::Value v = cfg["type"];
 	if (v.isString()) {
 		std::string t = v.asString();
@@ -448,6 +457,10 @@ enabled(false),
 latCount(0),
 lonCount(0)
 {
+	update(cfg);
+}
+
+void GridConfig::update(const Json::Value& cfg) {
 	Json::Value v = cfg["enabled"];
 	if (v.isBool()) {
 		enabled = v.asBool();
@@ -464,11 +477,16 @@ lonCount(0)
 	}
 }
 
+
 RTreeConfig::RTreeConfig(const Json::Value& cfg) :
 enabled(false),
 latCount(0),
 lonCount(0)
 {
+	update(cfg);
+}
+
+void RTreeConfig::update(const Json::Value& cfg) {
 	Json::Value v = cfg["enabled"];
 	if (v.isBool()) {
 		enabled = v.asBool();
@@ -488,6 +506,10 @@ lonCount(0)
 TagStoreConfig::TagStoreConfig(const Json::Value& cfg) :
 enabled(false)
 {
+	update(cfg);
+}
+
+void TagStoreConfig::update(const Json::Value& cfg) {
 	Json::Value v = cfg["enabled"];
 	if (v.isBool()) {
 		enabled = v.asBool();
@@ -524,6 +546,10 @@ numThreads(0),
 blobFetchCount(1),
 itemSortOrder(OsmKeyValueObjectStore::ISO_NONE)
 {
+	update(cfg);
+}
+
+void KVStoreConfig::update(const Json::Value& cfg) {
 	Json::Value v = cfg["enabled"];
 	if (v.isBool()) {
 		enabled = v.asBool();
@@ -566,7 +592,7 @@ itemSortOrder(OsmKeyValueObjectStore::ISO_NONE)
 	
 	v = cfg["maxTriangPerCell"];
 	if (v.isNumeric()) {
-		maxTriangPerCell = v.asUInt64();
+		maxTriangPerCell = v.asUInt();
 	}
 	
 	v = cfg["maxTriangCentroidDist"];
@@ -675,10 +701,15 @@ itemSortOrder(OsmKeyValueObjectStore::ISO_NONE)
 	}
 }
 
+
 TextSearchConfig::TextSearchConfig(const Json::Value& cfg) :
 enabled(false),
 type(liboscar::TextSearch::INVALID)
 {
+	update(cfg);
+}
+
+void TextSearchConfig::update(const Json::Value& cfg) {
 	Json::Value v = cfg["enabled"];
 	if (v.isBool()) {
 		enabled = v.asBool();
@@ -694,6 +725,7 @@ type(liboscar::TextSearch::INVALID)
 		parseTagTypeObject(v, ItemType::REGION);
 	}
 }
+
 
 void TextSearchConfig::parseTagTypeObject(const Json::Value& cfg, TextSearchConfig::ItemType itemType) {
 	Json::Value v = cfg["values"];
@@ -743,31 +775,61 @@ void TextSearchConfig::parseKvConfig(const Json::Value& cfg, TextSearchConfig::I
 	}
 }
 
-TextSearchConfig* TextSearchConfig::parseTyped(const Json::Value& cfg) {
+TextSearchConfig* TextSearchConfig::parseTyped(const Json::Value& cfg, TextSearchConfig * base) {
 	Json::Value tv = cfg["type"];
 	Json::Value cv = cfg["config"];
 	TextSearchConfig * result = 0;
 	if (tv.isString() && cv.isObject()) {
 		std::string t = tv.asString();
 		if (t == "items") {
-			result = new ItemSearchConfig(cv);
-			result->type = liboscar::TextSearch::ITEMS;
+			if (base && base->type == liboscar::TextSearch::ITEMS) {
+				result = base;
+				result->update(cv);
+			}
+			else {
+				result = new ItemSearchConfig(cv);
+				result->type = liboscar::TextSearch::ITEMS;
+			}
 		}
 		else if (t == "regions") {
-			result = new GeoHierarchySearchConfig(cv);
-			result->type = liboscar::TextSearch::GEOHIERARCHY;
+			if (base && base->type == liboscar::TextSearch::GEOHIERARCHY) {
+				result = base;
+				result->update(cv);
+			}
+			else {
+				result = new GeoHierarchySearchConfig(cv);
+				result->type = liboscar::TextSearch::GEOHIERARCHY;
+			}
 		}
 		else if (t == "geoitems") {
-			result = new GeoHierarchyItemsSearchConfig(cv);
-			result->type = liboscar::TextSearch::GEOHIERARCHY;
+			if (base && base->type == liboscar::TextSearch::GEOHIERARCHY) {
+				result = base;
+				result->update(cv);
+			}
+			else {
+				result = new GeoHierarchyItemsSearchConfig(cv);
+				result->type = liboscar::TextSearch::GEOHIERARCHY;
+			}
 		}
 		else if (t == "geocell") {
-			result = new GeoCellConfig(cv);
-			result->type = liboscar::TextSearch::GEOCELL;
+			if (base && base->type == liboscar::TextSearch::GEOCELL) {
+				result = base;
+				result->update(cv);
+			}
+			else {
+				result = new GeoCellConfig(cv);
+				result->type = liboscar::TextSearch::GEOCELL;
+			}
 		}
 		else if (t == "oomgeocell") {
-			result = new OOMGeoCellConfig(cv);
-			result->type = liboscar::TextSearch::OOMGEOCELL;
+			if (base && base->type == liboscar::TextSearch::GEOCELL) {
+				result = base;
+				result->update(cv);
+			}
+			else {
+				result = new OOMGeoCellConfig(cv);
+				result->type = liboscar::TextSearch::OOMGEOCELL;
+			}
 		}
 		else {
 			std::cerr << "Invalid text search type" << std::endl;
@@ -791,6 +853,15 @@ maxSuffixIndexMergeCount(0),
 check(false),
 threadCount(0)
 {
+	updateSelf(cfg);
+}
+
+void ItemSearchConfig::update(const Json::Value& cfg) {
+	TextSearchConfig::update(cfg);
+	updateSelf(cfg);
+}
+
+void ItemSearchConfig::updateSelf(const Json::Value& cfg) {
 	Json::Value v = cfg["suffixDelimeters"];
 	if (v.isString()) {
 		std::string str = v.asString();
@@ -896,6 +967,15 @@ trieType(TrieType::FLAT_TRIE),
 mmType(sserialize::MM_SHARED_MEMORY),
 check(false)
 {
+	updateSelf(cfg);
+}
+
+void GeoCellConfig::update(const Json::Value& cfg) {
+	oscar_create::TextSearchConfig::update(cfg);
+	updateSelf(cfg);
+}
+
+void GeoCellConfig::updateSelf(const Json::Value& cfg) {
 	Json::Value v = cfg["threadCount"];
 	if (v.isNumeric()) {
 		threadCount = v.asUInt();
@@ -939,6 +1019,15 @@ TextSearchConfig(cfg),
 threadCount(0),
 maxMemoryUsage(0xFFFFFFFF)
 {
+	updateSelf(cfg);
+}
+
+void OOMGeoCellConfig::update(const Json::Value& cfg) {
+	TextSearchConfig::update(cfg);
+	updateSelf(cfg);
+}
+
+void OOMGeoCellConfig::updateSelf(const Json::Value& cfg) {
 	Json::Value v = cfg["threadCount"];
 	if (v.isNumeric()) {
 		threadCount = v.asUInt();
@@ -949,6 +1038,7 @@ maxMemoryUsage(0xFFFFFFFF)
 		maxMemoryUsage = v.asUInt64()*(static_cast<uint32_t>(1) << 20);
 	}
 }
+
 
 std::string Config::help() {
 	return "[-a --ask] -i <input.osm.pbf|input dir> -o <output dir> -c <config.json>";
@@ -1015,8 +1105,9 @@ Config::ValidationReturnValues Config::validate() {
 
 
 Config::ReturnValues Config::fromCmdLineArgs(int argc, char** argv) {
-	std::string configString;
-
+	std::vector<std::string> configFiles;
+	std::vector<Json::Value> configData;
+	
 	for(int i=1; i < argc; ++i) {
 		std::string token(argv[i]);
 		if (token == "-i" && i+1 < argc) {
@@ -1028,7 +1119,7 @@ Config::ReturnValues Config::fromCmdLineArgs(int argc, char** argv) {
 			++i;
 		}
 		else if (token == "-c" && i+1 < argc) {
-			configString = std::string(argv[i+1]);
+			configFiles.emplace_back(argv[i+1]);
 			++i;
 		}
 		else if (token == "-a" || token == "--ask") {
@@ -1041,74 +1132,148 @@ Config::ReturnValues Config::fromCmdLineArgs(int argc, char** argv) {
 		return RV_FAILED;
 	}
 	
-	std::ifstream inFileStream;
-	inFileStream.open(configString);
-	
-	if (!inFileStream.is_open()) {
-		std::cerr << "could not open config file " << configString << std::endl;
-		return RV_FAILED;
+	//we just expand all include files at once in level-order?
+	for(std::size_t i(0); i < configFiles.size(); ++i) {
+		std::ifstream inFileStream;
+		inFileStream.open(configFiles.at(i));
+		if (!inFileStream.is_open()) {
+			std::cerr << "could not open config file " << configFiles.at(i) << std::endl;
+			return RV_FAILED;
+		}
+		Json::Value root;
+		inFileStream >> root;
+		
+		//TODO: file path should be relative to include file
+		
+		if (!root["include"].isNull()) {
+			Json::Value tmp = root["include"];
+			if (tmp.isString()) { //single include
+				configFiles.push_back(tmp.asString());
+			}
+			else if (tmp.isArray()) {
+				for(Json::ArrayIndex j(0), s(tmp.size()); j < s; ++j) {
+					Json::Value tmp2 = tmp[j];
+					if (!tmp2.isString()) {
+						std::cerr << "Invalid config option in file " << configFiles.at(i) << ": include directive takes a string or an array of strings" << std::endl;
+						return RV_FAILED;
+					}
+					configFiles.push_back(tmp2.asString());
+				}
+			}
+		}
+		
+		configData.emplace_back(std::move(root));
 	}
 	
-	Json::Value root;
-	inFileStream >> root;
+	
 	
 	Json::Value tmp;
 	
-	tmp = root["stats"];
-	if (!tmp.isNull()) {
-		statsConfig = StatsConfig(tmp);
-	}
+	std::unordered_map<std::string, std::size_t> tscId2tsc;
 	
-	tmp = root["tempdir"];
-	if (!root["tempdir"].isNull()) {
-		Json::Value tmp2 = tmp["fast"];
-		if (!tmp2.isNull() && tmp2.isString()) {
-			sserialize::UByteArrayAdapter::setFastTempFilePrefix(tmp2.asString());
-		}
-		
-		tmp2 = tmp["slow"];
-		if (!tmp2.isNull() && tmp2.isString()) {
-			sserialize::UByteArrayAdapter::setTempFilePrefix(tmp2.asString());
-		}
-	}
-	
-	tmp = root["index"];
-	if (!tmp.isNull()) {
-		indexStoreConfig = new IndexStoreConfig(tmp);
-	}
-	
-	tmp = root["store"];
-	if (!tmp.isNull()) {
-		kvStoreConfig = new KVStoreConfig(tmp);
-	}
-	
-	tmp = root["grid"];
-	if (!tmp.isNull()) {
-		gridConfig = new GridConfig(tmp);
-	}
-	
-	tmp = root["rtree"];
-	if (!tmp.isNull()) {
-		rTreeConfig = new RTreeConfig(tmp);
-	}
-	
-	tmp = root["tagstore"];
-	if (!tmp.isNull()) {
-		tagStoreConfig = new TagStoreConfig(tmp);
-	}
-	
-	tmp = root["textsearch"];
-	if (!tmp.isNull()) {
-		if (tmp.isArray()) {
-			for(const Json::Value & x : tmp) {
-				textSearchConfig.push_back(TextSearchConfig::parseTyped(x));
+	for(std::size_t i(0), s(configFiles.size()); i < s; ++i) {
+		Json::Value & root = configData.at(i);
+		try {
+			tmp = root["stats"];
+			if (!tmp.isNull()) {
+				statsConfig.update(tmp);
+			}
+			
+			tmp = root["tempdir"];
+			if (!root["tempdir"].isNull()) {
+				Json::Value tmp2 = tmp["fast"];
+				if (!tmp2.isNull() && tmp2.isString()) {
+					sserialize::UByteArrayAdapter::setFastTempFilePrefix(tmp2.asString());
+				}
+				
+				tmp2 = tmp["slow"];
+				if (!tmp2.isNull() && tmp2.isString()) {
+					sserialize::UByteArrayAdapter::setTempFilePrefix(tmp2.asString());
+				}
+			}
+			
+			tmp = root["index"];
+			if (!tmp.isNull()) {
+				if (!indexStoreConfig) {
+					indexStoreConfig = new IndexStoreConfig(tmp);
+				}
+				else {
+					indexStoreConfig->update(tmp);
+				}
+			}
+			
+			tmp = root["store"];
+			if (!tmp.isNull()) {
+				if (!kvStoreConfig) {
+					kvStoreConfig = new KVStoreConfig(tmp);
+				}
+				else {
+					kvStoreConfig->update(tmp);
+				}
+			}
+			
+			tmp = root["grid"];
+			if (!tmp.isNull()) {
+				if (!gridConfig) {
+					gridConfig = new GridConfig(tmp);
+				}
+				else {
+					gridConfig->update(tmp);
+				}
+			}
+			
+			tmp = root["rtree"];
+			if (!tmp.isNull()) {
+				if (!rTreeConfig) {
+					rTreeConfig = new RTreeConfig(tmp);
+				}
+				else {
+					rTreeConfig->update(tmp);
+				}
+			}
+			
+			tmp = root["tagstore"];
+			if (!tmp.isNull()) {
+				if (!tagStoreConfig) {
+					tagStoreConfig = new TagStoreConfig(tmp);
+				}
+				else {
+					tagStoreConfig->update(tmp);
+				}
+			}
+			
+			tmp = root["textsearch"];
+			if (!tmp.isNull()) {
+				auto handleSingleTsc = [this, &tscId2tsc](const Json::Value & x) {
+					std::string id = x["type"].asString();
+					if (!x["id"].isNull()) {
+						id = x["id"].asString();
+					}
+					if (tscId2tsc.count(id)) {
+						TextSearchConfig* & tsc = textSearchConfig.at(tscId2tsc.at(id));
+						tsc = TextSearchConfig::parseTyped(x, tsc);
+					}
+					else {
+						tscId2tsc[id] = textSearchConfig.size();
+						textSearchConfig.push_back(TextSearchConfig::parseTyped(x));
+					}
+				};
+				if (tmp.isArray()) {
+					for(const Json::Value & x : tmp) {
+						handleSingleTsc(x);
+					}
+				}
+				else if (tmp.isObject()) {
+					handleSingleTsc(tmp);
+				}
+				else {
+					std::cerr << "Invalid entry for textsearch in file " << configFiles.at(i) << std::endl;
+				}
 			}
 		}
-		else if (tmp.isObject()) {
-			textSearchConfig.push_back(TextSearchConfig::parseTyped(tmp));
-		}
-		else {
-			std::cerr << "Invalid entry for textsearch" << std::endl;
+		catch (const sserialize::ConfigurationException & e) {
+			std::cerr << "An error occured while parsing file " << configFiles.at(i) << ": " << e.what() << std::endl;
+			return oscar_create::Config::RV_FAILED;
 		}
 	}
 	
