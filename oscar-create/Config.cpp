@@ -1132,62 +1132,72 @@ Config::ReturnValues Config::fromCmdLineArgs(int argc, char** argv) {
 		return RV_FAILED;
 	}
 	
-	//we just expand all include files at once in level-order?
-	//TODO: in-order would be better to do stuff like:
-	//include global params but change some in the config
-	for(std::size_t i(0); i < configFiles.size(); ++i) {
+	auto toAbsolutePath = [](const std::string & str, const std::string base) -> std::string {
+		if (!str.size()) {
+			return str;
+		}
+		if (sserialize::MmappedFile::isAbsolute(str)) { //absolute path
+			return str;
+		}
+		else { //relative path
+			return sserialize::MmappedFile::realPath(base + "/" + str);
+		}
+	};
+
+	///@param path must be absolute
+	auto handleConfigFile = sserialize::fix([this, &configData, &toAbsolutePath](auto && self, const std::string & path) -> Config::ReturnValues {
+		SSERIALIZE_CHEAP_ASSERT(sserialize::MmappedFile::isAbsolute(path));
+		
 		std::ifstream inFileStream;
-		inFileStream.open(configFiles.at(i));
+		std::string basePath( sserialize::MmappedFile::dirName(path) );
+		Json::Value root;
+		
+		inFileStream.open(path);
 		if (!inFileStream.is_open()) {
-			std::cerr << "could not open config file " << configFiles.at(i) << std::endl;
+			std::cerr << "could not open config file " << path << std::endl;
 			return RV_FAILED;
 		}
-		Json::Value root;
 		inFileStream >> root;
 		
-		if (!root["include"].isNull()) {
-			Json::Value tmp = root["include"];
-			std::string basePath = sserialize::MmappedFile::dirName( configFiles.at(i) );
-			auto handleSingleInclude = [this, &configFiles, &basePath](const std::string & str) {
-				if (!str.size()) {
-					return;
+		Json::Value incDv = root["include"];
+		if (incDv.isString()) { //single include
+			self( toAbsolutePath( incDv.asString(), basePath) );
+		}
+		else if (incDv.isArray()) {
+			for(Json::ArrayIndex j(0), s(incDv.size()); j < s; ++j) {
+				if (!incDv[j].isString()) {
+					std::cerr << "Invalid config option in file " << path << ": include directive takes a string or an array of strings" << std::endl;
+					return RV_FAILED;
 				}
-				if (sserialize::MmappedFile::isAbsolute(str)) { //absolute path
-					configFiles.push_back(str);
+				if ( RV_OK != self( toAbsolutePath( incDv[j].asString(), basePath) ) ) {
+					return RV_FAILED;
 				}
-				else { //relative path
-					configFiles.push_back( sserialize::MmappedFile::realPath(basePath + "/" + str) );
-				}
-			};
-			
-			
-			if (tmp.isString()) { //single include
-				handleSingleInclude(tmp.asString());
-			}
-			else if (tmp.isArray()) {
-				for(Json::ArrayIndex j(0), s(tmp.size()); j < s; ++j) {
-					Json::Value tmp2 = tmp[j];
-					if (!tmp2.isString()) {
-						std::cerr << "Invalid config option in file " << configFiles.at(i) << ": include directive takes a string or an array of strings" << std::endl;
-						return RV_FAILED;
-					}
-					handleSingleInclude( tmp2.asString() );
-				}
-			}
-			else {
-				std::cerr << "Invalid config option in file " << configFiles.at(i) << ": include directive takes a string or an array of strings" << std::endl;
-				return RV_FAILED;
+				
 			}
 		}
+		else if (!incDv.isNull()) {
+			std::cerr << "Invalid config option in file " << path << ": include directive takes a string or an array of strings" << std::endl;
+			return RV_FAILED;
+		}
 		
-		configData.emplace_back(std::move(root));
+		//and append our own data changes to the processing queue
+		configData.emplace_back( std::move(root) );
+		return RV_OK;
+	});
+	
+	for(std::size_t i(0); i < configFiles.size(); ++i) {
+		auto rt = handleConfigFile( toAbsolutePath(configFiles.at(i), ".") );
+		if (rt != oscar_create::Config::RV_OK) {
+			return rt;
+		}
 	}
 	
 	Json::Value tmp;
 	
 	std::unordered_map<std::string, std::size_t> tscId2tsc;
 	
-	for(std::size_t i(0), s(configFiles.size()); i < s; ++i) {
+	//and process our input data in-order
+	for(std::size_t i(0), s(configData.size()); i < s; ++i) {
 		Json::Value & root = configData.at(i);
 		try {
 			tmp = root["stats"];
