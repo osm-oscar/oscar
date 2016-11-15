@@ -52,17 +52,17 @@ struct RTreeConfig {
 };
 
 struct TagStoreConfig {
-	TagStoreConfig(const Json::Value & cfg);
+	TagStoreConfig(const Json::Value & cfg, const std::string & basePath);
 	bool enabled;
 	std::string tagKeys;
 	std::string tagKeyValues;
-	void update(const Json::Value & cfg);
+	void update(const Json::Value & cfg, const std::string & basePath);
 	std::ostream & print(std::ostream & out) const;
 	bool valid() const;
 };
 
 struct KVStoreConfig {
-	KVStoreConfig(const Json::Value & cfg);
+	KVStoreConfig(const Json::Value & cfg, const std::string & basePath);
 	bool enabled;
 	uint64_t maxNodeHashTableSize; 
 	std::string keyToStoreFn;
@@ -91,7 +91,7 @@ struct KVStoreConfig {
 	uint32_t blobFetchCount;
 	int itemSortOrder;//as defined by OsmKeyValueObjectStore::ItemSortOrder
 	std::string prioStringsFileName;
-	void update(const Json::Value & cfg);
+	void update(const Json::Value & cfg, const std::string & basePath);
 	std::ostream & print(std::ostream & out) const;
 	bool valid() const;
 };
@@ -111,20 +111,20 @@ public:
 	};
 public:
 	TextSearchConfig() : enabled(false), type(liboscar::TextSearch::NONE) {}
-	TextSearchConfig(const Json::Value& cfg);
-	virtual void update(const Json::Value & cfg);
+	TextSearchConfig(const Json::Value& cfg, const std::string & basePath);
+	virtual void update(const Json::Value & cf, const std::string & basePath);
 	virtual std::ostream & print(std::ostream & out) const;
 	///@param base update base with new info
-	static TextSearchConfig * parseTyped(const Json::Value& cfg, TextSearchConfig * base = 0);
+	static TextSearchConfig * parseTyped(const Json::Value& cfg, const std::string & basePath, TextSearchConfig * base = 0);
 	virtual bool valid() const;
 	bool hasEnabled(QueryType qt) const;
 	bool hasCaseSensitive() const;
 	bool hasDiacriticInSensitive() const;
 	bool consistentCaseSensitive() const;
 private:
-	void parseTagTypeObject(const Json::Value & cfg, ItemType itemType);
-	void parseQueryTypeObject(const Json::Value & cfg, ItemType itemType, TagType tagType);
-	void parseKvConfig(const Json::Value & cfg, ItemType itemType, TagType tagType, QueryType qt);
+	void parseTagTypeObject(const Json::Value & cfg, const std::string & basePath, ItemType itemType);
+	void parseQueryTypeObject(const Json::Value & cfg, const std::string & basePath, ItemType itemType, TagType tagType);
+	void parseKvConfig(const Json::Value & cfg, const std::string & basePath, ItemType itemType, TagType tagType, QueryType qt);
 public:
 	bool enabled;
 	liboscar::TextSearch::Type type;
@@ -136,8 +136,8 @@ class ItemSearchConfig: public TextSearchConfig {
 public:
 	enum class TrieType { TRIE, FULL_INDEX_TRIE, FLAT_GST, FLAT_TRIE};
 public:
-	ItemSearchConfig(const Json::Value & cfg);
-	virtual void update(const Json::Value & cfg) override;
+	ItemSearchConfig(const Json::Value& cfg, const std::string& basePath);
+	virtual void update(const Json::Value & cfg, const std::string & basePath) override;
 	virtual std::ostream & print(std::ostream& out) const override;
 	virtual bool valid() const override;
 private:
@@ -164,14 +164,14 @@ public:
 
 class GeoHierarchyItemsSearchConfig: public ItemSearchConfig {
 public:
-	GeoHierarchyItemsSearchConfig(const Json::Value & cfg);
+	GeoHierarchyItemsSearchConfig(const Json::Value& cfg, const std::string& basePath);
 	virtual std::ostream & print(std::ostream & out) const override;
 	virtual bool valid() const override;
 };
 
 class GeoHierarchySearchConfig: public ItemSearchConfig {
 public:
-	GeoHierarchySearchConfig(const Json::Value & cfg);
+	GeoHierarchySearchConfig(const Json::Value & cfg, const std::string & basePath);
 	virtual std::ostream & print(std::ostream & out) const override;
 	virtual bool valid() const override;
 };
@@ -180,8 +180,8 @@ class GeoCellConfig: public TextSearchConfig {
 public:
 	enum class TrieType { TRIE, FLAT_TRIE };
 public:
-	GeoCellConfig(const Json::Value & cfg);
-	virtual void update(const Json::Value & cfg) override;
+	GeoCellConfig(const Json::Value& cfg, const std::string& basePath);
+	virtual void update(const Json::Value & cfg, const std::string & basePath) override;
 	virtual std::ostream & print(std::ostream & out) const override;
 	virtual bool valid() const override;
 private:
@@ -196,8 +196,8 @@ public:
 
 class OOMGeoCellConfig: public TextSearchConfig {
 public:
-	OOMGeoCellConfig(const Json::Value & cfg);
-	virtual void update(const Json::Value & cfg) override;
+	OOMGeoCellConfig(const Json::Value & cfg, const std::string & basePath);
+	virtual void update(const Json::Value & cfg, const std::string & basePath) override;
 	virtual std::ostream & print(std::ostream & out) const override;
 	virtual bool valid() const override;
 private:

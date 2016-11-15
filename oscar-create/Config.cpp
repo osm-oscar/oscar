@@ -10,11 +10,11 @@ namespace oscar_create {
 
 //Print functions----------------
 
-inline std::string toString(bool v) {
+std::string toString(bool v) {
 	return (v ? "yes" : "no");
 }
 
-inline std::string toString(sserialize::MmappedMemoryType mmt) {
+std::string toString(sserialize::MmappedMemoryType mmt) {
 	switch (mmt) {
 	case sserialize::MM_FILEBASED:
 		return "file-based";
@@ -27,7 +27,7 @@ inline std::string toString(sserialize::MmappedMemoryType mmt) {
 	}
 }
 
-inline std::string toString(sserialize::ItemIndex::Types v) {
+std::string toString(sserialize::ItemIndex::Types v) {
 	switch (v) {
 	case (sserialize::ItemIndex::T_WAH):
 		return "rle word aligned bit vector";
@@ -46,7 +46,7 @@ inline std::string toString(sserialize::ItemIndex::Types v) {
 	}
 }
 
-inline std::string toString(sserialize::Static::TrieNode::Types nodeType) {
+std::string toString(sserialize::Static::TrieNode::Types nodeType) {
 	switch (nodeType) {
 	case sserialize::Static::TrieNode::T_COMPACT:
 		return "compact";
@@ -59,7 +59,7 @@ inline std::string toString(sserialize::Static::TrieNode::Types nodeType) {
 	};
 }
 
-inline sserialize::MmappedMemoryType parseMMT(const std::string str) {
+sserialize::MmappedMemoryType parseMMT(const std::string str) {
 	sserialize::MmappedMemoryType mmType = sserialize::MM_INVALID;
 	if (str == "prg") {
 		mmType = sserialize::MM_PROGRAM_MEMORY;
@@ -74,6 +74,18 @@ inline sserialize::MmappedMemoryType parseMMT(const std::string str) {
 		mmType = sserialize::MM_FAST_FILEBASED;
 	}
 	return mmType;
+}
+
+std::string toAbsolutePath(const std::string & str, const std::string base) {
+	if (!str.size()) {
+		return str;
+	}
+	if (sserialize::MmappedFile::isAbsolute(str)) { //absolute path
+		return str;
+	}
+	else { //relative path
+		return sserialize::MmappedFile::realPath(base + "/" + str);
+	}
 }
 
 std::ostream& StatsConfig::print(std::ostream& out) const {
@@ -503,13 +515,13 @@ void RTreeConfig::update(const Json::Value& cfg) {
 	}
 }
 
-TagStoreConfig::TagStoreConfig(const Json::Value& cfg) :
+TagStoreConfig::TagStoreConfig(const Json::Value& cfg, const std::string & basePath) :
 enabled(false)
 {
-	update(cfg);
+	update(cfg, basePath);
 }
 
-void TagStoreConfig::update(const Json::Value& cfg) {
+void TagStoreConfig::update(const Json::Value& cfg, const std::string& basePath) {
 	Json::Value v = cfg["enabled"];
 	if (v.isBool()) {
 		enabled = v.asBool();
@@ -517,16 +529,16 @@ void TagStoreConfig::update(const Json::Value& cfg) {
 	
 	v = cfg["keys"];
 	if (v.isString()) {
-		tagKeys = v.asString();
+		tagKeys = toAbsolutePath(v.asString(), basePath);
 	}
 	
 	v = cfg["keyvalues"];
 	if (v.isString()) {
-		tagKeyValues = v.asString();
+		tagKeyValues = toAbsolutePath(v.asString(), basePath);
 	}
 }
 
-KVStoreConfig::KVStoreConfig(const Json::Value& cfg) :
+KVStoreConfig::KVStoreConfig(const Json::Value& cfg, const std::string & basePath) :
 enabled(false),
 maxNodeHashTableSize(std::numeric_limits<uint32_t>::max()),
 saveEverything(false),
@@ -546,10 +558,10 @@ numThreads(0),
 blobFetchCount(1),
 itemSortOrder(OsmKeyValueObjectStore::ISO_NONE)
 {
-	update(cfg);
+	update(cfg, basePath);
 }
 
-void KVStoreConfig::update(const Json::Value& cfg) {
+void KVStoreConfig::update(const Json::Value& cfg, const std::string & basePath) {
 	Json::Value v = cfg["enabled"];
 	if (v.isBool()) {
 		enabled = v.asBool();
@@ -629,11 +641,11 @@ void KVStoreConfig::update(const Json::Value& cfg) {
 	if (v.isObject()) {
 		Json::Value tmp = v["keys"];
 		if (tmp.isString()) {
-			keyToStoreFn = tmp.asString();
+			keyToStoreFn = toAbsolutePath(tmp.asString(), basePath);
 		}
 		tmp = v["keyValues"];
 		if (tmp.isString()) {
-			keyValuesToStoreFn = tmp.asString();
+			keyValuesToStoreFn = toAbsolutePath(tmp.asString(), basePath);
 		}
 	}
 	else if (v.isString() && v.asString() == "all") {
@@ -644,11 +656,11 @@ void KVStoreConfig::update(const Json::Value& cfg) {
 	if (v.isObject()) {
 		Json::Value tmp = v["keys"];
 		if (tmp.isString()) {
-			itemsSavedByKeyFn = tmp.asString();
+			itemsSavedByKeyFn = toAbsolutePath(tmp.asString(), basePath);
 		}
 		tmp = v["keyValues"];
 		if (tmp.isString()) {
-			itemsSavedByKeyValueFn = tmp.asString();
+			itemsSavedByKeyValueFn = toAbsolutePath(tmp.asString(), basePath);
 		}
 	}
 	else if (v.isString() && v.asString() == "all") {
@@ -659,24 +671,24 @@ void KVStoreConfig::update(const Json::Value& cfg) {
 	if (v.isObject()) {
 		Json::Value tmp = v["keys"];
 		if (tmp.isString()) {
-			keysDefiningRegions = tmp.asString();
+			keysDefiningRegions = toAbsolutePath(tmp.asString(), basePath);
 		}
 		tmp = v["keyValues"];
 		if (tmp.isString()) {
-			keyValuesDefiningRegions = tmp.asString();
+			keyValuesDefiningRegions = toAbsolutePath(tmp.asString(), basePath);
 		}
 	}
 	
 	v = cfg["splitValues"];
 	if (v.isString()) {
-		keysValuesToInflate = v.asString();
+		keysValuesToInflate = toAbsolutePath(v.asString(), basePath);
 	}
 	
 	v = cfg["scoring"];
 	if (v.isObject()) {
 		Json::Value tmp = v["config"];
 		if (tmp.isString()) {
-			scoreConfigFileName = tmp.asString();
+			scoreConfigFileName = toAbsolutePath(tmp.asString(), basePath);
 		}
 	}
 	
@@ -691,67 +703,70 @@ void KVStoreConfig::update(const Json::Value& cfg) {
 			else if (order == "name") {
 				itemSortOrder = OsmKeyValueObjectStore::ISO_SCORE_NAME;
 			}
-			if (order == "priority" && v["priority"].isString() &&
-				sserialize::MmappedFile::fileExists(v["priority"].asString()))
-			{
-				prioStringsFileName = v["priority"].asString();
-				itemSortOrder = OsmKeyValueObjectStore::ISO_SCORE_PRIO_STRINGS;
+			else if (order == "priority") {
+				if (v["priority"].isString()) {
+					prioStringsFileName = toAbsolutePath(v["priority"].asString(), basePath);
+					itemSortOrder = OsmKeyValueObjectStore::ISO_SCORE_PRIO_STRINGS;
+				}
+				else {
+					throw sserialize::ConfigurationException("KVStoreConfig", "sort order priority expects priority definition file");
+				}
 			}
 		}
 	}
 }
 
 
-TextSearchConfig::TextSearchConfig(const Json::Value& cfg) :
+TextSearchConfig::TextSearchConfig(const Json::Value& cfg, const std::string & basePath) :
 enabled(false),
 type(liboscar::TextSearch::INVALID)
 {
-	update(cfg);
+	update(cfg, basePath);
 }
 
-void TextSearchConfig::update(const Json::Value& cfg) {
-	Json::Value v = cfg["enabled"];
+void TextSearchConfig::update(const Json::Value& cf, const std::string& basePath) {
+	Json::Value v = cf["enabled"];
 	if (v.isBool()) {
 		enabled = v.asBool();
 	}
 	
-	v = cfg["items"];
+	v = cf["items"];
 	if (v.isObject()) {
-		parseTagTypeObject(v, ItemType::ITEM);
+		parseTagTypeObject(v, basePath, ItemType::ITEM);
 	}
 	
-	v = cfg["regions"];
+	v = cf["regions"];
 	if (v.isObject()) {
-		parseTagTypeObject(v, ItemType::REGION);
+		parseTagTypeObject(v, basePath, ItemType::REGION);
 	}
 }
 
 
-void TextSearchConfig::parseTagTypeObject(const Json::Value& cfg, TextSearchConfig::ItemType itemType) {
+void TextSearchConfig::parseTagTypeObject(const Json::Value& cfg, const std::string& basePath, TextSearchConfig::ItemType itemType) {
 	Json::Value v = cfg["values"];
 	if (v.isObject()) {
-		parseQueryTypeObject(v, itemType, TagType::VALUES);
+		parseQueryTypeObject(v, basePath, itemType, TagType::VALUES);
 	}
 	
 	v = cfg["tags"];
 	if (v.isObject()) {
-		parseQueryTypeObject(v, itemType, TagType::TAGS);
+		parseQueryTypeObject(v, basePath, itemType, TagType::TAGS);
 	}
 }
 
-void TextSearchConfig::parseQueryTypeObject(const Json::Value& cfg, TextSearchConfig::ItemType itemType, TextSearchConfig::TagType tagType) {
+void TextSearchConfig::parseQueryTypeObject(const Json::Value& cfg, const std::string& basePath, oscar_create::TextSearchConfig::ItemType itemType, oscar_create::TextSearchConfig::TagType tagType) {
 	Json::Value v = cfg["prefix"];
 	if (v.isObject()) {
-		parseKvConfig(v, itemType, tagType, QueryType::PREFIX);
+		parseKvConfig(v, basePath, itemType, tagType, QueryType::PREFIX);
 	}
 	
 	v = cfg["substring"];
 	if (v.isObject()) {
-		parseKvConfig(v, itemType, tagType, QueryType::SUBSTRING);
+		parseKvConfig(v, basePath, itemType, tagType, QueryType::SUBSTRING);
 	}
 }
 
-void TextSearchConfig::parseKvConfig(const Json::Value& cfg, TextSearchConfig::ItemType itemType, TextSearchConfig::TagType tagType, TextSearchConfig::QueryType qt) {
+void TextSearchConfig::parseKvConfig(const Json::Value& cfg, const std::string& basePath, oscar_create::TextSearchConfig::ItemType itemType, oscar_create::TextSearchConfig::TagType tagType, oscar_create::TextSearchConfig::QueryType qt) {
 	SearchCapabilities & cap = searchCapabilites[(int)itemType][(int)tagType][(int)qt];
 	
 	Json::Value v = cfg["enabled"];
@@ -771,11 +786,11 @@ void TextSearchConfig::parseKvConfig(const Json::Value& cfg, TextSearchConfig::I
 	
 	v = cfg["file"];
 	if (v.isString()) {
-		cap.fileName = v.asString();
+		cap.fileName = toAbsolutePath(v.asString(), basePath);
 	}
 }
 
-TextSearchConfig* TextSearchConfig::parseTyped(const Json::Value& cfg, TextSearchConfig * base) {
+TextSearchConfig* TextSearchConfig::parseTyped(const Json::Value& cfg, const std::string & basePath, TextSearchConfig * base) {
 	Json::Value tv = cfg["type"];
 	Json::Value cv = cfg["config"];
 	TextSearchConfig * result = 0;
@@ -784,50 +799,50 @@ TextSearchConfig* TextSearchConfig::parseTyped(const Json::Value& cfg, TextSearc
 		if (t == "items") {
 			if (base && base->type == liboscar::TextSearch::ITEMS) {
 				result = base;
-				result->update(cv);
+				result->update(cv, basePath);
 			}
 			else {
-				result = new ItemSearchConfig(cv);
+				result = new ItemSearchConfig(cv, basePath);
 				result->type = liboscar::TextSearch::ITEMS;
 			}
 		}
 		else if (t == "regions") {
 			if (base && base->type == liboscar::TextSearch::GEOHIERARCHY) {
 				result = base;
-				result->update(cv);
+				result->update(cv, basePath);
 			}
 			else {
-				result = new GeoHierarchySearchConfig(cv);
+				result = new GeoHierarchySearchConfig(cv, basePath);
 				result->type = liboscar::TextSearch::GEOHIERARCHY;
 			}
 		}
 		else if (t == "geoitems") {
 			if (base && base->type == liboscar::TextSearch::GEOHIERARCHY) {
 				result = base;
-				result->update(cv);
+				result->update(cv, basePath);
 			}
 			else {
-				result = new GeoHierarchyItemsSearchConfig(cv);
+				result = new GeoHierarchyItemsSearchConfig(cv, basePath);
 				result->type = liboscar::TextSearch::GEOHIERARCHY;
 			}
 		}
 		else if (t == "geocell") {
 			if (base && base->type == liboscar::TextSearch::GEOCELL) {
 				result = base;
-				result->update(cv);
+				result->update(cv, basePath);
 			}
 			else {
-				result = new GeoCellConfig(cv);
+				result = new GeoCellConfig(cv, basePath);
 				result->type = liboscar::TextSearch::GEOCELL;
 			}
 		}
 		else if (t == "oomgeocell") {
 			if (base && base->type == liboscar::TextSearch::GEOCELL) {
 				result = base;
-				result->update(cv);
+				result->update(cv, basePath);
 			}
 			else {
-				result = new OOMGeoCellConfig(cv);
+				result = new OOMGeoCellConfig(cv, basePath);
 				result->type = liboscar::TextSearch::OOMGEOCELL;
 			}
 		}
@@ -841,8 +856,8 @@ TextSearchConfig* TextSearchConfig::parseTyped(const Json::Value& cfg, TextSearc
 	return result;
 }
 
-ItemSearchConfig::ItemSearchConfig(const Json::Value& cfg) :
-TextSearchConfig(cfg),
+ItemSearchConfig::ItemSearchConfig(const Json::Value& cfg, const std::string & basePath) :
+TextSearchConfig(cfg, basePath),
 mergeIndex(false),
 aggressiveMem(false),
 mmType(sserialize::MM_SHARED_MEMORY),
@@ -856,8 +871,8 @@ threadCount(0)
 	updateSelf(cfg);
 }
 
-void ItemSearchConfig::update(const Json::Value& cfg) {
-	TextSearchConfig::update(cfg);
+void ItemSearchConfig::update(const Json::Value& cfg, const std::string& basePath) {
+	TextSearchConfig::update(cfg, basePath);
 	updateSelf(cfg);
 }
 
@@ -952,16 +967,16 @@ void ItemSearchConfig::updateSelf(const Json::Value& cfg) {
 	}
 }
 
-GeoHierarchyItemsSearchConfig::GeoHierarchyItemsSearchConfig(const Json::Value& cfg) :
-ItemSearchConfig(cfg)
+GeoHierarchyItemsSearchConfig::GeoHierarchyItemsSearchConfig(const Json::Value& cfg, const std::string & basePath) :
+ItemSearchConfig(cfg, basePath)
 {}
 
-GeoHierarchySearchConfig::GeoHierarchySearchConfig(const Json::Value& cfg) :
-ItemSearchConfig(cfg)
+GeoHierarchySearchConfig::GeoHierarchySearchConfig(const Json::Value& cfg, const std::string& basePath) :
+ItemSearchConfig(cfg, basePath)
 {}
 
-GeoCellConfig::GeoCellConfig(const Json::Value & cfg) :
-TextSearchConfig(cfg),
+GeoCellConfig::GeoCellConfig(const Json::Value & cfg, const std::string & basePath) :
+TextSearchConfig(cfg, basePath),
 threadCount(0),
 trieType(TrieType::FLAT_TRIE),
 mmType(sserialize::MM_SHARED_MEMORY),
@@ -970,8 +985,8 @@ check(false)
 	updateSelf(cfg);
 }
 
-void GeoCellConfig::update(const Json::Value& cfg) {
-	oscar_create::TextSearchConfig::update(cfg);
+void GeoCellConfig::update(const Json::Value& cfg, const std::string& basePath) {
+	oscar_create::TextSearchConfig::update(cfg, basePath);
 	updateSelf(cfg);
 }
 
@@ -1014,16 +1029,16 @@ void GeoCellConfig::updateSelf(const Json::Value& cfg) {
 	}
 }
 
-OOMGeoCellConfig::OOMGeoCellConfig(const Json::Value& cfg) :
-TextSearchConfig(cfg),
+OOMGeoCellConfig::OOMGeoCellConfig(const Json::Value& cfg, const std::string& basePath) :
+TextSearchConfig(cfg, basePath),
 threadCount(0),
 maxMemoryUsage(0xFFFFFFFF)
 {
 	updateSelf(cfg);
 }
 
-void OOMGeoCellConfig::update(const Json::Value& cfg) {
-	TextSearchConfig::update(cfg);
+void OOMGeoCellConfig::update(const Json::Value& cfg, const std::string& basePath) {
+	TextSearchConfig::update(cfg, basePath);
 	updateSelf(cfg);
 }
 
@@ -1106,7 +1121,7 @@ Config::ValidationReturnValues Config::validate() {
 
 Config::ReturnValues Config::fromCmdLineArgs(int argc, char** argv) {
 	std::vector<std::string> configFiles;
-	std::vector<Json::Value> configData;
+	std::vector< std::pair<std::string, Json::Value> > configData;
 	
 	for(int i=1; i < argc; ++i) {
 		std::string token(argv[i]);
@@ -1131,21 +1146,9 @@ Config::ReturnValues Config::fromCmdLineArgs(int argc, char** argv) {
 		std::cerr << "No input files specified" << std::endl;
 		return RV_FAILED;
 	}
-	
-	auto toAbsolutePath = [](const std::string & str, const std::string base) -> std::string {
-		if (!str.size()) {
-			return str;
-		}
-		if (sserialize::MmappedFile::isAbsolute(str)) { //absolute path
-			return str;
-		}
-		else { //relative path
-			return sserialize::MmappedFile::realPath(base + "/" + str);
-		}
-	};
 
 	///@param path must be absolute
-	auto handleConfigFile = sserialize::fix([this, &configData, &toAbsolutePath](auto && self, const std::string & path) -> Config::ReturnValues {
+	auto handleConfigFile = sserialize::fix([this, &configData](auto && self, const std::string & path) -> Config::ReturnValues {
 		SSERIALIZE_CHEAP_ASSERT(sserialize::MmappedFile::isAbsolute(path));
 		
 		std::ifstream inFileStream;
@@ -1181,7 +1184,7 @@ Config::ReturnValues Config::fromCmdLineArgs(int argc, char** argv) {
 		}
 		
 		//and append our own data changes to the processing queue
-		configData.emplace_back( std::move(root) );
+		configData.emplace_back( path, std::move(root) );
 		return RV_OK;
 	});
 	
@@ -1198,7 +1201,8 @@ Config::ReturnValues Config::fromCmdLineArgs(int argc, char** argv) {
 	
 	//and process our input data in-order
 	for(std::size_t i(0), s(configData.size()); i < s; ++i) {
-		Json::Value & root = configData.at(i);
+		Json::Value & root = configData.at(i).second;
+		std::string basePath = sserialize::MmappedFile::dirName(configData[i].first);
 		try {
 			tmp = root["stats"];
 			if (!tmp.isNull()) {
@@ -1231,10 +1235,10 @@ Config::ReturnValues Config::fromCmdLineArgs(int argc, char** argv) {
 			tmp = root["store"];
 			if (!tmp.isNull()) {
 				if (!kvStoreConfig) {
-					kvStoreConfig = new KVStoreConfig(tmp);
+					kvStoreConfig = new KVStoreConfig(tmp, basePath);
 				}
 				else {
-					kvStoreConfig->update(tmp);
+					kvStoreConfig->update(tmp, basePath);
 				}
 			}
 			
@@ -1261,27 +1265,27 @@ Config::ReturnValues Config::fromCmdLineArgs(int argc, char** argv) {
 			tmp = root["tagstore"];
 			if (!tmp.isNull()) {
 				if (!tagStoreConfig) {
-					tagStoreConfig = new TagStoreConfig(tmp);
+					tagStoreConfig = new TagStoreConfig(tmp, basePath);
 				}
 				else {
-					tagStoreConfig->update(tmp);
+					tagStoreConfig->update(tmp, basePath);
 				}
 			}
 			
 			tmp = root["textsearch"];
 			if (!tmp.isNull()) {
-				auto handleSingleTsc = [this, &tscId2tsc](const Json::Value & x) {
+				auto handleSingleTsc = [this, &tscId2tsc, &basePath](const Json::Value & x) {
 					std::string id = x["type"].asString();
 					if (!x["id"].isNull()) {
 						id = x["id"].asString();
 					}
 					if (tscId2tsc.count(id)) {
 						TextSearchConfig* & tsc = textSearchConfig.at(tscId2tsc.at(id));
-						tsc = TextSearchConfig::parseTyped(x, tsc);
+						tsc = TextSearchConfig::parseTyped(x, basePath, tsc);
 					}
 					else {
 						tscId2tsc[id] = textSearchConfig.size();
-						textSearchConfig.push_back(TextSearchConfig::parseTyped(x));
+						textSearchConfig.push_back(TextSearchConfig::parseTyped(x, basePath));
 					}
 				};
 				if (tmp.isArray()) {
