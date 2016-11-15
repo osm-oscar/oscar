@@ -49,6 +49,3 @@ BUGS:
 
 HIGH IMPORTANCE:
 visualize cells in oscar-gui (currently segfault in MarbleMap)
-
-HIGH:
-add ability to use include statements in oscar-create config
