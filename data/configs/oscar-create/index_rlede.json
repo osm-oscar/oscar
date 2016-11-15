@@ -1,0 +1,7 @@
+{
+	"index" : {
+		"type" : "rlede",
+		"check" : false,
+		"deduplicate" : true
+	}
+}

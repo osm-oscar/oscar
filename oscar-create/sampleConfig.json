@@ -1,4 +1,5 @@
 {
+	"include" : "include directives are executed first in-order in the order given by the array. This allows us to include common options ang change only parts below",
 	"include" : "filepath1.txt",
 	"include" : [ "filepath relative to include file.txt", "/absolute/file/path.txt" ],
 	"stats" : {

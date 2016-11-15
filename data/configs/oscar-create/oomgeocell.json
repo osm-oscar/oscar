@@ -1,20 +1,9 @@
 {
-	"stats" : {
-		"print-memory-usage" : false
-	},
-	"tempdir" : {
-		"fast" : "./tempdir/fast/osmc",
-		"slow" : "./tempdir/slow/osmc"
-	},
-	"index" : {
-		"type" : "rlede",
-		"check" : false,
-		"deduplicate" : true
-	},
 	"textsearch" :
 	[
 		{
 			"type" : "oomgeocell",
+			"id" : "oomgeocell",
 			"config" : {
 				"enabled" : true,
 				"items" : {
@@ -26,7 +15,7 @@
 							"diacriticSensitive" : false
 						},
 						"substring" : {
-							"enabled" : false,
+							"enabled" : true,
 							"file" : "lists/k_values_substring_prefix.txt",
 							"caseSensitive" : false,
 							"diacriticSensitive" : false
@@ -50,7 +39,7 @@
 							"diacriticSensitive" : false
 						},
 						"substring" : {
-							"enabled" : false,
+							"enabled" : true,
 							"file" : "lists/k_values_substring_prefix.txt",
 							"caseSensitive" : false,
 							"diacriticSensitive" : false

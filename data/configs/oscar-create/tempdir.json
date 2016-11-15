@@ -1,0 +1,6 @@
+{
+	"tempdir" : {
+		"fast" : "./tempdir/fast/osmc",
+		"slow" : "./tempdir/slow/osmc"
+	}
+}

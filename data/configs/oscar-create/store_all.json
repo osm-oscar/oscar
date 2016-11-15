@@ -1,16 +1,4 @@
 {
-	"stats" : {
-		"print-memory-usage" : false
-	},
-	"tempdir" : {
-		"fast" : "./tempdir/fast/osmc",
-		"slow" : "./tempdir/slow/osmc"
-	},
-	"index" : {
-		"type" : "rlede",
-		"check" : false,
-		"deduplicate" : true
-	},
 	"store" : {
 		"enabled" : true,
 		"threadCount" : 8,

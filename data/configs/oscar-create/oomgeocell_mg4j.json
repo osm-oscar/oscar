@@ -1,22 +1,11 @@
 {
-	"stats" : {
-		"print-memory-usage" : false
-	},
-	"tempdir" : {
-		"fast" : "./tempdir/fast/osmc",
-		"slow" : "./tempdir/slow/osmc"
-	},
-	"index" : {
-		"type" : "rlede",
-		"check" : false,
-		"deduplicate" : true
-	},
+	"include" : "geocell.json",
 	"textsearch" :
 	[
 		{
 			"type" : "oomgeocell",
+			"id" : "oomgeocell",
 			"config" : {
-				"enabled" : true,
 				"items" : {
 					"values" : {
 						"prefix" : {
@@ -64,9 +53,7 @@
 							"diacriticSensitive" : true
 						}
 					}
-				},
-				"threadCount" : 8,
-				"maxMemoryUsage" : 2048
+				}
 			}
 		}
 	]

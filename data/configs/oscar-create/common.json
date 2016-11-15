@@ -1,0 +1,7 @@
+{
+	"include": [
+		"tempdir.json",
+		"stats.json",
+		"index_rlede.json"
+	]
+}

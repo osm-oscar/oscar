@@ -1,15 +1,12 @@
 {
+	"include" : "oomgeocell.json",
 	"textsearch" :
 	[
 		{
-			"type" : "geocell",
-			"id" : "geocell",
+			"type" : "oomgeocell",
+			"id" : "oomgeocell",
 			"config" : {
 				"enabled" : true,
-				"threadCount" : 1,
-				"trieType" : "flattrie",
-				"mmt" : "prg",
-				"check" : false,
 				"items" : {
 					"values" : {
 						"prefix" : {
@@ -19,7 +16,7 @@
 							"diacriticSensitive" : false
 						},
 						"substring" : {
-							"enabled" : true,
+							"enabled" : false,
 							"file" : "lists/k_values_substring_prefix.txt",
 							"caseSensitive" : false,
 							"diacriticSensitive" : false
@@ -43,7 +40,7 @@
 							"diacriticSensitive" : false
 						},
 						"substring" : {
-							"enabled" : true,
+							"enabled" : false,
 							"file" : "lists/k_values_substring_prefix.txt",
 							"caseSensitive" : false,
 							"diacriticSensitive" : false
@@ -58,6 +55,7 @@
 						}
 					}
 				},
+				"threadCount" : 8,
 				"maxMemoryUsage" : 2048
 			}
 		}
