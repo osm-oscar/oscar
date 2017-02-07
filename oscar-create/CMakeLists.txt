@@ -38,12 +38,13 @@ TextSearchTraits.cpp
 ${CMAKE_SOURCE_DIR}/vendor/jsoncpp/src/jsoncpp.cpp
 )
 
-add_executable(${PROJECT_NAME} ${OSCAR_CREATE_SOURCES_CPP} ${LIBOSMTOOLS_SOURCES_CPP})
+add_executable(${PROJECT_NAME} ${OSCAR_CREATE_SOURCES_CPP})
 
 SET(OSCAR_CREATE_LINK_LIBS
-	${liboscar_BINARY_DIR}/libliboscar.so
-	${sserialize_BINARY_DIR}/libsserialize.a
-	${osmpbf_BINARY_DIR}/libosmpbf.a
+	liboscar
+	sserialize
+	osmpbf
+	libosmtools
 	${PROTOBUF_LIBRARIES}
 	${ZLIB_LIBRARIES}
 	${ICU_LIBRARIES}
@@ -57,7 +58,7 @@ SET(OSCAR_CREATE_LINK_LIBS
 )
 
 target_link_libraries(${PROJECT_NAME} ${OSCAR_CREATE_LINK_LIBS})
-add_dependencies(${PROJECT_NAME} liboscar sserialize osmpbf)
+add_dependencies(${PROJECT_NAME} liboscar sserialize osmpbf libosmtools)
 
 add_target_properties(${PROJECT_NAME} COMPILE_FLAGS "-fopenmp -DCGAL_HAS_THREADS")
 add_target_properties(${PROJECT_NAME} LINK_FLAGS "-DCGAL_HAS_THREADS -fopenmp")
