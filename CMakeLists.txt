@@ -16,6 +16,8 @@ include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/liboscar/vendor/sserialize/include
 )
 
+include(add_buildtype_lto)
+
 PROJECT(oscar-meta)
 SET(PACKAGE_NAME ${CMAKE_PROJECT_NAME})
 SET(PACKAGE_VERSION 0.1)
