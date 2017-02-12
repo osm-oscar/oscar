@@ -14,6 +14,7 @@ include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/vendor/libosmtools/include
 	${CMAKE_CURRENT_SOURCE_DIR}/liboscar/include
 	${CMAKE_CURRENT_SOURCE_DIR}/liboscar/vendor/sserialize/include
+	${LIBDTS2_INCLUDE_DIR}
 )
 
 include(add_buildtype_lto)
