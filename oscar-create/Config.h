@@ -91,6 +91,7 @@ struct KVStoreConfig {
 	uint32_t blobFetchCount;
 	int itemSortOrder;//as defined by OsmKeyValueObjectStore::ItemSortOrder
 	std::string prioStringsFileName;
+	sserialize::Static::spatial::Triangulation::GeometryCleanType gct;
 	void update(const Json::Value & cfg, const std::string & basePath);
 	std::ostream & print(std::ostream & out) const;
 	bool valid() const;

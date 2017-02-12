@@ -48,7 +48,8 @@
 		"sorting" : {
 			"order" : "score|name|priority",
 			"priority" : "file with priorities"
-		}
+		},
+		"geoclean" : "all|remove degenerate faces|none"
 	},
 	"grid" : {
 		"enabled" : false,

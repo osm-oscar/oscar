@@ -166,6 +166,7 @@ public:
 		ItemSortOrder sortOrder;
 		std::string prioStringsFn;//needed if sortOrder == ISO_SCORE_PRIO_STRINGS
 		bool addRegionsToCells;
+		sserialize::Static::spatial::Triangulation::GeometryCleanType geometryCleanType;
 		//a filter that defines regions
 		struct RegionConfig {
 			generics::RCPtr<osmpbf::AbstractTagFilter> regionFilter;
@@ -175,7 +176,15 @@ public:
 			double triangMaxCentroidDist;
 			RegionConfig() : polyStoreLatCount(100), polyStoreLonCount(100), polyStoreMaxTriangPerCell(std::numeric_limits<uint32_t>::max()), triangMaxCentroidDist(std::numeric_limits<double>::max()) {}
 		} rc;
-		CreationConfig() : maxNodeCoordTableSize(std::numeric_limits<uint32_t>::max()), minNodeId(0), maxNodeId(0), numThreads(1), sortOrder(ISO_SCORE), addRegionsToCells(false) {}
+		CreationConfig() :
+		maxNodeCoordTableSize(std::numeric_limits<uint32_t>::max()),
+		minNodeId(0),
+		maxNodeId(0),
+		numThreads(1),
+		sortOrder(ISO_SCORE),
+		addRegionsToCells(false),
+		geometryCleanType(sserialize::Static::spatial::Triangulation::GCT_NONE)
+		{}
 		inline bool incremental() { return maxNodeCoordTableSize != std::numeric_limits<uint32_t>::max(); }
 	};
 
@@ -279,7 +288,7 @@ private:
 		osmpbf::AbstractTagFilter * placeMarkerFilter();
 	};
 	
-// 	//Accept primitive if it is in @param acceptedPrimitives
+	///Accept primitive if it is in @param acceptedPrimitives
 	class MyRegionFilter: public osmpbf::AbstractTagFilter {
 	private:
 		const std::unordered_set<liboscar::OsmIdType> * m_d;

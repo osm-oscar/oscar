@@ -513,6 +513,7 @@ void handleKVCreation(oscar_create::Config & opts, State & state) {
 		cc.sortOrder = (oscar_create::OsmKeyValueObjectStore::ItemSortOrder) opts.kvStoreConfig->itemSortOrder;
 		cc.prioStringsFn = opts.kvStoreConfig->prioStringsFileName;
 		cc.scoreConfigFileName = opts.kvStoreConfig->scoreConfigFileName;
+		cc.geometryCleanType = opts.kvStoreConfig->gct;
 		
 		if (!opts.kvStoreConfig->keysValuesToInflate.empty()) {
 			oscar_create::readKeysFromFile(opts.kvStoreConfig->keysValuesToInflate, std::inserter(cc.inflateValues, cc.inflateValues.end()));

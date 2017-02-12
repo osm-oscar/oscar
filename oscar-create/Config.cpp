@@ -556,7 +556,8 @@ maxTriangPerCell(std::numeric_limits<uint32_t>::max()),
 maxTriangCentroidDist(std::numeric_limits<double>::max()),
 numThreads(0),
 blobFetchCount(1),
-itemSortOrder(OsmKeyValueObjectStore::ISO_NONE)
+itemSortOrder(OsmKeyValueObjectStore::ISO_NONE),
+gct(sserialize::Static::spatial::Triangulation::GCT_NONE)
 {
 	update(cfg, basePath);
 }
@@ -712,6 +713,22 @@ void KVStoreConfig::update(const Json::Value& cfg, const std::string & basePath)
 					throw sserialize::ConfigurationException("KVStoreConfig", "sort order priority expects priority definition file");
 				}
 			}
+		}
+	}
+	v = cfg["geoclean"];
+	if (v.isString()) {
+		std::string token = v.asString();
+		if (token == "none") {
+			gct = sserialize::Static::spatial::Triangulation::GCT_NONE;
+		}
+		else if (token == "rdf" || token == "remove degenerate faces") {
+			gct = sserialize::Static::spatial::Triangulation::GCT_REMOVE_DEGENERATE_FACES;
+		}
+		else if (token == "sv" || token == "total" || token == "snap vertices" || token == "all") {
+			gct = sserialize::Static::spatial::Triangulation::GCT_SNAP_VERTICES;
+		}
+		else {
+			throw sserialize::ConfigurationException("KVStoreConfig", "Unkown GeometryCleaningType: " + token);
 		}
 	}
 }

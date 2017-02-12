@@ -564,7 +564,7 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 	std::cout << "Creating final TriangulationRegionStore" << std::endl;
 	osmtools::OsmTriangulationRegionStore::LipschitzMeshCriteria refinerBase(ct.cc->rc.triangMaxCentroidDist, &(ct.trs.tds()));
 	osmtools::OsmTriangulationRegionStore::RegionOnlyLipschitzMeshCriteria refiner(refinerBase);
-	ct.trs.init(ct.polyStore, ct.cc->numThreads, &refiner, osmtools::OsmTriangulationRegionStore::MyRefineTag, true);
+	ct.trs.init(ct.polyStore, ct.cc->numThreads, &refiner, osmtools::OsmTriangulationRegionStore::MyRefineTag, ct.cc->geometryCleanType);
 	ct.trs.initGrid(ct.cc->rc.polyStoreLatCount, ct.cc->rc.polyStoreLonCount);
 	ct.trs.refineBySize(ct.cc->rc.polyStoreMaxTriangPerCell, 100, 100000, ct.cc->numThreads);
 	SSERIALIZE_EXPENSIVE_ASSERT(ct.trs.selfTest());
@@ -1213,7 +1213,7 @@ bool OsmKeyValueObjectStore::processCellMap(Context & ctx) {
 			oldToNewCellId[newToOldCellId.at(i)] = i;
 		}
 		m_ra = sserialize::UByteArrayAdapter::createCache(newToOldCellId.size()*4, sserialize::MM_FILEBASED);
-		ctx.trs.append(m_ra, oldToNewCellId);
+		ctx.trs.append(m_ra, oldToNewCellId, ctx.cc->geometryCleanType);
 		sserialize::UByteArrayAdapter::OffsetType tracGraphBegin = m_ra.size();
 		ctx.trs.cellGraph().append(m_ra, oldToNewCellId);
 		m_ra << ctx.trs.cellCenterOfMass(oldToNewCellId);

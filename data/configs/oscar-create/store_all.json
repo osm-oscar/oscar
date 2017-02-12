@@ -24,6 +24,7 @@
 		},
 		"sorting" : {
 			"order" : "name"
-		}
+		},
+		"geoclean" : "all"
 	}
 }
