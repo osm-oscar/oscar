@@ -23,24 +23,34 @@ include_directories(
 	${CGAL_3RD_PARTY_INCLUDE_DIRS}
 )
 
-set(OSCAR_CREATE_SOURCES_CPP
-oscarcreate.cpp
-AreaExtractor.cpp
-CellCreator.cpp
-CellTextCompleter.cpp
-helpers.cpp
-OsmKeyValueObjectStore.cpp
-readwritefuncs.cpp
-ScoreCreator.cpp
-TagStore.cpp
-Config.cpp
-TextSearchTraits.cpp
-${CMAKE_SOURCE_DIR}/vendor/jsoncpp/src/jsoncpp.cpp
+set(LIB_OSCAR_CREATE_SOURCES_CPP
+	AreaExtractor.cpp
+	CellCreator.cpp
+	CellTextCompleter.cpp
+	OsmKeyValueObjectStore.cpp
+	ScoreCreator.cpp
+	TagStore.cpp
+	Config.cpp
+	TextSearchTraits.cpp
+	helpers.cpp
+	${CMAKE_SOURCE_DIR}/vendor/jsoncpp/src/jsoncpp.cpp
 )
 
+set(OSCAR_CREATE_SOURCES_CPP
+oscarcreate.cpp
+readwritefuncs.cpp
+)
+
+set(OSCAR_CREATE_CELLS_SOURCES_CPP
+	createcells.cpp
+)
+
+add_library(lib${PROJECT_NAME} STATIC ${LIB_OSCAR_CREATE_SOURCES_CPP})
 add_executable(${PROJECT_NAME} ${OSCAR_CREATE_SOURCES_CPP})
+add_executable(${PROJECT_NAME}-cells ${OSCAR_CREATE_CELLS_SOURCES_CPP})
 
 SET(OSCAR_CREATE_LINK_LIBS
+	lib${PROJECT_NAME}
 	liboscar
 	sserialize
 	osmpbf
@@ -60,5 +70,14 @@ SET(OSCAR_CREATE_LINK_LIBS
 target_link_libraries(${PROJECT_NAME} ${OSCAR_CREATE_LINK_LIBS})
 add_dependencies(${PROJECT_NAME} liboscar sserialize osmpbf libosmtools)
 
+target_link_libraries(${PROJECT_NAME}-cells ${OSCAR_CREATE_LINK_LIBS})
+add_dependencies(${PROJECT_NAME}-cells liboscar sserialize osmpbf libosmtools)
+
+add_target_properties(lib${PROJECT_NAME} COMPILE_FLAGS "-fopenmp -DCGAL_HAS_THREADS")
+add_target_properties(lib${PROJECT_NAME} LINK_FLAGS "-DCGAL_HAS_THREADS -fopenmp")
+
 add_target_properties(${PROJECT_NAME} COMPILE_FLAGS "-fopenmp -DCGAL_HAS_THREADS")
 add_target_properties(${PROJECT_NAME} LINK_FLAGS "-DCGAL_HAS_THREADS -fopenmp")
+
+add_target_properties(${PROJECT_NAME}-cells COMPILE_FLAGS "-fopenmp -DCGAL_HAS_THREADS")
+add_target_properties(${PROJECT_NAME}-cells LINK_FLAGS "-DCGAL_HAS_THREADS -fopenmp")
