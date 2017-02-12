@@ -4,11 +4,11 @@
 
 namespace oscarcmd {
 
-double mercator_project_lon(double lon, double lon0) {
+static double mercator_project_lon(double lon, double lon0) {
 	return lon-lon0;
 }
 
-double mercator_project_lat(double lat) {
+static double mercator_project_lat(double lat) {
 	double tmp = ::log( ::tan(M_PI/4 + (lat/360*2*M_PI)/4) ); 
 	return tmp;
 }
@@ -94,9 +94,9 @@ void CairoRenderer::toCairoCoords(const sserialize::spatial::GeoPoint & p, doubl
 	y = (p.lat()-m_bounds.minLat())/(m_bounds.maxLat()-m_bounds.minLat());
 	x = (p.lon()-m_bounds.minLon())/(m_bounds.maxLon()-m_bounds.minLon());
 	
-		double ymax = mercator_project_lat(m_bounds.maxLat());
-		double ymin = mercator_project_lat(m_bounds.minLat());
-		y = (mercator_project_lat(p.lat()) - ymin)/ (ymax-ymin);
+	double ymax = mercator_project_lat(m_bounds.maxLat());
+	double ymin = mercator_project_lat(m_bounds.minLat());
+	y = (mercator_project_lat(p.lat()) - ymin)/ (ymax-ymin);
 
 	//x,y should now be between 0..1
 	y = std::max<double>(std::min<double>(y, 1.0), 0.0);
