@@ -80,7 +80,7 @@ void oscar_gui::ItemIndexTableModel::setIndex(const sserialize::ItemIndex& idx) 
 void oscar_gui::ItemIndexTableModel::setStore(const liboscar::Static::OsmKeyValueObjectStore& store) {
 	emit beginResetModel();
 	m_store  = store;
-	m_nameTagId = m_store.keyStringTable().find("name");
+	m_nameTagId = sserialize::narrow_check<uint32_t>( m_store.keyStringTable().find("name") );
 	emit endResetModel();
 }
 

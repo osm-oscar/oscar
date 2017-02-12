@@ -15,7 +15,7 @@ private:
 		sserialize::Static::spatial::GeoHierarchy::SubSet::NodePtr d;
 		DataNode * parent;
 		uint32_t posInParent;
-		inline uint32_t childrenSize() const { return d->size(); }
+		inline uint32_t childrenSize() const { return (uint32_t) d->size(); }
 		std::vector<DataNode*> children;
 		DataNode(DataNode * parent, const sserialize::Static::spatial::GeoHierarchy::SubSet::NodePtr & d, uint32_t posInParent);
 		~DataNode() { for(DataNode * n : children) delete n; }

@@ -97,7 +97,7 @@ bool MarbleMap::MyBaseLayer::doRender(const liboscar::Static::OsmKeyValueObjectS
 		c.setAlpha(120);
 		painter->setBrush( QBrush(c, Qt::Dense4Pattern) );
 		const sserialize::Static::spatial::GeoMultiPolygon* gmpo = gs.get<sserialize::Static::spatial::GeoMultiPolygon>();
-		for(uint32_t i = 0, s = gmpo->outerPolygons().size(); i < s; ++i) {
+		for(uint32_t i = 0, s = (uint32_t) gmpo->outerPolygons().size(); i < s; ++i) {
 			sserialize::Static::spatial::GeoPolygon gpo = gmpo->outerPolygons().at(i);
 			Marble::GeoDataLinearRing l;
 			for(sserialize::Static::spatial::GeoPolygon::const_iterator it(gpo.cbegin()), end(gpo.cend()); it != end; ++it) {
@@ -150,10 +150,10 @@ bool MarbleMap::MyItemSetLayer::render(Marble::GeoPainter* painter, Marble::View
 	typedef liboscar::Static::OsmItemSet::value_type Item;
 	if (!m_set.size())
 		return true;
-	uint32_t adminLevelKey = m_store.keyStringTable().find("admin_level");
+	auto adminLevelKey = m_store.keyStringTable().find("admin_level");
 	for(uint32_t i = m_showItemsBegin; i < m_showItemsEnd; ++i) {
 		Item item = m_store.at(m_set.at(i));
-		if (item.findKey(adminLevelKey) != Item::npos) {
+		if (adminLevelKey != m_store.keyStringTable().npos && item.findKey((uint32_t) adminLevelKey) != Item::npos) {
 			MyBaseLayer::doRender(item, itemName(item), painter);
 		}
 		else {
