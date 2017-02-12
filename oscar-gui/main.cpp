@@ -12,7 +12,8 @@ int main(int argc, char** argv)
 		initialCmpFileName = cmdline_args.at(1);
 	qRegisterMetaType<sserialize::ItemIndex>("sserialize::ItemIndex");
 	qRegisterMetaType<uint64_t>("uint64_t");
-	OscarQtMainWindow foo(initialCmpFileName);
-	foo.show();
+	OscarQtMainWindow mainWindow(initialCmpFileName);
+	mainWindow.show();
+	mainWindow.setMapThemeId("earth/openstreetmap/openstreetmap.dgml");
 	return app.exec();
 }

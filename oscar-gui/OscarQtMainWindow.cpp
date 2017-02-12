@@ -78,7 +78,7 @@ m_subSetFlattenerRunId(0)
 	m_tbl->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
 
 	m_map = new MarbleMap();
-	m_map->setMapThemeId("earth/openstreetmap/openstreetmap.dgml");
+// 	m_map->setMapThemeId("earth/openstreetmap/openstreetmap.dgml");
 	
 	m_tblMapWidget = new QWidget(this);
 	m_tblMapLayout = new QHBoxLayout(m_tblMapWidget);
@@ -252,6 +252,10 @@ void OscarQtMainWindow::selectedCompleterTypeChanged(int index) {
 		msgBox.setText("Failed to select the requested completer: " + QString::number(ts) + ":" + QString::number(ct));
 		msgBox.exec();
 	}
+}
+
+void OscarQtMainWindow::setMapThemeId(const QString& str) {
+	m_map->setMapThemeId(str);
 }
 
 void OscarQtMainWindow::selectedTextSearchTypeChanged(int index) {

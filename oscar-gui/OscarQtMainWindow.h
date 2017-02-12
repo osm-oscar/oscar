@@ -60,6 +60,7 @@ public slots:
 	void selectGeoHierarchyCompletion();
 	void selectedTextSearchTypeChanged(int index);
 	void selectedCompleterTypeChanged(int index);
+	void setMapThemeId(const QString & str);
 Q_SIGNALS:
 	void viewSetChanged(const sserialize::ItemIndex & resultIdx);
 	void viewSetChanged(uint32_t begin, uint32_t end);

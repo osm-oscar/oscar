@@ -276,7 +276,9 @@ void MarbleMap::MyCellLayer::setStore(const liboscar::Static::OsmKeyValueObjectS
 	calcCellColors();
 }
 
-MarbleMap::MarbleMap(): MarbleWidget() {
+MarbleMap::MarbleMap() :
+MarbleWidget()
+{
 	m_baseItemLayer = new MyItemSetLayer({"HOVERS_ABOVE_SURFACE"}, 0.0);
 	m_cellLayer = new MyCellLayer({"HOVERS_ABOVE_SURFACE"}, 1.0);
 	m_highlightItemLayer = new MySingleItemLayer({"HOVERS_ABOVE_SURFACE"}, 2.0);
