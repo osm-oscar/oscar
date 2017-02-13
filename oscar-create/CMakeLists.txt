@@ -5,6 +5,7 @@ find_package(Protobuf REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(ICU 4.9 REQUIRED)
 find_package(LIBRT REQUIRED)
+find_package(OpenMP REQUIRED)
 
 set(CGAL_DONT_OVERRIDE_CMAKE_FLAGS TRUE)
 # find_package(CGAL REQUIRED)
