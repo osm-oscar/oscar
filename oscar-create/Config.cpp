@@ -185,7 +185,7 @@ std::ostream& KVStoreConfig::print(std::ostream& out) const {
 	out << "Key:Values defining regions=" << keyValuesDefiningRegions << "\n";
 	out << "FullRegionIndex: " << (fullRegionIndex ? "yes" : "no" ) << "\n";
 	out << "Add parent info: " << (addParentInfo ? "yes" : "no") << "\n";
-	out << "Add regions to cells they enclose: " << (addRegionsToCells ? "yes" : "no");
+	out << "Add regions to cells they enclose: " << (addRegionsToCells ? "yes" : "no") << '\n';
 	out << "Geometry cleaning: ";
 	switch (gct) {
 	case sserialize::Static::spatial::Triangulation::GCT_NONE:
