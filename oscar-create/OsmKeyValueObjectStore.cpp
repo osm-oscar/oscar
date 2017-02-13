@@ -71,12 +71,6 @@ void inflateValues(const std::string& value, std::set< std::string >& destinatio
 
 ///thread-safe
 void addScore(OsmKeyValueRawItem & item, ScoreCreator & scoreCreator) {
-	if (item.data.osmIdType.id() == 2812851) {
-		std::cout << "Landkreis Esslingen get score" << std::endl;
-		scoreCreator.dump(std::cout);
-		std::cout << std::endl;
-		std::cout << item.asKeyValues() << std::endl;
-	}
 	uint32_t & score = item.data.score = 0;
 	for(OsmKeyValueRawItem::RawKeyValuesContainer::const_iterator it(item.rawKeyValues.begin()); it != item.rawKeyValues.end(); ++it) {
 		if (scoreCreator.hasScore(it->first)) {
