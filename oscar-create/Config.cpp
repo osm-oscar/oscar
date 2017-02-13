@@ -186,6 +186,22 @@ std::ostream& KVStoreConfig::print(std::ostream& out) const {
 	out << "FullRegionIndex: " << (fullRegionIndex ? "yes" : "no" ) << "\n";
 	out << "Add parent info: " << (addParentInfo ? "yes" : "no") << "\n";
 	out << "Add regions to cells they enclose: " << (addRegionsToCells ? "yes" : "no");
+	out << "Geometry cleaning: ";
+	switch (gct) {
+	case sserialize::Static::spatial::Triangulation::GCT_NONE:
+		out << "none";
+		break;
+	case sserialize::Static::spatial::Triangulation::GCT_REMOVE_DEGENERATE_FACES:
+		out << "remove degenerate faces";
+		break;
+	case sserialize::Static::spatial::Triangulation::GCT_SNAP_VERTICES:
+		out << "snapp vertices";
+		break;
+	default:
+		out << "invalid";
+		break;
+	}
+	out << "\n";
 	return out;
 }
 
