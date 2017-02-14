@@ -870,7 +870,7 @@ TextSearchConfig* TextSearchConfig::parseTyped(const Json::Value& cfg, const std
 			}
 		}
 		else if (t == "oomgeocell") {
-			if (base && base->type == liboscar::TextSearch::GEOCELL) {
+			if (base && base->type == liboscar::TextSearch::OOMGEOCELL) {
 				result = base;
 				result->update(cv, basePath);
 			}
