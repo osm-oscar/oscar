@@ -6,5 +6,9 @@ landuse
 forest
 landuse
 cemetery
+natural
+wood
+natural
+heath
 boundary
 postal_code
