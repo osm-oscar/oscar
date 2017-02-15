@@ -621,7 +621,13 @@ void KVStoreConfig::update(const Json::Value& cfg, const std::string & basePath)
 	
 	v = cfg["maxTriangPerCell"];
 	if (v.isNumeric()) {
-		maxTriangPerCell = v.asUInt();
+		int64_t tmp = v.asInt64();
+		if (tmp < 0) {
+			maxTriangPerCell = std::numeric_limits<uint32_t>::max();
+		}
+		else {
+			maxTriangPerCell = tmp;
+		}
 	}
 	
 	v = cfg["maxTriangCentroidDist"];
