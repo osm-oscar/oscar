@@ -52,10 +52,10 @@ add_executable(${PROJECT_NAME}-cells ${OSCAR_CREATE_CELLS_SOURCES_CPP})
 
 SET(OSCAR_CREATE_LINK_LIBS
 	lib${PROJECT_NAME}
-	liboscar
+	libosmtools
+	${LIBOSCAR_LINK_LIBRARIES}
 	sserialize
 	osmpbf
-	libosmtools
 	${PROTOBUF_LIBRARIES}
 	${ZLIB_LIBRARIES}
 	${ICU_LIBRARIES}
