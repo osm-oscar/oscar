@@ -297,6 +297,7 @@ std::ostream & GeoCellConfig::print(std::ostream& out) const {
 std::ostream & OOMGeoCellConfig::print(std::ostream& out) const {
 	TextSearchConfig::print(out);
 	out << "Thread count: " << threadCount << "\n";
+	out << "Sort concurrency: " << sortConcurrency << '\n';
 	out << "Max memory usage: " << sserialize::prettyFormatSize(maxMemoryUsage);
 	return out;
 }
