@@ -1071,6 +1071,7 @@ void GeoCellConfig::updateSelf(const Json::Value& cfg) {
 OOMGeoCellConfig::OOMGeoCellConfig(const Json::Value& cfg, const std::string& basePath) :
 TextSearchConfig(cfg, basePath),
 threadCount(0),
+sortConcurrency(0),
 maxMemoryUsage(0xFFFFFFFF)
 {
 	updateSelf(cfg);
@@ -1085,6 +1086,11 @@ void OOMGeoCellConfig::updateSelf(const Json::Value& cfg) {
 	Json::Value v = cfg["threadCount"];
 	if (v.isNumeric()) {
 		threadCount = v.asUInt();
+	}
+	
+	v = cfg["sortConcurrency"];
+	if (v.isNumeric()) {
+		sortConcurrency = v.asUInt();
 	}
 	
 	v = cfg["maxMemoryUsage"];

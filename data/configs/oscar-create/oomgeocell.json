@@ -55,6 +55,7 @@
 					}
 				},
 				"threadCount" : 8,
+				"sortConcurrency" : 2,
 				"maxMemoryUsage" : 2048
 			}
 		}

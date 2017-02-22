@@ -205,6 +205,7 @@ private:
 	void updateSelf(const Json::Value & cfg);
 public:
 	uint32_t threadCount;
+	uint32_t sortConcurrency;
 	sserialize::OffsetType maxMemoryUsage;
 };
 
