@@ -138,7 +138,7 @@ coldCache(false)
 			if (realOpts[1] == "geocell") {
 				ct = CT_GEOCELL;
 			}
-			else if (realOpts[1] == "tgeocell") {
+			else if (realOpts[1] == "treedgeocell") {
 				ct = CT_GEOCELL_TREED;
 			}
 			else if (realOpts[1] == "items") {
@@ -180,7 +180,7 @@ void Benchmarker::doGeocellBench(const std::vector<std::string> & strs, bool col
 	if (coldCache) {
 		fd = ::open("/proc/sys/vm/drop_caches", O_WRONLY);
 		if (fd < 0) {
-			throw std::runtime_error("Could not open proc for dropping caches");
+			throw std::runtime_error("Could not open proc to drop caches");
 		}
 	}
 	
@@ -196,13 +196,13 @@ void Benchmarker::doGeocellBench(const std::vector<std::string> & strs, bool col
 		}
 		sserialize::CellQueryResult r;
 		tm.begin();
-		if (!treedCQR) {
+		if (treedCQR) {
 			opTree.parse(str);
-			r = opTree.calc<sserialize::CellQueryResult>();
+			r = opTree.calc<sserialize::TreedCellQueryResult>().toCQR();
 		}
 		else {
 			opTree.parse(str);
-			r = opTree.calc<sserialize::TreedCellQueryResult>().toCQR();
+			r = opTree.calc<sserialize::CellQueryResult>();
 		}
 		tm.end();
 		cqrTime = tm.elapsedUseconds();
