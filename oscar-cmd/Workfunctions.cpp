@@ -426,7 +426,7 @@ void Worker::printCellNeighborStats(const WD_PrintCellNeighborStats& data) {
 	//number of neighbors a cell has within a radius of first*cellDiameter
 	std::map<uint32_t, std::vector<uint32_t> > cnCount;
 	
-	for(uint32_t i(0); i < maxFactor; ++i) {
+	for(uint32_t i(1); i < maxFactor; i *= 2) {
 		cnCount[i] = std::vector<uint32_t>(cg.size(), 0);
 	}
 	
