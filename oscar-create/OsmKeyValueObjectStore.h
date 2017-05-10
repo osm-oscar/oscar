@@ -17,6 +17,14 @@
 #include "CellCreator.h"
 #include "TagStore.h"
 
+#define OUTER_POLYGON_ORIENTATION 1
+#define INNER_POLYGON_ORIENTATION -1
+
+/** A not for the intersting reader: This code really is a piece of crap.
+  * You definetly do not want read this.
+  * 
+  **/
+
 namespace oscar_create {
 
 struct OsmKeyValueRawItem {
@@ -326,7 +334,9 @@ private:
 	
 	void applySort(Context & ctx);
 	
-	OsmKeyValueObjectStore & operator=(const OsmKeyValueObjectStore & other);
+	static void orient(sserialize::spatial::GeoRegion * shape);
+	
+	OsmKeyValueObjectStore & operator=(const OsmKeyValueObjectStore & other) = delete;
 public:
 	OsmKeyValueObjectStore();
 	///deletes all shapes!

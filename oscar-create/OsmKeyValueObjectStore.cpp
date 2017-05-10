@@ -340,6 +340,7 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 		osmtools::OsmGridRegionTree<RegionInfo> polyStore;
 		ae.extract(ct.inFile, [&polyStore](const std::shared_ptr<sserialize::spatial::GeoRegion> & region, osmpbf::IPrimitive & primitive) {
 			liboscar::OsmIdType osmIdType(primitive.id(), oscar_create::toOsmItemType(primitive.type()));
+			OsmKeyValueObjectStore::orient(region.get());
 			polyStore.push_back(*region, RegionInfo(osmIdType, region->type(), region->boundary()));
 		}, osmtools::AreaExtractor::ET_ALL_SPECIAL_BUT_BUILDINGS, myFilter, ct.cc->numThreads, "Residential area extraction");
 		
@@ -410,6 +411,7 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 		);
 		ae.extract(ct.inFile, [&polyStore](const std::shared_ptr<sserialize::spatial::GeoRegion> & region, osmpbf::IPrimitive & primitive) {
 			liboscar::OsmIdType osmIdType(primitive.id(), oscar_create::toOsmItemType(primitive.type()));
+			OsmKeyValueObjectStore::orient(region.get());
 			polyStore.push_back(*region, RegionInfo(osmIdType, region->type(), region->boundary()));
 		}, osmtools::AreaExtractor::ET_ALL_SPECIAL_BUT_BUILDINGS, myFilter, ct.cc->numThreads, "Region extraction");
 		polyStore.setRefinerOptions(2, 2, 10000);
@@ -853,7 +855,7 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 			} while(swct.missingRelation.size());
 		}
 		
-		{//handle relation multi polyons skip the ones that are in the store
+		{//handle relation multi polygons skip the ones that are in the store
 			osmtools::AreaExtractor ae;
 			generics::RCPtr<osmpbf::AbstractTagFilter> myRegionFilter(new MyRegionFilter(&ct.regionItems));
 			osmpbf::InversionFilter::invert(myRegionFilter);
@@ -864,6 +866,7 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 					rawItem.data.osmIdType.id(primitive.id());
 					rawItem.data.osmIdType.type(liboscar::OSMIT_RELATION);
 					rawItem.data.shape = region.get();
+					OsmKeyValueObjectStore::orient(region.get());
 					rawItem.data.id = wct.itemId.fetch_add(1);
 					oscar_create::addScore(rawItem, ct.scoreCreator);
 					ct.parent->createCell<sserialize::spatial::GeoPolygon, sserialize::spatial::GeoMultiPolygon>(rawItem, ct);
@@ -1201,6 +1204,19 @@ void OsmKeyValueObjectStore::applySort(oscar_create::OsmKeyValueObjectStore::Con
 	tm.end();
 	std::cout << "Sorting items took " << tm << std::endl;
 }
+
+void OsmKeyValueObjectStore::orient(sserialize::spatial::GeoRegion* shape) {
+	if (shape->type() == sserialize::spatial::GS_POLYGON && dynamic_cast<sserialize::spatial::GeoPolygon*>(shape) != 0) {
+		dynamic_cast<sserialize::spatial::GeoPolygon*>(shape)->orient(OUTER_POLYGON_ORIENTATION);
+	}
+	else if (shape->type() == sserialize::spatial::GS_MULTI_POLYGON && dynamic_cast<sserialize::spatial::GeoMultiPolygon*>(shape) != 0) {
+		dynamic_cast<sserialize::spatial::GeoMultiPolygon*>(shape)->orient(OUTER_POLYGON_ORIENTATION, INNER_POLYGON_ORIENTATION);
+	}
+	else {
+		throw sserialize::TypeMissMatchException("OsmKeyValueObjectStore: Unkown GeoRegion type");
+	}
+}
+
 
 bool OsmKeyValueObjectStore::processCellMap(Context & ctx) {
 	SSERIALIZE_CHEAP_ASSERT_EQUAL(m_newToOldItemId.size(), m_data.size());
