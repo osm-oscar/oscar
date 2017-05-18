@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
 #endif
 	
 	try {
-		osmCompleter.energize();
+		osmCompleter.energize(sserialize::spatial::GeoHierarchySubGraph::T_PASS_THROUGH);
 	}
 	catch (const std::exception & e) {
 		std::cerr << "Error occured: " << e.what() << std::endl;
