@@ -41,6 +41,9 @@ struct WD_PairValue: public WD_base {
 typedef WD_PairValue<int, int> WD_SelectTextCompleter;
 typedef WD_SingleValue<int> WD_SelectGeoCompleter;
 
+typedef WD_SingleValue<std::string> WD_LockMemory;
+typedef WD_SingleValue<std::string> WD_UnlockMemory;
+
 struct WD_PrintStats: public WD_base {
 	WD_PrintStats(PrintStatsSelection printStats) : printStats(printStats), out(&std::cout) {}
 	WD_PrintStats(PrintStatsSelection printStats, const std::string & fileName) : printStats(printStats), fileName(fileName), out(0) {}
@@ -255,7 +258,8 @@ public:
 			COMPLETE_STRING_PARTIAL, COMPLETE_STRING_SIMPLE, COMPLETE_STRING_FULL, COMPLETE_STRING_CLUSTERED, COMPLETE_STRING_CLUSTERED_TREED_CQR,
 			COMPLETE_FROM_FILE_PARTIAL, COMPLETE_FROM_FILE_SIMPLE, COMPLETE_FROM_FILE_FULL, COMPLETE_FROM_FILE_CLUSTERED, COMPLETE_FROM_FILE_CLUSTERED_TREED_CQR,
 			SYMDIFF_ITEMS_COMPLETERS,
-			CREATE_COMPLETION_STRINGS, BENCHMARK, CONSISTENCY_CHECK
+			CREATE_COMPLETION_STRINGS, BENCHMARK, CONSISTENCY_CHECK,
+			LOCK_MEMORY, UNLOCK_MEMORY
 			} Type;
 		Type type;
 		std::shared_ptr<WD_base> data;

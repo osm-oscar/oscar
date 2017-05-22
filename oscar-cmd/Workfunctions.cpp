@@ -625,6 +625,22 @@ void Worker::selectGeoCompleter(WD_SelectGeoCompleter & d) {
 	}
 }
 
+void Worker::lockMemory(WD_LockMemory& d) {
+	auto fc = liboscar::fileConfigFromString(d.value);
+	if (fc != liboscar::FC_INVALID) {
+		auto data = completer.data(fc);
+		data.advice(sserialize::UByteArrayAdapter::AT_LOCK, data.size());
+	}
+}
+
+void Worker::unlockMemory(WD_UnlockMemory& d) {
+	auto fc = liboscar::fileConfigFromString(d.value);
+	if (fc != liboscar::FC_INVALID) {
+		auto data = completer.data(fc);
+		data.advice(sserialize::UByteArrayAdapter::AT_UNLOCK, data.size());
+	}
+}
+
 void Worker::printSelectedTextCompleter() {
 	if (completer.textSearch().hasSearch(liboscar::TextSearch::ITEMS) ) {
 		std::cout << "Selected items text completer: " << completer.textSearch().get<liboscar::TextSearch::ITEMS>().getName() << std::endl;

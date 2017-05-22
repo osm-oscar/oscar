@@ -196,6 +196,12 @@ int main(int argc, char **argv) {
 			case Config::WorkItem::BENCHMARK:
 				worker.benchmark(*workItem.data->as<WD_Benchmark>());
 				break;
+			case Config::WorkItem::LOCK_MEMORY:
+				worker.lockMemory(*workItem.data->as<WD_LockMemory>());
+				break;
+			case Config::WorkItem::UNLOCK_MEMORY:
+				worker.unlockMemory(*workItem.data->as<WD_UnlockMemory>());
+				break;
 			default:
 				throw std::runtime_error("Bad operation. Unkown work item.");
 			};

@@ -93,7 +93,9 @@ void Config::printHelp() {
 -dghr storeid\tdump gh region \n \
 -dghc id\tdump gh cell \n \
 --check type\tcheck type=(index|store|gh|tds) \n \
---benchmark\tdo a benchmark \n";
+--benchmark\tdo a benchmark \n \
+--mlock index,kvstore,textsearch\tlock memory of specified file\n \
+--munlock index,kvstore,textsearch\tunlock memory of specified file\n";
 }
 
 int Config::parseSingleArg(int argc, char ** argv, int & i, int & printNumResults, int & threadCount, std::string & completionString) {
@@ -380,6 +382,14 @@ int Config::parseSingleArg(int argc, char ** argv, int & i, int & printNumResult
 		std::string cfgStr(argv[i+1]);
 		Benchmarker::Config cfg(cfgStr);
 		workItems.emplace_back(WorkItem::BENCHMARK, new WD_Benchmark(cfg));
+		++i;
+	}
+	else if (arg == "--mlock" && i+1 < argc) {
+		workItems.emplace_back(WorkItem::LOCK_MEMORY, new WD_LockMemory(std::string(argv[i+1])));
+		++i;
+	}
+	else if (arg == "--munlock" && i+1 < argc) {
+		workItems.emplace_back(WorkItem::UNLOCK_MEMORY, new WD_UnlockMemory(std::string(argv[i+1])));
 		++i;
 	}
 	else if (arg.size() && arg[0] == '-') {
