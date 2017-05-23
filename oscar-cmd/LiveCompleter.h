@@ -5,7 +5,15 @@
 namespace oscarcmd {
 
 class LiveCompletion {
-	liboscar::Static::OsmCompleter & m_completer;
+public:
+	struct CompletionStats {
+		sserialize::TimeMeasurer parseTime;
+		sserialize::TimeMeasurer calcTime;
+		sserialize::TimeMeasurer idxTime;
+		sserialize::TimeMeasurer analyzeTime;
+		std::string query;
+		void reset();
+	};
 public:
 	LiveCompletion(liboscar::Static::OsmCompleter & completer);
 	~LiveCompletion();
@@ -20,8 +28,8 @@ public:
 	void doFullCompletion(bool printStats);
 	void doSimpleCompletion(uint32_t count, uint32_t minStrLen, bool printStats);
 	void doPartialCompletion(int count);
-
-	
+private:
+	liboscar::Static::OsmCompleter & m_completer;
 };
 
 
