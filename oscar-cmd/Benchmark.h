@@ -64,11 +64,11 @@ public:
 		Config(const std::string str);
 	};
 private:
-	liboscar::Static::OsmCompleter m_completer;
+	liboscar::Static::OsmCompleter & m_completer;
 private:
 	void doGeocellBench(const std::vector< std::string >& strs, bool coldCache, bool treedCQR, std::ostream& out);
 public:
-	Benchmarker(const liboscar::Static::OsmCompleter & completer) : m_completer(completer) {}
+	Benchmarker(liboscar::Static::OsmCompleter & completer) : m_completer(completer) {}
 	~Benchmarker() {}
 	void benchmark(const Config & config);
 };
