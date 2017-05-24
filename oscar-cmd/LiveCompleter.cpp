@@ -15,6 +15,7 @@ void LiveCompletion::CompletionStats::reset() {
 	parseTime.reset();
 	calcTime.reset();
 	idxTime.reset();
+	subGraphTime.reset();
 	analyzeTime.reset();
 	query.clear();
 }
@@ -57,6 +58,7 @@ void printCompletionInfo(const LiveCompletion::CompletionStats & cs, TItemSetTyp
 	cout << " took: \n";
 	cout << "\tParse: " << cs.parseTime.elapsedMilliSeconds() << " [ms]\n";
 	cout << "\tCalc: " << cs.calcTime.elapsedMilliSeconds() << " [ms]\n";
+	cout << "\tSubGraph: " << cs.subGraphTime.elapsedMilliSeconds() << " [ms]\n";
 	cout << "\tIndex: " << cs.idxTime.elapsedMilliSeconds() << " [ms]\n";
 	cout << "\tAnalysis: " << cs.analyzeTime.elapsedMilliSeconds() << "[ms]\n";
 	cout << "Found " << compSet.size() << " items" << std::endl;
@@ -181,6 +183,11 @@ void LiveCompletion::doClusteredComplete(const std::vector<std::string> & comple
 			cqr = tcqr.toCQR(threadCount);
 			cs.calcTime.end();
 		}
+		
+		cs.subGraphTime.begin();
+		c->ghsg().subSet(cqr, false);
+		cs.subGraphTime.end();
+		
 		cs.idxTime.begin();
 		retIdx = cqr.flaten();
 		cs.idxTime.end();

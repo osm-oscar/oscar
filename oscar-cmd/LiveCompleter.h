@@ -10,6 +10,7 @@ public:
 		sserialize::TimeMeasurer parseTime;
 		sserialize::TimeMeasurer calcTime;
 		sserialize::TimeMeasurer idxTime;
+		sserialize::TimeMeasurer subGraphTime;
 		sserialize::TimeMeasurer analyzeTime;
 		std::string query;
 		void reset();
