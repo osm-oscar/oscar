@@ -14,6 +14,9 @@ namespace oscarcmd {
 void LiveCompletion::CompletionStats::reset() {
 	parseTime.reset();
 	calcTime.reset();
+	tree2TCQRTime.reset();
+	tcqr2CqrTime.reset();
+	cqrRemoveEmptyTime.reset();
 	idxTime.reset();
 	subGraphTime.reset();
 	analyzeTime.reset();
@@ -58,6 +61,15 @@ void printCompletionInfo(const LiveCompletion::CompletionStats & cs, TItemSetTyp
 	cout << " took: \n";
 	cout << "\tParse: " << cs.parseTime.elapsedMilliSeconds() << " [ms]\n";
 	cout << "\tCalc: " << cs.calcTime.elapsedMilliSeconds() << " [ms]\n";
+	if (cs.tree2TCQRTime.elapsedTime()) {
+		cout << "\tTree2TCQR: " << cs.tree2TCQRTime.elapsedMilliSeconds() << " [ms]\n";
+	}
+	if (cs.tcqr2CqrTime.elapsedTime()) {
+		cout << "\tTCQR2CQR: " << cs.tcqr2CqrTime.elapsedMilliSeconds() << " [ms]\n";
+	}
+	if (cs.cqrRemoveEmptyTime.elapsedTime()) {
+		cout << "\tCQRRemoveEmpty: " << cs.cqrRemoveEmptyTime.elapsedMilliSeconds() << " [ms]\n";
+	}
 	cout << "\tSubGraph: " << cs.subGraphTime.elapsedMilliSeconds() << " [ms]\n";
 	cout << "\tIndex: " << cs.idxTime.elapsedMilliSeconds() << " [ms]\n";
 	cout << "\tAnalysis: " << cs.analyzeTime.elapsedMilliSeconds() << "[ms]\n";
@@ -176,11 +188,22 @@ void LiveCompletion::doClusteredComplete(const std::vector<std::string> & comple
 			cs.parseTime.begin();
 			AdvancedCellOpTree opTree(cmp, cqrd, csq, c->ghsg());
 			opTree.parse(cs.query);
-			auto tcqr = opTree.calc<sserialize::TreedCellQueryResult>(threadCount);
 			cs.parseTime.end();
 			
 			cs.calcTime.begin();
-			cqr = tcqr.toCQR(threadCount);
+			
+			cs.tree2TCQRTime.begin();
+			auto tcqr = opTree.calc<sserialize::TreedCellQueryResult>(threadCount);
+			cs.tree2TCQRTime.end();
+			
+			cs.tcqr2CqrTime.begin();
+			cqr = tcqr.toCQR(threadCount, true);
+			cs.tcqr2CqrTime.end();
+			
+			cs.cqrRemoveEmptyTime.begin();
+			cqr = cqr.removeEmpty();
+			cs.cqrRemoveEmptyTime.end();
+			
 			cs.calcTime.end();
 		}
 		

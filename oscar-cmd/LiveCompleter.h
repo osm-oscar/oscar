@@ -9,6 +9,9 @@ public:
 	struct CompletionStats {
 		sserialize::TimeMeasurer parseTime;
 		sserialize::TimeMeasurer calcTime;
+		sserialize::TimeMeasurer tree2TCQRTime;
+		sserialize::TimeMeasurer tcqr2CqrTime;
+		sserialize::TimeMeasurer cqrRemoveEmptyTime;
 		sserialize::TimeMeasurer idxTime;
 		sserialize::TimeMeasurer subGraphTime;
 		sserialize::TimeMeasurer analyzeTime;
