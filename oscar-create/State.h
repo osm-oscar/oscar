@@ -8,6 +8,7 @@ namespace oscar_create {
 struct State {
 	sserialize::UByteArrayAdapter indexFile;
 	sserialize::ItemIndexFactory indexFactory;
+	sserialize::UByteArrayAdapter storeData;
 	liboscar::Static::OsmKeyValueObjectStore store;
 };
 

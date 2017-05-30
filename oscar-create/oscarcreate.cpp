@@ -61,6 +61,9 @@ int main(int argc, char ** argv) {
 		std::cerr << "Failed to create index file" << std::endl;
 		return -1;
 	}
+	#ifdef WITH_OSCAR_CREATE_NO_DATA_REFCOUNTING
+	state.indexFile.disableRefCounting();
+	#endif
 	
 	//init the index factory
 	{
@@ -109,7 +112,11 @@ int main(int argc, char ** argv) {
 
 	//open the store
 	try {
-		state.store = liboscar::Static::OsmKeyValueObjectStore(sserialize::UByteArrayAdapter::openRo(storeFileName, false));
+		state.storeData = sserialize::UByteArrayAdapter::openRo(storeFileName, false);
+		#ifdef WITH_OSCAR_CREATE_NO_DATA_REFCOUNTING
+		state.storeData.disableRefCounting();
+		#endif
+		state.store = liboscar::Static::OsmKeyValueObjectStore(state.storeData);
 	}
 	catch (sserialize::Exception & e) {
 		std::cerr << "Failed to open store file at " << storeFileName << " with error message: "<< e.what();
@@ -150,10 +157,14 @@ int main(int argc, char ** argv) {
 		}
 	}
 	
-	
 	if (opts.statsConfig.memUsage) {
 		sserialize::MemUsage().print();
 	}
+	
+	#ifdef WITH_OSCAR_CREATE_NO_DATA_REFCOUNTING
+	state.indexFile.enableRefCounting();
+	state.storeData.enableRefCounting();
+	#endif
 	
 	totalTime.end();
 	std::cout << "KV-Store creation took " << kvTime << "\n";

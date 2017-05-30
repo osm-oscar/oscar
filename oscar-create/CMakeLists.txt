@@ -7,6 +7,10 @@ find_package(ICU 4.9 REQUIRED)
 find_package(LIBRT REQUIRED)
 find_package(OpenMP REQUIRED)
 
+if (LIBOSCAR_NO_DATA_REFCOUNTING_ENABLED)
+	set(MY_COMPILE_DEFINITIONS "-DWITH_OSCAR_CREATE_NO_DATA_REFCOUNTING")
+endif(LIBOSCAR_NO_DATA_REFCOUNTING_ENABLED)
+
 include_directories(
 	${LIBOSCAR_INCLUDE_DIR}
 	${OSMPBF_INCLUDE_DIRS}
@@ -59,6 +63,7 @@ SET(OSCAR_CREATE_LINK_LIBS
 )
 
 target_link_libraries(${PROJECT_NAME} ${OSCAR_CREATE_LINK_LIBS})
+target_compile_definitions(${PROJECT_NAME} PRIVATE ${MY_COMPILE_DEFINITIONS})
 add_dependencies(${PROJECT_NAME} liboscar sserialize osmpbf libosmtools)
 
 target_link_libraries(${PROJECT_NAME}-cells ${OSCAR_CREATE_LINK_LIBS})
