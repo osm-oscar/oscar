@@ -178,11 +178,14 @@ public:
 		//a filter that defines regions
 		struct RegionConfig {
 			generics::RCPtr<osmpbf::AbstractTagFilter> regionFilter;
+			uint32_t grtLatCount;
+			uint32_t grtLonCount;
+			double grtMinDiag;
 			uint32_t polyStoreLatCount;
 			uint32_t polyStoreLonCount;
 			uint32_t polyStoreMaxTriangPerCell;
 			double triangMaxCentroidDist;
-			RegionConfig() : polyStoreLatCount(100), polyStoreLonCount(100), polyStoreMaxTriangPerCell(std::numeric_limits<uint32_t>::max()), triangMaxCentroidDist(std::numeric_limits<double>::max()) {}
+			RegionConfig() : grtLatCount(10), grtLonCount(10), grtMinDiag(0), polyStoreLatCount(100), polyStoreLonCount(100), polyStoreMaxTriangPerCell(std::numeric_limits<uint32_t>::max()), triangMaxCentroidDist(std::numeric_limits<double>::max()) {}
 		} rc;
 		CreationConfig() :
 		maxNodeCoordTableSize(std::numeric_limits<uint32_t>::max()),

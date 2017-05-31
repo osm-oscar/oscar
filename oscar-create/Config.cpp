@@ -173,6 +173,7 @@ std::ostream& KVStoreConfig::print(std::ostream& out) const {
 	out << "Read boundaries: ";
 	if (readBoundaries) {
 		out << "\n";
+		out << "\tgrt=" << grtLatCount << "x" << grtLonCount << " split till diag < " << grtMinDiag << '\n';
 		out << "\tinitial=" << latCount << "x" << lonCount << "\n";
 		out << "\tmax triangle per cell="<< maxTriangPerCell << "\n";
 		out << "\tmax triangle centroid dist=" << maxTriangCentroidDist;
@@ -569,6 +570,9 @@ addParentInfo(false),
 addRegionsToCells(false),
 latCount(0),
 lonCount(0),
+grtLatCount(10),
+grtLonCount(10),
+grtMinDiag(10000),
 maxTriangPerCell(std::numeric_limits<uint32_t>::max()),
 maxTriangCentroidDist(std::numeric_limits<double>::max()),
 numThreads(0),
@@ -613,6 +617,21 @@ void KVStoreConfig::update(const Json::Value& cfg, const std::string & basePath)
 	v = cfg["lonCount"];
 	if (v.isNumeric()) {
 		lonCount = v.asUInt();
+	}
+	
+	v = cfg["grtLatCount"];
+	if (v.isNumeric()) {
+		grtLatCount = v.asUInt();
+	}
+
+	v = cfg["grtLonCount"];
+	if (v.isNumeric()) {
+		grtLonCount = v.asUInt();
+	}
+	
+	v = cfg["grtMinDiag"];
+	if (v.isNumeric()) {
+		grtMinDiag = v.asDouble();
 	}
 	
 	v = cfg["readBoundaries"];

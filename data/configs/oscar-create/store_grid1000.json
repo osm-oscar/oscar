@@ -1,6 +1,8 @@
 {
 	"store" : {
 		"latCount" : 1000,
-		"lonCount" : 1000
+		"lonCount" : 1000,
+		"grtLatCount" : 100,
+		"grtLonCount" : 100
 	}
 }

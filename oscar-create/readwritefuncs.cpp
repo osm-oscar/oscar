@@ -517,6 +517,9 @@ void handleKVCreation(oscar_create::Config & opts, State & state) {
 		cc.blobFetchCount = opts.kvStoreConfig->blobFetchCount;
 		cc.addRegionsToCells = opts.kvStoreConfig->addRegionsToCells;
 		cc.rc.regionFilter = oscar_create::AreaExtractor::nameFilter(opts.kvStoreConfig->keysDefiningRegions, opts.kvStoreConfig->keyValuesDefiningRegions);
+		cc.rc.grtLatCount = opts.kvStoreConfig->grtLatCount;
+		cc.rc.grtLonCount = opts.kvStoreConfig->grtLonCount;
+		cc.rc.grtMinDiag = opts.kvStoreConfig->grtMinDiag;
 		cc.rc.polyStoreLatCount = opts.kvStoreConfig->latCount;
 		cc.rc.polyStoreLonCount = opts.kvStoreConfig->lonCount;
 		cc.rc.polyStoreMaxTriangPerCell = opts.kvStoreConfig->maxTriangPerCell;

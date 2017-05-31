@@ -85,6 +85,9 @@ struct KVStoreConfig {
 	bool addRegionsToCells;
 	uint32_t latCount;
 	uint32_t lonCount;
+	uint32_t grtLatCount;
+	uint32_t grtLonCount;
+	double grtMinDiag;
 	uint32_t maxTriangPerCell;
 	double maxTriangCentroidDist;
 	uint32_t numThreads;

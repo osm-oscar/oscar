@@ -414,8 +414,8 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 			OsmKeyValueObjectStore::orient(region.get());
 			polyStore.push_back(*region, RegionInfo(osmIdType, region->type(), region->boundary()));
 		}, osmtools::AreaExtractor::ET_ALL_SPECIAL_BUT_BUILDINGS, myFilter, ct.cc->numThreads, "Region extraction");
-		polyStore.setRefinerOptions(2, 2, 10000);
-		polyStore.addPolygonsToRaster(10, 10);
+		polyStore.setRefinerOptions(2, 2, ct.cc->rc.grtMinDiag);
+		polyStore.addPolygonsToRaster(ct.cc->rc.grtLatCount, ct.cc->rc.grtLonCount);
 		polyStore.printStats(std::cout);
 		trs.init(polyStore, ct.cc->numThreads);
 		trs.initGrid(ct.cc->rc.polyStoreLatCount, ct.cc->rc.polyStoreLonCount);
@@ -554,8 +554,8 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 		ct.polyStore.values().at(i).boundary = ct.polyStore.regions().at(i)->boundary();
 	}
 	
-	ct.polyStore.setRefinerOptions(2, 2, 10000);
-	ct.polyStore.addPolygonsToRaster(10, 10);
+	ct.polyStore.setRefinerOptions(2, 2, ct.cc->rc.grtMinDiag);
+	ct.polyStore.addPolygonsToRaster(ct.cc->rc.grtLatCount, ct.cc->rc.grtLonCount);
 	ct.polyStore.printStats(std::cout);
 	std::cout << "Creating final TriangulationRegionStore" << std::endl;
 	osmtools::OsmTriangulationRegionStore::LipschitzMeshCriteria refinerBase(ct.cc->rc.triangMaxCentroidDist, &(ct.trs.tds()));
