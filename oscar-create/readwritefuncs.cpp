@@ -11,6 +11,7 @@
 #include <sserialize/search/OOMSACTCCreator.h>
 #include <iostream>
 #include <regex>
+#include <liboscar/constants.h>
 
 #include "CellTextCompleter.h"
 #include "OsmKeyValueObjectStore.h"
@@ -386,10 +387,16 @@ void handleTextSearch(Config & opts, State & state) {
 
 	std::string fn = liboscar::fileNameFromFileConfig(opts.getOutFileDir(), liboscar::FC_TEXT_SEARCH, false);
 	sserialize::UByteArrayAdapter dest( sserialize::UByteArrayAdapter::createFile(1, fn) );
+
 	if (dest.size() != 1) {
 		std::cout << "Failed to create file for text search" << std::endl;
 		return;
 	}
+	
+#ifdef WITH_OSCAR_CREATE_NO_DATA_REFCOUNTING
+	dest.disableRefCounting();
+#endif
+
 	liboscar::TextSearchCreator tsCreator(dest);
 	
 	for(TextSearchConfig* x : opts.textSearchConfig) {
@@ -427,6 +434,10 @@ void handleTextSearch(Config & opts, State & state) {
 		tsCreator.endRawPut();
 	}
 	tsCreator.flush();
+	
+#ifdef WITH_OSCAR_CREATE_NO_DATA_REFCOUNTING
+	dest.enableRefCounting();
+#endif
 }
 
 void handleSearchCreation(Config & opts, State & state) {
