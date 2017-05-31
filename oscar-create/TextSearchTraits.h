@@ -62,6 +62,7 @@ public:
 	class StringsExtractor {
 	private:
 		std::shared_ptr<State> m_state;
+		sserialize::DiacriticRemover m_dr;
 	protected:
 		template<typename TOutputIterator>
 		void assign(TOutputIterator & out, const TextSearchConfig::SearchCapabilities & cap, const std::string & str) const {
@@ -69,7 +70,7 @@ public:
 				*out = str;
 				++out;
 				if (cap.diacritcInSensitive) {
-					*out = m_state->dr(str);
+					*out = m_dr(str);
 					++out;
 				}
 			}
@@ -78,13 +79,13 @@ public:
 				*out = tmp;
 				++out;
 				if (cap.diacritcInSensitive) {
-					*out = m_state->dr(tmp);
+					*out = m_dr(tmp);
 					++out;
 				}
 			}
 		}
 	public:
-		StringsExtractor(const std::shared_ptr<State> & state) : m_state(state) {}
+		StringsExtractor(const std::shared_ptr<State> & state) : m_state(state), m_dr(m_state->dr) {}
 		template<typename TOutputIterator>
 		void operator()(const item_type & item, TOutputIterator out) const {
 			const State & state = *m_state;
