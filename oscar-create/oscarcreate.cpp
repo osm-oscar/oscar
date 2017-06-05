@@ -23,9 +23,9 @@ int main(int argc, char ** argv) {
 		srand((unsigned int) (t1.tv_usec * t1.tv_sec));
 	}
 	std::cout.precision(10);
-	
 	oscar_create::Config opts;
-	oscar_create::State state;
+	oscar_create::Data data;
+	oscar_create::State state(data);
 	bool writeSymlink = false;
 	
 	int ret = opts.fromCmdLineArgs(argc, argv);
@@ -160,11 +160,6 @@ int main(int argc, char ** argv) {
 	if (opts.statsConfig.memUsage) {
 		sserialize::MemUsage().print();
 	}
-	
-	#ifdef WITH_OSCAR_CREATE_NO_DATA_REFCOUNTING
-	state.indexFile.enableRefCounting();
-	state.storeData.enableRefCounting();
-	#endif
 	
 	totalTime.end();
 	std::cout << "KV-Store creation took " << kvTime << "\n";

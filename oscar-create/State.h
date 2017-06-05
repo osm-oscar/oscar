@@ -5,11 +5,24 @@
 
 namespace oscar_create {
 
-struct State {
+struct Data {
 	sserialize::UByteArrayAdapter indexFile;
-	sserialize::ItemIndexFactory indexFactory;
 	sserialize::UByteArrayAdapter storeData;
+	~Data() {
+		#ifdef WITH_OSCAR_CREATE_NO_DATA_REFCOUNTING
+		indexFile.enableRefCounting();
+		storeData.enableRefCounting();
+		#endif
+	}
+};
+
+struct State {
+	sserialize::UByteArrayAdapter & indexFile;
+	sserialize::ItemIndexFactory indexFactory;
+	sserialize::UByteArrayAdapter & storeData;
 	liboscar::Static::OsmKeyValueObjectStore store;
+	State(Data & data) : indexFile(data.indexFile), storeData(data.storeData) {}
+	~State() {}
 };
 
 }//end namespace
