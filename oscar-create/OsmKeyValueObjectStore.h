@@ -20,7 +20,7 @@
 #define OUTER_POLYGON_ORIENTATION 1
 #define INNER_POLYGON_ORIENTATION -1
 
-/** A not for the intersting reader: This code really is a piece of crap.
+/** A note for the intersting reader: This code really is a piece of crap.
   * You definetly do not want read this.
   * 
   **/

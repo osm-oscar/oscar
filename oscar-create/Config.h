@@ -209,6 +209,7 @@ private:
 public:
 	uint32_t threadCount;
 	uint32_t sortConcurrency;
+	uint32_t payloadConcurrency;
 	sserialize::OffsetType maxMemoryUsage;
 };
 

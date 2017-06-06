@@ -1113,6 +1113,11 @@ void OOMGeoCellConfig::updateSelf(const Json::Value& cfg) {
 		sortConcurrency = v.asUInt();
 	}
 	
+	v = cfg["payloadConcurrency"];
+	if (v.isNumeric()) {
+		payloadConcurrency = v.asUInt();
+	}
+	
 	v = cfg["maxMemoryUsage"];
 	if (v.isNumeric()) {
 		maxMemoryUsage = v.asUInt64()*(static_cast<uint32_t>(1) << 20);
