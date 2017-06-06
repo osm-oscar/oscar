@@ -18,6 +18,12 @@ std::string statsFileNameSuffix(uint32_t which) {
 		return "all";
 	case PS_IDX_STORE:
 		return "idxstore";
+	case PS_ITEM_COMPLETER:
+		return "itemcomp";
+	case PS_HIERARCHY_COMPLETER:
+		return "hierachycomp";
+	case PS_GEOCELL_COMPLETER:
+		return "geocellcomp";
 	case PS_COMPLETER:
 		return "comp";
 	case PS_DB:
@@ -44,15 +50,19 @@ void doPrintStats(std::ostream & out, liboscar::Static::OsmCompleter & completer
 		completer.indexStore().printStats(out);
 		out << '\n';
 	}
-	if (PS_COMPLETER) {
+	if (PS_ITEM_COMPLETER) {
 		for(uint32_t i(0), s(completer.textSearch().size(liboscar::TextSearch::ITEMS)); i < s; ++i) {
 			completer.textSearch().get<liboscar::TextSearch::ITEMS>(i).printStats(out);
 			out << '\n';
 		}
+	}
+	if (PS_HIERARCHY_COMPLETER) {
 		for(uint32_t i(0), s(completer.textSearch().size(liboscar::TextSearch::GEOHIERARCHY)); i < s; ++i) {
 			completer.textSearch().get<liboscar::TextSearch::GEOHIERARCHY>(i).printStats(out);
 			out << '\n';
 		}
+	}
+	if (PS_GEOCELL_COMPLETER) {
 		for(uint32_t i(0), s(completer.textSearch().size(liboscar::TextSearch::GEOCELL)); i < s; ++i) {
 			completer.textSearch().get<liboscar::TextSearch::GEOCELL>(i).printStats(out);
 			out << '\n';
