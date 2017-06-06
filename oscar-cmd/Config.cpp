@@ -12,8 +12,14 @@ PrintStatsSelection printStatsfromString(const std::string & istr) {
 		return PS_ALL;
 	else if ("idxstore" == str || "idx" == str || "index" == str || "indexstore" == str) 
 		return PS_IDX_STORE;
-	else if("completer" == str)
+	else if ("completer" == str)
 		return PS_COMPLETER;
+	else if ("compitems" == str)
+		return PS_ITEM_COMPLETER;
+	else if ("comphierarchy" == str)
+		return PS_GEOCELL_COMPLETER;
+	else if ("compgeocell" == str)
+		return PS_GEOCELL_COMPLETER;
 	else if("db" == str)
 		return PS_DB;
 	else if("gh" == str)
@@ -65,7 +71,7 @@ void Config::printHelp() {
 -cfc file\tgeocell complete strings from file \n \
 -cfct file\tgeocell complete strings from file with treed cqr \n \
 --symdiff-items-completers c1,c2\tprint symmetric difference between completer c1 and completer c2 \n \
--ds which\tprint stats: all,idxstore,completer,db,geo,tag \n \
+-ds which\tprint stats: all,idxstore,completer(compitems,comphierarchy,compgeocell),db,geo,tag \n \
 -dcs\tdump cell statistics \n \
 -dpsdb file\tprint db paper stats, file sets the interesting tags \n \
 -dpsgh file\tprint gh paper stats, file is outfile \n \
