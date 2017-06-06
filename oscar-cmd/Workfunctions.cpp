@@ -42,7 +42,7 @@ std::string statsFileNameSuffix(uint32_t which) {
 }
 
 void doPrintStats(std::ostream & out, liboscar::Static::OsmCompleter & completer, uint32_t which) {
-	if (which & S_DB) {
+	if (which & PS_DB) {
 		completer.store().printStats(out);
 		out << '\n';
 	}
