@@ -42,7 +42,7 @@ std::string statsFileNameSuffix(uint32_t which) {
 }
 
 void doPrintStats(std::ostream & out, liboscar::Static::OsmCompleter & completer, uint32_t which) {
-	if (PS_DB) {
+	if (which & S_DB) {
 		completer.store().printStats(out);
 		out << '\n';
 	}
@@ -50,33 +50,33 @@ void doPrintStats(std::ostream & out, liboscar::Static::OsmCompleter & completer
 		completer.indexStore().printStats(out);
 		out << '\n';
 	}
-	if (PS_ITEM_COMPLETER) {
+	if (which & PS_ITEM_COMPLETER) {
 		for(uint32_t i(0), s(completer.textSearch().size(liboscar::TextSearch::ITEMS)); i < s; ++i) {
 			completer.textSearch().get<liboscar::TextSearch::ITEMS>(i).printStats(out);
 			out << '\n';
 		}
 	}
-	if (PS_HIERARCHY_COMPLETER) {
+	if (which & PS_HIERARCHY_COMPLETER) {
 		for(uint32_t i(0), s(completer.textSearch().size(liboscar::TextSearch::GEOHIERARCHY)); i < s; ++i) {
 			completer.textSearch().get<liboscar::TextSearch::GEOHIERARCHY>(i).printStats(out);
 			out << '\n';
 		}
 	}
-	if (PS_GEOCELL_COMPLETER) {
+	if (which & PS_GEOCELL_COMPLETER) {
 		for(uint32_t i(0), s(completer.textSearch().size(liboscar::TextSearch::GEOCELL)); i < s; ++i) {
 			completer.textSearch().get<liboscar::TextSearch::GEOCELL>(i).printStats(out);
 			out << '\n';
 		}
 	}
-	if (PS_GEO) {
+	if (which & PS_GEO) {
 		out << completer.geoCompleter()->describe();
 		out << '\n';
 	}
-	if (PS_TAG) {
+	if (which & PS_TAG) {
 		completer.tagStore().printStats(out);
 		out << '\n';
 	}
-	if (PS_GH) {
+	if (which & PS_GH) {
 		completer.store().geoHierarchy().printStats(out, completer.indexStore());
 		out << '\n';
 	}
