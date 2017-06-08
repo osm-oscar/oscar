@@ -7,7 +7,11 @@ find_package(LIBRT REQUIRED)
 
 IF (QT4_FOUND)
 
-include_directories(${QT_INCLUDES} ${CMAKE_CURRENT_BINARY_DIR})
+include_directories(
+	${LIBOSCAR_INCLUDE_DIR}
+	${QT_INCLUDES}
+	${CMAKE_CURRENT_BINARY_DIR}
+)
 
 set(SOURCES_MOC_H
 OscarQtMainWindow.h
@@ -30,29 +34,10 @@ qt4_wrap_cpp(SOURCES_MOC_CPP ${SOURCES_MOC_H})
 
 
 SET(OSCAR_LINK_LIBS
-	${liboscar_BINARY_DIR}/libliboscar.so
-# 	${sserialize_BINARY_DIR}/libsserialize.a
-# 	${osmpbf_BINARY_DIR}/libosmpbf.a
-# 	${PROTOBUF_LIBRARIES}
-	${ZLIB_LIBRARIES}
-	${LIBRT_LIBRARIES}
-	"CGAL"
-	"mpfr"
-	"gmp"
-	"boost_thread"
-	"boost_system"
+	${LIBOSCAR_LINK_LIBRARIES}
 	"marblewidget"
 	${QT_QTCORE_LIBRARY}
 	${QT_QTGUI_LIBRARY}
-	
-# 	"CGAL"
-# 	"mpfr"
-# 	"gmp"
-# 	"boost_thread"
-# 	"boost_system"
-# 	${QT_QTCORE_LIBRARY}
-# 	${QT_QTGUI_LIBRARY}
-# 	${LIBRT_LIBRARIES}
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES_CPP} ${SOURCES_MOC_CPP})
