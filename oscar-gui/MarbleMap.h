@@ -6,9 +6,7 @@
 
 #include <QtCore/QSemaphore>
 
-#include <sserialize/Static/TriangulationGeoHierarchyArrangement.h>
-#include <sserialize/Static/TracGraph.h>
-#include <sserialize/spatial/GeoWay.h>
+#include <liboscar/OsmKeyValueObjectStore.h>
 
 
 namespace oscar_gui {
@@ -28,10 +26,11 @@ private:
 	typedef enum {CS_DIFFERENT=0, CS_SAME=1, __CS_COUNT=2} ColorScheme;
 	
 	class Data {
+		liboscar::Static::OsmKeyValueObjectStore store;
 		TriangulationGeoHierarchyArrangement trs;
 		TracGraph cg;
 		std::vector<QColor> cellColors;
-		Data(const TriangulationGeoHierarchyArrangement & trs, const TracGraph & cg);
+		Data(const liboscar::Static::OsmKeyValueObjectStore & store);
 		QColor cellColor(uint32_t cellId, ColorScheme cs) const;
 	};
 	

@@ -147,9 +147,10 @@ void MarbleMap::MyPathLayer::changePath(const sserialize::spatial::GeoWay& w) {
 //BEGIN Data
 
 
-MarbleMap::Data::Data(const TriangulationGeoHierarchyArrangement & trs, const TracGraph & cg) :
-trs(trs),
-cg(cg)
+MarbleMap::Data::Data(const liboscar::Static::OsmKeyValueObjectStore & store) :
+store(store),
+trs(store.regionArrangement()),
+cg(store.cellGraph())
 {
 	std::vector<uint8_t> tmpColors(cg.size(), Qt::GlobalColor::color0);
 	for(uint32_t i(0), s(cg.size()); i < s; ++i) {
@@ -182,9 +183,9 @@ cg(cg)
 
 //END Data
 
-MarbleMap::MarbleMap(const TriangulationGeoHierarchyArrangement & trs, const TracGraph & cg):
+MarbleMap::MarbleMap(const liboscar::Static::OsmKeyValueObjectStore & store):
 MarbleWidget(),
-m_data(new Data(trs, cg))
+m_data(new Data(store))
 {
 	m_triangleLayer = new MarbleMap::MyTriangleLayer({"HOVERS_ABOVE_SURFACE"}, 0.0, m_data);
 	m_cellLayer = new MarbleMap::MyCellLayer({"HOVERS_ABOVE_SURFACE"}, 0.0, m_data);
