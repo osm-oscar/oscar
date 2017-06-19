@@ -2,8 +2,14 @@
 #define OSCAR_GUI_MARBLE_MAP_H
 #include <marble/MarbleWidget.h>
 #include <marble/LayerInterface.h>
-#include <liboscar/StaticOsmItemSet.h>
-#include <QSemaphore>
+#include <marble/GeoDataLineString.h>
+
+#include <QtCore/QSemaphore>
+
+#include <sserialize/Static/TriangulationGeoHierarchyArrangement.h>
+#include <sserialize/Static/TracGraph.h>
+#include <sserialize/spatial/GeoWay.h>
+
 
 namespace oscar_gui {
 
@@ -11,21 +17,47 @@ class MarbleMap : public Marble::MarbleWidget {
 	Q_OBJECT
 private:
 
+	typedef sserialize::Static::spatial::TriangulationGeoHierarchyArrangement TriangulationGeoHierarchyArrangement;
+	typedef sserialize::Static::spatial::TracGraph TracGraph;
+	
+	typedef TriangulationGeoHierarchyArrangement::Triangulation Triangulation;
+	typedef TriangulationGeoHierarchyArrangement::CFGraph CFGraph;
+	
+	typedef Triangulation::Face Face;
+	
+	typedef enum {CS_DIFFERENT=0, CS_SAME=1, __CS_COUNT=2} ColorScheme;
+	
+	class Data {
+		TriangulationGeoHierarchyArrangement trs;
+		TracGraph cg;
+		std::vector<QColor> cellColors;
+		Data(const TriangulationGeoHierarchyArrangement & trs, const TracGraph & cg);
+		QColor cellColor(uint32_t cellId, ColorScheme cs) const;
+	};
+	
+	typedef std::shared_ptr<Data> DataPtr;
+	
 	class MyBaseLayer: public Marble::LayerInterface {
 	private:
 		qreal m_zValue;
 		QStringList m_renderPosition;
-		std::unordered_map<int, QColor> m_shapeColor;
+		DataPtr m_data;
+		int m_cellOpacity;
+		int m_colorScheme;
 	protected:
-		bool doRender(const liboscar::Static::OsmKeyValueObjectStore::Item & item, const QString & label, Marble::GeoPainter * painter);
+		//render a single cell
+		bool doRender(const oscar_gui::MarbleMap::CFGraph& cg, const QString& label, Marble::GeoPainter* painter);
+		//render a single Triangulation::Face
+		bool doRender(const Face & f, const QBrush & brush, const QString& label, Marble::GeoPainter* painter);
+		inline const DataPtr & data() const { return m_data; }
+		inline DataPtr & data() { return m_data; }
 	public:
-		MyBaseLayer(const QStringList & renderPos, qreal zVal);
+		MyBaseLayer(const QStringList & renderPos, qreal zVal, const DataPtr & data);
 		virtual ~MyBaseLayer() {}
 		virtual QStringList renderPosition() const;
 		virtual qreal zValue() const;
-		inline QColor & shapeColor(uint32_t geoShapeType) {
-			return m_shapeColor[geoShapeType];
-		}
+		inline void setCellOpacity(int opacity) { m_cellOpacity = opacity; }
+		void setColorScheme(int colorScheme) { m_colorScheme = colorScheme; }
 	};
 	
 	class MyLockableBaseLayer: public MyBaseLayer {
@@ -36,74 +68,85 @@ private:
 	protected:
 		inline QSemaphore & lock() { return m_lock;}
 	public:
-		MyLockableBaseLayer(const QStringList & renderPos, qreal zVal) : MyBaseLayer(renderPos, zVal), m_lock(L_FULL) {}
+		MyLockableBaseLayer(const QStringList & renderPos, qreal zVal, const DataPtr & data) :
+		MyBaseLayer(renderPos, zVal, data), m_lock(L_FULL) {}
 		virtual ~MyLockableBaseLayer() {}
 	};
 	
-	class MyItemSetLayer: public MyLockableBaseLayer {
+	class MyTriangleLayer: public MyBaseLayer {
 	private:
-		sserialize::ItemIndex m_set;
-		liboscar::Static::OsmKeyValueObjectStore m_store;
-		uint32_t m_showItemsBegin;
-		uint32_t m_showItemsEnd;
+		typedef std::unordered_set<uint32_t> TriangleSet;
+	private:
+		TriangleSet m_cgi;
 	public:
-		MyItemSetLayer(const QStringList & renderPos, qreal zVal);
-		virtual ~MyItemSetLayer() {}
+		MyTriangleLayer(const QStringList & renderPos, qreal zVal, const DataPtr & data);
+		virtual ~MyTriangleLayer() {}
 		virtual bool render(Marble::GeoPainter *painter, Marble::ViewportParams * viewport, const QString & renderPos, Marble::GeoSceneLayer * layer);
-		void setItemSet(const sserialize::ItemIndex & idx);
-		void setStore(const liboscar::Static::OsmKeyValueObjectStore & store);
-		void setViewRange(uint32_t begin, uint32_t end);
+	public:
+		void clear();
+		void addTriangle(uint32_t cellId);
+		void removeTriangle(uint32_t cellId);
 	};
 	
-	class MySingleItemLayer: public MyLockableBaseLayer {
+	class MyCellLayer: public MyBaseLayer {
 	private:
-		liboscar::Static::OsmKeyValueObjectStore::Item m_item;
+		typedef std::unordered_map<uint32_t, CFGraph> GraphMap;
+	private:
+		GraphMap m_cgi;
 	public:
-		MySingleItemLayer(const QStringList & renderPos, qreal zVal);
-		virtual ~MySingleItemLayer() {}
-		virtual bool render(Marble::GeoPainter * painter, Marble::ViewportParams * viewport, const QString & renderPos, Marble::GeoSceneLayer * layer);
-		void setItem(const liboscar::Static::OsmKeyValueObjectStore::Item & item);
-	};
-	
-	class MyCellLayer: public MyLockableBaseLayer {
-	private:
-		typedef std::vector<uint32_t> Graph;
-		typedef std::unordered_map<uint32_t, Graph> GraphMap;
-	private:
-		liboscar::Static::OsmKeyValueObjectStore m_store;
-		std::vector<QColor> m_cellColors;
-		GraphMap m_cgm;
-	private:
-		void calcCellColors();
-	protected:
-		bool doRender(const std::vector<uint32_t> & faces, const QColor& color, Marble::GeoPainter* painter);
-	public:
-		MyCellLayer(const QStringList & renderPos, qreal zVal);
+		MyCellLayer(const QStringList & renderPos, qreal zVal, const DataPtr & data);
 		virtual ~MyCellLayer() {}
 		virtual bool render(Marble::GeoPainter *painter, Marble::ViewportParams * viewport, const QString & renderPos, Marble::GeoSceneLayer * layer);
-		void setCells(const sserialize::ItemIndex & cells);
-		void setStore(const liboscar::Static::OsmKeyValueObjectStore & store);
+	public:
+		void clear();
+		void addCell(uint32_t cellId);
+		void removeCell(uint32_t cellId);
 	};
 	
+	class MyPathLayer: public MyLockableBaseLayer {
+	private:
+		Marble::GeoDataLineString m_path;
+	public:
+		MyPathLayer(const QStringList & renderPos, qreal zVal, const DataPtr & trs);
+		virtual ~MyPathLayer() {}
+		virtual bool render(Marble::GeoPainter *painter, Marble::ViewportParams * viewport, const QString & renderPos, Marble::GeoSceneLayer * layer);
+		void changePath(const sserialize::spatial::GeoWay & p);
+	};
+
 private:
-	sserialize::ItemIndex m_set;
-	liboscar::Static::OsmKeyValueObjectStore m_store;
-	MyItemSetLayer * m_baseItemLayer;
-	MySingleItemLayer * m_highlightItemLayer;
-	MySingleItemLayer * m_singleItemLayer;
+	MyTriangleLayer * m_triangleLayer;
 	MyCellLayer * m_cellLayer;
+	MyPathLayer * m_pathLayer;
+	DataPtr m_data;
+	int m_cellOpacity;
+	int m_colorScheme;
+	double m_lastRmbClickLat;
+	double m_lastRmbClickLon;
 public:
-	MarbleMap();
+	MarbleMap(const TriangulationGeoHierarchyArrangement & trs, const TracGraph & cg);
 	virtual ~MarbleMap();
-public Q_SLOTS:
-	void itemStoreChanged(const liboscar::Static::OsmKeyValueObjectStore & store);
-	void activeCellsChanged(const sserialize::ItemIndex & cells);
-	void viewSetChanged(uint32_t begin, uint32_t end);
-	void viewSetChanged(const sserialize::ItemIndex & set);
-	void zoomToItem(uint32_t itemPos);
-	void drawAndZoomTo(const liboscar::Static::OsmKeyValueObjectStore::Item & item);
+public slots:
+	void zoomToCell(uint32_t cellId);
+	void addCell(uint32_t cellId);
+	void removeCell(uint32_t cellId);
+	void clearCells();
+public slots:
+	void zoomToTriangle(uint32_t triangleId);
+	void addTriangle(uint32_t triangleId);
+	void removeTriangle(uint32_t triangleId);
+	void clearTriangles();
+public slots:
+	void showPath(const sserialize::spatial::GeoWay & p);
+public slots:
+	void setCellOpacity(int cellOpacity);
+	void setColorScheme(int colorScheme);
+signals:
+	void toggleCellClicked(double lat, double lon);
+private slots:
+	void rmbRequested(int x, int y);
+	void toggleCellTriggered();
 };
 
-}
+}//end namespace oscar_gui
 
 #endif
