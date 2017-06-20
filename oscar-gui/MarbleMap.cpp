@@ -7,6 +7,7 @@
 #include <marble/MarbleWidgetPopupMenu.h>
 #include <marble/MarbleWidgetInputHandler.h>
 #include <QAction>
+#include <QtGui/QHBoxLayout>
 
 namespace oscar_gui {
 
@@ -15,7 +16,7 @@ MarbleMap::MyBaseLayer::MyBaseLayer(const QStringList& renderPos, qreal zVal, co
 m_zValue(zVal),
 m_renderPosition(renderPos),
 m_data(data),
-m_cellOpacity(255)
+m_opacity(255)
 {}
 
 QStringList MarbleMap::MyBaseLayer::renderPosition() const {
@@ -26,19 +27,12 @@ qreal MarbleMap::MyBaseLayer::zValue() const {
 	return m_zValue;
 }
 
-bool MarbleMap::MyBaseLayer::doRender(const CFGraph & cg, const QString & label, Marble::GeoPainter* painter) {
+bool MarbleMap::MyBaseLayer::doRender(const CFGraph & cg, const QBrush & brush, const QString & label, Marble::GeoPainter* painter) {
 	if (!cg.size()) {
 		return true;
 	}
-	uint32_t cellId = cg.cellId();
-	QColor lineColor(m_data->cellColors[m_colorScheme].at(cellId));
-	lineColor.setAlpha(255);
-	painter->setPen(QPen(QBrush(lineColor, Qt::BrushStyle::SolidPattern), 1));
-	QColor fillColor(lineColor);
-	fillColor.setAlpha(m_cellOpacity);
-	QBrush brush(fillColor, Qt::SolidPattern);
 	
-	cg.visit([this, &label, painter, &brush](const Face & f) {
+	cg.visitCB([this, &label, painter, &brush](const Face & f) {
 		this->doRender(f, brush, label, painter);
 	});
 	return true;
@@ -56,6 +50,7 @@ bool MarbleMap::MyBaseLayer::doRender(const Face & f, const QBrush & brush, cons
 	if (!label.isEmpty()) {
 		painter->drawText(l.latLonAltBox().center(), label);
 	}
+	return true;
 }
 
 //BEGIN: MyTriangleLayer
@@ -65,8 +60,16 @@ MyBaseLayer(renderPos, zVal, data)
 {}
 
 bool MarbleMap::MyTriangleLayer::render(Marble::GeoPainter * painter, Marble::ViewportParams* /*viewport*/, const QString& /*renderPos*/, Marble::GeoSceneLayer* /*layer*/) {
-	for(uint32_t & triangleId : m_cgi) {
-		if( !MyBaseLayer::doRender(data()->trs.tds().face(triangleId), "", painter)) {
+	QColor lineColor(Qt::blue);
+	lineColor.setAlpha(255);
+	painter->setPen(QPen(QBrush(lineColor, Qt::BrushStyle::SolidPattern), 1));
+	QColor fillColor(lineColor);
+	fillColor.setAlpha(opacity());
+	QBrush brush(fillColor, Qt::SolidPattern);
+
+
+	for(uint32_t triangleId : m_cgi) {
+		if( !MyBaseLayer::doRender(data()->trs.tds().face(triangleId), brush, "", painter)) {
 			return false;
 		}
 	}
@@ -91,12 +94,21 @@ void MarbleMap::MyTriangleLayer::clear() {
 //BEGIN: MyCellLayer
 
 MarbleMap::MyCellLayer::MyCellLayer(const QStringList & renderPos, qreal zVal, const DataPtr & data) :
-MyBaseLayer(renderPos, zVal, data)
+MyBaseLayer(renderPos, zVal, data),
+m_colorScheme(CS_DIFFERENT)
 {}
 
 bool MarbleMap::MyCellLayer::render(Marble::GeoPainter * painter, Marble::ViewportParams* /*viewport*/, const QString& /*renderPos*/, Marble::GeoSceneLayer* /*layer*/) {
 	for(std::pair<const uint32_t, CFGraph> & gi : m_cgi) {
-		if( !MyBaseLayer::doRender(gi.second, "", painter)) {
+		uint32_t cellId = gi.first;
+		QColor lineColor(data()->cellColor(cellId, colorScheme() ));
+		lineColor.setAlpha(255);
+		painter->setPen(QPen(QBrush(lineColor, Qt::BrushStyle::SolidPattern), 1));
+		QColor fillColor(lineColor);
+		fillColor.setAlpha(opacity());
+		QBrush brush(fillColor, Qt::SolidPattern);
+
+		if( !MyBaseLayer::doRender(gi.second, brush, "", painter)) {
 			return false;
 		}
 	}
@@ -107,7 +119,7 @@ void MarbleMap::MyCellLayer::addCell(uint32_t cellId) {
 	if (m_cgi.count(cellId)) {
 		return;
 	}
-	m_cgi[cellId] = data()->trs().cfGraph(cellId);
+	m_cgi[cellId] = data()->trs.cfGraph(cellId);
 }
 
 void MarbleMap::MyCellLayer::removeCell(uint32_t cellId) {
@@ -184,25 +196,30 @@ cg(store.cellGraph())
 //END Data
 
 MarbleMap::MarbleMap(const liboscar::Static::OsmKeyValueObjectStore & store):
-MarbleWidget(),
+m_map( new Marble::MarbleWidget() ),
 m_data(new Data(store))
 {
+	m_map->setMapThemeId("earth/openstreetmap/openstreetmap.dgml");
+
 	m_triangleLayer = new MarbleMap::MyTriangleLayer({"HOVERS_ABOVE_SURFACE"}, 0.0, m_data);
 	m_cellLayer = new MarbleMap::MyCellLayer({"HOVERS_ABOVE_SURFACE"}, 0.0, m_data);
 	
-	addLayer(m_triangleLayer);
-	addLayer(m_cellLayer);
+	m_map->addLayer(m_triangleLayer);
+	m_map->addLayer(m_cellLayer);
 
 	QAction * toggleCellAction = new QAction("Toggle Cell", this);
-	popupMenu()->addAction(Qt::MouseButton::RightButton, toggleCellAction);
+	m_map->popupMenu()->addAction(Qt::MouseButton::RightButton, toggleCellAction);
 
 	//get mouse clicks
-	connect(this->inputHandler(), SIGNAL(rmbRequest(int,int)), this, SLOT(rmbRequested(int,int)));
-	
+	connect(m_map->inputHandler(), SIGNAL(rmbRequest(int,int)), this, SLOT(rmbRequested(int,int)));
 	connect(toggleCellAction, SIGNAL(triggered(bool)), this, SLOT(toggleCellTriggered()));
+	
+	QHBoxLayout * mainLayout = new QHBoxLayout();
+	mainLayout->addWidget(m_map);
+	this->setLayout(mainLayout);
 }
 
-QColor MarbleMap::Data::cellColor(uint32_t cellId, MarbleMap::ColorScheme cs) const {
+QColor MarbleMap::Data::cellColor(uint32_t cellId, int cs) const {
 	if (cs == CS_DIFFERENT) {
 		return cellColors.at(cellId);
 	}
@@ -210,8 +227,8 @@ QColor MarbleMap::Data::cellColor(uint32_t cellId, MarbleMap::ColorScheme cs) co
 }
 
 MarbleMap::~MarbleMap() {
-	removeLayer(m_triangleLayer);
-	removeLayer(m_cellLayer);
+	m_map->removeLayer(m_triangleLayer);
+	m_map->removeLayer(m_cellLayer);
 	
 	delete m_triangleLayer;
 	delete m_cellLayer;
@@ -221,7 +238,7 @@ MarbleMap::~MarbleMap() {
 void MarbleMap::zoomToTriangle(uint32_t triangleId) {
 	auto p = m_data->trs.tds().face( triangleId ).centroid();
 	Marble::GeoDataLatLonBox marbleBounds(p.lat(), p.lon(), p.lat(), p.lon(), Marble::GeoDataCoordinates::Degree);
-	centerOn(marbleBounds, true);
+	m_map->centerOn(marbleBounds, true);
 }
 
 void MarbleMap::zoomToCell(uint32_t cellId) {
@@ -278,7 +295,7 @@ void MarbleMap::showPath(const sserialize::spatial::GeoWay& p) {
 void MarbleMap::setCellOpacity(int cellOpacity) {
 	m_cellOpacity = cellOpacity;
 	if (m_cellLayer) {
-		m_cellLayer->setCellOpacity(m_cellOpacity);
+		m_cellLayer->opacity(m_cellOpacity);
 		this->update();
 	}
 }
@@ -292,11 +309,14 @@ void MarbleMap::setColorScheme(int colorScheme) {
 }
 
 void MarbleMap::rmbRequested(int x, int y) {
-	this->geoCoordinates(x, y, m_lastRmbClickLon, m_lastRmbClickLat, Marble::GeoDataCoordinates::Degree);
+	m_map->geoCoordinates(x, y, m_lastRmbClickLon, m_lastRmbClickLat, Marble::GeoDataCoordinates::Degree);
 }
 
 void MarbleMap::toggleCellTriggered() {
-	emit toggleCellClicked(m_lastRmbClickLat, m_lastRmbClickLon);
+	uint32_t cellId = m_data->trs.cellId(m_lastRmbClickLat, m_lastRmbClickLon);
+	if (cellId != m_data->trs.tds().NullFace) {
+		emit toggleCellClicked(cellId);
+	}
 }
 
 } //end namespace oscar_gui

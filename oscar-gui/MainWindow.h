@@ -1,6 +1,6 @@
 #ifndef OSCAR_GUI_MAIN_WINDOW_H
 #define OSCAR_GUI_MAIN_WINDOW_H
-#include <QtGui/QMainWindow>
+#include <QMainWindow>
 
 #include <liboscar/StaticOsmCompleter.h>
 
@@ -19,7 +19,7 @@ class SearchWidget;
 class MainWindow : public QMainWindow {
 Q_OBJECT
 public:
-	MainWindow(const liboscar::Static::OsmCompleter & cmp);
+	MainWindow(const std::shared_ptr<liboscar::Static::OsmCompleter> & cmp);
 	virtual ~MainWindow();
 signals:
 	void colorSchemeChanged(int colorScheme);
@@ -39,7 +39,7 @@ private slots:
 	void changeColorScheme(int index);
 	void toggleCell(uint32_t cellId);
 private:
-	liboscar::Static::OsmCompleter m_completer;
+	std::shared_ptr<liboscar::Static::OsmCompleter> m_completer;
 };
 
 }//end namespace

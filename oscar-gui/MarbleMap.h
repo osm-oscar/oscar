@@ -7,11 +7,12 @@
 #include <QtCore/QSemaphore>
 
 #include <liboscar/OsmKeyValueObjectStore.h>
+#include <sserialize/spatial/GeoWay.h>
 
 
 namespace oscar_gui {
 
-class MarbleMap : public Marble::MarbleWidget {
+class MarbleMap : public QWidget {
 	Q_OBJECT
 private:
 
@@ -26,12 +27,15 @@ private:
 	typedef enum {CS_DIFFERENT=0, CS_SAME=1, __CS_COUNT=2} ColorScheme;
 	
 	class Data {
+	public:
 		liboscar::Static::OsmKeyValueObjectStore store;
 		TriangulationGeoHierarchyArrangement trs;
 		TracGraph cg;
-		std::vector<QColor> cellColors;
+	public:
 		Data(const liboscar::Static::OsmKeyValueObjectStore & store);
-		QColor cellColor(uint32_t cellId, ColorScheme cs) const;
+		QColor cellColor(uint32_t cellId, int cs) const;
+	private:
+		std::vector<QColor> cellColors;
 	};
 	
 	typedef std::shared_ptr<Data> DataPtr;
@@ -41,13 +45,13 @@ private:
 		qreal m_zValue;
 		QStringList m_renderPosition;
 		DataPtr m_data;
-		int m_cellOpacity;
-		int m_colorScheme;
+		int m_opacity;
 	protected:
 		//render a single cell
-		bool doRender(const oscar_gui::MarbleMap::CFGraph& cg, const QString& label, Marble::GeoPainter* painter);
+		bool doRender(const oscar_gui::MarbleMap::CFGraph& cg, const QBrush & brush, const QString& label, Marble::GeoPainter* painter);
 		//render a single Triangulation::Face
 		bool doRender(const Face & f, const QBrush & brush, const QString& label, Marble::GeoPainter* painter);
+	protected:
 		inline const DataPtr & data() const { return m_data; }
 		inline DataPtr & data() { return m_data; }
 	public:
@@ -55,8 +59,8 @@ private:
 		virtual ~MyBaseLayer() {}
 		virtual QStringList renderPosition() const;
 		virtual qreal zValue() const;
-		inline void setCellOpacity(int opacity) { m_cellOpacity = opacity; }
-		void setColorScheme(int colorScheme) { m_colorScheme = colorScheme; }
+		inline void opacity(int opacity) { m_opacity = opacity; }
+		inline int opacity() const { return m_opacity; }
 	};
 	
 	class MyLockableBaseLayer: public MyBaseLayer {
@@ -92,6 +96,7 @@ private:
 		typedef std::unordered_map<uint32_t, CFGraph> GraphMap;
 	private:
 		GraphMap m_cgi;
+		int m_colorScheme;
 	public:
 		MyCellLayer(const QStringList & renderPos, qreal zVal, const DataPtr & data);
 		virtual ~MyCellLayer() {}
@@ -100,6 +105,9 @@ private:
 		void clear();
 		void addCell(uint32_t cellId);
 		void removeCell(uint32_t cellId);
+	public:
+		inline void setColorScheme(int colorScheme) { m_colorScheme = colorScheme; }
+		inline int colorScheme() const { return m_colorScheme; }
 	};
 	
 	class MyPathLayer: public MyLockableBaseLayer {
@@ -113,6 +121,7 @@ private:
 	};
 
 private:
+	Marble::MarbleWidget * m_map;
 	MyTriangleLayer * m_triangleLayer;
 	MyCellLayer * m_cellLayer;
 	MyPathLayer * m_pathLayer;
@@ -122,7 +131,7 @@ private:
 	double m_lastRmbClickLat;
 	double m_lastRmbClickLon;
 public:
-	MarbleMap(const TriangulationGeoHierarchyArrangement & trs, const TracGraph & cg);
+	MarbleMap(const liboscar::Static::OsmKeyValueObjectStore & store);
 	virtual ~MarbleMap();
 public slots:
 	void zoomToCell(uint32_t cellId);
@@ -140,7 +149,7 @@ public slots:
 	void setCellOpacity(int cellOpacity);
 	void setColorScheme(int colorScheme);
 signals:
-	void toggleCellClicked(double lat, double lon);
+	void toggleCellClicked(uint32_t cellId);
 private slots:
 	void rmbRequested(int x, int y);
 	void toggleCellTriggered();

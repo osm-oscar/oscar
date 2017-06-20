@@ -6,10 +6,10 @@
 
 namespace oscar_gui {
 
-MainWindow::MainWindow(const liboscar::Static::OsmCompleter& cmp) :
+MainWindow::MainWindow(const std::shared_ptr< liboscar::Static::OsmCompleter >& cmp) :
 m_completer(cmp)
 {
-	m_map = new MarbleMap(cmp.store());
+	m_map = new MarbleMap(cmp->store());
 	
 	connect(this, SIGNAL(triangleAdded(uint32_t)), m_map, SLOT(addTriangle(uint32_t)));
 	connect(this, SIGNAL(triangleRemoved(uint32_t)), m_map, SLOT(removeTriangle(uint32_t)));
@@ -17,7 +17,9 @@ m_completer(cmp)
 	connect(this, SIGNAL(cellAdded(uint32_t)), m_map, SLOT(addCell(uint32_t)));
 	connect(this, SIGNAL(cellRemoved(uint32_t)), m_map, SLOT(removeCell(uint32_t)));
 	
-	QHBoxLayout * mainLayout = new QHBoxLayout(this);
+	connect(m_map, SIGNAL(toggleCellClicked(uint32_t)), this, SLOT(toggleCell(uint32_t)));
+	
+	QHBoxLayout * mainLayout = new QHBoxLayout();
 	mainLayout->addWidget(m_map);
 	
 	//set the central widget
@@ -26,9 +28,14 @@ m_completer(cmp)
 	setCentralWidget(centralWidget);
 }
 
+MainWindow::~MainWindow() {}
+
+void MainWindow::toggleCell(uint32_t cellId) {
+	;
+}
+
 void MainWindow::changeColorScheme(int index) {
 	m_map->setColorScheme(index);
 }
-
 
 }//end namespace oscar_gui
