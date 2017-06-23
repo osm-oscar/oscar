@@ -14,7 +14,7 @@ class QLineEdit;
 namespace oscar_gui {
 
 class MarbleMap;
-class SearchWidget;
+class SidebarWidget;
 
 class MainWindow : public QMainWindow {
 Q_OBJECT
@@ -34,7 +34,7 @@ signals:
 	void itemRemoved(uint32_t itemId);
 private://GUI
 	MarbleMap * m_map;
-	SearchWidget * m_search;
+	SidebarWidget * m_sidebar;
 private slots:
 	void changeColorScheme(int index);
 	void toggleCell(uint32_t cellId);

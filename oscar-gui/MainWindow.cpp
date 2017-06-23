@@ -3,6 +3,7 @@
 #include <QtGui/QHBoxLayout>
 
 #include "MarbleMap.h"
+#include "SidebarWidget.h"
 
 namespace oscar_gui {
 
@@ -10,6 +11,7 @@ MainWindow::MainWindow(const std::shared_ptr< liboscar::Static::OsmCompleter >& 
 m_completer(cmp)
 {
 	m_map = new MarbleMap(cmp->store());
+	m_sidebar = new SidebarWidget();
 	
 	connect(this, SIGNAL(triangleAdded(uint32_t)), m_map, SLOT(addTriangle(uint32_t)));
 	connect(this, SIGNAL(triangleRemoved(uint32_t)), m_map, SLOT(removeTriangle(uint32_t)));
@@ -20,7 +22,8 @@ m_completer(cmp)
 	connect(m_map, SIGNAL(toggleCellClicked(uint32_t)), this, SLOT(toggleCell(uint32_t)));
 	
 	QHBoxLayout * mainLayout = new QHBoxLayout();
-	mainLayout->addWidget(m_map);
+	mainLayout->addWidget(m_sidebar, 1);
+	mainLayout->addWidget(m_map, 2);
 	
 	//set the central widget
 	QWidget * centralWidget = new QWidget(this);

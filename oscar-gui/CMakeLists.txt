@@ -19,12 +19,25 @@ include_directories(
 set(SOURCES_MOC_H
 	MainWindow.h
 	MarbleMap.h
+	SidebarWidget.h
+	GeometryInputWidget.h
+	ItemDetailsWidget.h
+	SearchInputWidget.h
+	SearchResultsWidget.h
+	VisualizationOptionsWidget.h
 )
 
 set(SOURCES_CPP
+	main.cpp
 	MainWindow.cpp
 	MarbleMap.cpp
-	main.cpp
+	SidebarWidget.cpp
+	GeometryInputWidget.cpp
+	ItemDetailsWidget.cpp
+	SearchInputWidget.cpp
+	SearchResultsWidget.cpp
+	VisualizationOptionsWidget.cpp
+	States.cpp
 )
 
 qt4_wrap_cpp(SOURCES_MOC_CPP ${SOURCES_MOC_H})
