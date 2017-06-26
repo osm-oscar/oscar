@@ -156,13 +156,31 @@ void MarbleMap::MyPathLayer::changePath(const sserialize::spatial::GeoWay& w) {
 
 //END MyPathLayer
 
+//BEGIN MyGeometryLayer
+
+MarbleMap::MyGeometryLayer::MyGeometryLayer(const QStringList & renderPos, qreal zVal, const DataPtr & data) :
+MyLockableBaseLayer(renderPos, zVal, data)
+{}
+
+MarbleMap::MyGeometryLayer::~MyGeometryLayer() {}
+
+bool MarbleMap::MyGeometryLayer::render(Marble::GeoPainter* painter, Marble::ViewportParams* viewport, const QString& renderPos, Marble::GeoSceneLayer* layer) {
+	for(uint32_t i(0), s(data()->sgs->size()); i < s; ++i) {
+		
+	}
+}
+
+
+//END MyGeometryLayer
+
 //BEGIN Data
 
 
-MarbleMap::Data::Data(const liboscar::Static::OsmKeyValueObjectStore & store) :
+MarbleMap::Data::Data(const liboscar::Static::OsmKeyValueObjectStore& store, const oscar_gui::States& states) :
 store(store),
 trs(store.regionArrangement()),
-cg(store.cellGraph())
+cg(store.cellGraph()),
+sgs(states.sgs)
 {
 	std::vector<uint8_t> tmpColors(cg.size(), Qt::GlobalColor::color0);
 	for(uint32_t i(0), s(cg.size()); i < s; ++i) {
@@ -195,17 +213,19 @@ cg(store.cellGraph())
 
 //END Data
 
-MarbleMap::MarbleMap(const liboscar::Static::OsmKeyValueObjectStore & store):
+MarbleMap::MarbleMap(const liboscar::Static::OsmKeyValueObjectStore & store, const States & states):
 m_map( new Marble::MarbleWidget() ),
-m_data(new Data(store))
+m_data(new Data(store, states))
 {
 	m_map->setMapThemeId("earth/openstreetmap/openstreetmap.dgml");
 
 	m_triangleLayer = new MarbleMap::MyTriangleLayer({"HOVERS_ABOVE_SURFACE"}, 0.0, m_data);
 	m_cellLayer = new MarbleMap::MyCellLayer({"HOVERS_ABOVE_SURFACE"}, 0.0, m_data);
+	m_geometryLayer = new MarbleMap::MyGeometryLayer({"HOVERS_ABOVE_SURFACE"}, 0.0, m_data);
 	
 	m_map->addLayer(m_triangleLayer);
 	m_map->addLayer(m_cellLayer);
+	m_map->addLayer(m_geometryLayer);
 
 	QAction * toggleCellAction = new QAction("Toggle Cell", this);
 	m_map->popupMenu()->addAction(Qt::MouseButton::RightButton, toggleCellAction);
@@ -213,6 +233,9 @@ m_data(new Data(store))
 	//get mouse clicks
 	connect(m_map->inputHandler(), SIGNAL(rmbRequest(int,int)), this, SLOT(rmbRequested(int,int)));
 	connect(toggleCellAction, SIGNAL(triggered(bool)), this, SLOT(toggleCellTriggered()));
+	
+	//data changes
+	connect(states.sgs.get(), SIGNAL(dataChanged()), this, SLOT(geometryDataChanged()));
 	
 	QHBoxLayout * mainLayout = new QHBoxLayout();
 	mainLayout->addWidget(m_map);
@@ -229,9 +252,11 @@ QColor MarbleMap::Data::cellColor(uint32_t cellId, int cs) const {
 MarbleMap::~MarbleMap() {
 	m_map->removeLayer(m_triangleLayer);
 	m_map->removeLayer(m_cellLayer);
+	m_map->removeLayer(m_geometryLayer);
 	
 	delete m_triangleLayer;
 	delete m_cellLayer;
+	delete m_geometryLayer;
 }
 
 
@@ -289,6 +314,10 @@ void MarbleMap::clearCells() {
 
 void MarbleMap::showPath(const sserialize::spatial::GeoWay& p) {
 	m_pathLayer->changePath(p);
+	this->update();
+}
+
+void MarbleMap::geometryDataChanged() {
 	this->update();
 }
 

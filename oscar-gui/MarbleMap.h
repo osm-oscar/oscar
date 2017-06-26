@@ -8,6 +8,7 @@
 
 #include <liboscar/OsmKeyValueObjectStore.h>
 #include <sserialize/spatial/GeoWay.h>
+#include "States.h"
 
 
 namespace oscar_gui {
@@ -31,8 +32,9 @@ private:
 		liboscar::Static::OsmKeyValueObjectStore store;
 		TriangulationGeoHierarchyArrangement trs;
 		TracGraph cg;
+		std::shared_ptr<SearchGeometryState> sgs;
 	public:
-		Data(const liboscar::Static::OsmKeyValueObjectStore & store);
+		Data(const liboscar::Static::OsmKeyValueObjectStore & store, const States & states);
 		QColor cellColor(uint32_t cellId, int cs) const;
 	private:
 		std::vector<QColor> cellColors;
@@ -119,11 +121,22 @@ private:
 		virtual bool render(Marble::GeoPainter *painter, Marble::ViewportParams * viewport, const QString & renderPos, Marble::GeoSceneLayer * layer);
 		void changePath(const sserialize::spatial::GeoWay & p);
 	};
+	
+	class MyGeometryLayer: public MyLockableBaseLayer {
+	public:
+		MyGeometryLayer(const QStringList & renderPos, qreal zVal, const DataPtr & data);
+		virtual ~MyGeometryLayer();
+	public:
+		virtual bool render(Marble::GeoPainter *painter, Marble::ViewportParams * viewport, const QString & renderPos, Marble::GeoSceneLayer * layer);
+	private:
+		std::shared_ptr<SearchGeometryState> m_sgs;
+	};
 
 private:
 	Marble::MarbleWidget * m_map;
 	MyTriangleLayer * m_triangleLayer;
 	MyCellLayer * m_cellLayer;
+	MyGeometryLayer * m_geometryLayer;
 	MyPathLayer * m_pathLayer;
 	DataPtr m_data;
 	int m_cellOpacity;
@@ -131,7 +144,7 @@ private:
 	double m_lastRmbClickLat;
 	double m_lastRmbClickLon;
 public:
-	MarbleMap(const liboscar::Static::OsmKeyValueObjectStore & store);
+	MarbleMap(const liboscar::Static::OsmKeyValueObjectStore & store, const States & states);
 	virtual ~MarbleMap();
 public slots:
 	void zoomToCell(uint32_t cellId);
@@ -145,6 +158,8 @@ public slots:
 	void clearTriangles();
 public slots:
 	void showPath(const sserialize::spatial::GeoWay & p);
+public slots:
+	void geometryDataChanged();
 public slots:
 	void setCellOpacity(int cellOpacity);
 	void setColorScheme(int colorScheme);

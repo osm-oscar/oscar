@@ -3,26 +3,35 @@
 
 #include <marble/GeoDataLineString.h>
 
+#include <memory>
+
+#include "SemaphoreLocker.h"
+
 namespace oscar_gui {
 
-class SearchGeometryState {
+class SearchGeometryState: public QObject {
+Q_OBJECT
 public:
 	typedef enum {DT_INVALID, DT_POINT, DT_RECT, DT_PATH, DT_POLYGON} DataType;
 public:
-	SearchGeometryState() {}
-	~SearchGeometryState() {}
+	SearchGeometryState();
+	~SearchGeometryState();
 public:
-	inline void add(const QString & name, const Marble::GeoDataLineString & data, DataType t) {
-		m_entries.push_back(Entry(name, data, t));
-	}
-	inline void remove(std::size_t p) { m_entries.remove(p); }
-	inline void activate(std::size_t p) { m_entries[p].active = true; }
-	inline void deactivate(std::size_t p) { m_entries[p].active = false; }
+	void add(const QString & name, const Marble::GeoDataLineString & data, DataType t);
+	void remove(std::size_t p);
+	void activate(std::size_t p);
+	void deactivate(std::size_t p);
 public:
-	inline std::size_t size() const { return m_entries.size(); }
-	inline const QString & name(std::size_t p) const { return m_entries.at(p).name; }
-	inline bool active(std::size_t p) const { return m_entries.at(p).active; }
-	inline const Marble::GeoDataLineString & data(std::size_t p) const { return m_entries.at(p).data;}
+	SemaphoreLocker readLock() const;
+	std::size_t size() const;
+	const QString & name(std::size_t p) const;
+	bool active(std::size_t p) const;
+	DataType type(std::size_t p) const;
+	const Marble::GeoDataLineString & data(std::size_t p) const;
+signals:
+	void dataChanged();
+private:
+	SemaphoreLocker lock(SemaphoreLocker::Type t) const;
 private:
 	struct Entry {
 		QString name;
@@ -36,8 +45,13 @@ private:
 	};
 private:
 	QVector<Entry> m_entries;
+	mutable QSemaphore m_sem;
 };
 
+
+struct States {
+	std::shared_ptr<SearchGeometryState> sgs;
+};
 
 } //end namespace oscar_gui
 

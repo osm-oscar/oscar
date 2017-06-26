@@ -4,6 +4,8 @@
 
 #include <liboscar/StaticOsmCompleter.h>
 
+#include "States.h"
+
 class QTableView;
 class QSpinBox;
 class QPushButton;
@@ -40,6 +42,7 @@ private slots:
 	void toggleCell(uint32_t cellId);
 private:
 	std::shared_ptr<liboscar::Static::OsmCompleter> m_completer;
+	States m_states;
 };
 
 }//end namespace

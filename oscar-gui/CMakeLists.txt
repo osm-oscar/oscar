@@ -25,6 +25,7 @@ set(SOURCES_MOC_H
 	SearchInputWidget.h
 	SearchResultsWidget.h
 	VisualizationOptionsWidget.h
+	States.h
 )
 
 set(SOURCES_CPP
@@ -38,6 +39,7 @@ set(SOURCES_CPP
 	SearchResultsWidget.cpp
 	VisualizationOptionsWidget.cpp
 	States.cpp
+	SearchGeometryModel.cpp
 )
 
 qt4_wrap_cpp(SOURCES_MOC_CPP ${SOURCES_MOC_H})
