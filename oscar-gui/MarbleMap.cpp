@@ -1,5 +1,6 @@
 #include "MarbleMap.h"
 #include <marble/GeoPainter.h>
+#include <marble/GeoDataPoint.h>
 #include <marble/GeoDataLineString.h>
 #include <marble/GeoDataLinearRing.h>
 #include <marble/GeoDataPolygon.h>
@@ -165,17 +166,30 @@ MyLockableBaseLayer(renderPos, zVal, data)
 MarbleMap::MyGeometryLayer::~MyGeometryLayer() {}
 
 bool MarbleMap::MyGeometryLayer::render(Marble::GeoPainter* painter, Marble::ViewportParams* /*viewport*/, const QString& /*renderPos*/, Marble::GeoSceneLayer* /*layer*/) {
-	QBrush brush(QColor(Qt::blue));
+	QPen pen(QColor(Qt::blue));
+	QColor fillColor(0, 0, 255, 50);
+	QBrush brush(fillColor);
+	
+	painter->setPen(pen);
 	painter->setBrush(brush);
+	
 	auto lock(data()->sgs->readLock());
 	for(uint32_t i(0), s(data()->sgs->size()); i < s; ++i) {
+		if (! data()->sgs->active(i) & SearchGeometryState::AT_SHOW) {
+			continue;
+		}
 		const auto & d = data()->sgs->data(i);
 		switch (data()->sgs->type(i)) {
 		case SearchGeometryState::DT_POINT:
-			painter->drawPoint(d.at(0));
+			painter->drawEllipse(d.first(), 20, 20);
 			break;
 		case SearchGeometryState::DT_RECT:
-			painter->drawPolygon(d);
+			painter->drawRect(
+				d.latLonAltBox().center(),
+				d.latLonAltBox().height(Marble::GeoDataCoordinates::Degree),
+				d.latLonAltBox().width(Marble::GeoDataCoordinates::Degree),
+				true
+			);
 			break;
 		case SearchGeometryState::DT_PATH:
 			painter->drawPolyline(d);
@@ -192,6 +206,38 @@ bool MarbleMap::MyGeometryLayer::render(Marble::GeoPainter* painter, Marble::Vie
 
 
 //END MyGeometryLayer
+
+//BEGIN MyInputSearchGeometryLayer
+
+MarbleMap::MyInputSearchGeometryLayer::MyInputSearchGeometryLayer(const QStringList& renderPos, qreal zVal, const oscar_gui::MarbleMap::DataPtr& trs) :
+MyBaseLayer(renderPos, zVal, trs)
+{}
+
+MarbleMap::MyInputSearchGeometryLayer::~MyInputSearchGeometryLayer() {}
+
+void MarbleMap::MyInputSearchGeometryLayer::update(const Marble::GeoDataLineString & d) {
+	m_d = d;
+}
+
+bool MarbleMap::MyInputSearchGeometryLayer::render(Marble::GeoPainter* painter, Marble::ViewportParams*, const QString&, Marble::GeoSceneLayer*) {
+	if (!m_d.size()) {
+		return true;
+	}
+	QBrush brush(QColor(Qt::red));
+	painter->setBrush(brush);
+	
+	if (m_d.size() == 1) {
+		painter->drawPoint(m_d.first());
+	}
+	else {
+		painter->drawPolyline(m_d);
+	}
+	return true;
+}
+
+
+
+//END MyInputSearchGeometryLayer
 
 //BEGIN Data
 
@@ -242,17 +288,41 @@ m_data(new Data(store, states))
 	m_triangleLayer = new MarbleMap::MyTriangleLayer({"HOVERS_ABOVE_SURFACE"}, 0.0, m_data);
 	m_cellLayer = new MarbleMap::MyCellLayer({"HOVERS_ABOVE_SURFACE"}, 0.0, m_data);
 	m_geometryLayer = new MarbleMap::MyGeometryLayer({"HOVERS_ABOVE_SURFACE"}, 0.0, m_data);
+	m_isgLayer = new MarbleMap::MyInputSearchGeometryLayer({"HOVERS_ABOVE_SURFACE"}, 0.0, m_data);
 	
 	m_map->addLayer(m_triangleLayer);
 	m_map->addLayer(m_cellLayer);
 	m_map->addLayer(m_geometryLayer);
+	m_map->addLayer(m_isgLayer);
 
-	QAction * toggleCellAction = new QAction("Toggle Cell", this);
-	m_map->popupMenu()->addAction(Qt::MouseButton::RightButton, toggleCellAction);
 
+	QAction * beginSearchGeometry = new QAction("Begin search geometry", this);
+	m_map->popupMenu()->addAction(Qt::MouseButton::RightButton, beginSearchGeometry);
+	
+	QAction * addToSearchGeometry = new QAction("Add to search geometry", this);
+	m_map->popupMenu()->addAction(Qt::MouseButton::RightButton, addToSearchGeometry);
+	
+	QAction * endAsPoint = new QAction("End search geometry as point", this);
+	m_map->popupMenu()->addAction(Qt::MouseButton::RightButton, endAsPoint);
+	
+	QAction * endAsRect = new QAction("End search geometry as rectangle", this);
+	m_map->popupMenu()->addAction(Qt::MouseButton::RightButton, endAsRect);
+
+	QAction * endAsPath = new QAction("End search geometry as path", this);
+	m_map->popupMenu()->addAction(Qt::MouseButton::RightButton, endAsPath);
+	
+	QAction * endAsPolygon = new QAction("End search geometry as polygon", this);
+	m_map->popupMenu()->addAction(Qt::MouseButton::RightButton, endAsPolygon);
+	
 	//get mouse clicks
 	connect(m_map->inputHandler(), SIGNAL(rmbRequest(int,int)), this, SLOT(rmbRequested(int,int)));
-	connect(toggleCellAction, SIGNAL(triggered(bool)), this, SLOT(toggleCellTriggered()));
+	connect(beginSearchGeometry, SIGNAL(triggered(bool)), this, SLOT(beginSearchGeometryTriggered()));
+	connect(addToSearchGeometry, SIGNAL(triggered(bool)), this, SLOT(addToSearchGeometryTriggered()));
+	
+	connect(endAsPoint, SIGNAL(triggered(bool)), this, SLOT(endSearchGeometryAsPointTriggered()));
+	connect(endAsRect, SIGNAL(triggered(bool)), this, SLOT(endSearchGeometryAsRectTriggered()));
+	connect(endAsPath, SIGNAL(triggered(bool)), this, SLOT(endSearchGeometryAsPathTriggered()));
+	connect(endAsPolygon, SIGNAL(triggered(bool)), this, SLOT(endSearchGeometryAsPolygonTriggered()));
 	
 	//data changes
 	connect(states.sgs.get(), SIGNAL(dataChanged()), this, SLOT(geometryDataChanged()));
@@ -273,10 +343,12 @@ MarbleMap::~MarbleMap() {
 	m_map->removeLayer(m_triangleLayer);
 	m_map->removeLayer(m_cellLayer);
 	m_map->removeLayer(m_geometryLayer);
+	m_map->removeLayer(m_isgLayer);
 	
 	delete m_triangleLayer;
 	delete m_cellLayer;
 	delete m_geometryLayer;
+	delete m_isgLayer;
 }
 
 void MarbleMap::zoomTo(const Marble::GeoDataLatLonBox& bbox) {
@@ -361,14 +433,53 @@ void MarbleMap::setColorScheme(int colorScheme) {
 }
 
 void MarbleMap::rmbRequested(int x, int y) {
-	m_map->geoCoordinates(x, y, m_lastRmbClickLon, m_lastRmbClickLat, Marble::GeoDataCoordinates::Degree);
+	m_map->geoCoordinates(x, y, m_lastRmbClickLon, m_lastRmbClickLat, Marble::GeoDataCoordinates::Radian);
 }
 
-void MarbleMap::toggleCellTriggered() {
-	uint32_t cellId = m_data->trs.cellId(m_lastRmbClickLat, m_lastRmbClickLon);
-	if (cellId != m_data->trs.tds().NullFace) {
-		emit toggleCellClicked(cellId);
-	}
+void MarbleMap::beginSearchGeometryTriggered() {
+	m_isg.clear();
+	m_isgLayer->update(m_isg);
 }
+
+void MarbleMap::addToSearchGeometryTriggered() {
+	Marble::GeoDataCoordinates pos(m_lastRmbClickLon, m_lastRmbClickLat, Marble::GeoDataCoordinates::Radian);
+	qDebug() << "Adding " << pos.toString() << " to search geometry from lon=" << m_lastRmbClickLon << "; lat=" << m_lastRmbClickLat;
+	m_isg.append(pos);
+	m_isgLayer->update(m_isg);
+	this->update();
+}
+
+void MarbleMap::endSearchGeometryAsPointTriggered() {
+	if (m_isg.size() >= 1) {
+		Marble::GeoDataLineString tmp;
+		tmp.append(m_isg.first());
+		m_data->sgs->add("Point", tmp, SearchGeometryState::DT_POINT);
+	}
+	beginSearchGeometryTriggered();
+}
+
+void MarbleMap::endSearchGeometryAsRectTriggered() {
+	if (m_isg.size() >= 2) {
+		m_data->sgs->add("Rectangle", m_isg, SearchGeometryState::DT_RECT);
+	}
+	beginSearchGeometryTriggered();
+}
+
+void MarbleMap::endSearchGeometryAsPathTriggered() {
+	if (m_isg.size() >= 1) {
+		m_data->sgs->add("Path", m_isg, SearchGeometryState::DT_PATH);
+	}
+	beginSearchGeometryTriggered();
+}
+
+void MarbleMap::endSearchGeometryAsPolygonTriggered() {
+	if (m_isg.size() >= 3) {
+		m_data->sgs->add("Polygon", m_isg, SearchGeometryState::DT_POLYGON);
+	}
+	beginSearchGeometryTriggered();
+}
+
+
+
 
 } //end namespace oscar_gui

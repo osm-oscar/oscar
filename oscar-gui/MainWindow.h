@@ -39,7 +39,6 @@ private://GUI
 	SidebarWidget * m_sidebar;
 private slots:
 	void changeColorScheme(int index);
-	void toggleCell(uint32_t cellId);
 private:
 	std::shared_ptr<liboscar::Static::OsmCompleter> m_completer;
 	States m_states;

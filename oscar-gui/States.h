@@ -26,6 +26,7 @@ public:
 	void remove(std::size_t p);
 	void activate(std::size_t p, ActiveType at);
 	void deactivate(std::size_t p, ActiveType at);
+	void toggle(std::size_t p, ActiveType at);
 public:
 	SemaphoreLocker readLock() const;
 	std::size_t size() const;
@@ -58,7 +59,9 @@ struct States {
 	std::shared_ptr<liboscar::Static::OsmCompleter> cmp;
 	std::shared_ptr<SearchGeometryState> sgs;
 	
-	States(const std::shared_ptr<liboscar::Static::OsmCompleter> & cmp) : cmp(cmp) {}
+	explicit States(const std::shared_ptr<liboscar::Static::OsmCompleter> & cmp) : cmp(cmp), sgs(new SearchGeometryState()) {}
+	States(const States & other) = default;
+	States & operator=(const States & other) = default;
 };
 
 } //end namespace oscar_gui

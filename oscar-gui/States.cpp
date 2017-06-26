@@ -41,6 +41,20 @@ void SearchGeometryState::deactivate(std::size_t p, oscar_gui::SearchGeometrySta
 	emit dataChanged();
 }
 
+void SearchGeometryState::toggle(std::size_t p, SearchGeometryState::ActiveType at) {
+	{
+		auto l(lock(SemaphoreLocker::WRITE_LOCK));
+		if (m_entries[p].active & at) {
+			m_entries[p].active &= ~at;
+		}
+		else {
+			m_entries[p].active |= at;
+		}
+	}
+	emit dataChanged();
+}
+
+
 SemaphoreLocker SearchGeometryState::readLock() const {
 	return lock(SemaphoreLocker::READ_LOCK);
 }

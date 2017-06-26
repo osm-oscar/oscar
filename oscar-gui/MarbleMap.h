@@ -132,17 +132,18 @@ private:
 		std::shared_ptr<SearchGeometryState> m_sgs;
 	};
 
-private:
-	Marble::MarbleWidget * m_map;
-	MyTriangleLayer * m_triangleLayer;
-	MyCellLayer * m_cellLayer;
-	MyGeometryLayer * m_geometryLayer;
-	MyPathLayer * m_pathLayer;
-	DataPtr m_data;
-	int m_cellOpacity;
-	int m_colorScheme;
-	double m_lastRmbClickLat;
-	double m_lastRmbClickLon;
+	class MyInputSearchGeometryLayer: public MyBaseLayer {
+	public:
+		MyInputSearchGeometryLayer(const QStringList & renderPos, qreal zVal, const DataPtr & trs);
+		virtual ~MyInputSearchGeometryLayer();
+	public:
+		virtual bool render(Marble::GeoPainter *painter, Marble::ViewportParams * viewport, const QString & renderPos, Marble::GeoSceneLayer * layer);
+	public:
+		void update(const Marble::GeoDataLineString & d);
+	private:
+		Marble::GeoDataLineString m_d;
+	};
+	
 public:
 	MarbleMap(const liboscar::Static::OsmKeyValueObjectStore & store, const States & states);
 	virtual ~MarbleMap();
@@ -165,11 +166,27 @@ public slots:
 public slots:
 	void setCellOpacity(int cellOpacity);
 	void setColorScheme(int colorScheme);
-signals:
-	void toggleCellClicked(uint32_t cellId);
 private slots:
 	void rmbRequested(int x, int y);
-	void toggleCellTriggered();
+	void beginSearchGeometryTriggered();
+	void addToSearchGeometryTriggered();
+	void endSearchGeometryAsPointTriggered();
+	void endSearchGeometryAsRectTriggered();
+	void endSearchGeometryAsPathTriggered();
+	void endSearchGeometryAsPolygonTriggered();
+private:
+	Marble::MarbleWidget * m_map;
+	MyTriangleLayer * m_triangleLayer;
+	MyCellLayer * m_cellLayer;
+	MyGeometryLayer * m_geometryLayer;
+	MyPathLayer * m_pathLayer;
+	MyInputSearchGeometryLayer * m_isgLayer;
+	DataPtr m_data;
+	int m_cellOpacity;
+	int m_colorScheme;
+	double m_lastRmbClickLat; //in radian
+	double m_lastRmbClickLon; // in radian
+	Marble::GeoDataLineString m_isg;
 };
 
 }//end namespace oscar_gui

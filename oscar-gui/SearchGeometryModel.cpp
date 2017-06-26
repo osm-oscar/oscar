@@ -61,6 +61,31 @@ QVariant SearchGeometryModel::data(const QModelIndex& index, int role) const {
 	};
 }
 
+QVariant SearchGeometryModel::headerData(int section, Qt::Orientation orientation, int role) const {
+	if (role == Qt::DisplayRole) {
+		if (orientation == Qt::Horizontal) {
+			switch (section) {
+			case (CD_NAME):
+				return QVariant("Name");
+			case (CD_TYPE):
+				return QVariant("Type");
+			case (CD_SHOW):
+				return QVariant("Show");
+			case (CD_SHOW_CELLS):
+				return QVariant("Show cells");
+			case (CD_SHOW_TRIANGLES):
+				return QVariant("Show Triangles");
+			default:
+				return QVariant();
+			}
+		}
+		else {
+			return QVariant(section);
+		}
+	}
+	return QVariant();
+}
+
 void SearchGeometryModel::doubleClicked(const QModelIndex & index) {
 	switch (index.column()) {
 	case CD_SHOW:

@@ -19,8 +19,6 @@ m_states(cmp)
 	connect(this, SIGNAL(cellAdded(uint32_t)), m_map, SLOT(addCell(uint32_t)));
 	connect(this, SIGNAL(cellRemoved(uint32_t)), m_map, SLOT(removeCell(uint32_t)));
 	
-	connect(m_map, SIGNAL(toggleCellClicked(uint32_t)), this, SLOT(toggleCell(uint32_t)));
-	
 	QHBoxLayout * mainLayout = new QHBoxLayout();
 	mainLayout->addWidget(m_sidebar, 1);
 	mainLayout->addWidget(m_map, 2);
@@ -32,10 +30,6 @@ m_states(cmp)
 }
 
 MainWindow::~MainWindow() {}
-
-void MainWindow::toggleCell(uint32_t cellId) {
-	;
-}
 
 void MainWindow::changeColorScheme(int index) {
 	m_map->setColorScheme(index);
