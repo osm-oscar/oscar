@@ -147,6 +147,8 @@ public:
 	MarbleMap(const liboscar::Static::OsmKeyValueObjectStore & store, const States & states);
 	virtual ~MarbleMap();
 public slots:
+	void zoomTo(const Marble::GeoDataLatLonBox & bbox);
+public slots:
 	void zoomToCell(uint32_t cellId);
 	void addCell(uint32_t cellId);
 	void removeCell(uint32_t cellId);

@@ -26,6 +26,7 @@ set(SOURCES_MOC_H
 	SearchResultsWidget.h
 	VisualizationOptionsWidget.h
 	States.h
+	SearchGeometryModel.h
 )
 
 set(SOURCES_CPP

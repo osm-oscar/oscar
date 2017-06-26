@@ -11,13 +11,12 @@
 
 namespace oscar_gui {
 
-SidebarWidget::SidebarWidget(QWidget* parent, Qt::WindowFlags f) :
-QWidget(parent, f),
+SidebarWidget::SidebarWidget(const States & states) :
 m_tabs(new QTabWidget()),
 m_si(new SearchInputWidget()),
 m_sr(new SearchResultsWidget()),
 m_id(new ItemDetailsWidget()),
-m_gi(new GeometryInputWidget()),
+m_gi(new GeometryInputWidget(states)),
 m_vo(new VisualizationOptionsWidget())
 {
 	connect(this, SIGNAL(searchTextChanged(QString)), m_si, SIGNAL(searchTextChanged(QString)));

@@ -8,10 +8,10 @@
 namespace oscar_gui {
 
 MainWindow::MainWindow(const std::shared_ptr<liboscar::Static::OsmCompleter> & cmp) :
-m_completer(cmp)
+m_states(cmp)
 {
 	m_map = new MarbleMap(cmp->store(), m_states);
-	m_sidebar = new SidebarWidget();
+	m_sidebar = new SidebarWidget(m_states);
 	
 	connect(this, SIGNAL(triangleAdded(uint32_t)), m_map, SLOT(addTriangle(uint32_t)));
 	connect(this, SIGNAL(triangleRemoved(uint32_t)), m_map, SLOT(removeTriangle(uint32_t)));

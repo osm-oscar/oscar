@@ -164,10 +164,30 @@ MyLockableBaseLayer(renderPos, zVal, data)
 
 MarbleMap::MyGeometryLayer::~MyGeometryLayer() {}
 
-bool MarbleMap::MyGeometryLayer::render(Marble::GeoPainter* painter, Marble::ViewportParams* viewport, const QString& renderPos, Marble::GeoSceneLayer* layer) {
+bool MarbleMap::MyGeometryLayer::render(Marble::GeoPainter* painter, Marble::ViewportParams* /*viewport*/, const QString& /*renderPos*/, Marble::GeoSceneLayer* /*layer*/) {
+	QBrush brush(QColor(Qt::blue));
+	painter->setBrush(brush);
+	auto lock(data()->sgs->readLock());
 	for(uint32_t i(0), s(data()->sgs->size()); i < s; ++i) {
-		
+		const auto & d = data()->sgs->data(i);
+		switch (data()->sgs->type(i)) {
+		case SearchGeometryState::DT_POINT:
+			painter->drawPoint(d.at(0));
+			break;
+		case SearchGeometryState::DT_RECT:
+			painter->drawPolygon(d);
+			break;
+		case SearchGeometryState::DT_PATH:
+			painter->drawPolyline(d);
+			break;
+		case SearchGeometryState::DT_POLYGON:
+			painter->drawPolygon(d);
+			break;
+		default:
+			break;
+		}
 	}
+	return true;
 }
 
 
@@ -259,11 +279,14 @@ MarbleMap::~MarbleMap() {
 	delete m_geometryLayer;
 }
 
+void MarbleMap::zoomTo(const Marble::GeoDataLatLonBox& bbox) {
+	m_map->centerOn(bbox, true);
+}
 
 void MarbleMap::zoomToTriangle(uint32_t triangleId) {
 	auto p = m_data->trs.tds().face( triangleId ).centroid();
 	Marble::GeoDataLatLonBox marbleBounds(p.lat(), p.lon(), p.lat(), p.lon(), Marble::GeoDataCoordinates::Degree);
-	m_map->centerOn(marbleBounds, true);
+	zoomTo(marbleBounds);
 }
 
 void MarbleMap::zoomToCell(uint32_t cellId) {

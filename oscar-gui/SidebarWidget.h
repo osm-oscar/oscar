@@ -2,6 +2,8 @@
 #define OSCAR_GUI_SIDEBAR_WIDGET_H
 #include <QtGui/QWidget>
 
+#include "States.h"
+
 class QTabWidget;
 
 namespace oscar_gui {
@@ -15,7 +17,7 @@ class ItemDetailsWidget;
 class SidebarWidget: public QWidget {
 Q_OBJECT
 public:
-	explicit SidebarWidget(QWidget* parent = 0, Qt::WindowFlags f = 0);
+	explicit SidebarWidget(const States & states);
 	virtual ~SidebarWidget();
 public slots:
 	void setSearchText(const QString &);

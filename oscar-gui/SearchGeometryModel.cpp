@@ -50,11 +50,36 @@ QVariant SearchGeometryModel::data(const QModelIndex& index, int role) const {
 		return QVariant( m_sgs->name(index.row()) );
 	case CD_TYPE:
 		return QVariant( sgt2Str( m_sgs->type(index.row()) ) );
-	case CD_ACTIVE:
-		return QVariant( m_sgs->active(index.row()) ? "True" : "False" );
+	case CD_SHOW:
+		return QVariant( m_sgs->active(index.row()) == SearchGeometryState::AT_SHOW ? "True" : "False" );
+	case CD_SHOW_TRIANGLES:
+		return QVariant( m_sgs->active(index.row()) == SearchGeometryState::AT_TRIANGLES ? "True" : "False" );
+	case CD_SHOW_CELLS:
+		return QVariant( m_sgs->active(index.row()) == SearchGeometryState::AT_CELLS ? "True" : "False" );
 	default:
 		return QVariant();
 	};
 }
+
+void SearchGeometryModel::doubleClicked(const QModelIndex & index) {
+	switch (index.column()) {
+	case CD_SHOW:
+		emit showGeometryClicked(index.row());
+		break;
+	case CD_SHOW_TRIANGLES:
+		emit showTrianglesClicked(index.row());
+		break;
+	case CD_SHOW_CELLS:
+		emit showCellsClicked(index.row());
+		break;
+	default:
+		break;
+	}
+}
+
+void SearchGeometryModel::clicked(const QModelIndex& index) {
+	emit geometryClicked(index.row());
+}
+
 
 } //end namespace oscar_gui
