@@ -26,6 +26,7 @@ private slots:
 	void showTrianglesClicked(int p);
 	void showCellsClicked(int p);
 	void geometryClicked(int p);
+	void dataChanged();
 private:
 	QTableView * m_tbl;
 	SearchGeometryModel * m_sgm;

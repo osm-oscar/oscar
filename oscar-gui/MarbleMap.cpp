@@ -44,7 +44,7 @@ bool MarbleMap::MyBaseLayer::doRender(const Face & f, const QBrush & brush, cons
 	Marble::GeoDataLinearRing l;
 	for(int i(0); i < 3; ++i) {
 		auto p = f.point(i);
-		l.append(Marble::GeoDataCoordinates(p.lat(), p.lon(), 0.0, Marble::GeoDataCoordinates::Degree));
+		l.append(Marble::GeoDataCoordinates(p.lon(), p.lat(), 0.0, Marble::GeoDataCoordinates::Degree));
 	}
 	painter->setBrush( brush );
 	painter->drawPolygon(l);
@@ -175,30 +175,42 @@ bool MarbleMap::MyGeometryLayer::render(Marble::GeoPainter* painter, Marble::Vie
 	
 	auto lock(data()->sgs->readLock());
 	for(uint32_t i(0), s(data()->sgs->size()); i < s; ++i) {
-		if (! data()->sgs->active(i) & SearchGeometryState::AT_SHOW) {
-			continue;
+		auto at = data()->sgs->active(i);
+		if (at & SearchGeometryState::AT_SHOW) {
+			const auto & d = data()->sgs->data(i);
+			switch (data()->sgs->type(i)) {
+			case SearchGeometryState::DT_POINT:
+				painter->drawEllipse(d.first(), 20, 20);
+				break;
+			case SearchGeometryState::DT_RECT:
+				painter->drawRect(
+					d.latLonAltBox().center(),
+					d.latLonAltBox().height(Marble::GeoDataCoordinates::Degree),
+					d.latLonAltBox().width(Marble::GeoDataCoordinates::Degree),
+					true
+				);
+				break;
+			case SearchGeometryState::DT_PATH:
+				painter->drawPolyline(d);
+				break;
+			case SearchGeometryState::DT_POLYGON:
+				painter->drawPolygon(d);
+				break;
+			default:
+				break;
+			}
 		}
-		const auto & d = data()->sgs->data(i);
-		switch (data()->sgs->type(i)) {
-		case SearchGeometryState::DT_POINT:
-			painter->drawEllipse(d.first(), 20, 20);
-			break;
-		case SearchGeometryState::DT_RECT:
-			painter->drawRect(
-				d.latLonAltBox().center(),
-				d.latLonAltBox().height(Marble::GeoDataCoordinates::Degree),
-				d.latLonAltBox().width(Marble::GeoDataCoordinates::Degree),
-				true
-			);
-			break;
-		case SearchGeometryState::DT_PATH:
-			painter->drawPolyline(d);
-			break;
-		case SearchGeometryState::DT_POLYGON:
-			painter->drawPolygon(d);
-			break;
-		default:
-			break;
+		if (at & SearchGeometryState::AT_TRIANGLES) {
+			const auto & triangles = data()->sgs->triangles(i);
+			for(uint32_t faceId : triangles) {
+				this->doRender(data()->trs.tds().face(faceId), brush, QString(), painter);
+			}
+		}
+		if (at & SearchGeometryState::AT_CELLS) {
+			const auto & cells = data()->sgs->cells(i);
+			for(uint32_t cellId : cells) {
+				this->doRender(data()->trs.cfGraph(cellId), brush, QString(), painter);
+			}
 		}
 	}
 	return true;
@@ -330,6 +342,11 @@ m_data(new Data(store, states))
 	QHBoxLayout * mainLayout = new QHBoxLayout();
 	mainLayout->addWidget(m_map);
 	this->setLayout(mainLayout);
+	
+	sserialize::spatial::GeoRect bounds = states.cmp->store().boundary();
+	Marble::GeoDataLatLonBox mbounds(bounds.maxLat()*Marble::DEG2RAD, bounds.minLat()*Marble::DEG2RAD, bounds.minLon()*Marble::DEG2RAD+M_PI, bounds.maxLon()*Marble::DEG2RAD+M_PI, Marble::GeoDataCoordinates::Radian);
+	qDebug() << "Zoom to" << mbounds.toString(Marble::GeoDataCoordinates::Degree);
+	this->zoomTo(mbounds);
 }
 
 QColor MarbleMap::Data::cellColor(uint32_t cellId, int cs) const {

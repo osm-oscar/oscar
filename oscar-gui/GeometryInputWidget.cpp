@@ -47,6 +47,8 @@ m_sgs(states.sgs)
 	mainLayout->addWidget(sgtWidget);
 	mainLayout->addWidget(m_tbl);
 	this->setLayout(mainLayout);
+	
+	connect(m_sgs.get(), SIGNAL(dataChanged(int)), this, SLOT(dataChanged()));
 }
 
 GeometryInputWidget::~GeometryInputWidget() {}
@@ -67,5 +69,8 @@ void GeometryInputWidget::showTrianglesClicked(int p) {
 	m_sgs->toggle(p, SearchGeometryState::AT_TRIANGLES);
 }
 
+void GeometryInputWidget::dataChanged() {
+	this->update();
+}
 
 }//end namespace oscar_gui
