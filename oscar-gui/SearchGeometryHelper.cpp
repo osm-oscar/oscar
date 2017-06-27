@@ -71,6 +71,7 @@ QString SearchGeometryHelper::toOscarQuery(const Marble::GeoDataLineString & pat
 	for(int i(0), s(path.size()); i < s; ++i) {
 		tmp.append(',');
 		tmp.append(QString::number(path.at(i).latitude(Marble::GeoDataCoordinates::Degree)));
+		tmp.append(',');
 		tmp.append(QString::number(path.at(i).longitude(Marble::GeoDataCoordinates::Degree)));
 	}
 	return tmp;
@@ -83,6 +84,7 @@ QString SearchGeometryHelper::toOscarQuery(const Marble::GeoDataLinearRing & pol
 	QString tmp("$poly:");
 	for(int i(0), s(polygon.size()); i < s; ++i) {
 		tmp.append(QString::number(polygon.at(i).latitude(Marble::GeoDataCoordinates::Degree)));
+		tmp.append(',');
 		tmp.append(QString::number(polygon.at(i).longitude(Marble::GeoDataCoordinates::Degree)));
 		tmp.append(',');
 	}

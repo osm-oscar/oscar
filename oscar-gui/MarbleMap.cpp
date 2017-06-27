@@ -176,10 +176,13 @@ bool MarbleMap::MyGeometryLayer::render(Marble::GeoPainter* painter, Marble::Vie
 	QColor fillColor(0, 0, 255, 50);
 	QBrush brush(fillColor);
 	
-	painter->setPen(pen);
+	
 	painter->setBrush(brush);
 	
 	auto lock(data()->sgs->readLock());
+	
+	pen.setWidth(5);
+	painter->setPen(pen);
 	for(uint32_t i(0), s(data()->sgs->size()); i < s; ++i) {
 		auto at = data()->sgs->active(i);
 		if (at & SearchGeometryState::AT_SHOW) {
@@ -206,6 +209,12 @@ bool MarbleMap::MyGeometryLayer::render(Marble::GeoPainter* painter, Marble::Vie
 				break;
 			}
 		}
+	}
+	
+	pen.setWidth(1);
+	painter->setPen(pen);
+	for(uint32_t i(0), s(data()->sgs->size()); i < s; ++i) {
+		auto at = data()->sgs->active(i);
 		if (at & SearchGeometryState::AT_TRIANGLES) {
 			const auto & triangles = data()->sgs->triangles(i);
 			for(uint32_t faceId : triangles) {
