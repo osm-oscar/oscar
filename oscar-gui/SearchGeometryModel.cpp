@@ -20,7 +20,7 @@ static QString sgt2Str(SearchGeometryState::DataType t) {
 SearchGeometryModel::SearchGeometryModel(const std::shared_ptr<SearchGeometryState> & sgs) :
 m_sgs(sgs)
 {
-	connect(m_sgs.get(), SIGNAL(dataChanged()), this, SIGNAL(modelReset()));
+	connect(m_sgs.get(), SIGNAL(dataChanged(int)), this, SIGNAL(modelReset()));
 }
 
 SearchGeometryModel::~SearchGeometryModel() {}

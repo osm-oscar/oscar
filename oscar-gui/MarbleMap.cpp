@@ -325,7 +325,7 @@ m_data(new Data(store, states))
 	connect(endAsPolygon, SIGNAL(triggered(bool)), this, SLOT(endSearchGeometryAsPolygonTriggered()));
 	
 	//data changes
-	connect(states.sgs.get(), SIGNAL(dataChanged()), this, SLOT(geometryDataChanged()));
+	connect(states.sgs.get(), SIGNAL(dataChanged(int)), this, SLOT(geometryDataChanged(int)));
 	
 	QHBoxLayout * mainLayout = new QHBoxLayout();
 	mainLayout->addWidget(m_map);
@@ -412,7 +412,7 @@ void MarbleMap::showPath(const sserialize::spatial::GeoWay& p) {
 	this->update();
 }
 
-void MarbleMap::geometryDataChanged() {
+void MarbleMap::geometryDataChanged(int) {
 	this->update();
 }
 

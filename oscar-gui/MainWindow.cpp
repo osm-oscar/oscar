@@ -8,7 +8,8 @@
 namespace oscar_gui {
 
 MainWindow::MainWindow(const std::shared_ptr<liboscar::Static::OsmCompleter> & cmp) :
-m_states(cmp)
+m_states(cmp),
+m_stateHandlers(m_states)
 {
 	m_map = new MarbleMap(cmp->store(), m_states);
 	m_sidebar = new SidebarWidget(m_states);

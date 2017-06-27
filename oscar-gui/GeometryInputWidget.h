@@ -7,6 +7,8 @@
 #include "States.h"
 
 class QTableView;
+class QLineEdit;
+class QPushButton;
 
 namespace oscar_gui {
 
@@ -27,6 +29,9 @@ private slots:
 private:
 	QTableView * m_tbl;
 	SearchGeometryModel * m_sgm;
+	QLineEdit * m_sgt; //search geometry text input
+	QLineEdit * m_sgtr; //search geometry text input result
+	QPushButton * m_sgtb; //search geometry text accept button
 	std::shared_ptr<SearchGeometryState> m_sgs;
 	
 };

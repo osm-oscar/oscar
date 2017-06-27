@@ -3,6 +3,8 @@
 #include <QtGui/QTableView>
 #include <QtGui/QHBoxLayout>
 #include <QtGui/QHeaderView>
+#include <QtGui/QLineEdit>
+#include <QtGui/QPushButton>
 
 #include "SearchGeometryModel.h"
 
@@ -28,7 +30,21 @@ m_sgs(states.sgs)
 	connect(m_sgm, SIGNAL(showTrianglesClicked(int)), this, SLOT(showTrianglesClicked(int)));
 	connect(m_sgm, SIGNAL(showCellsClicked(int)), this, SLOT(showCellsClicked(int)));
 	
-	QHBoxLayout * mainLayout = new QHBoxLayout();
+	m_sgt = new QLineEdit();
+	m_sgt->setPlaceholderText("Search query to create geometry");
+	m_sgtr = new QLineEdit();
+	m_sgtr->setPlaceholderText("Geometry created from search query");
+	m_sgtb = new QPushButton("Accept");
+	
+	QVBoxLayout * sgtLayout = new QVBoxLayout();
+	sgtLayout->addWidget(m_sgt);
+	sgtLayout->addWidget(m_sgtr);
+	sgtLayout->addWidget(m_sgtb);
+	QWidget * sgtWidget = new QWidget();
+	sgtWidget->setLayout(sgtLayout);
+	
+	QVBoxLayout * mainLayout = new QVBoxLayout();
+	mainLayout->addWidget(sgtWidget);
 	mainLayout->addWidget(m_tbl);
 	this->setLayout(mainLayout);
 }

@@ -5,6 +5,7 @@
 #include <liboscar/StaticOsmCompleter.h>
 
 #include "States.h"
+#include "StateHandlers.h"
 
 class QTableView;
 class QSpinBox;
@@ -42,6 +43,7 @@ private slots:
 private:
 	std::shared_ptr<liboscar::Static::OsmCompleter> m_completer;
 	States m_states;
+	StateHandlers m_stateHandlers;
 };
 
 }//end namespace

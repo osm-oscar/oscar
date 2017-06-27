@@ -27,6 +27,9 @@ public:
 	void activate(std::size_t p, ActiveType at);
 	void deactivate(std::size_t p, ActiveType at);
 	void toggle(std::size_t p, ActiveType at);
+
+	void setCells(std::size_t p, const sserialize::ItemIndex & idx);
+	void setTriangles(std::size_t p, const sserialize::ItemIndex & idx);
 public:
 	SemaphoreLocker readLock() const;
 	std::size_t size() const;
@@ -34,8 +37,10 @@ public:
 	ActiveType active(std::size_t p) const;
 	DataType type(std::size_t p) const;
 	const Marble::GeoDataLineString & data(std::size_t p) const;
+	const sserialize::ItemIndex & cells(std::size_t p) const;
+	const sserialize::ItemIndex & triangles(std::size_t p) const;
 signals:
-	void dataChanged();
+	void dataChanged(int p);
 private:
 	SemaphoreLocker lock(SemaphoreLocker::Type t) const;
 private:
@@ -44,6 +49,8 @@ private:
 		Marble::GeoDataLineString data;
 		int active;
 		DataType type;
+		sserialize::ItemIndex triangles;
+		sserialize::ItemIndex cells;
 		Entry() : active(AT_NONE), type(DT_INVALID) {}
 		Entry(const QString & name, const Marble::GeoDataLineString & data, DataType t) :
 		name(name), data(data), active(AT_NONE), type(t)
@@ -53,7 +60,6 @@ private:
 	QVector<Entry> m_entries;
 	mutable QSemaphore m_sem;
 };
-
 
 struct States {
 	std::shared_ptr<liboscar::Static::OsmCompleter> cmp;

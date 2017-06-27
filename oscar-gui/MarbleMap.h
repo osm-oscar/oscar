@@ -162,7 +162,7 @@ public slots:
 public slots:
 	void showPath(const sserialize::spatial::GeoWay & p);
 public slots:
-	void geometryDataChanged();
+	void geometryDataChanged(int p);
 public slots:
 	void setCellOpacity(int cellOpacity);
 	void setColorScheme(int colorScheme);
