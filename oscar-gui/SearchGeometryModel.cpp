@@ -51,11 +51,11 @@ QVariant SearchGeometryModel::data(const QModelIndex& index, int role) const {
 	case CD_TYPE:
 		return QVariant( sgt2Str( m_sgs->type(index.row()) ) );
 	case CD_SHOW:
-		return QVariant( m_sgs->active(index.row()) == SearchGeometryState::AT_SHOW ? "True" : "False" );
+		return QVariant( m_sgs->active(index.row()) & SearchGeometryState::AT_SHOW ? "True" : "False" );
 	case CD_SHOW_TRIANGLES:
-		return QVariant( m_sgs->active(index.row()) == SearchGeometryState::AT_TRIANGLES ? "True" : "False" );
+		return QVariant( m_sgs->active(index.row()) & SearchGeometryState::AT_TRIANGLES ? "True" : "False" );
 	case CD_SHOW_CELLS:
-		return QVariant( m_sgs->active(index.row()) == SearchGeometryState::AT_CELLS ? "True" : "False" );
+		return QVariant( m_sgs->active(index.row()) & SearchGeometryState::AT_CELLS ? "True" : "False" );
 	default:
 		return QVariant();
 	};

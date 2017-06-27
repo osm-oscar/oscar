@@ -49,7 +49,13 @@ bool MarbleMap::MyBaseLayer::doRender(const Face & f, const QBrush & brush, cons
 	painter->setBrush( brush );
 	painter->drawPolygon(l);
 	if (!label.isEmpty()) {
-		painter->drawText(l.latLonAltBox().center(), label);
+		double lat, lon;
+		lat = lon = 0.0;
+		for(const auto & x : l) {
+			lat += x.latitude();
+			lon += x.longitude();
+		}
+		painter->drawText(Marble::GeoDataCoordinates(lon/3, lat/3), label);
 	}
 	return true;
 }
@@ -203,7 +209,7 @@ bool MarbleMap::MyGeometryLayer::render(Marble::GeoPainter* painter, Marble::Vie
 		if (at & SearchGeometryState::AT_TRIANGLES) {
 			const auto & triangles = data()->sgs->triangles(i);
 			for(uint32_t faceId : triangles) {
-				this->doRender(data()->trs.tds().face(faceId), brush, QString(), painter);
+				this->doRender(data()->trs.tds().face(faceId), brush, QString::number(faceId), painter);
 			}
 		}
 		if (at & SearchGeometryState::AT_CELLS) {
