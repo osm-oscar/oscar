@@ -41,6 +41,8 @@ std::string toString(sserialize::ItemIndex::Types v) {
 		return "simple";
 	case (sserialize::ItemIndex::T_NATIVE):
 		return "native";
+	case (sserialize::ItemIndex::T_ELIAS_FANO):
+		return "elias-fano";
 	default:
 		return "invalid";
 	}
@@ -465,6 +467,9 @@ void IndexStoreConfig::update(const Json::Value & cfg) {
 		}
 		else if (t == "native") {
 			type = sserialize::ItemIndex::T_NATIVE;
+		}
+		else if (t == "eliasfano") {
+			type = sserialize::ItemIndex::T_ELIAS_FANO;
 		}
 		else {
 			throw sserialize::ConfigurationException("IndexStoreConfig", "invalid index type");
