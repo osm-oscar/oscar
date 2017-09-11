@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 project(oscar-cmd)
 find_package(LIBRT REQUIRED)
+find_package(Cairo REQUIRED)
 
 include_directories(
 	${LIBOSCAR_INCLUDE_DIR}
@@ -21,7 +22,7 @@ CairoRenderer.cpp
 
 SET(OSCAR_CMD_LINK_LIBS
 	${LIBOSCAR_LINK_LIBRARIES}
-	"cairo"
+	${CAIRO_LIBRARIES}
 )
 
 add_executable(${PROJECT_NAME} ${OSCAR_CMD_SOURCES_CPP})
