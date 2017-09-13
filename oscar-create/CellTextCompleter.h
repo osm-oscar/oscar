@@ -236,7 +236,7 @@ struct ContainerMerger {
 };
 
 struct Data {
-	Data() {}
+	Data() : id(0xFFFFFFFF) {}
 	Data(const MatchDesc & exact, const MatchDesc & suffix) : exact(exact), suffix(suffix), id(0xFFFFFFFF) {}
 	MatchDesc exact;
 	MatchDesc suffix;
