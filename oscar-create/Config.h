@@ -116,6 +116,7 @@ public:
 public:
 	TextSearchConfig() : enabled(false), type(liboscar::TextSearch::NONE) {}
 	TextSearchConfig(const Json::Value& cfg, const std::string & basePath);
+	virtual ~TextSearchConfig() {}
 	virtual void update(const Json::Value & cf, const std::string & basePath);
 	virtual std::ostream & print(std::ostream & out) const;
 	///@param base update base with new info
@@ -141,6 +142,7 @@ public:
 	enum class TrieType { TRIE, FULL_INDEX_TRIE, FLAT_GST, FLAT_TRIE};
 public:
 	ItemSearchConfig(const Json::Value& cfg, const std::string& basePath);
+	virtual ~ItemSearchConfig() {}
 	virtual void update(const Json::Value & cfg, const std::string & basePath) override;
 	virtual std::ostream & print(std::ostream& out) const override;
 	virtual bool valid() const override;
@@ -169,6 +171,7 @@ public:
 class GeoHierarchyItemsSearchConfig: public ItemSearchConfig {
 public:
 	GeoHierarchyItemsSearchConfig(const Json::Value& cfg, const std::string& basePath);
+	virtual ~GeoHierarchyItemsSearchConfig() {}
 	virtual std::ostream & print(std::ostream & out) const override;
 	virtual bool valid() const override;
 };
@@ -176,6 +179,7 @@ public:
 class GeoHierarchySearchConfig: public ItemSearchConfig {
 public:
 	GeoHierarchySearchConfig(const Json::Value & cfg, const std::string & basePath);
+	virtual ~GeoHierarchySearchConfig() {}
 	virtual std::ostream & print(std::ostream & out) const override;
 	virtual bool valid() const override;
 };
@@ -185,6 +189,7 @@ public:
 	enum class TrieType { TRIE, FLAT_TRIE };
 public:
 	GeoCellConfig(const Json::Value& cfg, const std::string& basePath);
+	virtual ~GeoCellConfig() {}
 	virtual void update(const Json::Value & cfg, const std::string & basePath) override;
 	virtual std::ostream & print(std::ostream & out) const override;
 	virtual bool valid() const override;
@@ -201,6 +206,7 @@ public:
 class OOMGeoCellConfig: public TextSearchConfig {
 public:
 	OOMGeoCellConfig(const Json::Value & cfg, const std::string & basePath);
+	virtual ~OOMGeoCellConfig() {}
 	virtual void update(const Json::Value & cfg, const std::string & basePath) override;
 	virtual std::ostream & print(std::ostream & out) const override;
 	virtual bool valid() const override;
@@ -226,7 +232,7 @@ private:
 	std::string m_outFileName;
 public:
 	Config();
-	~Config() {}
+	~Config();
 	ReturnValues fromCmdLineArgs(int argc, char** argv);
 	ValidationReturnValues validate();
 	std::string getOutFileDir() const;

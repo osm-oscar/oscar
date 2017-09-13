@@ -78,7 +78,7 @@ sserialize::MmappedMemoryType parseMMT(const std::string str) {
 	return mmType;
 }
 
-std::string toAbsolutePath(const std::string & str, const std::string base) {
+std::string toAbsolutePath(const std::string & str, const std::string & base) {
 	if (!str.size()) {
 		return str;
 	}
@@ -1159,6 +1159,17 @@ gridConfig(0),
 rTreeConfig(0),
 tagStoreConfig(0)
 {}
+
+Config::~Config() {
+	delete indexStoreConfig;
+	delete kvStoreConfig;
+	for(auto x : textSearchConfig) {
+		delete x;
+	}
+	delete gridConfig;
+	delete rTreeConfig;
+	delete tagStoreConfig;
+}
 
 std::string Config::getOutFileDir() const {
 	return m_outFileName;
