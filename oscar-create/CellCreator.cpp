@@ -1,6 +1,7 @@
 #include "CellCreator.h"
 #include <sserialize/Static/GeoWay.h>
 #include <sserialize/utility/printers.h>
+#include <sserialize/mt/ThreadPool.h>
 #include "OsmKeyValueObjectStore.h"
 
 inline std::size_t hashCellId(const std::vector<uint32_t> & v) {
@@ -195,7 +196,7 @@ void CellCreator::createGeoHierarchy(FlatCellList& cellList, uint32_t geoRegionC
 	typedef sserialize::CFLArray< sserialize::MMVector<uint32_t> > CellsOfGeoRegion;
 	typedef sserialize::MMVector< CellsOfGeoRegion > GeoRegionCellSplitListType;
 	sserialize::ProgressInfo info;
-	uint32_t processedItems = 0;
+	std::atomic<uint32_t> processedItems(0);
 	std::cout << "CellCreator: creating GeoHierarchy for " << geoRegionCount << " regions out of " << cellList.size() << " cells" << std::endl;
 	
 	sserialize::MMVector<uint32_t> geoRegionGraphData(sserialize::MM_FILEBASED);
@@ -239,61 +240,70 @@ void CellCreator::createGeoHierarchy(FlatCellList& cellList, uint32_t geoRegionC
 										else
 											return geoRegionCellSplit.at(x).size() < geoRegionCellSplit.at(y).size();
 									};
-
+		
 		processedItems = 0;
+		std::mutex lck;
 		info.begin(geoRegionCount, "Creating GeoRegionGraph");
-		#pragma omp parallel for schedule(dynamic, 1)
-		for(uint32_t i = 0; i < geoRegionCount; ++i) {
-			const auto & myCellList = geoRegionCellSplit.at(i);
-			SSERIALIZE_EXPENSIVE_ASSERT(std::is_sorted(myCellList.begin(), myCellList.end()));
-			std::set<uint32_t, decltype(geoRegionCellSizeComparer)> tmpChildRegions(geoRegionCellSizeComparer);
-			std::unordered_set<uint32_t> checkedCandidateRegions;
-			checkedCandidateRegions.insert(i);
-			for(auto cit(myCellList.begin()), cend(myCellList.end()); cit != cend; ++cit) {
-				for(auto pit(cellList.at(*cit).parentsBegin()), pend(cellList.at(*cit).parentsEnd()); pit != pend; ++pit) {
-					if (!checkedCandidateRegions.count(*pit)) {
-						if (sserialize::subset_of(geoRegionCellSplit.at(*pit).cbegin(), geoRegionCellSplit.at(*pit).cend(), myCellList.cbegin(), myCellList.cend())) {
-							tmpChildRegions.insert(*pit);
+		{
+			std::atomic<uint32_t> regionIt(0);
+			sserialize::ThreadPool::execute([&]() {
+				while (true) {
+					uint32_t i = regionIt.fetch_add(1);
+					
+					if (i >= geoRegionCount) {
+						return;
+					}
+					
+					const auto & myCellList = geoRegionCellSplit.at(i);
+					SSERIALIZE_EXPENSIVE_ASSERT(std::is_sorted(myCellList.begin(), myCellList.end()));
+					std::set<uint32_t, decltype(geoRegionCellSizeComparer)> tmpChildRegions(geoRegionCellSizeComparer);
+					std::unordered_set<uint32_t> checkedCandidateRegions;
+					checkedCandidateRegions.insert(i);
+					for(auto cit(myCellList.begin()), cend(myCellList.end()); cit != cend; ++cit) {
+						for(auto pit(cellList.at(*cit).parentsBegin()), pend(cellList.at(*cit).parentsEnd()); pit != pend; ++pit) {
+							if (!checkedCandidateRegions.count(*pit)) {
+								if (sserialize::subset_of(geoRegionCellSplit.at(*pit).cbegin(), geoRegionCellSplit.at(*pit).cend(), myCellList.cbegin(), myCellList.cend())) {
+									tmpChildRegions.insert(*pit);
+								}
+								else {
+									checkedCandidateRegions.insert(*pit);
+								}
+							}
 						}
-						else {
-							checkedCandidateRegions.insert(*pit);
+					}
+					//now remove all children that are not direct descendents
+					//the children are sorted according to the size of their cell-list (in ascending order!)
+					//start with the largest one and remove all subsets
+					std::vector<uint32_t> myChildren;
+					while (tmpChildRegions.size()) {
+						uint32_t directChild = *tmpChildRegions.rbegin();
+						myChildren.push_back(directChild);
+						tmpChildRegions.erase(directChild);
+						const auto & directChildCellList = geoRegionCellSplit.at(directChild); 
+						for(std::set<uint32_t>::iterator it(tmpChildRegions.begin()), end(tmpChildRegions.end()); it != end;) {
+							if (sserialize::subset_of(geoRegionCellSplit.at(*it).cbegin(), geoRegionCellSplit.at(*it).cend(), directChildCellList.cbegin(), directChildCellList.cend())) {
+								it = tmpChildRegions.erase(it);
+							}
+							else {
+								++it;
+							}
 						}
+					}
+					//sort the children since they are now sorted according to their cell count
+					std::sort(myChildren.begin(), myChildren.end());
+					ChildrenOfGeoRegion & me = geoRegionGraph.at(i);
+					me.u.o.size = myChildren.size();
+					{
+						std::unique_lock<std::mutex> l(lck);
+						me.u.o.beginOffset = geoRegionGraphData.size();
+						geoRegionGraphData.push_back(myChildren.begin(), myChildren.end());
+					}
+					{
+						++processedItems;
+						info(processedItems);
 					}
 				}
-			}
-			//now remove all children that are not direct descendents
-			//the children are sorted according to the size of their cell-list (in ascending order!)
-			//start with the largest one and remove all subsets
-			std::vector<uint32_t> myChildren;
-			while (tmpChildRegions.size()) {
-				uint32_t directChild = *tmpChildRegions.rbegin();
-				myChildren.push_back(directChild);
-				tmpChildRegions.erase(directChild);
-				const auto & directChildCellList = geoRegionCellSplit[directChild]; 
-				for(std::set<uint32_t>::iterator it(tmpChildRegions.begin()), end(tmpChildRegions.end()); it != end;) {
-					if (sserialize::subset_of(geoRegionCellSplit.at(*it).cbegin(), geoRegionCellSplit.at(*it).cend(), directChildCellList.cbegin(), directChildCellList.cend())) {
-						it = tmpChildRegions.erase(it);
-					}
-					else {
-						++it;
-					}
-				}
-			}
-			//sort the children since they are now sorted according to their cell count
-			std::sort(myChildren.begin(), myChildren.end());
-			ChildrenOfGeoRegion & me = geoRegionGraph.at(i);
-			me.u.o.size = myChildren.size();
-			#pragma omp critical (parent_child_flush)
-			{
-				me.u.o.beginOffset = geoRegionGraphData.size();
-				geoRegionGraphData.push_back(myChildren.begin(), myChildren.end());
-			}
-			#pragma omp critical (update_processed_items)
-			{
-				++processedItems;
-				info(processedItems);
-			}
-			
+			});
 		}
 		for(ChildrenOfGeoRegion & x : geoRegionGraph) {
 			auto off = x.u.o.beginOffset;
