@@ -7,8 +7,15 @@ find_package(ICU 4.9 REQUIRED)
 find_package(LIBRT REQUIRED)
 find_package(OpenMP REQUIRED)
 
+set(MY_COMPILE_DEFINITIONS
+	${LIBOSCAR_COMPILE_DEFINITIONS}
+)
+
 if (LIBOSCAR_NO_DATA_REFCOUNTING_ENABLED)
-	set(MY_COMPILE_DEFINITIONS "-DWITH_OSCAR_CREATE_NO_DATA_REFCOUNTING")
+	set(MY_COMPILE_DEFINITIONS
+		"-DWITH_OSCAR_CREATE_NO_DATA_REFCOUNTING"
+		${MY_COMPILE_DEFINITIONS}
+	)
 endif(LIBOSCAR_NO_DATA_REFCOUNTING_ENABLED)
 
 include_directories(
@@ -62,9 +69,12 @@ SET(OSCAR_CREATE_LINK_LIBS
 	"boost_system"
 )
 
+target_compile_definitions(lib${PROJECT_NAME} PUBLIC ${MY_COMPILE_DEFINITIONS})
+add_dependencies(lib${PROJECT_NAME} liboscar sserialize osmpbf libosmtools)
+
 target_link_libraries(${PROJECT_NAME} ${OSCAR_CREATE_LINK_LIBS})
 target_compile_definitions(${PROJECT_NAME} PRIVATE ${MY_COMPILE_DEFINITIONS})
-add_dependencies(${PROJECT_NAME} liboscar sserialize osmpbf libosmtools)
+add_dependencies(${PROJECT_NAME} lib${PROJECT_NAME})
 
 target_link_libraries(${PROJECT_NAME}-cells ${OSCAR_CREATE_LINK_LIBS})
 add_dependencies(${PROJECT_NAME}-cells liboscar sserialize osmpbf libosmtools)
