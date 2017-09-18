@@ -184,6 +184,9 @@ int Config::parseSingleArg(int argc, char ** argv, int & i, int & printNumResult
 		workItems.emplace_back(Config::WorkItem::CELL_IMAGE_FROM_QUERY, new WD_CellImageFromQuery(completionString, std::string(argv[i+1])));
 		++i;
 	}
+	else if (arg == "-ifq") {
+		workItems.emplace_back(Config::WorkItem::ITEMS_FROM_QUERY, new WD_ItemsFromQuery(completionString, threadCount));
+	}
 	//interactive complete
 	
 	else if (arg == "-cip" && i+1 < argc) {

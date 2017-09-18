@@ -140,6 +140,9 @@ int main(int argc, char **argv) {
 			case Config::WorkItem::LIST_COMPLETERS:
 				worker.listCompleters();
 				break;
+			case Config::WorkItem::ITEMS_FROM_QUERY:
+				worker.itemsFromQuery(*workItem.data->as<WD_ItemsFromQuery>());
+				break;
 			case Config::WorkItem::CELLS_FROM_QUERY:
 				worker.cellsFromQuery(*workItem.data->as<WD_CellsFromQuery>());
 				break;

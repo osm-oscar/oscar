@@ -117,6 +117,16 @@ struct WD_CellsFromQuery: public WD_base {
 	uint32_t threadCount;
 };
 
+struct WD_ItemsFromQuery: public WD_base {
+	WD_ItemsFromQuery(const std::string & value, uint32_t threadCount) :
+	value(value),
+	threadCount(threadCount)
+	{}
+	virtual ~WD_ItemsFromQuery() {}
+	std::string value;
+	uint32_t threadCount;
+};
+
 struct WD_CellImageFromQuery: public WD_base {
 	WD_CellImageFromQuery(const std::string & query, const std::string & cfg) :
 	query(query),
@@ -265,6 +275,7 @@ public:
 			GH_ID_2_STORE_ID, STORE_ID_2_GH_ID,
 			PRINT_STATS, PRINT_CELL_STATS, PRINT_STATS_SINGLE, PRINT_PAPER_STATS_DB, PRINT_PAPER_STATS_GH, PRINT_CTC_STATS, PRINT_CTC_SELECTIVE_STATS, PRINT_CQR_DATA_SIZE, DUMP_ALL_ITEM_TAGS_WITH_INHERITED_TAGS, PRINT_CELL_NEIGHBOR_STATS,
 			LIST_COMPLETERS,
+			ITEMS_FROM_QUERY,
 			CELLS_FROM_QUERY, CELL_IMAGE_FROM_QUERY,
 			INTERACTIVE_PARTIAL, INTERACTIVE_SIMPLE, INTERACTIVE_FULL,
 			COMPLETE_STRING_PARTIAL, COMPLETE_STRING_SIMPLE, COMPLETE_STRING_FULL, COMPLETE_STRING_CLUSTERED, COMPLETE_STRING_CLUSTERED_TREED_CQR,
