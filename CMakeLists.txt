@@ -26,7 +26,7 @@ SET(PACKAGE_VERSION 0.1)
 
 set(MY_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Wextra -Wno-unknown-pragmas -Wstrict-overflow=3")
 set(MY_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++14 -Wall -Wextra -Wno-unknown-pragmas -Wstrict-overflow=3")# -Wshorten-64-to-32")
-set(DEBUG_FLAGS "${DEBUG_FLAGS} -DDEBUG_CHECK_ALL -DWITH_SSERIALIZE_CHEAP_ASSERT")# -DWITH_SSERIALIZE_EXPENSIVE_ASSERT")# -Wconversion")
+set(DEBUG_FLAGS "${DEBUG_FLAGS} -DWITH_SSERIALIZE_CHEAP_ASSERT")# -DWITH_SSERIALIZE_EXPENSIVE_ASSERT")# -Wconversion")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MY_C_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MY_CXX_FLAGS}")
