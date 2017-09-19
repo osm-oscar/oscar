@@ -78,12 +78,3 @@ add_dependencies(${PROJECT_NAME} lib${PROJECT_NAME})
 
 target_link_libraries(${PROJECT_NAME}-cells ${OSCAR_CREATE_LINK_LIBS})
 add_dependencies(${PROJECT_NAME}-cells liboscar sserialize osmpbf libosmtools)
-
-add_target_properties(lib${PROJECT_NAME} COMPILE_FLAGS "-fopenmp -DCGAL_HAS_THREADS")
-add_target_properties(lib${PROJECT_NAME} LINK_FLAGS "-DCGAL_HAS_THREADS -fopenmp")
-
-add_target_properties(${PROJECT_NAME} COMPILE_FLAGS "-fopenmp -DCGAL_HAS_THREADS")
-add_target_properties(${PROJECT_NAME} LINK_FLAGS "-DCGAL_HAS_THREADS -fopenmp")
-
-add_target_properties(${PROJECT_NAME}-cells COMPILE_FLAGS "-fopenmp -DCGAL_HAS_THREADS")
-add_target_properties(${PROJECT_NAME}-cells LINK_FLAGS "-DCGAL_HAS_THREADS -fopenmp")

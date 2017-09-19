@@ -29,14 +29,3 @@ SET(OSCAR_CMD_LINK_LIBS
 add_executable(${PROJECT_NAME} ${OSCAR_CMD_SOURCES_CPP})
 add_dependencies(${PROJECT_NAME} liboscar)
 target_link_libraries(${PROJECT_NAME} ${OSCAR_CMD_LINK_LIBS})
-
-
-add_target_properties(sserialize COMPILE_FLAGS "-fopenmp -DCGAL_HAS_THREADS")
-add_target_properties(sserialize LINK_FLAGS "-DCGAL_HAS_THREADS -fopenmp")
-
-add_target_properties(liboscar COMPILE_FLAGS "-fopenmp -DCGAL_HAS_THREADS")
-add_target_properties(liboscar LINK_FLAGS "-DCGAL_HAS_THREADS -fopenmp")
-
-add_target_properties(${PROJECT_NAME} COMPILE_FLAGS "-fopenmp -DCGAL_HAS_THREADS")
-add_target_properties(${PROJECT_NAME} LINK_FLAGS "-DCGAL_HAS_THREADS -fopenmp")
-
