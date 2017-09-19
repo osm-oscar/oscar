@@ -18,6 +18,7 @@ include_directories(
 )
 
 include(add_buildtype_lto)
+include(add_buildtype_sanitize_debug)
 
 PROJECT(oscar-meta)
 SET(PACKAGE_NAME ${CMAKE_PROJECT_NAME})
