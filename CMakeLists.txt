@@ -43,15 +43,18 @@ IF(CMAKE_CROSSCOMPILING OR ANDROID)
 	ENDIF(ANDROID)
 	add_subdirectory(liboscar liboscar)
 	add_subdirectory(oscar-cmd oscar-cmd)
-ELSE (CMAKE_CROSSCOMPILING OR ANDROID)
+ELSE(CMAKE_CROSSCOMPILING OR ANDROID)
 	add_subdirectory(liboscar liboscar) #contains sserialize
-
-	#oscar-create
-	add_subdirectory(vendor/osmpbf osmpbf)
-	add_subdirectory(vendor/libosmtools libosmtools)
-	add_subdirectory(oscar-create oscar-create)
 	
 	#these only need liboscar
 	add_subdirectory(oscar-cmd oscar-cmd)
 	add_subdirectory(oscar-gui oscar-gui)
+
+	#oscar-create is only useful on 64 Bit systems
+	IF(CMAKE_SIZEOF_VOID_P EQUAL 8)
+		add_subdirectory(vendor/osmpbf osmpbf)
+		add_subdirectory(vendor/libosmtools libosmtools)
+		add_subdirectory(oscar-create oscar-create)
+	ENDIF(CMAKE_SIZEOF_VOID_P EQUAL 8)
+	
 ENDIF(CMAKE_CROSSCOMPILING OR ANDROID)
