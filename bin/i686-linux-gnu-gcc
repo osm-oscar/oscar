@@ -1,0 +1,3 @@
+#!/bin/sh
+export LIBRARY_PATH=/usr/lib/gcc/i686-linux-gnu/6:/usr/lib/i386-linux-gnu
+/usr/bin/gcc -m32 "$@"

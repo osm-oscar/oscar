@@ -1,0 +1,1 @@
+Cairo not found? Check that libcairo.so is there (should be symlink to libcairo.so.2.whatever)

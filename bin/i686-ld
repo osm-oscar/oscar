@@ -1,0 +1,3 @@
+#!/bin/sh
+echo "LD32: $@"
+/usr/bin/ld -melf_i386 "$@"
