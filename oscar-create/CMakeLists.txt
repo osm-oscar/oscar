@@ -5,7 +5,7 @@ find_package(Protobuf REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(ICU 4.9 REQUIRED)
 find_package(LIBRT REQUIRED)
-find_package(OpenMP REQUIRED)
+find_package(OpenMP)
 
 set(MY_COMPILE_DEFINITIONS
 	${LIBOSCAR_COMPILE_DEFINITIONS}

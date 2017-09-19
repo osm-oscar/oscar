@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 project(oscar-cmd)
-find_package(LIBRT REQUIRED)
+find_package(LIBRT)
 find_package(Cairo REQUIRED)
+find_package(OpenMP)
 
 include_directories(
 	${LIBOSCAR_INCLUDE_DIR}
