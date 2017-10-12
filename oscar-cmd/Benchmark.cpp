@@ -207,7 +207,7 @@ void Benchmarker::doGeocellBench(const std::vector<std::string> & strs, bool col
 		tm.end();
 		cqrTime = tm.elapsedUseconds();
 		tm.begin();
-		sserialize::Static::spatial::GeoHierarchy::SubSet subSet = m_completer.store().geoHierarchy().subSet(r, false);
+		sserialize::Static::spatial::GeoHierarchy::SubSet subSet = m_completer.store().geoHierarchy().subSet(r, false, 1);
 		tm.end();
 		subsetTime = tm.elapsedUseconds();
 		out << str << ";" << cqrTime << ";" << subsetTime << ";" << r.cellCount() << ";" << r.flaten().size() << "\n";

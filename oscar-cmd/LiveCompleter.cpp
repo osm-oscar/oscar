@@ -208,7 +208,7 @@ void LiveCompletion::doClusteredComplete(const std::vector<std::string> & comple
 		}
 		
 		cs.subGraphTime.begin();
-		c->ghsg().subSet(cqr, false);
+		c->ghsg().subSet(cqr, false, threadCount);
 		cs.subGraphTime.end();
 		
 		cs.idxTime.begin();
