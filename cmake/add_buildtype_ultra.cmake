@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.0)
 
 SET(CMAKE_CXX_FLAGS_ULTRA
-	"-DNDEBUG -O3 -march=native -flto -ffat-lto-objects -frounding-math"
+	"-DNDEBUG -g -O3 -march=native -flto -ffat-lto-objects -frounding-math"
 	CACHE STRING "Flags used by the C++ compiler during ultra builds."
 	FORCE
 )
 SET(CMAKE_C_FLAGS_ULTRA
-	"-DNDEBUG -O3 -march=native -flto -ffat-lto-objects -frounding-math"
+	"-DNDEBUG -g -O3 -march=native -flto -ffat-lto-objects -frounding-math"
 	CACHE STRING "Flags used by the C compiler during ultra builds."
 	FORCE
 )
