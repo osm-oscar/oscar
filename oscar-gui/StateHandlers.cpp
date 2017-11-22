@@ -14,7 +14,7 @@ SearchGeometryStateHandler::~SearchGeometryStateHandler() {}
 void SearchGeometryStateHandler::dataChanged(int p) {
 	{
 		auto lock(m_sgs->readLock());
-		if (m_sgs->size() <= p) {
+		if (p < 0 || m_sgs->size() <= (std::size_t) p) {
 			return;
 		}
 		auto at = m_sgs->active(p);
