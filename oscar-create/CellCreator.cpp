@@ -27,8 +27,8 @@ CellCreator::FlatCellMap& CellCreator::FlatCellMap::operator=(CellCreator::FlatC
 	if (this == &other) {
 		return *this;
 	}
-	std::unique_lock<std::mutex>(m_cellItemLock);
-	std::unique_lock<std::mutex>(other.m_cellItemLock);
+	std::lock_guard<std::mutex> l1(m_cellItemLock);
+	std::lock_guard<std::mutex> l2(other.m_cellItemLock);
 
 	using std::swap;
 	m_cellCount = std::move(other.m_cellCount);
@@ -40,7 +40,7 @@ CellCreator::FlatCellMap& CellCreator::FlatCellMap::operator=(CellCreator::FlatC
 
 void CellCreator::FlatCellMap::insert(uint32_t cellId, uint32_t itemId, const sserialize::spatial::GeoRect & gr) {
 	SSERIALIZE_CHEAP_ASSERT_SMALLER(cellId, m_cellCount);
-	std::unique_lock<std::mutex> cILock(m_cellItemLock);
+	std::lock_guard<std::mutex> cILock(m_cellItemLock);
 	m_cellItemEntries.emplace_back(cellId, itemId);
 	sserialize::spatial::GeoRect & cb = m_cellBoundaries.at(cellId);
 	//snap boundary here. All points inserted into the cellmap are snapped later anyway
@@ -294,7 +294,7 @@ void CellCreator::createGeoHierarchy(FlatCellList& cellList, uint32_t geoRegionC
 					ChildrenOfGeoRegion & me = geoRegionGraph.at(i);
 					me.u.o.size = myChildren.size();
 					{
-						std::unique_lock<std::mutex> l(lck);
+						std::lock_guard<std::mutex> l(lck);
 						me.u.o.beginOffset = geoRegionGraphData.size();
 						geoRegionGraphData.push_back(myChildren.begin(), myChildren.end());
 					}

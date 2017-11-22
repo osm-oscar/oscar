@@ -232,7 +232,7 @@ void OsmKeyValueObjectStore::Context::getNodes() {
 					);
 				}
 			}
-			std::unique_lock<std::mutex> lck(tmpDsLock);
+			std::lock_guard<std::mutex> lck(tmpDsLock);
 			tmpDs.push_back(tmp.begin(), tmp.end());
 			return tmpDs.size() < nodesToStore.size();
 		}, cc->numThreads, cc->blobFetchCount
@@ -390,7 +390,7 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 						polyStore->test(node.latd(), node.lond(), myIntersected);
 					}
 				}
-				std::unique_lock<std::mutex> lck(wct->residentialRegionsLock);
+				std::lock_guard<std::mutex> lck(wct->residentialRegionsLock);
 				wct->activeResidentialRegions.insert(myIntersected.begin(), myIntersected.end());
 			}
 		};
@@ -457,7 +457,7 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 					ct.totalGeoPointCount += way.refsSize();
 				}
 			}
-			std::unique_lock<std::mutex> lck(wct.nodesToStoreLock);
+			std::lock_guard<std::mutex> lck(wct.nodesToStoreLock);
 			for(int64_t x : tmpRefs) {
 				ct.nodesToStore.mark(x);
 			}
@@ -506,9 +506,9 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 						}
 					}
 				}
-			}
-			std::unique_lock<std::mutex> lck(wct.regionFlushLock);
+			};
 			{
+				std::lock_guard<std::mutex> lck(wct.regionFlushLock);
 				wct.relevantCells.set(hitCells.cbegin(), hitCells.cend());
 			}
 		}, ct.cc->numThreads, 1, false, blobsRead);
@@ -695,7 +695,7 @@ void OsmKeyValueObjectStore::insertItemStrings(OsmKeyValueObjectStore::Context& 
 					
 					uint32_t itemStringsCount;
 					{
-						std::unique_lock<std::mutex> lck(wct.addKeyLock);
+						std::lock_guard<std::mutex> lck(wct.addKeyLock);
 						itemStringsCount = ct.parent->addKeyValues(rawItem.rawKeyValues);
 					}
 					ct.totalItemStringsCount += itemStringsCount;
@@ -724,7 +724,7 @@ void OsmKeyValueObjectStore::insertItemStrings(OsmKeyValueObjectStore::Context& 
 					
 					uint32_t itemStringsCount;
 					{
-						std::unique_lock<std::mutex> lck(wct.addKeyLock);
+						std::lock_guard<std::mutex> lck(wct.addKeyLock);
 						itemStringsCount = ct.parent->addKeyValues(rawItem.rawKeyValues);
 					}
 					ct.totalItemStringsCount += itemStringsCount;
@@ -742,7 +742,7 @@ void OsmKeyValueObjectStore::insertItemStrings(OsmKeyValueObjectStore::Context& 
 					++ct.totalItemCount;
 					uint32_t itemStringsCount;
 					{
-						std::unique_lock<std::mutex> lck(wct.addKeyLock);
+						std::lock_guard<std::mutex> lck(wct.addKeyLock);
 						itemStringsCount = ct.parent->addKeyValues(rawItem.rawKeyValues);
 					}
 					ct.totalItemStringsCount += itemStringsCount;
@@ -760,7 +760,7 @@ void OsmKeyValueObjectStore::insertItemStrings(OsmKeyValueObjectStore::Context& 
 					++ct.totalItemCount;
 					uint32_t itemStringsCount;
 					{
-						std::unique_lock<std::mutex> lck(wct.addKeyLock);
+						std::lock_guard<std::mutex> lck(wct.addKeyLock);
 						itemStringsCount = ct.parent->addKeyValues(rawItem.rawKeyValues);
 					}
 					ct.totalItemStringsCount += itemStringsCount;
@@ -813,7 +813,7 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 						tmp.insert(liboscar::OsmIdType(mem.id(), toOsmItemType(mem.type()) ));
 					}
 				}
-				std::unique_lock<std::mutex> itemFlushLock(ct.itemFlushLock);
+				std::lock_guard<std::mutex> itemFlushLock(ct.itemFlushLock);
 				for(const liboscar::OsmIdType & x : tmp) {
 					ct.relationItems[x] = std::numeric_limits<uint32_t>::max();
 				}
@@ -840,7 +840,7 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 						}
 					}
 				}
-				std::unique_lock<std::mutex> lck(swct.lock);
+				std::lock_guard<std::mutex> lck(swct.lock);
 				swct.missingRelation.insert(tmp.begin(), tmp.end());
 			};
 			ct.inFile.reset();
@@ -871,7 +871,7 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 					oscar_create::addScore(rawItem, ct.scoreCreator);
 					ct.parent->createCell<sserialize::spatial::GeoPolygon, sserialize::spatial::GeoMultiPolygon>(rawItem, ct);
 					ct.push_back(rawItem, false);
-					std::unique_lock<std::mutex> lck(rwct.multiPolyItemsLock);
+					std::lock_guard<std::mutex> lck(rwct.multiPolyItemsLock);
 					rwct.multiPolyItems.insert(liboscar::OsmIdType(primitive.id(), liboscar::OSMIT_RELATION));
 				}
 			};
@@ -903,7 +903,7 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 					myNodesToStore.insert(myNodesToStore.end(), way.refBegin(), way.refEnd());
 				}
 			}
-			std::unique_lock<std::mutex> lck(wct.nodesToStoreLock);
+			std::lock_guard<std::mutex> lck(wct.nodesToStoreLock);
 			for(auto x : myNodesToStore) {
 				ct.nodesToStore.mark(x);
 			}

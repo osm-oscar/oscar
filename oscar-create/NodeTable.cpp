@@ -27,7 +27,7 @@ void NodeTable::populate(const std::string& filename) {
 			for(osmpbf::INodeStream node(pbi.getNodeStream()); !node.isNull(); node.next()) {
 				tmp.emplace_back(node.id(), RawGeoPoint(node.latd(), node.lond()));
 			}
-			std::unique_lock<std::mutex> lck(tmpDsLock);
+			std::lock_guard<std::mutex> lck(tmpDsLock);
 			tmpDs.push_back(tmp.cbegin(), tmp.cend());
 		}
 	);
