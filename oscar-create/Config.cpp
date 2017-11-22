@@ -1,3 +1,4 @@
+
 #include "Config.h"
 #include <sserialize/algorithm/utilfuncs.h>
 #include <sserialize/utility/printers.h>
@@ -301,6 +302,7 @@ std::ostream & OOMGeoCellConfig::print(std::ostream& out) const {
 	TextSearchConfig::print(out);
 	out << "Thread count: " << threadCount << "\n";
 	out << "Sort concurrency: " << sortConcurrency << '\n';
+	out << "Payload concurrency: " << payloadConcurrency << '\n';
 	out << "Max memory usage: " << sserialize::prettyFormatSize(maxMemoryUsage);
 	return out;
 }
