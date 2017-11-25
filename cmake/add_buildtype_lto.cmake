@@ -1,12 +1,16 @@
 cmake_minimum_required(VERSION 3.0)
 
+IF (NOT LTO_PLUGIN_PARAMETERS_SET)
+	message(WARNING "Ultra builds should use a proper pre-cache file to correctly handle lto paramters")
+ENDIF(NOT LTO_PLUGIN_PARAMETERS_SET)
+
 SET(CMAKE_CXX_FLAGS_LTO
-	"-DNDEBUG -g -O3 -march=native -flto -ffat-lto-objects -frounding-math"
+	"-DNDEBUG -g -O3 -march=native -flto -fno-fat-lto-objects -frounding-math"
 	CACHE STRING "Flags used by the C++ compiler during lto builds."
 	FORCE
 )
 SET(CMAKE_C_FLAGS_LTO
-	"-DNDEBUG -g -O3 -march=native -flto -ffat-lto-objects -frounding-math"
+	"-DNDEBUG -g -O3 -march=native -flto -fno-fat-lto-objects -frounding-math"
 	CACHE STRING "Flags used by the C compiler during lto builds."
 	FORCE
 )
