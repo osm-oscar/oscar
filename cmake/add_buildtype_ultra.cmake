@@ -6,10 +6,6 @@ IF($ENV{CMAKE_GCC_VERSION_FOR_LTO})
 	ENDIF()
 ENDIF()
 
-IF (NOT LTO_PLUGIN_PARAMETERS_SET)
-	message(WARNING "Ultra builds should use a proper pre-cache file to correctly handle lto paramters")
-ENDIF(NOT LTO_PLUGIN_PARAMETERS_SET)
-
 SET(CMAKE_CXX_FLAGS_ULTRA
 	"-DNDEBUG -g -O3 -march=native -flto -fno-fat-lto-objects -frounding-math"
 	CACHE STRING "Flags used by the C++ compiler during ultra builds."
