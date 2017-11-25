@@ -23,8 +23,8 @@ Initialize all submodules and their submodules or clone with --recursive
 # Building
 
 ## LTO and ultra builds
-
-export CMAKE_GCC_VERSION_FOR_LTO=4.9
 mkdir build && cd build
-cmake -C ../cmake/preload-lto-gcc.cmake -DCMAKE_BUILD_TYPE=ultra ../
+CMAKE_GCC_VERSION_FOR_LTO=4.9 cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/setup-lto.cmake -DCMAKE_BUILD_TYPE=ultra ../
+
+Note that changing build types afterwards is not supported as this does not set the correct compiler flags
 

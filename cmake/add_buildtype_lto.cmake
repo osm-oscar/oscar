@@ -1,9 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 
-IF($ENV{CMAKE_GCC_VERSION_FOR_LTO})
-	IF(NOT LTO_PLUGIN_PARAMETERS_SET)
-		include(preload-lto-gcc)
-	ENDIF()
+IF(CMAKE_BUILD_TYPE EQUAL "lto")
+	include(setup-lto)
 ENDIF()
 
 SET(CMAKE_CXX_FLAGS_LTO
