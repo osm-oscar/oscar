@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 
-IF(CMAKE_BUILD_TYPE EQUAL "lto")
+IF(CMAKE_BUILD_TYPE MATCHES "^lto$")
 	include(setup-lto)
 ENDIF()
 
