@@ -1,5 +1,3 @@
-set(CMAKE_SYSTEM_NAME Linux)
-
 SET(CMAKE_GCC_VERSION_FOR_LTO
 	$ENV{CMAKE_GCC_VERSION_FOR_LTO}
 	CACHE INTERNAL "Gcc version specified on command line during initial cache population"

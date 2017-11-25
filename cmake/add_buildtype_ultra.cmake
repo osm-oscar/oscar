@@ -1,5 +1,11 @@
 cmake_minimum_required(VERSION 3.0)
 
+IF($ENV{CMAKE_GCC_VERSION_FOR_LTO})
+	IF(NOT LTO_PLUGIN_PARAMETERS_SET)
+		include(preload-lto-gcc)
+	ENDIF()
+ENDIF()
+
 IF (NOT LTO_PLUGIN_PARAMETERS_SET)
 	message(WARNING "Ultra builds should use a proper pre-cache file to correctly handle lto paramters")
 ENDIF(NOT LTO_PLUGIN_PARAMETERS_SET)
