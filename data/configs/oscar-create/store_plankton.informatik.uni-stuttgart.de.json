@@ -1,7 +1,0 @@
-{
-	"store" : {
-		"threadCount" : 48,
-		"blobFetchCount" : 5,
-		"nodeTableSize" : 100000000
-	}
-}
