@@ -1,4 +1,8 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.6)
+PROJECT(oscar-meta)
+SET(PACKAGE_NAME ${CMAKE_PROJECT_NAME})
+SET(PACKAGE_VERSION 0.1)
+
 set(CMAKE_MODULE_PATH
 	${CMAKE_SOURCE_DIR}/cmake
 	${CMAKE_SOURCE_DIR}/liboscar/vendor/sserialize/cmake/
@@ -20,13 +24,10 @@ include_directories(
 include(add_buildtype_lto)
 include(add_buildtype_sanitize_debug)
 include(add_buildtype_ultra)
+include(set_highest_cpp)
 
-PROJECT(oscar-meta)
-SET(PACKAGE_NAME ${CMAKE_PROJECT_NAME})
-SET(PACKAGE_VERSION 0.1)
-
-set(MY_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Wextra -Wno-unknown-pragmas -Wstrict-overflow=3")
-set(MY_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++14 -Wall -Wextra -Wno-unknown-pragmas -Wstrict-overflow=3")# -Wshorten-64-to-32")
+set(MY_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wno-unknown-pragmas -Wstrict-overflow=3")
+set(MY_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-unknown-pragmas -Wstrict-overflow=3")# -Wshorten-64-to-32")
 set(DEBUG_FLAGS "${DEBUG_FLAGS} -DWITH_SSERIALIZE_CHEAP_ASSERT")# -DWITH_SSERIALIZE_EXPENSIVE_ASSERT")# -Wconversion")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MY_C_FLAGS}")
