@@ -67,7 +67,7 @@ int main(int argc, char ** argv) {
 	
 	//init the index factory
 	{
-		state.indexFactory.setCheckIndex(opts.indexStoreConfig->check);;
+		state.indexFactory.setCheckIndex(opts.indexStoreConfig->check);
 		state.indexFactory.setType(opts.indexStoreConfig->type);
 		state.indexFactory.setIndexFile( state.indexFile );
 		state.indexFactory.setDeduplication(opts.indexStoreConfig->deduplicate);
@@ -105,7 +105,11 @@ int main(int argc, char ** argv) {
 				return -1;
 			}
 		}
-		state.indexFactory.setDeduplication(opts.indexStoreConfig->deduplicate);
+		if (opts.indexStoreConfig->deduplicate) {
+			state.indexFactory.setDeduplication(true);
+			std::cout << "Re-calculating ItemIndexFactory deduplication database" << std::endl;
+			state.indexFactory.recalculateDeduplicationData();
+		}
 		SSERIALIZE_CHEAP_ASSERT_EQUAL(idxStore.size(), state.indexFactory.size());
 	}
 	kvTime.end();
