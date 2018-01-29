@@ -61,6 +61,59 @@ FilterState::FilterState(const sserialize::Static::KeyValueObjectStore& kv, cons
 	}
 }
 
+OOM_SA_CTC_CellLocalIds_TraitsState::OOM_SA_CTC_CellLocalIds_TraitsState(
+	const sserialize::Static::spatial::GeoHierarchy& gh,
+	const sserialize::Static::ItemIndexStore& idxStore
+)
+{
+	//compute number of entries per item
+	std::vector<uint32_t> tmp;
+	for(uint32_t cellId(0), s(gh.cellSize()); cellId < s; ++cellId) {
+		uint32_t itemIdxId = gh.cellItemsPtr(cellId);
+		sserialize::ItemIndex itemIdx( idxStore.at(itemIdxId) );
+		
+		itemIdx.putInto(tmp);
+		for(uint32_t itemId : tmp) {
+			if (itemId2LocalId.size() <= itemId) {
+				itemId2LocalId.resize(itemId+1, 0);
+			}
+			itemId2LocalId[itemId] += 1;
+		}
+		tmp.clear();
+	}
+	
+	uint64_t itemBeginOffset = 0;
+	for(uint32_t i(0), s(itemId2LocalId.size()); i < s; ++i) {
+		uint64_t itemCellCount = itemId2LocalId[i];
+		itemId2LocalId[i] = itemBeginOffset;
+		itemBeginOffset += itemCellCount;
+	}
+	localIds.resize(itemBeginOffset);
+	
+	//now compute the map
+	for(uint32_t cellId(0), cs(gh.cellSize()); cellId < cs; ++cellId) {
+		uint32_t itemIdxId = gh.cellItemsPtr(cellId);
+		sserialize::ItemIndex itemIdx( idxStore.at(itemIdxId) );
+		
+		itemIdx.putInto(tmp);
+		for(uint32_t localId(0), ls(tmp.size()); localId < ls; ++localId) {
+			uint32_t itemId = tmp[localId];
+			uint64_t & off = itemId2LocalId[itemId];
+			std::pair<uint32_t, uint32_t> & cId2lId = localIds.at(off);
+			cId2lId.first = cellId;
+			cId2lId.second = localId;
+			++off;
+		}
+		tmp.clear();
+	}
+	//the first entry points to the second, second to the beginning of the third and so on, so shift them accordingly
+	for(uint32_t i(1), s(itemId2LocalId.size()); i < s; ++i) {
+		itemId2LocalId[i] = itemId2LocalId[i-1];
+	}
+	itemId2LocalId.at(0) = 0;
+}
+
+
 SimpleSearchBaseTraits::SimpleSearchBaseTraits(const TextSearchConfig & tsc, const liboscar::Static::OsmKeyValueObjectStore & store) : 
 m_state(new BaseSearchTraitsState(store.kvStore(), tsc)),
 m_ies(m_state),
