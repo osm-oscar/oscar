@@ -107,8 +107,9 @@ int main(int argc, char ** argv) {
 		}
 		if (opts.indexStoreConfig->deduplicate) {
 			state.indexFactory.setDeduplication(true);
-			std::cout << "Re-calculating ItemIndexFactory deduplication database" << std::endl;
+			std::cout << "Re-calculating ItemIndexFactory deduplication database..." << std::flush;
 			state.indexFactory.recalculateDeduplicationData();
+			std::cout << "done" << std::endl;
 		}
 		SSERIALIZE_CHEAP_ASSERT_EQUAL(idxStore.size(), state.indexFactory.size());
 	}

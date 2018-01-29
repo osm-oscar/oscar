@@ -205,7 +205,7 @@ public:
 		static constexpr bool HasCellLocalIds = true;
 	public:
 		inline uint32_t operator()(const item_type & item) { return item.id(); }
-		inline uint32_t operator()(const item_type & item, uint32_t cellId) {
+		uint32_t operator()(const item_type & item, uint32_t cellId) {
 			uint32_t id = item.id();
 			uint64_t i = m_state->itemId2LocalId.at(id);
 			uint64_t s =  id+1 < m_state->itemId2LocalId.size() ? m_state->itemId2LocalId.at(id+1) : m_state->localIds.size();
@@ -215,6 +215,7 @@ public:
 					return cId2lId.second;
 				}
 			}
+			sserialize::breakHereIf(true);
 			throw std::out_of_range("Could not find item " + std::to_string(id) + " in cell " + std::to_string(cellId));
 			return 0;
 		}
@@ -230,9 +231,13 @@ public:
 	using MyBaseClass::itemCells;
 	inline ItemId itemId() { return ItemId(m_cellLocalItemIds); }
 public:
-	OOM_SA_CTC_CellLocalIds_Traits(const TextSearchConfig & tsc, const liboscar::Static::OsmKeyValueObjectStore & store, const sserialize::Static::ItemIndexStore & idxStore) : 
+	OOM_SA_CTC_CellLocalIds_Traits(
+		const TextSearchConfig & tsc,
+		const liboscar::Static::OsmKeyValueObjectStore & store,
+		const sserialize::Static::ItemIndexStore & idxStore,
+		const std::shared_ptr<OOM_SA_CTC_CellLocalIds_TraitsState> & cellLocalItemIds) : 
 	MyBaseClass(tsc, store, idxStore),
-	m_cellLocalItemIds(new OOM_SA_CTC_CellLocalIds_TraitsState(store.geoHierarchy(), idxStore))
+	m_cellLocalItemIds(cellLocalItemIds)
 	{}
 private:
 	std::shared_ptr<OOM_SA_CTC_CellLocalIds_TraitsState> m_cellLocalItemIds;

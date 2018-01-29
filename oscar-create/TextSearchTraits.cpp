@@ -66,11 +66,13 @@ OOM_SA_CTC_CellLocalIds_TraitsState::OOM_SA_CTC_CellLocalIds_TraitsState(
 	const sserialize::Static::ItemIndexStore& idxStore
 )
 {
+	std::cout << "Calculating cell local item ids..." << std::flush;
 	//compute number of entries per item
 	std::vector<uint32_t> tmp;
-	for(uint32_t cellId(0), s(gh.cellSize()); cellId < s; ++cellId) {
+	for(uint32_t cellId(0), cs(gh.cellSize()); cellId < cs; ++cellId) {
 		uint32_t itemIdxId = gh.cellItemsPtr(cellId);
 		sserialize::ItemIndex itemIdx( idxStore.at(itemIdxId) );
+		
 		
 		itemIdx.putInto(tmp);
 		for(uint32_t itemId : tmp) {
@@ -83,9 +85,9 @@ OOM_SA_CTC_CellLocalIds_TraitsState::OOM_SA_CTC_CellLocalIds_TraitsState(
 	}
 	
 	uint64_t itemBeginOffset = 0;
-	for(uint32_t i(0), s(itemId2LocalId.size()); i < s; ++i) {
-		uint64_t itemCellCount = itemId2LocalId[i];
-		itemId2LocalId[i] = itemBeginOffset;
+	for(uint32_t itemId(0), is(itemId2LocalId.size()); itemId < is; ++itemId) {
+		uint64_t itemCellCount = itemId2LocalId[itemId];
+		itemId2LocalId[itemId] = itemBeginOffset;
 		itemBeginOffset += itemCellCount;
 	}
 	localIds.resize(itemBeginOffset);
@@ -94,6 +96,7 @@ OOM_SA_CTC_CellLocalIds_TraitsState::OOM_SA_CTC_CellLocalIds_TraitsState(
 	for(uint32_t cellId(0), cs(gh.cellSize()); cellId < cs; ++cellId) {
 		uint32_t itemIdxId = gh.cellItemsPtr(cellId);
 		sserialize::ItemIndex itemIdx( idxStore.at(itemIdxId) );
+		
 		
 		itemIdx.putInto(tmp);
 		for(uint32_t localId(0), ls(tmp.size()); localId < ls; ++localId) {
@@ -106,11 +109,14 @@ OOM_SA_CTC_CellLocalIds_TraitsState::OOM_SA_CTC_CellLocalIds_TraitsState(
 		}
 		tmp.clear();
 	}
-	//the first entry points to the second, second to the beginning of the third and so on, so shift them accordingly
-	for(uint32_t i(1), s(itemId2LocalId.size()); i < s; ++i) {
-		itemId2LocalId[i] = itemId2LocalId[i-1];
+	if (itemId2LocalId.size()) {
+		//the first entry points to the second, second to the beginning of the third and so on, so shift them accordingly
+		for(uint32_t i(itemId2LocalId.size()-1); i > 0; --i) {
+			itemId2LocalId[i] = itemId2LocalId[i-1];
+		}
+		itemId2LocalId.at(0) = 0;
 	}
-	itemId2LocalId.at(0) = 0;
+	std::cout << "done" << std::endl;
 }
 
 

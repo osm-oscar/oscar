@@ -355,8 +355,9 @@ void handleOOMCellTextSearch(OOMGeoCellConfig & cfg, State & state, sserialize::
 	}
 	
 	if (cfg.cellLocalIds) {
-		OOM_SA_CTC_CellLocalIds_Traits<TextSearchConfig::ItemType::ITEM> itemTraits(cfg, state.store, state.indexFactory.asItemIndexStore());
-		OOM_SA_CTC_CellLocalIds_Traits<TextSearchConfig::ItemType::REGION> regionTraits(cfg, state.store, state.indexFactory.asItemIndexStore());
+		std::shared_ptr<OOM_SA_CTC_CellLocalIds_TraitsState> cellLocalIds( new OOM_SA_CTC_CellLocalIds_TraitsState(state.store.geoHierarchy(), state.indexFactory.asItemIndexStore()) );
+		OOM_SA_CTC_CellLocalIds_Traits<TextSearchConfig::ItemType::ITEM> itemTraits(cfg, state.store, state.indexFactory.asItemIndexStore(), cellLocalIds);
+		OOM_SA_CTC_CellLocalIds_Traits<TextSearchConfig::ItemType::REGION> regionTraits(cfg, state.store, state.indexFactory.asItemIndexStore(), cellLocalIds);
 
 		sserialize::appendSACTC(
 			state.store.begin(), state.store.end(),
