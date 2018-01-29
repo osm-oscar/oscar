@@ -120,7 +120,8 @@
 		"config" : {
 			"_comment"  : "oomgeocell config",
 			"threadCount" : 0,
-			"maxMemoryUsage _in_Mebibytes_" : 16
+			"maxMemoryUsage _in_Mebibytes_" : 16,
+			"cellLocalIds" : false
 		}
 	}
 }

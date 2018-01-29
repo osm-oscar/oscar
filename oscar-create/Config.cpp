@@ -303,7 +303,8 @@ std::ostream & OOMGeoCellConfig::print(std::ostream& out) const {
 	out << "Thread count: " << threadCount << "\n";
 	out << "Sort concurrency: " << sortConcurrency << '\n';
 	out << "Payload concurrency: " << payloadConcurrency << '\n';
-	out << "Max memory usage: " << sserialize::prettyFormatSize(maxMemoryUsage);
+	out << "Max memory usage: " << sserialize::prettyFormatSize(maxMemoryUsage) << '\n';
+	out << "Cell local ids: " << (cellLocalIds ? "yes" : "no");
 	return out;
 }
 
@@ -1099,7 +1100,8 @@ OOMGeoCellConfig::OOMGeoCellConfig(const Json::Value& cfg, const std::string& ba
 TextSearchConfig(cfg, basePath),
 threadCount(0),
 sortConcurrency(0),
-maxMemoryUsage(0xFFFFFFFF)
+maxMemoryUsage(0xFFFFFFFF),
+cellLocalIds(false)
 {
 	updateSelf(cfg);
 }
@@ -1128,6 +1130,11 @@ void OOMGeoCellConfig::updateSelf(const Json::Value& cfg) {
 	v = cfg["maxMemoryUsage"];
 	if (v.isNumeric()) {
 		maxMemoryUsage = v.asUInt64()*(static_cast<uint32_t>(1) << 20);
+	}
+	
+	v = cfg["cellLocalIds"];
+	if (v.isBool()) {
+		cellLocalIds = v.asBool();
 	}
 }
 

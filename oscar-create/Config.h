@@ -217,6 +217,7 @@ public:
 	uint32_t sortConcurrency;
 	uint32_t payloadConcurrency;
 	sserialize::OffsetType maxMemoryUsage;
+	bool cellLocalIds;
 };
 
 

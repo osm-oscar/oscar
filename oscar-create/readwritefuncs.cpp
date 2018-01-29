@@ -339,8 +339,6 @@ handleCellTextSearch(GeoCellConfig & cfg, State & state, sserialize::UByteArrayA
 
 void handleOOMCellTextSearch(OOMGeoCellConfig & cfg, State & state, sserialize::UByteArrayAdapter & dest) {
 	std::shared_ptr<BaseSearchTraitsState> searchState(new BaseSearchTraitsState(state.store.kvStore(), cfg));
-	OOM_SA_CTC_Traits<TextSearchConfig::ItemType::ITEM> itemTraits(cfg, state.store, state.indexFactory.asItemIndexStore());
-	OOM_SA_CTC_Traits<TextSearchConfig::ItemType::REGION> regionTraits(cfg, state.store, state.indexFactory.asItemIndexStore());
 	
 	int sq = sserialize::StringCompleter::SQ_NONE;
 	if (cfg.hasEnabled(TextSearchConfig::QueryType::PREFIX)) {
@@ -356,16 +354,34 @@ void handleOOMCellTextSearch(OOMGeoCellConfig & cfg, State & state, sserialize::
 		sq |= sserialize::StringCompleter::SQ_CASE_INSENSITIVE;
 	}
 	
-	
-	sserialize::appendSACTC(
-		state.store.begin(), state.store.end(),
-		state.store.begin(), state.store.begin()+state.store.geoHierarchy().regionSize(),
-		itemTraits, regionTraits,
-		cfg.maxMemoryUsage, cfg.threadCount, cfg.sortConcurrency, cfg.payloadConcurrency,
-		(sserialize::StringCompleter::SupportedQuerries)sq,
-		state.indexFactory,
-		dest
-	);
+	if (cfg.cellLocalIds) {
+		OOM_SA_CTC_CellLocalIds_Traits<TextSearchConfig::ItemType::ITEM> itemTraits(cfg, state.store, state.indexFactory.asItemIndexStore());
+		OOM_SA_CTC_CellLocalIds_Traits<TextSearchConfig::ItemType::REGION> regionTraits(cfg, state.store, state.indexFactory.asItemIndexStore());
+
+		sserialize::appendSACTC(
+			state.store.begin(), state.store.end(),
+			state.store.begin(), state.store.begin()+state.store.geoHierarchy().regionSize(),
+			itemTraits, regionTraits,
+			cfg.maxMemoryUsage, cfg.threadCount, cfg.sortConcurrency, cfg.payloadConcurrency,
+			(sserialize::StringCompleter::SupportedQuerries)sq,
+			state.indexFactory,
+			dest
+		);
+	}
+	else {
+		OOM_SA_CTC_Traits<TextSearchConfig::ItemType::ITEM> itemTraits(cfg, state.store, state.indexFactory.asItemIndexStore());
+		OOM_SA_CTC_Traits<TextSearchConfig::ItemType::REGION> regionTraits(cfg, state.store, state.indexFactory.asItemIndexStore());
+
+		sserialize::appendSACTC(
+			state.store.begin(), state.store.end(),
+			state.store.begin(), state.store.begin()+state.store.geoHierarchy().regionSize(),
+			itemTraits, regionTraits,
+			cfg.maxMemoryUsage, cfg.threadCount, cfg.sortConcurrency, cfg.payloadConcurrency,
+			(sserialize::StringCompleter::SupportedQuerries)sq,
+			state.indexFactory,
+			dest
+		);
+	}
 }
 
 void handleTextSearch(Config & opts, State & state) {
