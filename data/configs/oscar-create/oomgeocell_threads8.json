@@ -1,0 +1,15 @@
+{
+	"textsearch" :
+	[
+		{
+			"type" : "oomgeocell",
+			"id" : "oomgeocell",
+			"config" : {
+				"threadCount" : 8,
+				"sortConcurrency" : 8,
+				"payloadConcurrency" : 8,
+				"maxMemoryUsage" : 2048
+			}
+		}
+	]
+}

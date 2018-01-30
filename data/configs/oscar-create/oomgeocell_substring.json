@@ -1,5 +1,4 @@
 {
-	"include" : "oomgeocell.json",
 	"textsearch" :
 	[
 		{
@@ -15,7 +14,7 @@
 							"diacriticSensitive" : false
 						},
 						"substring" : {
-							"enabled" : false,
+							"enabled" : true,
 							"file" : "lists/k_values_substring_prefix.txt",
 							"caseSensitive" : false,
 							"diacriticSensitive" : false
@@ -39,7 +38,7 @@
 							"diacriticSensitive" : false
 						},
 						"substring" : {
-							"enabled" : false,
+							"enabled" : true,
 							"file" : "lists/k_values_substring_prefix.txt",
 							"caseSensitive" : false,
 							"diacriticSensitive" : false

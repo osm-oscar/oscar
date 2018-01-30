@@ -54,9 +54,10 @@
 						}
 					}
 				},
-				"threadCount" : 8,
-				"sortConcurrency" : 2,
-				"maxMemoryUsage" : 2048
+				"threadCount" : 1,
+				"sortConcurrency" : 1,
+				"payloadConcurrency" : 1,
+				"maxMemoryUsage" : 512
 			}
 		}
 	]
