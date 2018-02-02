@@ -133,7 +133,7 @@ void Worker::printCQRDataSize(const WD_PrintCQRDataSize& data) {
 	sserialize::Static::CellTextCompleter::Payload::Type t = cmp.typeFromCompletion(qstr, qt);
 	sserialize::ItemIndex fmIdx = idxStore.at( t.fmPtr() );
 	sserialize::ItemIndex pmIdx = idxStore.at( t.pPtr() );
-	sserialize::CellQueryResult r(fmIdx, pmIdx, t.pItemsPtrBegin(), gh, idxStore);
+	sserialize::CellQueryResult r(fmIdx, pmIdx, t.pItemsPtrBegin(), gh, idxStore, cmp.flags());
 	std::vector<sserialize::UByteArrayAdapter::SizeType> idxDataSizes;
 	std::vector<uint32_t> idxSizes;
 	idxDataSizes.reserve(r.cellCount());
