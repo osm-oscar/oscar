@@ -471,8 +471,9 @@ CellTextCompleter< sserialize::UnicodeTrie::Trie<detail::CellTextCompleter::Data
 	detail::CellTextCompleter::PayloadHandler ph(&m_cellItemCounts);
 	ph.idxFactory = &idxFactory;
 	sserialize::UnicodeTrie::Trie<TrieData>::NodeCreatorPtr nc(new sserialize::Static::UnicodeTrie::detail::SimpleNodeCreator());
-	dest.putUint8(2); //Version
+	dest.putUint8(3); //Version
 	dest.putUint8(sq); //SupportedQuerries
+	dest.putUint8(sserialize::CellQueryResult::FF_CELL_GLOBAL_ITEM_IDS);
 	dest.putUint8(sserialize::Static::CellTextCompleter::TrieTypeMarker::TT_TRIE);//Trie type marker
 	m_trie.append<detail::CellTextCompleter::PayloadHandler, detail::CellTextCompleter::Payload>(dest, ph, nc);
 	return dest;
@@ -483,8 +484,9 @@ sserialize::UByteArrayAdapter&
 CellTextCompleter< sserialize::HashBasedFlatTrie<detail::CellTextCompleter::Data> >::append(sserialize::StringCompleter::SupportedQuerries sq, sserialize::UByteArrayAdapter& dest, sserialize::ItemIndexFactory & idxFactory, uint32_t threadCount) {
 	detail::CellTextCompleter::PayloadHandler ph(&m_cellItemCounts);
 	ph.idxFactory = &idxFactory;
-	dest.putUint8(2); //Version
-	dest.putUint8(sq);//SupportedQuerries
+	dest.putUint8(3); //Version
+	dest.putUint8(sq); //SupportedQuerries
+	dest.putUint8(sserialize::CellQueryResult::FF_CELL_GLOBAL_ITEM_IDS);
 	dest.putUint8(sserialize::Static::CellTextCompleter::TrieTypeMarker::TT_FLAT_TRIE);//Trie type marker
 	m_trie.append<detail::CellTextCompleter::PayloadHandler, detail::CellTextCompleter::Payload>(dest, ph, threadCount);
 	return dest;
