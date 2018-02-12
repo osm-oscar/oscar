@@ -17,6 +17,7 @@ void LiveCompletion::CompletionStats::reset() {
 	tree2TCQRTime.reset();
 	tcqr2CqrTime.reset();
 	cqrRemoveEmptyTime.reset();
+	cqrLocal2GlobalIds.reset();
 	idxTime.reset();
 	subGraphTime.reset();
 	analyzeTime.reset();
@@ -69,6 +70,9 @@ void printCompletionInfo(const LiveCompletion::CompletionStats & cs, TItemSetTyp
 	}
 	if (cs.cqrRemoveEmptyTime.elapsedTime()) {
 		cout << "\tCQRRemoveEmpty: " << cs.cqrRemoveEmptyTime.elapsedMilliSeconds() << " [ms]\n";
+	}
+	if (cs.cqrLocal2GlobalIds.elapsedTime()) {
+		cout << "\tCQRLocal2GlobalIds: " << cs.cqrLocal2GlobalIds.elapsedMilliSeconds() << "[ms]\n";
 	}
 	cout << "\tSubGraph: " << cs.subGraphTime.elapsedMilliSeconds() << " [ms]\n";
 	cout << "\tIndex: " << cs.idxTime.elapsedMilliSeconds() << " [ms]\n";
@@ -205,6 +209,12 @@ void LiveCompletion::doClusteredComplete(const std::vector<std::string> & comple
 			cs.cqrRemoveEmptyTime.end();
 			
 			cs.calcTime.end();
+		}
+		
+		if (cqr.flags() & sserialize::CellQueryResult::FF_CELL_LOCAL_ITEM_IDS) {
+			cs.cqrLocal2GlobalIds.begin();
+			cqr =  cqr.toGlobalItemIds();
+			cs.cqrLocal2GlobalIds.end();
 		}
 		
 		cs.subGraphTime.begin();

@@ -12,6 +12,7 @@ public:
 		sserialize::TimeMeasurer tree2TCQRTime;
 		sserialize::TimeMeasurer tcqr2CqrTime;
 		sserialize::TimeMeasurer cqrRemoveEmptyTime;
+		sserialize::TimeMeasurer cqrLocal2GlobalIds;
 		sserialize::TimeMeasurer idxTime;
 		sserialize::TimeMeasurer subGraphTime;
 		sserialize::TimeMeasurer analyzeTime;
