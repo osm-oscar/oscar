@@ -40,7 +40,7 @@ int main(int argc, char ** argv) {
 	
 	State state;
 	try {
-		state.input = std::move( osmpbf::PbiStream(cfg.inFileNames) );
+		state.input = osmpbf::PbiStream(cfg.inFileNames);
 	}
 	catch (const std::exception & e) {
 		std::cerr << "Error occured while opening files: " << e.what() << std::endl;
