@@ -87,7 +87,7 @@ void ContainerMerger::operator()(MatchDesc & a, MatchDesc & b) {
 }
 
 //c must hold at least cellIdsStorageNeed uints
-void MatchDesc::initValueContainer(uint32_t* &dataBegin, const std::pair<uint32_t*, uint32_t*> & /*dataWindow*/, MyNodeStorageHashTable::iterator & begin, const MyNodeStorageHashTable::iterator & end) {
+void MatchDesc::initValueContainer(uint32_t* &dataBegin, const std::pair<uint32_t*, uint32_t*> & dataWindow, MyNodeStorageHashTable::iterator & begin, const MyNodeStorageHashTable::iterator & end) {
 	uint32_t myNodeId = begin->first.nodeId;
 	uint32_t* myDataBegin = dataBegin;
 	uint32_t curOffset = 0;
