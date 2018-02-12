@@ -122,6 +122,9 @@ int main(int argc, char ** argv) {
 		state.storeData.disableRefCounting();
 		#endif
 		state.store = liboscar::Static::OsmKeyValueObjectStore(state.storeData);
+		#ifdef WITH_OSCAR_CREATE_NO_DATA_REFCOUNTING
+		state.store.disableRefCounting();
+		#endif
 	}
 	catch (sserialize::Exception & e) {
 		std::cerr << "Failed to open store file at " << storeFileName << " with error message: "<< e.what();
@@ -170,5 +173,10 @@ int main(int argc, char ** argv) {
 	std::cout << "KV-Store creation took " << kvTime << "\n";
 	std::cout << "Search data structure creation took " << searchTime << "\n";
 	std::cout << "Total time: " << totalTime << std::endl;
+	
+	#ifdef WITH_OSCAR_CREATE_NO_DATA_REFCOUNTING
+	state.store.enableRefCounting();
+	#endif
+	
 	return 0;
 }
