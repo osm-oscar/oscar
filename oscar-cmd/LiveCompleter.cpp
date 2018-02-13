@@ -213,7 +213,7 @@ void LiveCompletion::doClusteredComplete(const std::vector<std::string> & comple
 		
 		if (cqr.flags() & sserialize::CellQueryResult::FF_CELL_LOCAL_ITEM_IDS) {
 			cs.cqrLocal2GlobalIds.begin();
-			cqr =  cqr.toGlobalItemIds();
+			cqr =  cqr.toGlobalItemIds(threadCount);
 			cs.cqrLocal2GlobalIds.end();
 		}
 		
@@ -222,7 +222,7 @@ void LiveCompletion::doClusteredComplete(const std::vector<std::string> & comple
 		cs.subGraphTime.end();
 		
 		cs.idxTime.begin();
-		retIdx = cqr.flaten();
+		retIdx = cqr.flaten(threadCount);
 		cs.idxTime.end();
 
 		return liboscar::Static::OsmItemSet(c->store(), retIdx);
