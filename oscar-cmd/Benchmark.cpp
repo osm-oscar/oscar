@@ -149,6 +149,9 @@ coldCache(false)
 				return;
 			}
 		}
+		else if (realOpts[0] == "tc") {
+			threadCount = std::stoi(realOpts[1]);
+		}
 		else {
 			throw std::runtime_error("oscarcmd::Benchmarker::Config: unknown option: " + splitString);
 			return;

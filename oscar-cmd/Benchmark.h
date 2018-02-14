@@ -50,7 +50,7 @@ struct BenchmarkStats {
 /**
   * A simple benchmark class
   * Config accepts the following config string:
-  * i=inputFileName,o=outputFileName,t=(tgeocell|geocell|items),cc=(true|false)
+  * i=inputFileName,o=outputFileName,t=(tgeocell|geocell|items),cc=(true|false),tc=<num>
   */
 class Benchmarker final {
 public:
@@ -60,7 +60,8 @@ public:
 		bool coldCache;
 		std::string completionStringsFileName;
 		std::string outFileName;
-		Config() : ct(CT_INVALID) {}
+		uint32_t threadCount;
+		Config() : ct(CT_INVALID), threadCount(1) {}
 		Config(const std::string str);
 	};
 private:
