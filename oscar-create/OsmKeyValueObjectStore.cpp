@@ -444,7 +444,7 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 		osmpbf::OffsetType filePos = ct.inFile.dataPosition();
 
 		//first get the node refs for our ways
-		uint32_t blobsRead = osmpbf::parseFileCPPThreads(ct.inFile, [&ct, &wct, &polyStore](osmpbf::PrimitiveBlockInputAdaptor & pbi) -> bool {
+		uint32_t blobsRead = osmpbf::parseFileCPPThreads(ct.inFile, [&ct, &wct](osmpbf::PrimitiveBlockInputAdaptor & pbi) -> bool {
 			std::unordered_set<int64_t> tmpRefs;
 			for(osmpbf::IWayStream way = pbi.getWayStream(); !way.isNull(); way.next()) {
 				if (!way.refsSize() || !way.tagsSize() || ct.regionItems.count(liboscar::OsmIdType(way.id(), liboscar::OSMIT_WAY))) {

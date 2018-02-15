@@ -156,7 +156,7 @@ void LiveCompletion::doPartialCompletion(const std::vector<std::string> & comple
 		x.seek(count);
 		cs.analyzeTime.end();
 	};
-	auto fn = [&c, count](LiveCompletion::CompletionStats & cs) -> liboscar::Static::OsmItemSetIterator {
+	auto fn = [&c](LiveCompletion::CompletionStats & cs) -> liboscar::Static::OsmItemSetIterator {
 		cs.idxTime.begin();
 		auto ret = c->partialComplete(cs.query);
 		cs.idxTime.end();

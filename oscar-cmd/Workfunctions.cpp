@@ -454,7 +454,7 @@ void Worker::printCellNeighborStats(const WD_PrintCellNeighborStats& data) {
 		double maxDist = cellDiag * maxFactor;
 		
 		std::unordered_set<uint32_t> neighborCells;
-		tds.explore(ra.faceIdFromCellId(cellId), [&neighborCells, &tds, &ccm, &ra, &maxDist](const sserialize::Static::spatial::Triangulation::Face & face) -> bool {
+		tds.explore(ra.faceIdFromCellId(cellId), [&neighborCells, &ccm, &ra, &maxDist](const sserialize::Static::spatial::Triangulation::Face & face) -> bool {
 			neighborCells.insert(ra.cellIdFromFaceId(face.id()));
 			auto fc = face.centroid();
 			return std::abs<double>( sserialize::spatial::distanceTo(fc.lat(), fc.lon(), ccm.lat(), ccm.lon()) ) < maxDist;

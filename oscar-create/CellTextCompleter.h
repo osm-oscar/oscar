@@ -1094,7 +1094,7 @@ CellTextCompleter<TBaseTrieType>::create(const liboscar::Static::OsmKeyValueObje
 	{
 		std::vector<uint32_t> & tmpData = cellIndex;
 		pinfo(nodeCount, "CTC: fixing inconsistent MatchDesc");
-		auto mkCsFunc = [&pinfo, &inConsistentMatchDescs, &tmpData](Node & node) {
+		auto mkCsFunc = [&inConsistentMatchDescs, &tmpData](Node & node) {
 			detail::CellTextCompleter::Data & data = node.value();
 			if (inConsistentMatchDescs.isSet(data.id)) {
 				data.makeConsistent(tmpData);
