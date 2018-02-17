@@ -12,7 +12,7 @@
 			"config" : {
 				"threadCount" : 48,
 				"sortConcurrency" : 4,
-				"payloadConcurrency" : 48,
+				"payloadConcurrency" : 12,
 				"maxMemoryUsage" : 65536
 			}
 		}
