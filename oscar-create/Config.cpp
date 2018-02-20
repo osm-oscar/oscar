@@ -1243,7 +1243,7 @@ Config::ReturnValues Config::fromCmdLineArgs(int argc, char** argv) {
 	}
 
 	///@param path must be absolute
-	auto handleConfigFile = sserialize::fix([this, &configData](auto && self, const std::string & path) -> Config::ReturnValues {
+	auto handleConfigFile = sserialize::fix([&configData](auto && self, const std::string & path) -> Config::ReturnValues {
 		SSERIALIZE_CHEAP_ASSERT(sserialize::MmappedFile::isAbsolute(path));
 		
 		std::ifstream inFileStream;
