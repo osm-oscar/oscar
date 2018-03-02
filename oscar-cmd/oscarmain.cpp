@@ -205,6 +205,12 @@ int main(int argc, char **argv) {
 			case Config::WorkItem::UNLOCK_MEMORY:
 				worker.unlockMemory(*workItem.data->as<WD_UnlockMemory>());
 				break;
+			case Config::WorkItem::LOAD_INTO_MEMORY:
+				worker.loadMemory(*workItem.data->as<WD_LoadMemory>());
+				break;
+			case Config::WorkItem::DROP_FROM_MEMORY:
+				worker.dropMemory(*workItem.data->as<WD_DropMemory>());
+				break;
 			default:
 				throw std::runtime_error("Bad operation. Unkown work item.");
 			};

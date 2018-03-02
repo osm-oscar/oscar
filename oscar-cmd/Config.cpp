@@ -101,7 +101,9 @@ void Config::printHelp() {
 --check type\tcheck type=(index|store|gh|tds) \n \
 --benchmark\tdo a benchmark \n \
 --mlock index,kvstore,textsearch\tlock memory of specified file\n \
---munlock index,kvstore,textsearch\tunlock memory of specified file\n";
+--munlock index,kvstore,textsearch\tunlock memory of specified file\n \
+--mload index,kvstore,textsearch\tload data of specified file into memory\n \
+--mdrop index,kvstore,textsearch\tdrop memory of specified file\n";
 }
 
 int Config::parseSingleArg(int argc, char ** argv, int & i, int & printNumResults, int & threadCount, std::string & completionString) {
@@ -399,6 +401,14 @@ int Config::parseSingleArg(int argc, char ** argv, int & i, int & printNumResult
 	}
 	else if (arg == "--munlock" && i+1 < argc) {
 		workItems.emplace_back(WorkItem::UNLOCK_MEMORY, new WD_UnlockMemory(std::string(argv[i+1])));
+		++i;
+	}
+	else if (arg == "--mload" && i+1 < argc) {
+		workItems.emplace_back(WorkItem::LOAD_INTO_MEMORY, new WD_LoadMemory(std::string(argv[i+1])));
+		++i;
+	}
+	else if (arg == "--mdrop" && i+1 < argc) {
+		workItems.emplace_back(WorkItem::DROP_FROM_MEMORY, new WD_DropMemory(std::string(argv[i+1])));
 		++i;
 	}
 	else if (arg.size() && arg[0] == '-') {

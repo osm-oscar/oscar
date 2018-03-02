@@ -34,6 +34,8 @@ struct Worker {
 	void selectGeoCompleter(WD_SelectGeoCompleter & d);
 	void lockMemory(WD_LockMemory & d);
 	void unlockMemory(WD_UnlockMemory & d);
+	void loadMemory(WD_LoadMemory & d);
+	void dropMemory(WD_DropMemory & d);
 	void printSelectedTextCompleter();
 	void printSelectedGeoCompleter();
 	
