@@ -1,0 +1,20 @@
+{
+	"store" : {
+		"threadCount" : 6,
+		"blobFetchCount" : 5,
+		"nodeTableSize" : 100000000
+	},
+	"textsearch" :
+	[
+		{
+			"type" : "oomgeocell",
+			"id" : "oomgeocell",
+			"config" : {
+				"threadCount" : 6,
+				"sortConcurrency" : 4,
+				"payloadConcurrency" : 6,
+				"maxMemoryUsage" : 65536
+			}
+		}
+	]
+}
