@@ -59,6 +59,7 @@ int main(int argc, char **argv) {
 				break;
 			case Config::WorkItem::SELECT_GEO_COMPLETER:
 				worker.selectGeoCompleter(*workItem.data->as<WD_SelectGeoCompleter>());
+				break;
 			case Config::WorkItem::PRINT_SELECTED_TEXT_COMPLETER:
 				worker.printSelectedTextCompleter();
 				break;
@@ -190,6 +191,7 @@ int main(int argc, char **argv) {
 				break;
 			case Config::WorkItem::SYMDIFF_ITEMS_COMPLETERS:
 				worker.symDiffCompleters(*workItem.data->as<WD_SymDiffItemsCompleters>());
+				break;
 			case Config::WorkItem::CONSISTENCY_CHECK:
 				worker.consistencyCheck(*workItem.data->as<WD_ConsistencyCheck>());
 				break;
