@@ -1175,8 +1175,8 @@ void Worker::symDiffCompleters(WD_SymDiffItemsCompleters& d) {
 }
 
 void Worker::benchmark(WD_Benchmark & d) {
-	Benchmarker bm(completer);
-	bm.benchmark(d.config);
+	Benchmarker bm(completer, d.config);
+	bm.execute();
 }
 
 }//end namespace

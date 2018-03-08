@@ -4,6 +4,7 @@
 #include <sserialize/stats/TimeMeasuerer.h>
 #include <sserialize/stats/statfuncs.h>
 #include <sserialize/stats/ProgressInfo.h>
+#include <sserialize/iterator/TransformIterator.h>
 #include <liboscar/AdvancedCellOpTree.h>
 #include <limits>
 #include <algorithm>
@@ -13,110 +14,7 @@
 
 namespace oscarcmd {
 
-	
-void BenchmarkStats::printLatexStats(std::ostream & out) {
-	std::vector<long int> elapsedTimes; elapsedTimes.reserve(tm.size());
-	std::vector<long int> elapsedMeanTimesPerCompletion; elapsedMeanTimesPerCompletion.reserve(tm.size());
-	for(std::size_t i = 0; i < tm.size(); ++i) {
-		elapsedTimes.push_back( tm[i].elapsedTime() );
-		elapsedMeanTimesPerCompletion.push_back( elapsedTimes.back() / updateCount[i] );
-	}
-
-
-	std::size_t minPosTotal = std::min_element(elapsedTimes.begin(), elapsedTimes.end()) - elapsedTimes.begin();
-	std::size_t maxPosTotal = std::max_element(elapsedTimes.begin(), elapsedTimes.end()) - elapsedTimes.begin();
-// 	std::size_t minPosSingle = std::min_element(elapsedMeanTimesPerCompletion.begin(), elapsedMeanTimesPerCompletion.end()) - elapsedMeanTimesPerCompletion.begin();
-// 	std::size_t maxPosSingle = std::max_element(elapsedMeanTimesPerCompletion.begin(), elapsedMeanTimesPerCompletion.end()) - elapsedMeanTimesPerCompletion.begin();
-
-	out << "\\multicolumn{2}{c}{Allgemeine Informationen}\\\\\\hline" << std::endl;
-	out << "Anzahl voller Simulationen\t&" << elapsedTimes.size() << "\\\\" << std::endl;
-	out << "Kummulierte Anzahl an Komplettierungen&" << std::accumulate(updateCount.begin(), updateCount.end(), 0) << "\\\\" << std::endl;
-
-	out << "\\multicolumn{2}{c}{Komplettierungszeiten für eine volle Simulation}\\\\\\hline" << std::endl;
-	out << "Minimum\t\t&" << elapsedTimes[minPosTotal] << "\\\\" << std::endl; 
-	out << "Maximum\t\t&" << elapsedTimes[maxPosTotal] << "\\\\" << std::endl;
-	out << "Mittelwert\t\t&" << sserialize::statistics::mean(elapsedTimes.begin(), elapsedTimes.end(), 0.0) << std::endl;
-	out << "Median\t\t&" << sserialize::statistics::median(elapsedTimes.begin(), elapsedTimes.end(), 0.0) << std::endl;
-	out << "Standardabweichung\t&" << sserialize::statistics::stddev(elapsedTimes.begin(), elapsedTimes.end(), 0.0) << std::endl;
-
-	out << "\\multicolumn{2}{c}{Komplettierungszeiten für eine einzelne Anfrage}\\\\\\hline" << std::endl;
-	out << "Minimum\t\t&" << elapsedMeanTimesPerCompletion[minPosTotal] << "\\\\" << std::endl; 
-	out << "Maximum\t\t&" << elapsedMeanTimesPerCompletion[maxPosTotal] << "\\\\" << std::endl;
-	out << "Mittelwert\t\t&" << sserialize::statistics::mean(elapsedMeanTimesPerCompletion.begin(), elapsedMeanTimesPerCompletion.end(), 0.0) << std::endl;
-	out << "Median\t\t&" << sserialize::statistics::median(elapsedMeanTimesPerCompletion.begin(), elapsedMeanTimesPerCompletion.end(), 0.0) << std::endl;
-	out << "Standardabweichung\t&" << sserialize::statistics::stddev(elapsedMeanTimesPerCompletion.begin(), elapsedMeanTimesPerCompletion.end(), 0.0) << std::endl;
-
-}
-
-void  BenchmarkStats::printStats(std::ostream & out) {
-	std::vector<long int> elapsedTimes; elapsedTimes.reserve(tm.size());
-	std::vector<long int> elapsedMeanTimesPerCompletion; elapsedMeanTimesPerCompletion.reserve(tm.size());
-	std::vector< std::vector<long int> > singleElapsedTimes; singleElapsedTimes.resize(singleTm.size());
-	
-	std::vector<long int> minSingleTimes; minSingleTimes.reserve(tm.size());
-	std::vector<long int> maxSingleTimes; maxSingleTimes.reserve(tm.size());
-	std::vector<long int> allSingleTimes;
-	for(std::size_t i = 0; i < tm.size(); ++i) {
-		elapsedTimes.push_back( tm[i].elapsedTime() );
-		elapsedMeanTimesPerCompletion.push_back( elapsedTimes.back() / updateCount[i] );
-	}
-	for(std::size_t i = 0; i < singleTm.size(); ++i) {
-		for(std::size_t j = 0; j < singleTm[i].size(); ++j) {
-			singleElapsedTimes[i].push_back( singleTm[i][j].elapsedTime() );
-			allSingleTimes.push_back(singleElapsedTimes[i].back());
-		}
-	}
-
-	for(std::size_t i = 0; i < singleElapsedTimes.size(); ++i) {
-		minSingleTimes.push_back( std::min_element(singleElapsedTimes[i].begin(), singleElapsedTimes[i].end()).operator*() );
-		maxSingleTimes.push_back( std::max_element(singleElapsedTimes[i].begin(), singleElapsedTimes[i].end()).operator*() );
-	}
-
-	if (elapsedTimes.size()) {
-		out << "Cumulated Timing stats" << std::endl;
-		printStatsFromVector(out, elapsedTimes);
-	}
-	if (elapsedMeanTimesPerCompletion.size()) {
-		out << "Timing stats per completion (mean)" << std::endl;
-		printStatsFromVector(out, elapsedMeanTimesPerCompletion);
-	}
-	
-	if (minSingleTimes.size()) {
-		out << "Minimum Single Timing stats" << std::endl;
-		printStatsFromVector(out, minSingleTimes);
-	}
-	if (maxSingleTimes.size()) {
-		out << "Maximum Single Timing stats" << std::endl;
-		printStatsFromVector(out, maxSingleTimes);
-	}
-	if (allSingleTimes.size()) {
-		out << "All Single Timing stats" << std::endl;
-		printStatsFromVector(out, maxSingleTimes, false);
-	}
-}
-
-void BenchmarkStats::printRawStats(std::ostream & out) {
-	std::vector< std::vector<long int> > singleElapsedTimes; singleElapsedTimes.resize(singleTm.size());
-	for(std::size_t i = 0; i < singleTm.size(); ++i) {
-		for(std::size_t j = 0; j < singleTm[i].size(); ++j) {
-			singleElapsedTimes[i].push_back( singleTm[i][j].elapsedTime() );
-		}
-	}
-	for(std::size_t i = 0; i < singleElapsedTimes.size(); ++i) {
-		std::size_t j = 0;
-		while (true) {
-			out << singleElapsedTimes[i][j];
-			++j;
-			if (j < singleElapsedTimes[i].size())
-				out << ";";
-			else
-				break;
-		}
-		out << std::endl;
-	}
-}
-
-Benchmarker::Config::Config(const std::string str) :
+Benchmarker::Config::Config(const std::string & str) :
 ct(CT_INVALID),
 coldCache(false)
 {
@@ -152,6 +50,18 @@ coldCache(false)
 		else if (realOpts[0] == "tc") {
 			threadCount = std::stoi(realOpts[1]);
 		}
+		else if (realOpts[0] == "ghsg") {
+			if (realOpts[1] == "mem" || realOpts[1] == "memory" || realOpts[1] == "cached") {
+				ghsgt = sserialize::spatial::GeoHierarchySubGraph::T_IN_MEMORY;
+			}
+			else if (realOpts[1] == "pass-through" || realOpts[1] == "pass") {
+				ghsgt = sserialize::spatial::GeoHierarchySubGraph::T_PASS_THROUGH;
+			}
+			else {
+				throw std::runtime_error("Benchmarker::Config: invalid GeoHierarchySubGraph type: " + realOpts[1]);
+				return;
+			}
+		}
 		else {
 			throw std::runtime_error("oscarcmd::Benchmarker::Config: unknown option: " + splitString);
 			return;
@@ -159,12 +69,33 @@ coldCache(false)
 	}
 }
 
-void Benchmarker::doGeocellBench(const std::vector<std::string> & strs, bool coldCache, bool treedCQR, std::ostream & out) {
+void Benchmarker::doGeocellBench() {
 	if (!m_completer.textSearch().hasSearch(liboscar::TextSearch::Type::GEOCELL)) {
 		throw std::runtime_error("No support fo clustered completion available");
 		return;
 	}
-	//out << "#Query;Time for set operations;Time for subgraph creation;Number of cells;Number of items\n";
+	std::ofstream rawOutFile;
+	rawOutFile.open(config.outFileName + ".raw");
+	if (!rawOutFile.is_open()) {
+		throw std::runtime_error("Could not open file " + config.outFileName + ".raw");
+		return;
+	}
+	
+	std::ofstream statsOutFile;
+	statsOutFile.open(config.outFileName + ".stats");
+	if (!statsOutFile.is_open()) {
+		throw std::runtime_error("Could not open file " + config.outFileName + ".stats");
+		return;
+	}
+
+	int fd = -1;
+	if (config.coldCache) {
+		fd = ::open("/proc/sys/vm/drop_caches", O_WRONLY);
+		if (fd < 0) {
+			throw std::runtime_error("Could not open proc to drop caches");
+		}
+	}
+	
 	sserialize::Static::CellTextCompleter cmp;
 	if (m_completer.textSearch().hasSearch(liboscar::TextSearch::Type::GEOCELL)) {
 		cmp = m_completer.textSearch().get<liboscar::TextSearch::Type::GEOCELL>();
@@ -174,72 +105,115 @@ void Benchmarker::doGeocellBench(const std::vector<std::string> & strs, bool col
 	}
 	sserialize::Static::CQRDilator cqrd(m_completer.store().cellCenterOfMass(), m_completer.store().cellGraph());
 	liboscar::CQRFromPolygon cqrfp(m_completer.store(), m_completer.indexStore());
-	sserialize::spatial::GeoHierarchySubGraph ghs(m_completer.store().geoHierarchy(), m_completer.indexStore(), sserialize::spatial::GeoHierarchySubGraph::T_PASS_THROUGH);
+	sserialize::spatial::GeoHierarchySubGraph ghs(m_completer.store().geoHierarchy(), m_completer.indexStore(), config.ghsgt);
 	liboscar::CQRFromComplexSpatialQuery csq(ghs, cqrfp);
 	liboscar::AdvancedCellOpTree opTree(cmp, cqrd, csq, ghs);
-	sserialize::TimeMeasurer tm;
-	long int cqrTime, subsetTime;
-	int fd = -1;
-	if (coldCache) {
-		fd = ::open("/proc/sys/vm/drop_caches", O_WRONLY);
-		if (fd < 0) {
-			throw std::runtime_error("Could not open proc to drop caches");
-		}
-	}
 	
-	for(const std::string & str : strs) {
-		if (coldCache) {
+	std::vector<Stats> stats;
+	
+	auto totalStart = std::chrono::high_resolution_clock::now();
+	for(const std::string & str : m_strs) {
+		Stats stat;
+		sserialize::CellQueryResult cqr;
+		if (config.coldCache) {
 			::sync();
-			sleep(5);
+			::sleep(5);
 			if (2 != ::write(fd, "3\n", 2)) {
 				throw std::runtime_error("Benchmarker: could not drop caches");
 			}
 			::sync();
-			sleep(5);
+			::sleep(5);
 		}
-		sserialize::CellQueryResult r;
-		tm.begin();
-		if (treedCQR) {
+		auto start = std::chrono::high_resolution_clock::now();
+		if (config.ct == Config::CT_GEOCELL_TREED) {
 			opTree.parse(str);
-			r = opTree.calc<sserialize::TreedCellQueryResult>().toCQR();
+			cqr = opTree.calc<sserialize::TreedCellQueryResult>().toCQR();
 		}
 		else {
 			opTree.parse(str);
-			r = opTree.calc<sserialize::CellQueryResult>();
+			cqr = opTree.calc<sserialize::CellQueryResult>();
 		}
-		tm.end();
-		cqrTime = tm.elapsedUseconds();
-		tm.begin();
-		sserialize::Static::spatial::GeoHierarchy::SubSet subSet = m_completer.store().geoHierarchy().subSet(r, false, 1);
-		tm.end();
-		subsetTime = tm.elapsedUseconds();
-		out << str << ";" << cqrTime << ";" << subsetTime << ";" << r.cellCount() << ";" << r.flaten().size() << "\n";
+		auto stop = std::chrono::high_resolution_clock::now();
+		stat.cqr = std::chrono::duration_cast<Stats::meas_res>(stop-start);
+		
+		start = std::chrono::high_resolution_clock::now();
+		auto subSet = ghs.subSet(cqr, false, config.threadCount);
+		stop = std::chrono::high_resolution_clock::now();
+		stat.subgraph = std::chrono::duration_cast<Stats::meas_res>(stop-start);
+		
+		start = std::chrono::high_resolution_clock::now();
+		auto items = cqr.flaten(config.threadCount);
+		stop = std::chrono::high_resolution_clock::now();
+		stat.flaten = std::chrono::duration_cast<Stats::meas_res>(stop-start);
+		
+		stat.cellCount = cqr.cellCount();
+		stat.itemCount = items.size();
+		
+		stats.push_back(stat);
 	}
+	auto totalStop = std::chrono::high_resolution_clock::now();
+	
+	if (!stats.size()) {
+		return;
+	}
+	
+	rawOutFile << "Query id; cqr time; subgraph time; flaten time; cell count; item count";
+	for(uint32_t i(0), s(stats.size()); i < s; ++i) {
+		const Stats & stat = stats[i];
+		rawOutFile << i << ';' << stat.cqr.count() << ';'
+			<< stat.subgraph.count() << ';' << stat.flaten.count()
+			<< stat.cellCount << ';' << stat.itemCount << '\n';
+	}
+	
+	Stats min(stats.front()), max(stats.front()), mean(stats.front()), median(stats.front());
+	for(uint32_t i(1), s(stats.size()); i < s; ++i) {
+		const Stats & stat = stats[i];
+		min.cqr = std::min(stat.cqr, min.cqr);
+		min.subgraph = std::min(stat.subgraph, min.subgraph);
+		min.flaten = std::min(stat.flaten, min.flaten);
+		
+		max.cqr = std::max(stat.cqr, max.cqr);
+		max.subgraph = std::max(stat.subgraph, max.subgraph);
+		max.flaten = std::max(stat.flaten, max.flaten);
+		
+		mean.cqr += stat.cqr;
+		mean.subgraph += stat.subgraph;
+		mean.flaten += stat.flaten;
+	}
+	
+	statsOutFile << "total: " << std::chrono::duration_cast<Stats::meas_res>(totalStop-totalStart).count() << '\n';
+	statsOutFile << "cqr::min: " << min.cqr.count() << '\n';
+	statsOutFile << "cqr::max: " << max.cqr.count() << '\n';
+	statsOutFile << "cqr::mean: " << mean.cqr.count()/stats.size() << '\n';
+	
+	statsOutFile << "subgraph::min: " << min.subgraph.count() << '\n';
+	statsOutFile << "subgraph::max: " << max.subgraph.count() << '\n';
+	statsOutFile << "subgraph::mean: " << mean.subgraph.count()/stats.size() << '\n';
+
+	statsOutFile << "flaten::min: " << min.flaten.count() << '\n';
+	statsOutFile << "flaten::max: " << max.flaten.count() << '\n';
+	statsOutFile << "flaten::mean: " << mean.flaten.count()/stats.size() << '\n';
+
 }
 
-void Benchmarker::benchmark(const Benchmarker::Config & config) {
-	std::vector<std::string> strs;
+
+Benchmarker::Benchmarker(liboscar::Static::OsmCompleter & completer, const Config & config) :
+m_completer(completer),
+config(config)
+{
 	{
 		sserialize::MmappedMemory<char> mm(config.completionStringsFileName);
 		const char * dBegin = mm.data();
 		const char * dEnd = dBegin+mm.size();
 		sserialize::split<const char *, sserialize::OneValueSet<uint32_t>, sserialize::OneValueSet<uint32_t>, std::back_insert_iterator<std::vector<std::string> > >(
-			dBegin, dEnd, sserialize::OneValueSet<uint32_t>('\n'), sserialize::OneValueSet<uint32_t>(0xFFFFFFFF), std::back_insert_iterator<std::vector<std::string> >(strs)
+			dBegin, dEnd, sserialize::OneValueSet<uint32_t>('\n'), sserialize::OneValueSet<uint32_t>(0xFFFFFFFF), std::back_insert_iterator<std::vector<std::string> >(m_strs)
 			);
 	}
-	std::ofstream outFile;
-	outFile.open(config.outFileName);
-	if (!outFile.is_open()) {
-		throw std::runtime_error("Could not open file " + config.outFileName);
-		return;
-	}
-	
-	if (config.ct == Config::CT_GEOCELL) {
-		doGeocellBench(strs, config.coldCache, false, outFile);
-	}
-	else if (config.ct == Config::CT_GEOCELL_TREED) {
-		doGeocellBench(strs, config.coldCache, true, outFile);
-	}
+
+}
+
+void Benchmarker::execute() {
+	doGeocellBench();
 }
 
 }//end namespace

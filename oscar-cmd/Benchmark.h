@@ -3,54 +3,14 @@
 #include <liboscar/StaticOsmCompleter.h>
 #include <sserialize/stats/statfuncs.h>
 #include <sserialize/stats/TimeMeasuerer.h>
-
+#include <chrono>
 
 namespace oscarcmd {
-
-struct BenchmarkStats {
-	BenchmarkStats() {}
-	///resize tm to count
-	BenchmarkStats(std::size_t count) {
-		tm.resize(count);
-		singleTm.resize(count);
-		updateCount.resize(count, 0);
-		finalCompletionString.resize(count);
-	}
-	std::vector<std::string> finalCompletionString;
-	std::vector< sserialize::TimeMeasurer > tm;
-	std::vector< std::vector<sserialize::TimeMeasurer> > singleTm;
-	std::vector<uint32_t> updateCount;
-
-	template<typename TValue>
-	void printStatsFromVector(std::ostream & out, std::vector<TValue> src, bool withExtra = true) {
-		std::size_t minPos = std::min_element(src.begin(), src.end()) - src.begin();
-		std::size_t maxPos = std::max_element(src.begin(), src.end()) - src.begin();
-	
-		out << "Min: " << src[minPos] << std::endl;
-		if (withExtra) {
-			out << "Min-Query: " << finalCompletionString[minPos] << std::endl;
-			out << "Min-UpdateCount: " << updateCount[minPos] << std::endl;
-		}
-		out << "Max: " << src[maxPos] << std::endl;
-		if (withExtra) {
-			out << "Max-Query: " << finalCompletionString[maxPos] << std::endl;
-			out << "Max-UpdateCount: " << updateCount[maxPos] << std::endl;
-		}
-		out << "Mean: " << sserialize::statistics::mean(src.begin(), src.end(), 0.0) << std::endl;
-		out << "StdDev: " << sserialize::statistics::stddev(src.begin(), src.end(), 0.0) << std::endl;
-		std::sort(src.begin(), src.end());
-		out << "Median: " << src.at(src.size()/2) << std::endl;
-	}
-	
-	void printLatexStats(std::ostream & out);
-	void printStats(std::ostream & out);
-	void printRawStats(std::ostream & out);
-};
 
 /**
   * A simple benchmark class
   * Config accepts the following config string:
-  * i=inputFileName,o=outputFileName,t=(tgeocell|geocell|items),cc=(true|false),tc=<num>
+  * i=inputFileName,o=outputFileName,t=(tgeocell|geocell|items),cc=(true|false),tc=<num>,ghsg=(mem|pass)
   */
 class Benchmarker final {
 public:
@@ -61,17 +21,30 @@ public:
 		std::string completionStringsFileName;
 		std::string outFileName;
 		uint32_t threadCount;
-		Config() : ct(CT_INVALID), threadCount(1) {}
-		Config(const std::string str);
+		sserialize::spatial::GeoHierarchySubGraph::Type ghsgt;
+		Config() : ct(CT_INVALID), threadCount(1), ghsgt(sserialize::spatial::GeoHierarchySubGraph::T_PASS_THROUGH) {}
+		Config(const std::string & str);
 	};
+	
+	struct Stats {
+		using meas_res = std::chrono::microseconds;
+		meas_res cqr;
+		meas_res subgraph;
+		meas_res flaten;
+		uint32_t cellCount;
+		uint32_t itemCount;
+	};
+	
 private:
 	liboscar::Static::OsmCompleter & m_completer;
+	Config config;
+	std::vector<std::string> m_strs;
 private:
-	void doGeocellBench(const std::vector< std::string >& strs, bool coldCache, bool treedCQR, std::ostream& out);
+	void doGeocellBench();
 public:
-	Benchmarker(liboscar::Static::OsmCompleter & completer) : m_completer(completer) {}
+	Benchmarker(liboscar::Static::OsmCompleter & completer, const Config & config);
 	~Benchmarker() {}
-	void benchmark(const Config & config);
+	void execute();
 };
 
 
