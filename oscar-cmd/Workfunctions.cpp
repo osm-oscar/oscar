@@ -651,7 +651,6 @@ void Worker::unlockMemory(WD_UnlockMemory& d) {
 	}
 }
 
-
 void Worker::loadMemory(WD_LoadMemory & d) {
 	auto fc = liboscar::fileConfigFromString(d.value);
 	if (fc != liboscar::FC_INVALID) {
