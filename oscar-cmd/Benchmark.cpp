@@ -202,17 +202,17 @@ void Benchmarker::doGeocellBench() {
 	statsOutFile << "cqr::min[" << Stats::meas_res_unit << "]: " << min.cqr.count() << '\n';
 	statsOutFile << "cqr::max[" << Stats::meas_res_unit << "]: " << max.cqr.count() << '\n';
 	statsOutFile << "cqr::mean[" << Stats::meas_res_unit << "]: " << mean.cqr.count()/stats.size() << '\n';
-	statsOutFile << "cqr::mean[" << Stats::meas_res_unit << "]: " << cqr_median.at(stats.size()/2).count() << '\n';
+	statsOutFile << "cqr::median[" << Stats::meas_res_unit << "]: " << cqr_median.at(stats.size()/2).count() << '\n';
 	
 	statsOutFile << "subgraph::min[" << Stats::meas_res_unit << "]: " << min.subgraph.count() << '\n';
 	statsOutFile << "subgraph::max[" << Stats::meas_res_unit << "]: " << max.subgraph.count() << '\n';
 	statsOutFile << "subgraph::mean[" << Stats::meas_res_unit << "]: " << mean.subgraph.count()/stats.size() << '\n';
-	statsOutFile << "subgraph::mean[" << Stats::meas_res_unit << "]: " << subgraph_median.at(stats.size()/2).count() << '\n';
+	statsOutFile << "subgraph::median[" << Stats::meas_res_unit << "]: " << subgraph_median.at(stats.size()/2).count() << '\n';
 
 	statsOutFile << "flaten::min[" << Stats::meas_res_unit << "]: " << min.flaten.count() << '\n';
 	statsOutFile << "flaten::max[" << Stats::meas_res_unit << "]: " << max.flaten.count() << '\n';
 	statsOutFile << "flaten::mean[" << Stats::meas_res_unit << "]: " << mean.flaten.count()/stats.size() << '\n';
-	statsOutFile << "flaten::mean[" << Stats::meas_res_unit << "]: " << flaten_median.at(stats.size()/2).count() << '\n';
+	statsOutFile << "flaten::median[" << Stats::meas_res_unit << "]: " << flaten_median.at(stats.size()/2).count() << '\n';
 
 }
 
