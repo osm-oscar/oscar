@@ -173,7 +173,8 @@ void Benchmarker::doGeocellBench() {
 			<< stat.cellCount << ';' << stat.itemCount << '\n';
 	}
 	
-	Stats min(stats.front()), max(stats.front()), mean(stats.front()), median(stats.front());
+	Stats min(stats.front()), max(stats.front()), mean(stats.front());
+	std::vector<Stats::meas_res> cqr_median, subgraph_median, flaten_median;
 	for(uint32_t i(1), s(stats.size()); i < s; ++i) {
 		const Stats & stat = stats[i];
 		min.cqr = std::min(stat.cqr, min.cqr);
@@ -187,20 +188,31 @@ void Benchmarker::doGeocellBench() {
 		mean.cqr += stat.cqr;
 		mean.subgraph += stat.subgraph;
 		mean.flaten += stat.flaten;
+		
+		cqr_median.emplace_back(stat.cqr);
+		subgraph_median.emplace_back(stat.subgraph);
+		flaten_median.emplace_back(stat.flaten);
 	}
+	
+	std::sort(cqr_median.begin(), cqr_median.end());
+	std::sort(subgraph_median.begin(), subgraph_median.end());
+	std::sort(flaten_median.begin(), flaten_median.end());
 	
 	statsOutFile << "total [" << Stats::meas_res_unit << "]: " << std::chrono::duration_cast<Stats::meas_res>(totalStop-totalStart).count() << '\n';
 	statsOutFile << "cqr::min[" << Stats::meas_res_unit << "]: " << min.cqr.count() << '\n';
 	statsOutFile << "cqr::max[" << Stats::meas_res_unit << "]: " << max.cqr.count() << '\n';
 	statsOutFile << "cqr::mean[" << Stats::meas_res_unit << "]: " << mean.cqr.count()/stats.size() << '\n';
+	statsOutFile << "cqr::mean[" << Stats::meas_res_unit << "]: " << cqr_median.at(stats.size()/2).count() << '\n';
 	
 	statsOutFile << "subgraph::min[" << Stats::meas_res_unit << "]: " << min.subgraph.count() << '\n';
 	statsOutFile << "subgraph::max[" << Stats::meas_res_unit << "]: " << max.subgraph.count() << '\n';
 	statsOutFile << "subgraph::mean[" << Stats::meas_res_unit << "]: " << mean.subgraph.count()/stats.size() << '\n';
+	statsOutFile << "subgraph::mean[" << Stats::meas_res_unit << "]: " << subgraph_median.at(stats.size()/2).count() << '\n';
 
 	statsOutFile << "flaten::min[" << Stats::meas_res_unit << "]: " << min.flaten.count() << '\n';
 	statsOutFile << "flaten::max[" << Stats::meas_res_unit << "]: " << max.flaten.count() << '\n';
 	statsOutFile << "flaten::mean[" << Stats::meas_res_unit << "]: " << mean.flaten.count()/stats.size() << '\n';
+	statsOutFile << "flaten::mean[" << Stats::meas_res_unit << "]: " << flaten_median.at(stats.size()/2).count() << '\n';
 
 }
 
