@@ -13,6 +13,8 @@
 #include <fcntl.h>
 
 namespace oscarcmd {
+	
+const char * Benchmarker::Stats::meas_res_unit = "us";
 
 Benchmarker::Config::Config(const std::string & str) :
 ct(CT_INVALID),
