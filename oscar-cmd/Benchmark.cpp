@@ -175,6 +175,11 @@ void Benchmarker::doGeocellBench() {
 	
 	Stats min(stats.front()), max(stats.front()), mean(stats.front());
 	std::vector<Stats::meas_res> cqr_median, subgraph_median, flaten_median;
+	
+	cqr_median.emplace_back(stats.front().cqr);
+	subgraph_median.emplace_back(stats.front().subgraph);
+	flaten_median.emplace_back(stats.front().flaten);
+	
 	for(uint32_t i(1), s(stats.size()); i < s; ++i) {
 		const Stats & stat = stats[i];
 		min.cqr = std::min(stat.cqr, min.cqr);
