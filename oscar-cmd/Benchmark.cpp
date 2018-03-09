@@ -49,6 +49,9 @@ coldCache(false)
 		}
 		else if (realOpts[0] == "tc") {
 			threadCount = std::stoi(realOpts[1]);
+			if (!threadCount) {
+				threadCount = std::thread::hardware_concurrency();
+			}
 		}
 		else if (realOpts[0] == "ghsg") {
 			if (realOpts[1] == "mem" || realOpts[1] == "memory" || realOpts[1] == "cached") {
@@ -127,7 +130,7 @@ void Benchmarker::doGeocellBench() {
 		auto start = std::chrono::high_resolution_clock::now();
 		if (config.ct == Config::CT_GEOCELL_TREED) {
 			opTree.parse(str);
-			cqr = opTree.calc<sserialize::TreedCellQueryResult>().toCQR();
+			cqr = opTree.calc<sserialize::TreedCellQueryResult>().toCQR(config.threadCount);
 		}
 		else {
 			opTree.parse(str);
@@ -157,7 +160,10 @@ void Benchmarker::doGeocellBench() {
 		return;
 	}
 	
-	rawOutFile << "Query id; cqr time; subgraph time; flaten time; cell count; item count";
+	rawOutFile << "Query id; cqr time [" << Stats::meas_res_unit << "];"
+				<< "subgraph time[" << Stats::meas_res_unit << "];"
+				<< "flaten time[" << Stats::meas_res_unit << "];"
+				<< "cell count]; item count\n";
 	for(uint32_t i(0), s(stats.size()); i < s; ++i) {
 		const Stats & stat = stats[i];
 		rawOutFile << i << ';' << stat.cqr.count() << ';'
@@ -181,18 +187,18 @@ void Benchmarker::doGeocellBench() {
 		mean.flaten += stat.flaten;
 	}
 	
-	statsOutFile << "total: " << std::chrono::duration_cast<Stats::meas_res>(totalStop-totalStart).count() << '\n';
-	statsOutFile << "cqr::min: " << min.cqr.count() << '\n';
-	statsOutFile << "cqr::max: " << max.cqr.count() << '\n';
-	statsOutFile << "cqr::mean: " << mean.cqr.count()/stats.size() << '\n';
+	statsOutFile << "total [" << Stats::meas_res_unit << "]: " << std::chrono::duration_cast<Stats::meas_res>(totalStop-totalStart).count() << '\n';
+	statsOutFile << "cqr::min[" << Stats::meas_res_unit << "]: " << min.cqr.count() << '\n';
+	statsOutFile << "cqr::max[" << Stats::meas_res_unit << "]: " << max.cqr.count() << '\n';
+	statsOutFile << "cqr::mean[" << Stats::meas_res_unit << "]: " << mean.cqr.count()/stats.size() << '\n';
 	
-	statsOutFile << "subgraph::min: " << min.subgraph.count() << '\n';
-	statsOutFile << "subgraph::max: " << max.subgraph.count() << '\n';
-	statsOutFile << "subgraph::mean: " << mean.subgraph.count()/stats.size() << '\n';
+	statsOutFile << "subgraph::min[" << Stats::meas_res_unit << "]: " << min.subgraph.count() << '\n';
+	statsOutFile << "subgraph::max[" << Stats::meas_res_unit << "]: " << max.subgraph.count() << '\n';
+	statsOutFile << "subgraph::mean[" << Stats::meas_res_unit << "]: " << mean.subgraph.count()/stats.size() << '\n';
 
-	statsOutFile << "flaten::min: " << min.flaten.count() << '\n';
-	statsOutFile << "flaten::max: " << max.flaten.count() << '\n';
-	statsOutFile << "flaten::mean: " << mean.flaten.count()/stats.size() << '\n';
+	statsOutFile << "flaten::min[" << Stats::meas_res_unit << "]: " << min.flaten.count() << '\n';
+	statsOutFile << "flaten::max[" << Stats::meas_res_unit << "]: " << max.flaten.count() << '\n';
+	statsOutFile << "flaten::mean[" << Stats::meas_res_unit << "]: " << mean.flaten.count()/stats.size() << '\n';
 
 }
 

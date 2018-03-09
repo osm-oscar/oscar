@@ -27,6 +27,7 @@ public:
 	};
 	
 	struct Stats {
+		static constexpr char meas_res_unit[3] = "us";
 		using meas_res = std::chrono::microseconds;
 		meas_res cqr;
 		meas_res subgraph;
