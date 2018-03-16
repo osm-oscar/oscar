@@ -99,7 +99,7 @@ void Config::printHelp() {
 -dghr storeid\tdump gh region \n \
 -dghc id\tdump gh cell \n \
 --check type\tcheck type=(index|store|gh|tds) \n \
---benchmark i=strings,o=out-prefix,t=(tgeocell|geocell|items),cc=(true|false),tc=<num>,ghsg=(mem|pass) \n \
+--benchmark i=strings,o=out-prefix,t=(tgeocell|geocell|items),cc=(true|false),tc=<num>,ghsg=(mem|pass),subset(true|false),items=(true|false) \n \
 --mlock index,kvstore,textsearch\tlock memory of specified file\n \
 --munlock index,kvstore,textsearch\tunlock memory of specified file\n \
 --mload index,kvstore,textsearch\tload data of specified file into memory\n \

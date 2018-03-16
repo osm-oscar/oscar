@@ -67,6 +67,12 @@ coldCache(false)
 				return;
 			}
 		}
+		else if (realOpts[0] == "subset") {
+			computeSubSet = sserialize::toBool(realOpts[1]);
+		}
+		else if (realOpts[0] == "items") {
+			computeItems = sserialize::toBool(realOpts[1]);
+		}
 		else {
 			throw std::runtime_error("oscarcmd::Benchmarker::Config: unknown option: " + splitString);
 			return;
@@ -142,17 +148,21 @@ void Benchmarker::doGeocellBench() {
 		stat.cqr = std::chrono::duration_cast<Stats::meas_res>(stop-start);
 		
 		start = std::chrono::high_resolution_clock::now();
-		auto subSet = ghs.subSet(cqr, false, config.threadCount);
+		if (config.computeSubSet) {
+			auto subSet = ghs.subSet(cqr, false, config.threadCount);
+		}
 		stop = std::chrono::high_resolution_clock::now();
 		stat.subgraph = std::chrono::duration_cast<Stats::meas_res>(stop-start);
 		
 		start = std::chrono::high_resolution_clock::now();
-		auto items = cqr.flaten(config.threadCount);
+		if (config.computeItems) {
+			auto items = cqr.flaten(config.threadCount);
+			stat.itemCount = items.size();
+		}
 		stop = std::chrono::high_resolution_clock::now();
 		stat.flaten = std::chrono::duration_cast<Stats::meas_res>(stop-start);
 		
 		stat.cellCount = cqr.cellCount();
-		stat.itemCount = items.size();
 		
 		stats.push_back(stat);
 	}

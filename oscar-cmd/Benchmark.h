@@ -10,7 +10,7 @@ namespace oscarcmd {
 /**
   * A simple benchmark class
   * Config accepts the following config string:
-  * i=inputFileName,o=outputFileName,t=(tgeocell|geocell|items),cc=(true|false),tc=<num>,ghsg=(mem|pass)
+  * i=inputFileName,o=outputFileName,t=(tgeocell|geocell|items),cc=(true|false),tc=<num>,ghsg=(mem|pass),subset=(true|false),items(true|false)
   */
 class Benchmarker final {
 public:
@@ -22,7 +22,15 @@ public:
 		std::string outFileName;
 		uint32_t threadCount;
 		sserialize::spatial::GeoHierarchySubGraph::Type ghsgt;
-		Config() : ct(CT_INVALID), threadCount(1), ghsgt(sserialize::spatial::GeoHierarchySubGraph::T_PASS_THROUGH) {}
+		bool computeSubSet;
+		bool computeItems;
+		Config() :
+		ct(CT_INVALID),
+		threadCount(1),
+		ghsgt(sserialize::spatial::GeoHierarchySubGraph::T_PASS_THROUGH),
+		computeSubSet(true),
+		computeItems(true)
+		{}
 		Config(const std::string & str);
 	};
 	
@@ -32,8 +40,8 @@ public:
 		meas_res cqr;
 		meas_res subgraph;
 		meas_res flaten;
-		uint32_t cellCount;
-		uint32_t itemCount;
+			uint32_t cellCount = 0;
+		uint32_t itemCount = 0;
 	};
 	
 private:
