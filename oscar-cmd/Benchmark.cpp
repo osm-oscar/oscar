@@ -154,13 +154,23 @@ void Benchmarker::doGeocellBench() {
 		stop = std::chrono::high_resolution_clock::now();
 		stat.subgraph = std::chrono::duration_cast<Stats::meas_res>(stop-start);
 		
-		start = std::chrono::high_resolution_clock::now();
+		
+		
 		if (config.computeItems) {
+			if (cqr.flags() & sserialize::CellQueryResult::FF_CELL_LOCAL_ITEM_IDS) {
+				start = std::chrono::high_resolution_clock::now();
+				cqr = cqr.toGlobalItemIds(config.threadCount);
+				stop = std::chrono::high_resolution_clock::now();
+				
+				stat.toGlobalIds = std::chrono::duration_cast<Stats::meas_res>(stop-start);	
+			}
+			start = std::chrono::high_resolution_clock::now();
 			auto items = cqr.flaten(config.threadCount);
+			stop = std::chrono::high_resolution_clock::now();
+		
+			stat.flaten = std::chrono::duration_cast<Stats::meas_res>(stop-start);	
 			stat.itemCount = items.size();
 		}
-		stop = std::chrono::high_resolution_clock::now();
-		stat.flaten = std::chrono::duration_cast<Stats::meas_res>(stop-start);
 		
 		stat.cellCount = cqr.cellCount();
 		
@@ -174,12 +184,13 @@ void Benchmarker::doGeocellBench() {
 	
 	rawOutFile << "Query id; cqr time [" << Stats::meas_res_unit << "];"
 				<< "subgraph time[" << Stats::meas_res_unit << "];"
+				<< "toGlobalIds time[" << Stats::meas_res_unit << "];"
 				<< "flaten time[" << Stats::meas_res_unit << "];"
 				<< "cell count]; item count\n";
 	for(uint32_t i(0), s(stats.size()); i < s; ++i) {
 		const Stats & stat = stats[i];
 		rawOutFile << i << ';' << stat.cqr.count() << ';'
-			<< stat.subgraph.count() << ';' << stat.flaten.count()
+			<< stat.subgraph.count() << ';' << stat.toGlobalIds.count() << stat.flaten.count()
 			<< stat.cellCount << ';' << stat.itemCount << '\n';
 	}
 	

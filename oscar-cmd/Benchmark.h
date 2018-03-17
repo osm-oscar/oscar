@@ -39,8 +39,9 @@ public:
 		using meas_res = std::chrono::microseconds;
 		meas_res cqr;
 		meas_res subgraph;
+		meas_res toGlobalIds;
 		meas_res flaten;
-			uint32_t cellCount = 0;
+		uint32_t cellCount = 0;
 		uint32_t itemCount = 0;
 	};
 	
