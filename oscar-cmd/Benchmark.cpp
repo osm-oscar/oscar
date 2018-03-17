@@ -195,33 +195,39 @@ void Benchmarker::doGeocellBench() {
 	}
 	
 	Stats min(stats.front()), max(stats.front()), mean(stats.front());
-	std::vector<Stats::meas_res> cqr_median, subgraph_median, flaten_median;
+	std::vector<Stats::meas_res> cqr_median, subgraph_median, toGlobalIds_median, flaten_median;
 	
 	cqr_median.emplace_back(stats.front().cqr);
 	subgraph_median.emplace_back(stats.front().subgraph);
+	toGlobalIds_median.emplace_back(stats.front().flaten);
 	flaten_median.emplace_back(stats.front().flaten);
 	
 	for(uint32_t i(1), s(stats.size()); i < s; ++i) {
 		const Stats & stat = stats[i];
 		min.cqr = std::min(stat.cqr, min.cqr);
 		min.subgraph = std::min(stat.subgraph, min.subgraph);
+		min.toGlobalIds = std::min(stat.toGlobalIds, min.toGlobalIds);
 		min.flaten = std::min(stat.flaten, min.flaten);
 		
 		max.cqr = std::max(stat.cqr, max.cqr);
 		max.subgraph = std::max(stat.subgraph, max.subgraph);
+		max.toGlobalIds = std::max(stat.toGlobalIds, max.toGlobalIds);
 		max.flaten = std::max(stat.flaten, max.flaten);
 		
 		mean.cqr += stat.cqr;
 		mean.subgraph += stat.subgraph;
+		mean.toGlobalIds += stat.toGlobalIds;
 		mean.flaten += stat.flaten;
 		
 		cqr_median.emplace_back(stat.cqr);
 		subgraph_median.emplace_back(stat.subgraph);
+		toGlobalIds_median.emplace_back(stat.toGlobalIds);
 		flaten_median.emplace_back(stat.flaten);
 	}
 	
 	std::sort(cqr_median.begin(), cqr_median.end());
 	std::sort(subgraph_median.begin(), subgraph_median.end());
+	std::sort(toGlobalIds_median.begin(), toGlobalIds_median.end());
 	std::sort(flaten_median.begin(), flaten_median.end());
 	
 	statsOutFile << "total [" << Stats::meas_res_unit << "]: " << std::chrono::duration_cast<Stats::meas_res>(totalStop-totalStart).count() << '\n';
@@ -235,6 +241,11 @@ void Benchmarker::doGeocellBench() {
 	statsOutFile << "subgraph::mean[" << Stats::meas_res_unit << "]: " << mean.subgraph.count()/stats.size() << '\n';
 	statsOutFile << "subgraph::median[" << Stats::meas_res_unit << "]: " << subgraph_median.at(stats.size()/2).count() << '\n';
 
+	statsOutFile << "toGlobalIds::min[" << Stats::meas_res_unit << "]: " << min.toGlobalIds.count() << '\n';
+	statsOutFile << "toGlobalIds::max[" << Stats::meas_res_unit << "]: " << max.toGlobalIds.count() << '\n';
+	statsOutFile << "toGlobalIds::mean[" << Stats::meas_res_unit << "]: " << mean.toGlobalIds.count()/stats.size() << '\n';
+	statsOutFile << "toGlobalIds::median[" << Stats::meas_res_unit << "]: " << toGlobalIds_median.at(stats.size()/2).count() << '\n';
+	
 	statsOutFile << "flaten::min[" << Stats::meas_res_unit << "]: " << min.flaten.count() << '\n';
 	statsOutFile << "flaten::max[" << Stats::meas_res_unit << "]: " << max.flaten.count() << '\n';
 	statsOutFile << "flaten::mean[" << Stats::meas_res_unit << "]: " << mean.flaten.count()/stats.size() << '\n';
