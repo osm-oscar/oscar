@@ -43,6 +43,7 @@ public:
 		meas_res flaten;
 		uint32_t cellCount = 0;
 		uint32_t itemCount = 0;
+		Stats() : cqr(0), subgraph(0), toGlobalIds(0), flaten(0) {}
 	};
 	
 private:

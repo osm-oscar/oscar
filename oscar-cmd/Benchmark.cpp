@@ -199,7 +199,7 @@ void Benchmarker::doGeocellBench() {
 	
 	cqr_median.emplace_back(stats.front().cqr);
 	subgraph_median.emplace_back(stats.front().subgraph);
-	toGlobalIds_median.emplace_back(stats.front().flaten);
+	toGlobalIds_median.emplace_back(stats.front().toGlobalIds);
 	flaten_median.emplace_back(stats.front().flaten);
 	
 	for(uint32_t i(1), s(stats.size()); i < s; ++i) {
