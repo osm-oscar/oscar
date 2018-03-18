@@ -26,6 +26,7 @@ public:
 		bool computeItems;
 		Config() :
 		ct(CT_INVALID),
+		coldCache(false),
 		threadCount(1),
 		ghsgt(sserialize::spatial::GeoHierarchySubGraph::T_PASS_THROUGH),
 		computeSubSet(true),

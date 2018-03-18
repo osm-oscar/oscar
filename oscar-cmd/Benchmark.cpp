@@ -17,8 +17,7 @@ namespace oscarcmd {
 const char * Benchmarker::Stats::meas_res_unit = "us";
 
 Benchmarker::Config::Config(const std::string & str) :
-ct(CT_INVALID),
-coldCache(false)
+Config()
 {
 	std::vector<std::string> splitted = sserialize::split< std::vector<std::string> >(str, ',', '\\');
 	for(const std::string & splitString : splitted) {
@@ -186,7 +185,7 @@ void Benchmarker::doGeocellBench() {
 				<< "subgraph time[" << Stats::meas_res_unit << "];"
 				<< "toGlobalIds time[" << Stats::meas_res_unit << "];"
 				<< "flaten time[" << Stats::meas_res_unit << "];"
-				<< "cell count]; item count\n";
+				<< "cell count; item count\n";
 	for(uint32_t i(0), s(stats.size()); i < s; ++i) {
 		const Stats & stat = stats[i];
 		rawOutFile << i << ';' <<
