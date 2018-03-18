@@ -189,9 +189,13 @@ void Benchmarker::doGeocellBench() {
 				<< "cell count]; item count\n";
 	for(uint32_t i(0), s(stats.size()); i < s; ++i) {
 		const Stats & stat = stats[i];
-		rawOutFile << i << ';' << stat.cqr.count() << ';'
-			<< stat.subgraph.count() << ';' << stat.toGlobalIds.count() << stat.flaten.count()
-			<< stat.cellCount << ';' << stat.itemCount << '\n';
+		rawOutFile << i << ';' <<
+		stat.cqr.count() << ';'
+		<< stat.subgraph.count() << ';'
+		<< stat.toGlobalIds.count() << ';'
+		<< stat.flaten.count()
+		<< stat.cellCount << ';'
+		<< stat.itemCount << '\n';
 	}
 	
 	Stats min(stats.front()), max(stats.front()), mean(stats.front());
