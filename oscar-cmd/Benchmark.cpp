@@ -193,7 +193,7 @@ void Benchmarker::doGeocellBench() {
 		stat.cqr.count() << ';'
 		<< stat.subgraph.count() << ';'
 		<< stat.toGlobalIds.count() << ';'
-		<< stat.flaten.count()
+		<< stat.flaten.count() << ';'
 		<< stat.cellCount << ';'
 		<< stat.itemCount << '\n';
 	}
