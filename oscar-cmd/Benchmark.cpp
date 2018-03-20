@@ -121,8 +121,11 @@ void Benchmarker::doGeocellBench() {
 	
 	std::vector<Stats> stats;
 	
+	sserialize::ProgressInfo pinfo;
+	pinfo.begin(m_strs.size(), "Processing");
 	auto totalStart = std::chrono::high_resolution_clock::now();
-	for(const std::string & str : m_strs) {
+	for(std::size_t i(0), s(m_strs.size()); i < s; ++i) {
+		const std::string & str  = m_strs[i];
 		Stats stat;
 		sserialize::CellQueryResult cqr;
 		if (config.coldCache) {
@@ -153,8 +156,6 @@ void Benchmarker::doGeocellBench() {
 		stop = std::chrono::high_resolution_clock::now();
 		stat.subgraph = std::chrono::duration_cast<Stats::meas_res>(stop-start);
 		
-		
-		
 		if (config.computeItems) {
 			if (cqr.flags() & sserialize::CellQueryResult::FF_CELL_LOCAL_ITEM_IDS) {
 				start = std::chrono::high_resolution_clock::now();
@@ -174,8 +175,11 @@ void Benchmarker::doGeocellBench() {
 		stat.cellCount = cqr.cellCount();
 		
 		stats.push_back(stat);
+		
+		pinfo(i);
 	}
 	auto totalStop = std::chrono::high_resolution_clock::now();
+	pinfo.end();
 	
 	if (!stats.size()) {
 		return;
