@@ -108,7 +108,7 @@ void Config::printHelp() {
 
 int Config::parseSingleArg(int argc, char ** argv, int & i, int & printNumResults, int & threadCount, std::string & completionString) {
 	std::string arg(argv[i]);
-	if (arg == "--help") {
+	if (arg == "--help" || arg == "-h") {
 		printHelp();
 		return PRT_HELP;
 	}
