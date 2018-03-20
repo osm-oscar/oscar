@@ -113,9 +113,12 @@ void Benchmarker::doGeocellBench() {
 	else if (m_completer.textSearch().hasSearch(liboscar::TextSearch::Type::OOMGEOCELL)) {
 		cmp = m_completer.textSearch().get<liboscar::TextSearch::Type::OOMGEOCELL>();
 	}
+	
+	sserialize::Static::ItemIndexStore indexStore = m_completer.indexStore();
+	sserialize::Static::spatial::GeoHierarchy gh = m_completer.store().geoHierarchy();
 	sserialize::Static::CQRDilator cqrd(m_completer.store().cellCenterOfMass(), m_completer.store().cellGraph());
-	liboscar::CQRFromPolygon cqrfp(m_completer.store(), m_completer.indexStore());
-	sserialize::spatial::GeoHierarchySubGraph ghs(m_completer.store().geoHierarchy(), m_completer.indexStore(), config.ghsgt);
+	liboscar::CQRFromPolygon cqrfp(m_completer.store(), indexStore);
+	sserialize::spatial::GeoHierarchySubGraph ghs(gh, indexStore, config.ghsgt);
 	liboscar::CQRFromComplexSpatialQuery csq(ghs, cqrfp);
 	liboscar::AdvancedCellOpTree opTree(cmp, cqrd, csq, ghs);
 	
