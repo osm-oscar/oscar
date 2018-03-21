@@ -45,6 +45,23 @@
 		"scoring" : {
 			"config" : "scores of keys and key:values"
 		},
+		"triangleRefining" : {
+			"type" : "conforming|gabriel|max-centroid|lipschitz",
+			"_comment" : {
+				"conformin|gabriel" : "no options",
+				"max-centroid" : "value : maximum centroid distance in meter",
+				"lipschitz" : "value : maximum ratio of centroid distance between neighboring triangles"
+			},
+			"value" : "see comment"
+		},
+		"cellRefining" : {
+			"type" : "none|triangle-count|cell-diag",
+			"_comment" : {
+				"triangle-count" : " value : maximum triangle count",
+				"cell-daig" : "value : maximum cell diagonal in meter"
+			},
+			"value" : "see comment"
+		},
 		"sorting" : {
 			"order" : "score|name|priority",
 			"priority" : "file with priorities"

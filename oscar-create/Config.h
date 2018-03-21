@@ -62,6 +62,28 @@ struct TagStoreConfig {
 };
 
 struct KVStoreConfig {
+	struct TriangleRefinementConfig {
+		typedef enum { T_NONE, T_CONFORMING, T_GABRIEL, T_MAX_CENTROID_DISTANCE, T_LIPSCHITZ} Type;
+		TriangleRefinementConfig();
+		TriangleRefinementConfig(const Json::Value & cfg, const std::string & basePath);
+		void update(const Json::Value & cfg, const std::string & basePath);
+		std::ostream & print(std::ostream & out) const;
+		bool valid() const;
+		Type type;
+		double maxCentroidDistance;
+		double maxCentroidDistanceRatio;
+	};
+	struct CellRefinementConfig {
+		typedef enum {T_NONE, T_TRIANGLE_COUNT, T_CELL_DIAG} Type;
+		CellRefinementConfig();
+		CellRefinementConfig(const Json::Value & cfg, const std::string & basePath);
+		void update(const Json::Value & cfg, const std::string & basePath);
+		std::ostream & print(std::ostream & out) const;
+		bool valid() const;
+		Type type;
+		double maxCellDiag;
+		uint32_t maxTriangPerCell;
+	};
 	KVStoreConfig(const Json::Value & cfg, const std::string & basePath);
 	bool enabled;
 	uint64_t maxNodeHashTableSize; 
@@ -88,8 +110,8 @@ struct KVStoreConfig {
 	uint32_t grtLatCount;
 	uint32_t grtLonCount;
 	double grtMinDiag;
-	uint32_t maxTriangPerCell;
-	double maxTriangCentroidDist;
+	TriangleRefinementConfig triangRefineCfg;
+	CellRefinementConfig cellRefineCfg;
 	uint32_t numThreads;
 	uint32_t blobFetchCount;
 	int itemSortOrder;//as defined by OsmKeyValueObjectStore::ItemSortOrder
