@@ -241,21 +241,26 @@ void Benchmarker::doGeocellBench() {
 	std::sort(flaten_median.begin(), flaten_median.end());
 	
 	statsOutFile << "total [" << Stats::meas_res_unit << "]: " << std::chrono::duration_cast<Stats::meas_res>(totalStop-totalStart).count() << '\n';
+	
+	statsOutFile << "cqr::total[" << Stats::meas_res_unit << "]: " << std::accumulate(cqr_median.begin(), cqr_median.end(), Stats::meas_res(0)) .count() << '\n';
 	statsOutFile << "cqr::min[" << Stats::meas_res_unit << "]: " << min.cqr.count() << '\n';
 	statsOutFile << "cqr::max[" << Stats::meas_res_unit << "]: " << max.cqr.count() << '\n';
 	statsOutFile << "cqr::mean[" << Stats::meas_res_unit << "]: " << mean.cqr.count()/stats.size() << '\n';
 	statsOutFile << "cqr::median[" << Stats::meas_res_unit << "]: " << cqr_median.at(stats.size()/2).count() << '\n';
 	
+	statsOutFile << "subgraph::total[" << Stats::meas_res_unit << "]: " << std::accumulate(subgraph_median.begin(), subgraph_median.end(), Stats::meas_res(0)) .count() << '\n';
 	statsOutFile << "subgraph::min[" << Stats::meas_res_unit << "]: " << min.subgraph.count() << '\n';
 	statsOutFile << "subgraph::max[" << Stats::meas_res_unit << "]: " << max.subgraph.count() << '\n';
 	statsOutFile << "subgraph::mean[" << Stats::meas_res_unit << "]: " << mean.subgraph.count()/stats.size() << '\n';
 	statsOutFile << "subgraph::median[" << Stats::meas_res_unit << "]: " << subgraph_median.at(stats.size()/2).count() << '\n';
 
+	statsOutFile << "toGlobalIds::total[" << Stats::meas_res_unit << "]: " << std::accumulate(toGlobalIds_median.begin(), toGlobalIds_median.end(), Stats::meas_res(0)) .count() << '\n';
 	statsOutFile << "toGlobalIds::min[" << Stats::meas_res_unit << "]: " << min.toGlobalIds.count() << '\n';
 	statsOutFile << "toGlobalIds::max[" << Stats::meas_res_unit << "]: " << max.toGlobalIds.count() << '\n';
 	statsOutFile << "toGlobalIds::mean[" << Stats::meas_res_unit << "]: " << mean.toGlobalIds.count()/stats.size() << '\n';
 	statsOutFile << "toGlobalIds::median[" << Stats::meas_res_unit << "]: " << toGlobalIds_median.at(stats.size()/2).count() << '\n';
 	
+	statsOutFile << "flaten::total[" << Stats::meas_res_unit << "]: " << std::accumulate(flaten_median.begin(), flaten_median.end(), Stats::meas_res(0)) .count() << '\n';
 	statsOutFile << "flaten::min[" << Stats::meas_res_unit << "]: " << min.flaten.count() << '\n';
 	statsOutFile << "flaten::max[" << Stats::meas_res_unit << "]: " << max.flaten.count() << '\n';
 	statsOutFile << "flaten::mean[" << Stats::meas_res_unit << "]: " << mean.flaten.count()/stats.size() << '\n';
