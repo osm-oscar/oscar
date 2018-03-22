@@ -558,21 +558,62 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 	ct.polyStore.addPolygonsToRaster(ct.cc->rc.grtLatCount, ct.cc->rc.grtLonCount);
 	ct.polyStore.printStats(std::cout);
 	std::cout << "Creating final TriangulationRegionStore" << std::endl;
-	osmtools::OsmTriangulationRegionStore::LipschitzMeshCriteria refinerBase(ct.cc->rc.triangMaxCentroidDist, &(ct.trs.tds()));
-	osmtools::OsmTriangulationRegionStore::RegionOnlyLipschitzMeshCriteria refiner(refinerBase);
+	
 	std::size_t num_removed_edges = 0;
-	ct.trs.init(ct.polyStore,
-				ct.cc->numThreads,
-				&refiner,
-				osmtools::OsmTriangulationRegionStore::MyRefineTag,
-				ct.cc->geometryCleanType,
-				[&num_removed_edges](const auto &, const auto &) {
-					++num_removed_edges;
-				}
-	);
+	auto removedEdges = [&num_removed_edges](const auto &, const auto &) -> void {
+		++num_removed_edges;
+	};
+	auto trsInit = [&](auto * refiner, osmtools::OsmTriangulationRegionStore::RefinementAlgoTags refineTag) -> void {
+		ct.trs.init(
+			ct.polyStore,
+			ct.cc->numThreads,
+			refiner,
+			refineTag,
+			ct.cc->geometryCleanType,
+			removedEdges
+		);
+	};
+	switch (ct.cc->rc.triangRefineCfg.type) {
+	case TriangleRefinementConfig::T_CONFORMING:
+		trsInit(static_cast<osmtools::OsmTriangulationRegionStore::CentroidDistanceMeshCriteria*>(0), osmtools::OsmTriangulationRegionStore::CGALConformingTriangulationTag);
+		break;
+	case TriangleRefinementConfig::T_GABRIEL:
+		trsInit(static_cast<osmtools::OsmTriangulationRegionStore::CentroidDistanceMeshCriteria*>(0), osmtools::OsmTriangulationRegionStore::CGALGabrielTriangulationTag);
+		break;
+	case TriangleRefinementConfig::T_MAX_CENTROID_DISTANCE:
+	{
+		using namespace osmtools::detail::OsmTriangulationRegionStore;
+		using TDS = osmtools::OsmTriangulationRegionStore::Triangulation;
+		CentroidDistanceMeshCriteria<TDS> refinerBase(ct.cc->rc.triangRefineCfg.maxCentroidDistance);
+		RefineTrianglesWithCellIdMeshCriteria<decltype(refinerBase)> refiner(refinerBase);
+		trsInit(&refiner, osmtools::OsmTriangulationRegionStore::MyRefineTag);
+	}
+		break;
+	case TriangleRefinementConfig::T_LIPSCHITZ:
+	{
+		osmtools::OsmTriangulationRegionStore::LipschitzMeshCriteria refinerBase(ct.cc->rc.triangRefineCfg.maxCentroidDistanceRatio, &(ct.trs.tds()));
+		osmtools::OsmTriangulationRegionStore::RegionOnlyLipschitzMeshCriteria refiner(refinerBase);
+		trsInit(&refiner, osmtools::OsmTriangulationRegionStore::MyRefineTag);
+	}
+		break;
+	case TriangleRefinementConfig::T_MAX_EDGE_LENGTH_RATIO:
+	{
+		using namespace osmtools::detail::OsmTriangulationRegionStore;
+		using TDS = osmtools::OsmTriangulationRegionStore::Triangulation;
+		EdgeLengthRatioMeshCriteria<TDS> refinerBase(ct.cc->rc.triangRefineCfg.maxEdgeLengthRatio);
+		RefineTrianglesWithCellIdMeshCriteria<decltype(refinerBase)> refiner(refinerBase);
+		trsInit(&refiner, osmtools::OsmTriangulationRegionStore::MyRefineTag);
+	}
+		break;
+	case TriangleRefinementConfig::T_NONE:
+	default:
+		trsInit(static_cast<osmtools::OsmTriangulationRegionStore::CentroidDistanceMeshCriteria*>(0), osmtools::OsmTriangulationRegionStore::NoRefineTag);
+		break;
+		
+	};
 	std::cout << "Could not re-add " << num_removed_edges << " edges" << std::endl;
 	ct.trs.initGrid(ct.cc->rc.polyStoreLatCount, ct.cc->rc.polyStoreLonCount);
-	ct.trs.refineBySize(ct.cc->rc.polyStoreMaxTriangPerCell, 100, 100000, ct.cc->numThreads);
+// 	ct.trs.refineBySize(ct.cc->rc., 100, 100000, ct.cc->numThreads);
 	SSERIALIZE_EXPENSIVE_ASSERT(ct.trs.selfTest());
 	ct.cellMap = decltype(ct.cellMap)(ct.trs.cellCount());
 	tm.end();
@@ -991,8 +1032,6 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 }
 
 bool OsmKeyValueObjectStore::populate(CreationConfig & cc) {
-	SSERIALIZE_CHEAP_ASSERT_LARGER(cc.rc.triangMaxCentroidDist, 1);
-	
 	Context ct(this, cc);
 	createRegionStore(ct);
 	

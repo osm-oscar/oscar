@@ -16,6 +16,7 @@
 #include "ScoreCreator.h"
 #include "CellCreator.h"
 #include "TagStore.h"
+#include "Config.h"
 
 #define OUTER_POLYGON_ORIENTATION 1
 #define INNER_POLYGON_ORIENTATION -1
@@ -175,17 +176,23 @@ public:
 		std::string prioStringsFn;//needed if sortOrder == ISO_SCORE_PRIO_STRINGS
 		bool addRegionsToCells;
 		sserialize::Static::spatial::Triangulation::GeometryCleanType geometryCleanType;
-		//a filter that defines regions
 		struct RegionConfig {
+			//a filter that defines regions
 			generics::RCPtr<osmpbf::AbstractTagFilter> regionFilter;
 			uint32_t grtLatCount;
 			uint32_t grtLonCount;
 			double grtMinDiag;
 			uint32_t polyStoreLatCount;
 			uint32_t polyStoreLonCount;
-			uint32_t polyStoreMaxTriangPerCell;
-			double triangMaxCentroidDist;
-			RegionConfig() : grtLatCount(10), grtLonCount(10), grtMinDiag(0), polyStoreLatCount(100), polyStoreLonCount(100), polyStoreMaxTriangPerCell(std::numeric_limits<uint32_t>::max()), triangMaxCentroidDist(std::numeric_limits<double>::max()) {}
+			TriangleRefinementConfig triangRefineCfg;
+			CellRefinementConfig cellRefineCfg;
+			RegionConfig() :
+			grtLatCount(10),
+			grtLonCount(10),
+			grtMinDiag(0),
+			polyStoreLatCount(100),
+			polyStoreLonCount(100)
+			{}
 		} rc;
 		CreationConfig() :
 		maxNodeCoordTableSize(std::numeric_limits<uint32_t>::max()),
@@ -196,7 +203,7 @@ public:
 		addRegionsToCells(false),
 		geometryCleanType(sserialize::Static::spatial::Triangulation::GCT_NONE)
 		{}
-		inline bool incremental() { return maxNodeCoordTableSize != std::numeric_limits<uint32_t>::max(); }
+		inline bool incremental() const { return maxNodeCoordTableSize != std::numeric_limits<uint32_t>::max(); }
 	};
 
 private:
@@ -347,7 +354,6 @@ public:
 	void clear();
 	std::ostream & stats(std::ostream & out);
 	
-	///BUG: this only supports adding a single file, not multiple!
 	bool populate(CreationConfig & cc);
 	
 	inline Item at(uint32_t pos) const {

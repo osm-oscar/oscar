@@ -46,11 +46,12 @@
 			"config" : "scores of keys and key:values"
 		},
 		"triangleRefining" : {
-			"type" : "conforming|gabriel|max-centroid|lipschitz",
+			"type" : "conforming|gabriel|max-centroid-distance|lipschitz|max-edge-length-ratio",
 			"_comment" : {
 				"conformin|gabriel" : "no options",
-				"max-centroid" : "value : maximum centroid distance in meter",
-				"lipschitz" : "value : maximum ratio of centroid distance between neighboring triangles"
+				"max-centroid-distance" : "value : maximum centroid distance in meter",
+				"lipschitz" : "value : maximum ratio of centroid distance between neighboring triangles",
+				"max-edge-length-ratio" : "value : maximum ratio of longest edge to shortest edge"
 			},
 			"value" : "see comment"
 		},

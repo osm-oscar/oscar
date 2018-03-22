@@ -566,19 +566,19 @@ void TagStoreConfig::update(const Json::Value& cfg, const std::string& basePath)
 	}
 }
 
-KVStoreConfig::TriangleRefinementConfig::TriangleRefinementConfig() :
+TriangleRefinementConfig::TriangleRefinementConfig() :
 type(T_NONE),
 maxCentroidDistance(std::numeric_limits<double>::max()),
 maxCentroidDistanceRatio(std::numeric_limits<double>::max())
 {}
 
-KVStoreConfig::TriangleRefinementConfig::TriangleRefinementConfig(const Json::Value & cfg, const std::string & basePath) :
+TriangleRefinementConfig::TriangleRefinementConfig(const Json::Value & cfg, const std::string & basePath) :
 TriangleRefinementConfig()
 {
 	update(cfg, basePath);
 }
 
-void KVStoreConfig::TriangleRefinementConfig::update(const Json::Value & cfg, const std::string & /*basePath*/) {
+void TriangleRefinementConfig::update(const Json::Value & cfg, const std::string & /*basePath*/) {
 	Json::Value v = cfg["type"];
 	if (v.isString()) {
 		std::string token = v.asString();
@@ -591,33 +591,43 @@ void KVStoreConfig::TriangleRefinementConfig::update(const Json::Value & cfg, co
 		else if (token == "gabriel") {
 			type = T_GABRIEL;
 		}
-		else if (token == "max-centroid") {
+		else if (token == "max-centroid-distance") {
 			type = T_MAX_CENTROID_DISTANCE;
 			v = cfg["value"];
 			if (v.isNumeric()) {
-				maxCentroidDistance = v.asUInt();
+				maxCentroidDistance = v.asDouble();
 			}
 			else {
-				throw sserialize::ConfigurationException("KVStoreConfig::TriangleRefinementConfig", "Missing parameter: value");
+				throw sserialize::ConfigurationException("TriangleRefinementConfig", "Missing parameter: value");
 			}
 		}
 		else if (token == "lipschitz") {
 			type = T_LIPSCHITZ;
 			v = cfg["value"];
 			if (v.isNumeric()) {
-				maxCentroidDistance = v.asUInt();
+				maxCentroidDistanceRatio = v.asDouble();
 			}
 			else {
-				throw sserialize::ConfigurationException("KVStoreConfig::TriangleRefinementConfig", "Missing parameter: value");
+				throw sserialize::ConfigurationException("TriangleRefinementConfig", "Missing parameter: value");
+			}
+		}
+		else if (token == "max-edge-length-ratio") {
+			type = T_MAX_EDGE_LENGTH_RATIO;
+			v = cfg["value"];
+			if (v.isNumeric()) {
+				maxEdgeLengthRatio = v.asDouble();
+			}
+			else {
+				throw sserialize::ConfigurationException("TriangleRefinementConfig", "Missing parameter: value");
 			}
 		}
 		else {
-			throw sserialize::ConfigurationException("KVStoreConfig::TriangleRefinementConfig", "Unknown type: " + token);
+			throw sserialize::ConfigurationException("TriangleRefinementConfig", "Unknown type: " + token);
 		}
 	}
 }
 
-std::ostream & KVStoreConfig::TriangleRefinementConfig::print(std::ostream & out) const {
+std::ostream & TriangleRefinementConfig::print(std::ostream & out) const {
 	switch (type) {
 	case T_NONE:
 		out << "none\n";
@@ -640,19 +650,19 @@ std::ostream & KVStoreConfig::TriangleRefinementConfig::print(std::ostream & out
 	return out;
 }
 
-KVStoreConfig::CellRefinementConfig::CellRefinementConfig() :
+CellRefinementConfig::CellRefinementConfig() :
 type(T_NONE),
 maxCellDiag(std::numeric_limits<double>::max()),
 maxTriangPerCell(std::numeric_limits<uint32_t>::max())
 {}
 
-KVStoreConfig::CellRefinementConfig::CellRefinementConfig(const Json::Value & cfg, const std::string & basePath) :
+CellRefinementConfig::CellRefinementConfig(const Json::Value & cfg, const std::string & basePath) :
 CellRefinementConfig()
 {
 	update(cfg, basePath);
 }
 
-void KVStoreConfig::CellRefinementConfig::update(const Json::Value & cfg, const std::string & /*basePath*/) {
+void CellRefinementConfig::update(const Json::Value & cfg, const std::string & /*basePath*/) {
 	Json::Value v = cfg["type"];
 	if (v.isString()) {
 		std::string token = v.asString();
@@ -666,7 +676,7 @@ void KVStoreConfig::CellRefinementConfig::update(const Json::Value & cfg, const 
 				maxTriangPerCell = v.asUInt();
 			}
 			else {
-				throw sserialize::ConfigurationException("KVStoreConfig::CellRefinementConfig", "Missing parameter: value");
+				throw sserialize::ConfigurationException("CellRefinementConfig", "Missing parameter: value");
 			}
 		}
 		else if (token == "cell-diag") {
@@ -676,16 +686,16 @@ void KVStoreConfig::CellRefinementConfig::update(const Json::Value & cfg, const 
 				maxCellDiag = v.asDouble();
 			}
 			else {
-				throw sserialize::ConfigurationException("KVStoreConfig::CellRefinementConfig", "Missing parameter: value");
+				throw sserialize::ConfigurationException("CellRefinementConfig", "Missing parameter: value");
 			}
 		}
 		else {
-			throw sserialize::ConfigurationException("KVStoreConfig::CellRefinementConfig", "Unknown type: " + token);
+			throw sserialize::ConfigurationException("CellRefinementConfig", "Unknown type: " + token);
 		}
 	}
 }
 
-std::ostream & KVStoreConfig::CellRefinementConfig::print(std::ostream & out) const {
+std::ostream & CellRefinementConfig::print(std::ostream & out) const {
 	switch (type) {
 	case T_NONE:
 		out << "none\n";
