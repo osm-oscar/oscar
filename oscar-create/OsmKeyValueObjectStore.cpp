@@ -11,6 +11,7 @@
 #include <liboscar/constants.h>
 #include <osmtools/AreaExtractor.h>
 #include <osmtools/MeshCriteria.h>
+#include <osmtools/CellCriteria.h>
 #include "CellCreator.h"
 #include "common.h"
 #include "AreaExtractor.h"
@@ -608,8 +609,26 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 		std::cout << "Could not re-add " << num_removed_edges << " edges" << std::endl;
 	}
 	ct.trs.initGrid(ct.cc->rc.polyStoreLatCount, ct.cc->rc.polyStoreLonCount);
-	{ //refine cells
-		
+	switch(ct.cc->rc.cellRefineCfg.type) { //refine cells
+	case CellRefinementConfig::T_TRIANGLE_COUNT:
+		ct.trs.refineCells(
+			std::make_shared<osmtools::CellCriteria::CellTriangleCountCriteria>(ct.cc->rc.cellRefineCfg.maxCellDiag),
+			10,
+			1000,
+			ct.cc->numThreads
+		);
+		break;
+	case CellRefinementConfig::T_CELL_DIAG:
+		ct.trs.refineCells(
+			std::make_shared<osmtools::CellCriteria::CellDiagonalCriteria>(ct.cc->rc.cellRefineCfg.maxCellDiag),
+			10,
+			1000,
+			ct.cc->numThreads
+		);
+		break;
+	case CellRefinementConfig::T_NONE:
+	default:
+		break;
 	}
 	SSERIALIZE_EXPENSIVE_ASSERT(ct.trs.selfTest());
 	ct.cellMap = decltype(ct.cellMap)(ct.trs.cellCount());
