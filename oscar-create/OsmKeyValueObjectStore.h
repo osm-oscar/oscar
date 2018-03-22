@@ -244,7 +244,7 @@ private:
 		osmpbf::PbiStream inFile;
 		
 		//the grt is only used temporarily and the store data will be deleted by addPolygonStoreItems
-		osmtools::OsmGridRegionTree<RegionInfo> polyStore;
+		std::shared_ptr< osmtools::OsmGridRegionTree<RegionInfo> > polyStore;
 		osmtools::OsmTriangulationRegionStore trs;
 		
 		std::unordered_set<liboscar::OsmIdType> residentialRegions;
