@@ -10,6 +10,7 @@
 #include <liboscar/OsmKeyValueObjectStore.h>
 #include <liboscar/constants.h>
 #include <osmtools/AreaExtractor.h>
+#include <osmtools/MeshCriteria.h>
 #include "CellCreator.h"
 #include "common.h"
 #include "AreaExtractor.h"
@@ -564,34 +565,33 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 	
 	switch (ct.cc->rc.triangRefineCfg.type) { //refine triangulation
 	case TriangleRefinementConfig::T_CONFORMING:
-		ct.trs.refineTriangulation(osmtools::OsmTriangulationRegionStore::CGALConformingTriangulationTag);
+		ct.trs.refineTriangulation(osmtools::OsmTriangulationRegionStore::TRAS_ConformingTriangulation);
 		break;
 	case TriangleRefinementConfig::T_GABRIEL:
-		ct.trs.refineTriangulation(osmtools::OsmTriangulationRegionStore::CGALGabrielTriangulationTag);
+		ct.trs.refineTriangulation(osmtools::OsmTriangulationRegionStore::TRAS_GabrielTriangulation);
 		break;
 	case TriangleRefinementConfig::T_MAX_CENTROID_DISTANCE:
 	{
-		using namespace osmtools::detail::OsmTriangulationRegionStore;
 		using TDS = osmtools::OsmTriangulationRegionStore::Triangulation;
-		CentroidDistanceMeshCriteria<TDS> refinerBase(ct.cc->rc.triangRefineCfg.maxCentroidDistance);
-		RefineTrianglesWithCellIdMeshCriteria<decltype(refinerBase)> refiner(refinerBase);
-		ct.trs.refineTriangulation(refiner, osmtools::OsmTriangulationRegionStore::MyRefineTag, ct.cc->numThreads);
+		osmtools::CentroidDistanceMeshCriteria<TDS> refinerBase(ct.cc->rc.triangRefineCfg.maxCentroidDistance);
+		osmtools::RefineTrianglesWithCellIdMeshCriteria<decltype(refinerBase)> refiner(refinerBase);
+		ct.trs.refineTriangulation(refiner, osmtools::OsmTriangulationRegionStore::TRAS_Osmtools, ct.cc->numThreads);
 	}
 		break;
 	case TriangleRefinementConfig::T_LIPSCHITZ:
 	{
-		osmtools::OsmTriangulationRegionStore::LipschitzMeshCriteria refinerBase(ct.cc->rc.triangRefineCfg.maxCentroidDistanceRatio, &(ct.trs.tds()));
-		osmtools::OsmTriangulationRegionStore::RegionOnlyLipschitzMeshCriteria refiner(refinerBase);
-		ct.trs.refineTriangulation(refiner, osmtools::OsmTriangulationRegionStore::MyRefineTag, ct.cc->numThreads);
+		using TDS = osmtools::OsmTriangulationRegionStore::Triangulation;
+		osmtools::LipschitzMeshCriteria<TDS> refinerBase(ct.cc->rc.triangRefineCfg.maxCentroidDistanceRatio, &(ct.trs.tds()));
+		osmtools::RefineTrianglesWithCellIdMeshCriteria<decltype(refinerBase)> refiner(refinerBase);
+		ct.trs.refineTriangulation(refiner, osmtools::OsmTriangulationRegionStore::TRAS_Osmtools, ct.cc->numThreads);
 	}
 		break;
 	case TriangleRefinementConfig::T_MAX_EDGE_LENGTH_RATIO:
 	{
-		using namespace osmtools::detail::OsmTriangulationRegionStore;
 		using TDS = osmtools::OsmTriangulationRegionStore::Triangulation;
-		EdgeLengthRatioMeshCriteria<TDS> refinerBase(ct.cc->rc.triangRefineCfg.maxEdgeLengthRatio);
-		RefineTrianglesWithCellIdMeshCriteria<decltype(refinerBase)> refiner(refinerBase);
-		ct.trs.refineTriangulation(refiner, osmtools::OsmTriangulationRegionStore::MyRefineTag, ct.cc->numThreads);
+		osmtools::EdgeLengthRatioMeshCriteria<TDS> refinerBase(ct.cc->rc.triangRefineCfg.maxEdgeLengthRatio);
+		osmtools::RefineTrianglesWithCellIdMeshCriteria<decltype(refinerBase)> refiner(refinerBase);
+		ct.trs.refineTriangulation(refiner, osmtools::OsmTriangulationRegionStore::TRAS_Osmtools, ct.cc->numThreads);
 	}
 		break;
 	case TriangleRefinementConfig::T_NONE:
