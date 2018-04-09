@@ -539,8 +539,8 @@ void handleKVCreation(oscar_create::Config & opts, State & state) {
 		cc.rc.grtMinDiag = opts.kvStoreConfig->grtMinDiag;
 		cc.rc.polyStoreLatCount = opts.kvStoreConfig->latCount;
 		cc.rc.polyStoreLonCount = opts.kvStoreConfig->lonCount;
-		cc.rc.polyStoreMaxTriangPerCell = opts.kvStoreConfig->maxTriangPerCell;
-		cc.rc.triangMaxCentroidDist = opts.kvStoreConfig->maxTriangCentroidDist;
+		cc.rc.cellRefineCfg = opts.kvStoreConfig->cellRefineCfg;
+		cc.rc.triangRefineCfg = opts.kvStoreConfig->triangRefineCfg;
 		cc.sortOrder = (oscar_create::OsmKeyValueObjectStore::ItemSortOrder) opts.kvStoreConfig->itemSortOrder;
 		cc.prioStringsFn = opts.kvStoreConfig->prioStringsFileName;
 		cc.scoreConfigFileName = opts.kvStoreConfig->scoreConfigFileName;

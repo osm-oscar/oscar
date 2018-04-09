@@ -10,6 +10,8 @@
 #include <liboscar/OsmKeyValueObjectStore.h>
 #include <liboscar/constants.h>
 #include <osmtools/AreaExtractor.h>
+#include <osmtools/MeshCriteria.h>
+#include <osmtools/CellCriteria.h>
 #include "CellCreator.h"
 #include "common.h"
 #include "AreaExtractor.h"
@@ -192,6 +194,7 @@ gphMMT(cc.incremental() ? sserialize::MM_SHARED_MEMORY : sserialize::MM_FAST_FIL
 cc(&cc),
 parent(parent),
 inFile(cc.fileNames),
+polyStore(std::make_shared<osmtools::OsmGridRegionTree<RegionInfo> >()),
 scoreCreator(cc.scoreConfigFileName),
 cellMap(0),
 // 		nodeIdToGeoPoint(cc.minNodeId, cc.maxNodeId, gphMMT, GeoPointHashMapHashBase( OADValueStorage(gphMMT), OADTableStorage(sserialize::MM_SHARED_MEMORY) )),
@@ -323,7 +326,7 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 	sserialize::TimeMeasurer tm;
 	tm.begin();
 	osmtools::OsmTriangulationRegionStore trs;
-	osmtools::OsmGridRegionTree<RegionInfo> polyStore;
+	auto polyStore = std::make_shared< osmtools::OsmGridRegionTree<RegionInfo> >();
 	osmtools::AreaExtractor ae;
 
 	{//fetch all residential areas without a name, try to name them with their city-node
@@ -337,16 +340,16 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 		);
 		osmpbf::InversionFilter::invert( ct.cc->rc.regionFilter );
 		
-		osmtools::OsmGridRegionTree<RegionInfo> polyStore;
+		auto polyStore = std::make_shared< osmtools::OsmGridRegionTree<RegionInfo> >();
 		ae.extract(ct.inFile, [&polyStore](const std::shared_ptr<sserialize::spatial::GeoRegion> & region, osmpbf::IPrimitive & primitive) {
 			liboscar::OsmIdType osmIdType(primitive.id(), oscar_create::toOsmItemType(primitive.type()));
 			OsmKeyValueObjectStore::orient(region.get());
-			polyStore.push_back(*region, RegionInfo(osmIdType, region->type(), region->boundary()));
+			polyStore->push_back(*region, RegionInfo(osmIdType, region->type(), region->boundary()));
 		}, osmtools::AreaExtractor::ET_ALL_SPECIAL_BUT_BUILDINGS, myFilter, ct.cc->numThreads, "Residential area extraction");
 		
-		polyStore.setRefinerOptions(2, 2, 10000);
-		polyStore.addPolygonsToRaster(10, 10);
-		polyStore.printStats(std::cout);
+		polyStore->setRefinerOptions(2, 2, 10000);
+		polyStore->addPolygonsToRaster(10, 10);
+		polyStore->printStats(std::cout);
 		
 		//now try to assign the nameless polygons their city-node
 		//we won't do this now, but instead later when adding the region since we only store the osmIdType for a region and its boundary
@@ -358,12 +361,12 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 			std::mutex residentialRegionsLock;
 		} wct;
 		struct MyProc {
-			osmtools::OsmGridRegionTree<RegionInfo> * polyStore;
+			std::shared_ptr< osmtools::OsmGridRegionTree<RegionInfo> > polyStore;
 			Context * ctx;
 			osmpbf::PrimitiveBlockInputAdaptor * m_pbi;
 			osmpbf::RCFilterPtr m_filter;
 			WorkContext * wct;
-			MyProc(osmtools::OsmGridRegionTree<RegionInfo> * polyStore, Context * ctx, WorkContext * wct) :
+			MyProc(std::shared_ptr< osmtools::OsmGridRegionTree<RegionInfo> > polyStore, Context * ctx, WorkContext * wct) :
 			polyStore(polyStore),
 			ctx(ctx),
 			m_pbi(0),
@@ -396,9 +399,9 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 		};
 		
 		ct.inFile.reset();
-		osmpbf::parseFileCPPThreads(ct.inFile, MyProc(&polyStore, &ct, &wct), ct.cc->numThreads, 1, true);
+		osmpbf::parseFileCPPThreads(ct.inFile, MyProc(polyStore, &ct, &wct), ct.cc->numThreads, 1, true);
 		for(uint32_t x : wct.activeResidentialRegions) {
-			ct.residentialRegions.insert(polyStore.values().at(x).osmIdType);
+			ct.residentialRegions.insert(polyStore->values().at(x).osmIdType);
 		}
 		std::cout << "Collected " << ct.residentialRegions.size() << " residential regions" << std::endl;
 	}
@@ -412,19 +415,19 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 		ae.extract(ct.inFile, [&polyStore](const std::shared_ptr<sserialize::spatial::GeoRegion> & region, osmpbf::IPrimitive & primitive) {
 			liboscar::OsmIdType osmIdType(primitive.id(), oscar_create::toOsmItemType(primitive.type()));
 			OsmKeyValueObjectStore::orient(region.get());
-			polyStore.push_back(*region, RegionInfo(osmIdType, region->type(), region->boundary()));
+			polyStore->push_back(*region, RegionInfo(osmIdType, region->type(), region->boundary()));
 		}, osmtools::AreaExtractor::ET_ALL_SPECIAL_BUT_BUILDINGS, myFilter, ct.cc->numThreads, "Region extraction");
-		polyStore.setRefinerOptions(2, 2, ct.cc->rc.grtMinDiag);
-		polyStore.addPolygonsToRaster(ct.cc->rc.grtLatCount, ct.cc->rc.grtLonCount);
-		polyStore.printStats(std::cout);
+		polyStore->setRefinerOptions(2, 2, ct.cc->rc.grtMinDiag);
+		polyStore->addPolygonsToRaster(ct.cc->rc.grtLatCount, ct.cc->rc.grtLonCount);
+		polyStore->printStats(std::cout);
 		trs.init(polyStore, ct.cc->numThreads);
 		trs.initGrid(ct.cc->rc.polyStoreLatCount, ct.cc->rc.polyStoreLonCount);
 		trs.makeConnected();
 		SSERIALIZE_EXPENSIVE_ASSERT(ct.trs.selfTest());
 	}
 	//put current active regions into regionItems hash to make sure that the region is not checked with itself
-	for(uint32_t i(0), s((uint32_t) polyStore.size()); i < s; ++i) {
-		ct.regionItems.insert(polyStore.values().at(i).osmIdType);
+	for(uint32_t i(0), s((uint32_t) polyStore->size()); i < s; ++i) {
+		ct.regionItems.insert(polyStore->values().at(i).osmIdType);
 	}
 	
 	struct WorkContext {
@@ -524,11 +527,11 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 	std::cout << "Found " << wct.relevantCells.size() << " cells containing items" << std::endl;
 	{
 		//delete grt to save space since we need to temprarily hold some copies
-		polyStore.clearGRT();
+		polyStore->clearGRT();
 		ct.regionItems.clear();
 		
 		sserialize::SimpleBitVector relevantRegions;
-		relevantRegions.resize(polyStore.size());
+		relevantRegions.resize(polyStore->size());
 		for(uint32_t cellId(0), s(trs.cellCount()); cellId < s; ++cellId) {
 			if (wct.relevantCells.isSet(cellId)) {
 				const osmtools::OsmTriangulationRegionStore::RegionList & rl = trs.regions(cellId);
@@ -537,59 +540,118 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 		}
 		trs.clear();
 		
-		for(uint32_t i(0), s((uint32_t) polyStore.size()); i < s; ++i) {
+		for(uint32_t i(0), s((uint32_t) polyStore->size()); i < s; ++i) {
 			if (relevantRegions.isSet(i)) {
-				auto & r = polyStore.regions().at(i);
-				auto & v = polyStore.values().at(i);
-				ct.polyStore.push_back(*r, RegionInfo(v.osmIdType, r->type(), r->boundary()));
+				auto & r = polyStore->regions().at(i);
+				auto & v = polyStore->values().at(i);
+				ct.polyStore->push_back(*r, RegionInfo(v.osmIdType, r->type(), r->boundary()));
 				ct.regionItems.insert(v.osmIdType);
 			}
 		}
-		polyStore.clear();
+		polyStore->clear();
 	}
-	ct.polyStore.snapPoints();
+	ct.polyStore->snapPoints();
 	
 	//update region info due to snapped points
-	for(uint32_t i(0), s((uint32_t) ct.polyStore.size()); i < s; ++i) {
-		ct.polyStore.values().at(i).boundary = ct.polyStore.regions().at(i)->boundary();
+	for(uint32_t i(0), s((uint32_t) ct.polyStore->size()); i < s; ++i) {
+		ct.polyStore->values().at(i).boundary = ct.polyStore->regions().at(i)->boundary();
 	}
 	
-	ct.polyStore.setRefinerOptions(2, 2, ct.cc->rc.grtMinDiag);
-	ct.polyStore.addPolygonsToRaster(ct.cc->rc.grtLatCount, ct.cc->rc.grtLonCount);
-	ct.polyStore.printStats(std::cout);
+	ct.polyStore->setRefinerOptions(2, 2, ct.cc->rc.grtMinDiag);
+	ct.polyStore->addPolygonsToRaster(ct.cc->rc.grtLatCount, ct.cc->rc.grtLonCount);
+	ct.polyStore->printStats(std::cout);
 	std::cout << "Creating final TriangulationRegionStore" << std::endl;
-	osmtools::OsmTriangulationRegionStore::LipschitzMeshCriteria refinerBase(ct.cc->rc.triangMaxCentroidDist, &(ct.trs.tds()));
-	osmtools::OsmTriangulationRegionStore::RegionOnlyLipschitzMeshCriteria refiner(refinerBase);
-	std::size_t num_removed_edges = 0;
-	ct.trs.init(ct.polyStore,
-				ct.cc->numThreads,
-				&refiner,
-				osmtools::OsmTriangulationRegionStore::MyRefineTag,
-				ct.cc->geometryCleanType,
-				[&num_removed_edges](const auto &, const auto &) {
-					++num_removed_edges;
-				}
-	);
-	std::cout << "Could not re-add " << num_removed_edges << " edges" << std::endl;
+	
+	ct.trs.init(ct.polyStore, ct.cc->numThreads);
+	
+	switch (ct.cc->rc.triangRefineCfg.type) { //refine triangulation
+	case TriangleRefinementConfig::T_CONFORMING:
+		ct.trs.refineTriangulation(osmtools::OsmTriangulationRegionStore::TRAS_ConformingTriangulation);
+		break;
+	case TriangleRefinementConfig::T_GABRIEL:
+		ct.trs.refineTriangulation(osmtools::OsmTriangulationRegionStore::TRAS_GabrielTriangulation);
+		break;
+	case TriangleRefinementConfig::T_MAX_CENTROID_DISTANCE:
+	{
+		using TDS = osmtools::OsmTriangulationRegionStore::Triangulation;
+		osmtools::CentroidDistanceMeshCriteria<TDS> refinerBase(ct.cc->rc.triangRefineCfg.maxCentroidDistance);
+		osmtools::RefineTrianglesWithCellIdMeshCriteria<decltype(refinerBase)> refiner(refinerBase);
+		ct.trs.assignCellIds(ct.cc->numThreads);
+		ct.trs.refineTriangulation(osmtools::OsmTriangulationRegionStore::TRAS_Osmtools, refiner);
+	}
+		break;
+	case TriangleRefinementConfig::T_LIPSCHITZ:
+	{
+		using TDS = osmtools::OsmTriangulationRegionStore::Triangulation;
+		osmtools::LipschitzMeshCriteria<TDS> refinerBase(ct.cc->rc.triangRefineCfg.maxCentroidDistanceRatio, &(ct.trs.tds()));
+		osmtools::RefineTrianglesWithCellIdMeshCriteria<decltype(refinerBase)> refiner(refinerBase);
+		ct.trs.assignCellIds(ct.cc->numThreads);
+		ct.trs.refineTriangulation(osmtools::OsmTriangulationRegionStore::TRAS_Osmtools, refiner);
+	}
+		break;
+	case TriangleRefinementConfig::T_MAX_EDGE_LENGTH_RATIO:
+	{
+		using TDS = osmtools::OsmTriangulationRegionStore::Triangulation;
+		osmtools::EdgeLengthRatioMeshCriteria<TDS> refinerBase(ct.cc->rc.triangRefineCfg.maxEdgeLengthRatio);
+		osmtools::RefineTrianglesWithCellIdMeshCriteria<decltype(refinerBase)> refiner(refinerBase);
+		ct.trs.assignCellIds(ct.cc->numThreads);
+		ct.trs.refineTriangulation(osmtools::OsmTriangulationRegionStore::TRAS_Osmtools, refiner);
+	}
+		break;
+	case TriangleRefinementConfig::T_NONE:
+	default:
+		break;
+	};
+	{ //snap triangulation
+		std::size_t num_removed_edges = 0;
+		auto removedEdges = [&num_removed_edges](const auto &, const auto &) -> void {
+			++num_removed_edges;
+		};
+		ct.trs.snapTriangulation(ct.cc->geometryCleanType, removedEdges);
+		std::cout << "Could not re-add " << num_removed_edges << " edges" << std::endl;
+	}
 	ct.trs.initGrid(ct.cc->rc.polyStoreLatCount, ct.cc->rc.polyStoreLonCount);
-	ct.trs.refineBySize(ct.cc->rc.polyStoreMaxTriangPerCell, 100, 100000, ct.cc->numThreads);
+	
+	ct.trs.assignCellIds(ct.cc->numThreads);
+	
+	switch(ct.cc->rc.cellRefineCfg.type) { //refine cells
+	case CellRefinementConfig::T_TRIANGLE_COUNT:
+		ct.trs.refineCells(
+			std::make_shared<osmtools::CellCriteria::CellTriangleCountCriteria>(ct.cc->rc.cellRefineCfg.maxCellDiag),
+			10,
+			1000,
+			ct.cc->numThreads
+		);
+		break;
+	case CellRefinementConfig::T_CELL_DIAG:
+		ct.trs.refineCells(
+			std::make_shared<osmtools::CellCriteria::CellDiagonalCriteria>(ct.cc->rc.cellRefineCfg.maxCellDiag),
+			10,
+			1000,
+			ct.cc->numThreads
+		);
+		break;
+	case CellRefinementConfig::T_NONE:
+	default:
+		break;
+	}
 	SSERIALIZE_EXPENSIVE_ASSERT(ct.trs.selfTest());
 	ct.cellMap = decltype(ct.cellMap)(ct.trs.cellCount());
 	tm.end();
 	ct.trs.printStats(std::cout);
-	std::cout << "Total time to create the region store with " << ct.polyStore.size() << " regions: " << tm << std::endl;
+	std::cout << "Total time to create the region store with " << ct.polyStore->size() << " regions: " << tm << std::endl;
 }
 
 void OsmKeyValueObjectStore::addPolyStoreItems(Context & ctx) {
-	if (!ctx.polyStore.values().size()) {
+	if (!ctx.polyStore->values().size()) {
 		return;
 	}
 	struct WorkContext {
 		std::unordered_map<liboscar::OsmIdType, uint32_t> osmIdToRegionId;
 		WorkContext() {}
 	} wct;
-	for(uint32_t i(0), s((uint32_t) ctx.polyStore.values().size()); i < s; ++i) {
-		wct.osmIdToRegionId[ctx.polyStore.values().at(i).osmIdType] = i;
+	for(uint32_t i(0), s((uint32_t) ctx.polyStore->values().size()); i < s; ++i) {
+		wct.osmIdToRegionId[ctx.polyStore->values().at(i).osmIdType] = i;
 	}
 	
 	struct Worker {
@@ -600,19 +662,19 @@ void OsmKeyValueObjectStore::addPolyStoreItems(Context & ctx) {
 		osmpbf::RCFilterPtr placeMarkerFilter;
 		Worker(Context & ctx, WorkContext & wct) :
 		ctx(ctx), wct(wct),
-		foundRegionsCounter(0), rawItems(ctx.polyStore.size()),
+		foundRegionsCounter(0), rawItems(ctx.polyStore->size()),
 		placeMarkerFilter(ctx.placeMarkerFilter())
 		{}
 		Worker(Worker & o) : ctx(o.ctx), wct(o.wct) { throw std::runtime_error("Illegal function call");}
 		void flush() {
-			SSERIALIZE_CHEAP_ASSERT_EQUAL(foundRegionsCounter.load(), ctx.polyStore.size());
+			SSERIALIZE_CHEAP_ASSERT_EQUAL(foundRegionsCounter.load(), ctx.polyStore->size());
 			ctx.push_back(rawItems.begin(), rawItems.end(), false);
 		}
 		void processItem(uint32_t regionId, osmpbf::IPrimitive & primitive) {
 			OsmKeyValueRawItem & rawItem = rawItems.at(regionId);
 			ctx.inflateValues(rawItem, primitive);
-			rawItem.data.osmIdType = ctx.polyStore.values().at(regionId).osmIdType;
-			rawItem.data.shape = ctx.polyStore.regions().at(regionId);
+			rawItem.data.osmIdType = ctx.polyStore->values().at(regionId).osmIdType;
+			rawItem.data.shape = ctx.polyStore->regions().at(regionId);
 			rawItem.data.id = regionId;
 			
 			++foundRegionsCounter;
@@ -624,7 +686,7 @@ void OsmKeyValueObjectStore::addPolyStoreItems(Context & ctx) {
 			uint32_t myCellId = ctx.trs.cellId(node.latd(), node.lond());
 			const auto & cellRegions = ctx.trs.regions(myCellId);
 			for(const uint32_t & regionId : cellRegions) {
-				const  RegionInfo & ri = ctx.polyStore.values().at(regionId);
+				const  RegionInfo & ri = ctx.polyStore->values().at(regionId);
 				if (ctx.residentialRegions.count(ri.osmIdType)) {
 					OsmKeyValueRawItem & destRawItem = rawItems.at(regionId);
 					OsmKeyValueRawItem tmpRawItem;
@@ -674,10 +736,10 @@ void OsmKeyValueObjectStore::addPolyStoreItems(Context & ctx) {
 			}
 		}
 	}
-	SSERIALIZE_CHEAP_ASSERT_EQUAL(size(), ctx.polyStore.size());
+	SSERIALIZE_CHEAP_ASSERT_EQUAL(size(), ctx.polyStore->size());
 	SSERIALIZE_CHEAP_ASSERT_EQUAL(ctx.itemIdForCells.size(), size());
-	ctx.regionInfo = std::move(ctx.polyStore.values());
-	ctx.polyStore.clear();
+	ctx.regionInfo = std::move(ctx.polyStore->values());
+	ctx.polyStore->clear();
 }
 
 void OsmKeyValueObjectStore::insertItemStrings(OsmKeyValueObjectStore::Context& ct) {
@@ -991,8 +1053,6 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 }
 
 bool OsmKeyValueObjectStore::populate(CreationConfig & cc) {
-	SSERIALIZE_CHEAP_ASSERT_LARGER(cc.rc.triangMaxCentroidDist, 1);
-	
 	Context ct(this, cc);
 	createRegionStore(ct);
 	

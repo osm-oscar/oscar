@@ -178,8 +178,10 @@ std::ostream& KVStoreConfig::print(std::ostream& out) const {
 		out << "\n";
 		out << "\tgrt=" << grtLatCount << "x" << grtLonCount << " split till diag < " << grtMinDiag << '\n';
 		out << "\tinitial=" << latCount << "x" << lonCount << "\n";
-		out << "\tmax triangle per cell="<< maxTriangPerCell << "\n";
-		out << "\tmax triangle centroid dist=" << maxTriangCentroidDist;
+		out << "Triangle Refinement: ";
+		triangRefineCfg.print(out);
+		out << "Cell refinement: ";
+		cellRefineCfg.print(out);
 	}
 	else {
 		out << "no";
@@ -564,6 +566,152 @@ void TagStoreConfig::update(const Json::Value& cfg, const std::string& basePath)
 	}
 }
 
+TriangleRefinementConfig::TriangleRefinementConfig() :
+type(T_NONE),
+maxCentroidDistance(std::numeric_limits<double>::max()),
+maxCentroidDistanceRatio(std::numeric_limits<double>::max())
+{}
+
+TriangleRefinementConfig::TriangleRefinementConfig(const Json::Value & cfg, const std::string & basePath) :
+TriangleRefinementConfig()
+{
+	update(cfg, basePath);
+}
+
+void TriangleRefinementConfig::update(const Json::Value & cfg, const std::string & /*basePath*/) {
+	Json::Value v = cfg["type"];
+	if (v.isString()) {
+		std::string token = v.asString();
+		if (token == "none") {
+			type = T_NONE;
+		}
+		else if (token == "conforming") {
+			type = T_CONFORMING;
+		}
+		else if (token == "gabriel") {
+			type = T_GABRIEL;
+		}
+		else if (token == "max-centroid-distance") {
+			type = T_MAX_CENTROID_DISTANCE;
+			v = cfg["value"];
+			if (v.isNumeric()) {
+				maxCentroidDistance = v.asDouble();
+			}
+			else {
+				throw sserialize::ConfigurationException("TriangleRefinementConfig", "Missing parameter: value");
+			}
+		}
+		else if (token == "lipschitz") {
+			type = T_LIPSCHITZ;
+			v = cfg["value"];
+			if (v.isNumeric()) {
+				maxCentroidDistanceRatio = v.asDouble();
+			}
+			else {
+				throw sserialize::ConfigurationException("TriangleRefinementConfig", "Missing parameter: value");
+			}
+		}
+		else if (token == "max-edge-length-ratio") {
+			type = T_MAX_EDGE_LENGTH_RATIO;
+			v = cfg["value"];
+			if (v.isNumeric()) {
+				maxEdgeLengthRatio = v.asDouble();
+			}
+			else {
+				throw sserialize::ConfigurationException("TriangleRefinementConfig", "Missing parameter: value");
+			}
+		}
+		else {
+			throw sserialize::ConfigurationException("TriangleRefinementConfig", "Unknown type: " + token);
+		}
+	}
+}
+
+std::ostream & TriangleRefinementConfig::print(std::ostream & out) const {
+	switch (type) {
+	case T_NONE:
+		out << "none\n";
+		break;
+	case T_CONFORMING:
+		out << "conforming\n";
+		break;
+	case T_GABRIEL:
+		out << "gabriel\n";
+		break;
+	case T_MAX_CENTROID_DISTANCE:
+		out << "maximum centroid distance: " << maxCentroidDistance << "m\n";
+		break;
+	case T_LIPSCHITZ:
+		out << "maximum centroid distance ratio to neighbors: " << maxCentroidDistanceRatio << '\n';
+		break;
+	default:
+		out << "invalid\n";
+	};
+	return out;
+}
+
+CellRefinementConfig::CellRefinementConfig() :
+type(T_NONE),
+maxCellDiag(std::numeric_limits<double>::max()),
+maxTriangPerCell(std::numeric_limits<uint32_t>::max())
+{}
+
+CellRefinementConfig::CellRefinementConfig(const Json::Value & cfg, const std::string & basePath) :
+CellRefinementConfig()
+{
+	update(cfg, basePath);
+}
+
+void CellRefinementConfig::update(const Json::Value & cfg, const std::string & /*basePath*/) {
+	Json::Value v = cfg["type"];
+	if (v.isString()) {
+		std::string token = v.asString();
+		if (token == "none") {
+			type = T_NONE;
+		}
+		else if (token == "triangle-count") {
+			type = T_TRIANGLE_COUNT;
+			v = cfg["value"];
+			if (v.isNumeric()) {
+				maxTriangPerCell = v.asUInt();
+			}
+			else {
+				throw sserialize::ConfigurationException("CellRefinementConfig", "Missing parameter: value");
+			}
+		}
+		else if (token == "cell-diag") {
+			type = T_CELL_DIAG;
+			v = cfg["value"];
+			if (v.isNumeric()) {
+				maxCellDiag = v.asDouble();
+			}
+			else {
+				throw sserialize::ConfigurationException("CellRefinementConfig", "Missing parameter: value");
+			}
+		}
+		else {
+			throw sserialize::ConfigurationException("CellRefinementConfig", "Unknown type: " + token);
+		}
+	}
+}
+
+std::ostream & CellRefinementConfig::print(std::ostream & out) const {
+	switch (type) {
+	case T_NONE:
+		out << "none\n";
+		break;
+	case T_TRIANGLE_COUNT:
+		out << "maximum triangles per cell: " << maxTriangPerCell << '\n';
+		break;
+	case T_CELL_DIAG:
+		out << "maximum cell diagonal: " << maxCellDiag << "m\n";
+		break;
+	default:
+		out << "invalid\n";
+	};
+	return out;
+}
+
 KVStoreConfig::KVStoreConfig(const Json::Value& cfg, const std::string & basePath) :
 enabled(false),
 maxNodeHashTableSize(std::numeric_limits<uint32_t>::max()),
@@ -581,8 +729,6 @@ lonCount(0),
 grtLatCount(10),
 grtLonCount(10),
 grtMinDiag(10000),
-maxTriangPerCell(std::numeric_limits<uint32_t>::max()),
-maxTriangCentroidDist(std::numeric_limits<double>::max()),
 numThreads(0),
 blobFetchCount(1),
 itemSortOrder(OsmKeyValueObjectStore::ISO_NONE),
@@ -647,20 +793,14 @@ void KVStoreConfig::update(const Json::Value& cfg, const std::string & basePath)
 		readBoundaries = v.asBool();
 	}
 	
-	v = cfg["maxTriangPerCell"];
-	if (v.isNumeric()) {
-		int64_t tmp = v.asInt64();
-		if (tmp < 0) {
-			maxTriangPerCell = std::numeric_limits<uint32_t>::max();
-		}
-		else {
-			maxTriangPerCell = tmp;
-		}
+	v = cfg["triangleRefining"];
+	if (v.isObject()) {
+		triangRefineCfg.update(v, basePath);
 	}
 	
-	v = cfg["maxTriangCentroidDist"];
-	if (v.isNumeric()) {
-		maxTriangCentroidDist = v.asDouble();
+	v = cfg["cellRefining"];
+	if (v.isObject()) {
+		cellRefineCfg.update(v, basePath);
 	}
 	
 	v = cfg["addParentInfo"];

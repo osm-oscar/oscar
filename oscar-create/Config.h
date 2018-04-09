@@ -61,6 +61,30 @@ struct TagStoreConfig {
 	bool valid() const;
 };
 
+struct TriangleRefinementConfig {
+	typedef enum { T_NONE, T_CONFORMING, T_GABRIEL, T_MAX_CENTROID_DISTANCE, T_LIPSCHITZ, T_MAX_EDGE_LENGTH_RATIO} Type;
+	TriangleRefinementConfig();
+	TriangleRefinementConfig(const Json::Value & cfg, const std::string & basePath);
+	void update(const Json::Value & cfg, const std::string & basePath);
+	std::ostream & print(std::ostream & out) const;
+	bool valid() const;
+	Type type;
+	double maxCentroidDistance;
+	double maxCentroidDistanceRatio;
+	double maxEdgeLengthRatio;
+};
+struct CellRefinementConfig {
+	typedef enum {T_NONE, T_TRIANGLE_COUNT, T_CELL_DIAG} Type;
+	CellRefinementConfig();
+	CellRefinementConfig(const Json::Value & cfg, const std::string & basePath);
+	void update(const Json::Value & cfg, const std::string & basePath);
+	std::ostream & print(std::ostream & out) const;
+	bool valid() const;
+	Type type;
+	double maxCellDiag;
+	uint32_t maxTriangPerCell;
+};
+
 struct KVStoreConfig {
 	KVStoreConfig(const Json::Value & cfg, const std::string & basePath);
 	bool enabled;
@@ -88,8 +112,8 @@ struct KVStoreConfig {
 	uint32_t grtLatCount;
 	uint32_t grtLonCount;
 	double grtMinDiag;
-	uint32_t maxTriangPerCell;
-	double maxTriangCentroidDist;
+	TriangleRefinementConfig triangRefineCfg;
+	CellRefinementConfig cellRefineCfg;
 	uint32_t numThreads;
 	uint32_t blobFetchCount;
 	int itemSortOrder;//as defined by OsmKeyValueObjectStore::ItemSortOrder
@@ -220,8 +244,6 @@ public:
 	bool cellLocalIds;
 };
 
-
-//TODO: file directive should store absolute path, this way it is not necessary to create the symlinks to the lists
 class Config {
 public:
 	enum ReturnValues { RV_OK, RV_FAILED, RV_HELP};
