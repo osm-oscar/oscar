@@ -12,6 +12,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+#include "DecelledACOT.h"
+
 namespace oscarcmd {
 	
 const char * Benchmarker::Stats::meas_res_unit = "us";
@@ -42,6 +44,9 @@ Config()
 			}
 			else if (realOpts[1] == "items") {
 				ct = CT_ITEMS;
+			}
+			else if (realOpts[1] == "decelled") {
+				ct = CT_GEOCELL_DECELLED;
 			}
 			else {
 				throw std::runtime_error("Benchmarker::Config: invalid completer type: " + realOpts[1]);
@@ -76,6 +81,10 @@ Config()
 			throw std::runtime_error("oscarcmd::Benchmarker::Config: unknown option: " + splitString);
 			return;
 		}
+	}
+	if (ct == CT_GEOCELL_DECELLED) {
+		computeSubSet = false;
+		computeItems = true;
 	}
 }
 
@@ -121,8 +130,10 @@ void Benchmarker::doGeocellBench() {
 	sserialize::spatial::GeoHierarchySubGraph ghs(gh, indexStore, config.ghsgt);
 	liboscar::CQRFromComplexSpatialQuery csq(ghs, cqrfp);
 	liboscar::AdvancedCellOpTree opTree(cmp, cqrd, csq, ghs);
+	oscar_cmd::DecelledACOT dOpTree(opTree);
 	
 	std::vector<Stats> stats;
+	sserialize::CellQueryResult cqr;
 	
 	sserialize::ProgressInfo pinfo;
 	pinfo.begin(m_strs.size(), "Processing");
@@ -130,7 +141,6 @@ void Benchmarker::doGeocellBench() {
 	for(std::size_t i(0), s(m_strs.size()); i < s; ++i) {
 		const std::string & str  = m_strs[i];
 		Stats stat;
-		sserialize::CellQueryResult cqr;
 		if (config.coldCache) {
 			::sync();
 			::sleep(5);
@@ -140,14 +150,20 @@ void Benchmarker::doGeocellBench() {
 			::sync();
 			::sleep(5);
 		}
+		opTree.parse(str);
+
 		auto start = std::chrono::high_resolution_clock::now();
+
 		if (config.ct == Config::CT_GEOCELL_TREED) {
-			opTree.parse(str);
 			cqr = opTree.calc<sserialize::TreedCellQueryResult>().toCQR(config.threadCount);
 		}
-		else {
-			opTree.parse(str);
+		else if (config.ct == Config::CT_GEOCELL_TREED) {
 			cqr = opTree.calc<sserialize::CellQueryResult>();
+		}
+		else if (config.ct == Config::CT_GEOCELL_DECELLED) {
+			dOpTree.clear();
+			dOpTree.prepare();
+			dOpTree.flaten(config.threadCount);
 		}
 		auto stop = std::chrono::high_resolution_clock::now();
 		stat.cqr = std::chrono::duration_cast<Stats::meas_res>(stop-start);
@@ -167,8 +183,21 @@ void Benchmarker::doGeocellBench() {
 				
 				stat.toGlobalIds = std::chrono::duration_cast<Stats::meas_res>(stop-start);	
 			}
+			
+			sserialize::ItemIndex items;
+			
 			start = std::chrono::high_resolution_clock::now();
-			auto items = cqr.flaten(config.threadCount);
+			switch (config.ct) {
+			case Config::CT_GEOCELL:
+			case Config::CT_GEOCELL_TREED:
+				items = cqr.flaten(config.threadCount);
+				break;
+			case Config::CT_GEOCELL_DECELLED:
+				items = dOpTree.execute();
+				break;
+			default:
+				break;
+			};
 			stop = std::chrono::high_resolution_clock::now();
 		
 			stat.flaten = std::chrono::duration_cast<Stats::meas_res>(stop-start);	
@@ -268,7 +297,6 @@ void Benchmarker::doGeocellBench() {
 
 }
 
-
 Benchmarker::Benchmarker(liboscar::Static::OsmCompleter & completer, const Config & config) :
 m_completer(completer),
 config(config)
@@ -285,7 +313,15 @@ config(config)
 }
 
 void Benchmarker::execute() {
-	doGeocellBench();
+	switch (config.ct) {
+	case Config::CT_GEOCELL:
+	case Config::CT_GEOCELL_TREED:
+	case Config::CT_GEOCELL_DECELLED:
+		doGeocellBench();
+		break;
+	default:
+		break;
+	}
 }
 
 }//end namespace

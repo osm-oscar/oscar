@@ -15,7 +15,7 @@ namespace oscarcmd {
 class Benchmarker final {
 public:
 	struct Config {
-		typedef enum {CT_INVALID, CT_ITEMS, CT_GEOCELL, CT_GEOCELL_TREED} CompleterType;
+		typedef enum {CT_INVALID, CT_ITEMS, CT_GEOCELL, CT_GEOCELL_TREED, CT_GEOCELL_DECELLED} CompleterType;
 		CompleterType ct;
 		bool coldCache;
 		std::string completionStringsFileName;

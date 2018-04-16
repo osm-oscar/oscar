@@ -19,6 +19,7 @@ LiveCompleter.cpp
 GeoHierarchyPrinter.cpp
 ConsistencyCheckers.cpp
 CairoRenderer.cpp
+DecelledACOT.cpp
 )
 
 SET(OSCAR_CMD_LINK_LIBS
