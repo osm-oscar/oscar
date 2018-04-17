@@ -51,7 +51,6 @@ set(OSCAR_CREATE_CELLS_SOURCES_CPP
 
 add_library(lib${PROJECT_NAME} STATIC ${LIB_OSCAR_CREATE_SOURCES_CPP})
 add_executable(${PROJECT_NAME} ${OSCAR_CREATE_SOURCES_CPP})
-add_executable(${PROJECT_NAME}-cells ${OSCAR_CREATE_CELLS_SOURCES_CPP})
 
 SET(OSCAR_CREATE_LINK_LIBS
 	lib${PROJECT_NAME}
@@ -75,6 +74,3 @@ add_dependencies(lib${PROJECT_NAME} liboscar sserialize osmpbf libosmtools)
 target_link_libraries(${PROJECT_NAME} ${OSCAR_CREATE_LINK_LIBS})
 target_compile_definitions(${PROJECT_NAME} PRIVATE ${MY_COMPILE_DEFINITIONS})
 add_dependencies(${PROJECT_NAME} lib${PROJECT_NAME})
-
-target_link_libraries(${PROJECT_NAME}-cells ${OSCAR_CREATE_LINK_LIBS})
-add_dependencies(${PROJECT_NAME}-cells liboscar sserialize osmpbf libosmtools)
