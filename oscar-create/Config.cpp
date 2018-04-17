@@ -621,6 +621,16 @@ void TriangleRefinementConfig::update(const Json::Value & cfg, const std::string
 				throw sserialize::ConfigurationException("TriangleRefinementConfig", "Missing parameter: value");
 			}
 		}
+		else if (token == "max-edge-length") {
+			type = T_MAX_EDGE_LENGTH;
+			v = cfg["value"];
+			if (v.isNumeric()) {
+				maxEdgeLength = v.asDouble();
+			}
+			else {
+				throw sserialize::ConfigurationException("TriangleRefinementConfig", "Missing parameter: value");
+			}
+		}
 		else {
 			throw sserialize::ConfigurationException("TriangleRefinementConfig", "Unknown type: " + token);
 		}
@@ -643,6 +653,12 @@ std::ostream & TriangleRefinementConfig::print(std::ostream & out) const {
 		break;
 	case T_LIPSCHITZ:
 		out << "maximum centroid distance ratio to neighbors: " << maxCentroidDistanceRatio << '\n';
+		break;
+	case T_MAX_EDGE_LENGTH_RATIO:
+		out << "maximum edge length ratio within a triangle: " << maxEdgeLengthRatio << '\n';
+		break;
+	case T_MAX_EDGE_LENGTH:
+		out << "maximum edge length: " << maxEdgeLength << '\n';
 		break;
 	default:
 		out << "invalid\n";

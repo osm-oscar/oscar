@@ -598,6 +598,15 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 		ct.trs.refineTriangulation(osmtools::OsmTriangulationRegionStore::TRAS_Osmtools, refiner);
 	}
 		break;
+	case TriangleRefinementConfig::T_MAX_EDGE_LENGTH:
+	{
+		using TDS = osmtools::OsmTriangulationRegionStore::Triangulation;
+		osmtools::EdgeLengthMeshCriteria<TDS> refinerBase(ct.cc->rc.triangRefineCfg.maxEdgeLength);
+		osmtools::RefineTrianglesWithCellIdMeshCriteria<decltype(refinerBase)> refiner(refinerBase);
+		ct.trs.assignCellIds(ct.cc->numThreads);
+		ct.trs.refineTriangulation(osmtools::OsmTriangulationRegionStore::TRAS_Osmtools, refiner);
+	}
+		break;
 	case TriangleRefinementConfig::T_NONE:
 	default:
 		break;
