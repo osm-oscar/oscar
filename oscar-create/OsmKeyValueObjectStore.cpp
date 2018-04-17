@@ -627,7 +627,7 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 	switch(ct.cc->rc.cellRefineCfg.type) { //refine cells
 	case CellRefinementConfig::T_TRIANGLE_COUNT:
 		ct.trs.refineCells(
-			std::make_shared<osmtools::CellCriteria::CellTriangleCountCriteria>(ct.cc->rc.cellRefineCfg.maxCellDiag),
+			std::make_shared<osmtools::CellCriteria::CellTriangleCountCriteria>(ct.cc->rc.cellRefineCfg.maxTriangPerCell),
 			10,
 			1000,
 			ct.cc->numThreads
