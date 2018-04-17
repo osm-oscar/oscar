@@ -155,10 +155,10 @@ void Benchmarker::doGeocellBench() {
 		auto start = std::chrono::high_resolution_clock::now();
 
 		if (config.ct == Config::CT_GEOCELL_TREED) {
-			cqr = opTree.calc<sserialize::TreedCellQueryResult>().toCQR(config.threadCount);
+			cqr = opTree.calc<sserialize::TreedCellQueryResult>(config.threadCount).toCQR(config.threadCount);
 		}
-		else if (config.ct == Config::CT_GEOCELL_TREED) {
-			cqr = opTree.calc<sserialize::CellQueryResult>();
+		else if (config.ct == Config::CT_GEOCELL) {
+			cqr = opTree.calc<sserialize::CellQueryResult>(config.threadCount);
 		}
 		else if (config.ct == Config::CT_GEOCELL_DECELLED) {
 			dOpTree.clear();
