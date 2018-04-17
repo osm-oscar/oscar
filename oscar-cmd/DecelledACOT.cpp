@@ -21,6 +21,9 @@ void DecelledACOT::clear() {
 
 void DecelledACOT::flaten(uint32_t threadCount) {
 	for(auto & x : m_cqrs) {
+		if (x.second.flags() & sserialize::CellQueryResult::FF_CELL_LOCAL_ITEM_IDS) {
+			x.second = x.second.toGlobalItemIds(threadCount);
+		}
 		m_idxs[x.first] = x.second.flaten(threadCount);
 	}
 }
