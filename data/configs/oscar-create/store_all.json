@@ -16,7 +16,8 @@
 		"grtMinDiag" : 10000,
 		"readBoundaries" : true,
 		"triangleRefining" : {
-			"type" : "gabriel"
+			"type" : "max-edge-lenght",
+			"value" : 1000
 		},
 		"cellRefining" : {
 			"type" : "cell-diag",
