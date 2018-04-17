@@ -422,6 +422,7 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 		polyStore->printStats(std::cout);
 		trs.init(polyStore, ct.cc->numThreads);
 		trs.initGrid(ct.cc->rc.polyStoreLatCount, ct.cc->rc.polyStoreLonCount);
+		trs.assignCellIds(ct.cc->numThreads);
 		trs.makeConnected();
 		SSERIALIZE_EXPENSIVE_ASSERT(ct.trs.selfTest());
 	}
