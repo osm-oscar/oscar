@@ -16,12 +16,12 @@
 		"grtMinDiag" : 10000,
 		"readBoundaries" : true,
 		"triangleRefining" : {
-			"type" : "max-edge-lenght",
+			"type" : "max-edge-length",
 			"value" : 1000
 		},
 		"cellRefining" : {
 			"type" : "cell-diag",
-			"value" : 2000
+			"value" : 5000
 		},
 		"maxTriangCentroidDist" : 1000000000.0,
 		"regionFilter" : {
