@@ -1548,12 +1548,12 @@ Config::ReturnValues Config::fromCmdLineArgs(int argc, char** argv) {
 					handleSingleTsc(tmp);
 				}
 				else {
-					std::cerr << "Invalid entry for textsearch in file " << configFiles.at(i) << std::endl;
+					std::cerr << "Invalid entry for textsearch in file " << configData.at(i).first << std::endl;
 				}
 			}
 		}
 		catch (const sserialize::ConfigurationException & e) {
-			std::cerr << "An error occured while parsing file " << configFiles.at(i) << ": " << e.what() << std::endl;
+			std::cerr << "An error occured while parsing file " << configData.at(i).first << ": " << e.what() << std::endl;
 			return oscar_create::Config::RV_FAILED;
 		}
 	}
