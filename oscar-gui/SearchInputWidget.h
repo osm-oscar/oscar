@@ -1,7 +1,10 @@
 #ifndef OSCAR_GUI_SEARCH_INPUT_WIDGET_H
 #define OSCAR_GUI_SEARCH_INPUT_WIDGET_H
-#include <QtGui/QWidget>
+#include <QWidget>
 
+#include "States.h"
+
+class QPushButton;
 class QLineEdit;
 
 namespace oscar_gui {
@@ -9,13 +12,18 @@ namespace oscar_gui {
 class SearchInputWidget: public QWidget {
 Q_OBJECT
 public:
-	explicit SearchInputWidget(QWidget* parent = 0, Qt::WindowFlags f = 0);
+	explicit SearchInputWidget();
 	virtual ~SearchInputWidget();
 public slots:
 	void setSearchText(const QString &);
 signals:
 	void searchTextChanged(const QString&);
+private slots:
+	void goButtonPressed();
+	void clearButtonPressed();
 private:
+	QPushButton * m_goButton;
+	QPushButton * m_clearButton;
 	QLineEdit * m_search;
 };
 

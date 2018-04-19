@@ -9,41 +9,31 @@
 
 #include "SemaphoreLocker.h"
 
-
-
 namespace oscar_gui {
+	
+class LockableState: public QObject {
+Q_OBJECT
+public:
+	LockableState();
+	virtual ~LockableState();
+public:
+	SemaphoreLocker writeLock() const;
+	SemaphoreLocker readLock() const;
+protected:
+	SemaphoreLocker lock(SemaphoreLocker::Type t) const;
+private:
+	mutable QSemaphore m_sem;
+};
 
-class SearchGeometryState: public QObject {
+class GeometryState: public LockableState {
 Q_OBJECT
 public:
 	typedef enum {DT_INVALID, DT_POINT, DT_RECT, DT_PATH, DT_POLYGON} DataType;
 	typedef enum {AT_NONE=0, AT_SHOW=0x1, AT_TRIANGLES=0x2, AT_CELLS=0x4} ActiveType;
 public:
-	SearchGeometryState();
-	~SearchGeometryState();
-public:
-	void add(const QString & name, const Marble::GeoDataLineString & data, DataType t);
-	void remove(std::size_t p);
-	void activate(std::size_t p, ActiveType at);
-	void deactivate(std::size_t p, ActiveType at);
-	void toggle(std::size_t p, ActiveType at);
-
-	void setCells(std::size_t p, const sserialize::ItemIndex & idx);
-	void setTriangles(std::size_t p, const sserialize::ItemIndex & idx);
-public:
-	SemaphoreLocker readLock() const;
-	std::size_t size() const;
-	const QString & name(std::size_t p) const;
-	ActiveType active(std::size_t p) const;
-	DataType type(std::size_t p) const;
-	const Marble::GeoDataLineString & data(std::size_t p) const;
-	const sserialize::ItemIndex & cells(std::size_t p) const;
-	const sserialize::ItemIndex & triangles(std::size_t p) const;
-signals:
-	void dataChanged(int p);
-private:
-	SemaphoreLocker lock(SemaphoreLocker::Type t) const;
-private:
+	GeometryState() {}
+	virtual ~GeometryState() {}
+protected:
 	struct Entry {
 		QString name;
 		Marble::GeoDataLineString data;
@@ -56,18 +46,89 @@ private:
 		name(name), data(data), active(AT_NONE), type(t)
 		{}
 	};
-private:
-	QVector<Entry> m_entries;
-	mutable QSemaphore m_sem;
 };
 
-struct States {
-	std::shared_ptr<liboscar::Static::OsmCompleter> cmp;
-	std::shared_ptr<SearchGeometryState> sgs;
-	
-	explicit States(const std::shared_ptr<liboscar::Static::OsmCompleter> & cmp) : cmp(cmp), sgs(new SearchGeometryState()) {}
+class SearchGeometryState: public GeometryState {
+Q_OBJECT
+public:
+	SearchGeometryState();
+	virtual ~SearchGeometryState();
+public:
+	void add(const QString & name, const Marble::GeoDataLineString & data, DataType t);
+	void remove(std::size_t p);
+	void activate(std::size_t p, ActiveType at);
+	void deactivate(std::size_t p, ActiveType at);
+	void toggle(std::size_t p, ActiveType at);
+
+	void setCells(std::size_t p, const sserialize::ItemIndex & idx);
+	void setTriangles(std::size_t p, const sserialize::ItemIndex & idx);
+public:
+	std::size_t size() const;
+	const QString & name(std::size_t p) const;
+	ActiveType active(std::size_t p) const;
+	DataType type(std::size_t p) const;
+	const Marble::GeoDataLineString & data(std::size_t p) const;
+	const sserialize::ItemIndex & cells(std::size_t p) const;
+	const sserialize::ItemIndex & triangles(std::size_t p) const;
+signals:
+	void dataChanged(int p);
+private:
+	std::unordered_map<std::size_t, Entry> m_entries;
+};
+
+class TextSearchState: public LockableState {
+Q_OBJECT
+public:
+	TextSearchState() {}
+	virtual ~TextSearchState() {}
+public:
+	QString searchText() const;
+public slots:
+	void setSearchText(const QString & value);
+signals:
+	void searchTextChanged(const QString & value);
+private:
+	QString m_searchText;
+};
+
+class ItemGeometryState: public SearchGeometryState {
+Q_OBJECT
+public:
+	ItemGeometryState() {}
+	virtual ~ItemGeometryState() {}
+};
+
+class ResultListState: public LockableState {
+Q_OBJECT
+public:
+	ResultListState() {}
+	virtual ~ResultListState() {}
+public:
+	void setResult(const QString & queryString, const sserialize::ItemIndex & items);
+public:
+	QString queryString() const;
+	sserialize::ItemIndex items() const;
+	uint32_t itemId(uint32_t pos) const;
+	std::size_t size() const;
+signals:
+	void dataChanged();
+private:
+	QString m_qs;
+	sserialize::ItemIndex m_items;
+};
+
+class States: QObject {
+Q_OBJECT
+public:
+	explicit States(const std::shared_ptr<liboscar::Static::OsmCompleter> & cmp);
 	States(const States & other) = default;
 	States & operator=(const States & other) = default;
+public:
+	std::shared_ptr<liboscar::Static::OsmCompleter> cmp;
+	std::shared_ptr<SearchGeometryState> sgs;
+	std::shared_ptr<ItemGeometryState> igs;
+	std::shared_ptr<TextSearchState> tss;
+	std::shared_ptr<ResultListState> rls;
 };
 
 } //end namespace oscar_gui

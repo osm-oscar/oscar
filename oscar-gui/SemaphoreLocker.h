@@ -24,13 +24,24 @@ public:
 	}
 	inline void lock() {
 		if (!m_locked) {
-			m_s.release(m_c);
+			m_s.acquire(m_c);
 			m_locked = true;
+		}
+	}
+	inline void update(Type t) {
+		if (!m_locked) {
+			m_c = t;
+		}
+		else if (m_c < t) { // read -> write
+			m_s.acquire(WRITE_LOCK - READ_LOCK);
+		}
+		else if (m_c > t) { //write -> read
+			m_s.release(WRITE_LOCK - READ_LOCK);
 		}
 	}
 private:
 	QSemaphore & m_s;
-	const int m_c;
+	int m_c;
 	bool m_locked;
 };
 

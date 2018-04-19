@@ -4,12 +4,33 @@
 #include "SearchGeometryHelper.h"
 
 namespace oscar_gui {
+	
+class SearchStateHandler: LockableState {
+Q_OBJECT
+public:
+	SearchStateHandler(const States & states);
+	virtual ~SearchStateHandler();
+public slots:
+	void searchTextChanged(const QString & queryString);
+signals:
+	void searchResultsChanged(const QString & queryString, const sserialize::ItemIndex & items);
+private slots:
+	void computeResult();
+	void computeResult2(const QString & queryString);
+	void computationCompleted(const QString & queryString, const sserialize::ItemIndex & items);
+private:
+	std::shared_ptr<TextSearchState> m_tss;
+	std::shared_ptr<ResultListState> m_rls;
+	std::shared_ptr<liboscar::Static::OsmCompleter> m_cmp;
+	bool m_pendingUpdate;
+	QString m_qs;
+};
 
 class SearchGeometryStateHandler: QObject {
 Q_OBJECT
 public:
 	SearchGeometryStateHandler(const States & states);
-	~SearchGeometryStateHandler();
+	virtual ~SearchGeometryStateHandler();
 public slots:
 	void dataChanged(int p);
 private:
@@ -19,6 +40,7 @@ private:
 
 struct StateHandlers {
 	std::shared_ptr<SearchGeometryStateHandler> sgsh;
+	std::shared_ptr<SearchStateHandler> ssh;
 
 	StateHandlers(const States & states);
 };

@@ -1,12 +1,15 @@
 project(oscar-gui)
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.7)
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_SOURCE_DIR})
 
-find_package(Qt4)
+set(CMAKE_CXX_STANDARD 14)
+
+find_package(Qt5Widgets REQUIRED)
+find_package(Qt5Gui REQUIRED)
 find_package(Marble REQUIRED)
 find_package(LIBRT)
 
-IF (QT4_FOUND AND MARBLE_FOUND)
+IF (MARBLE_FOUND)
 
 	include_directories(
 		${LIBOSCAR_INCLUDE_DIR}
@@ -27,6 +30,7 @@ IF (QT4_FOUND AND MARBLE_FOUND)
 		States.h
 		SearchGeometryModel.h
 		StateHandlers.h
+		ResultsTableModel.h
 	)
 
 	set(SOURCES_CPP
@@ -43,21 +47,21 @@ IF (QT4_FOUND AND MARBLE_FOUND)
 		SearchGeometryModel.cpp
 		SearchGeometryHelper.cpp
 		StateHandlers.cpp
+		ResultsTableModel.cpp
 	)
 
-	qt4_wrap_cpp(SOURCES_MOC_CPP ${SOURCES_MOC_H})
+	qt5_wrap_cpp(SOURCES_MOC_CPP ${SOURCES_MOC_H})
 
 
 	SET(OSCAR_LINK_LIBS
 		${LIBOSCAR_LINK_LIBRARIES}
 		${MARBLE_LIBRARIES}
-		${QT_QTCORE_LIBRARY}
-		${QT_QTGUI_LIBRARY}
+		Qt5::Widgets
+		Qt5::Gui
 	)
 
 	add_executable(${PROJECT_NAME} ${SOURCES_CPP} ${SOURCES_MOC_CPP})
 	add_dependencies(${PROJECT_NAME} liboscar sserialize)
 	target_link_libraries(${PROJECT_NAME} ${OSCAR_LINK_LIBS})
 
-
-ENDIF(QT4_FOUND AND MARBLE_FOUND)
+ENDIF(MARBLE_FOUND)

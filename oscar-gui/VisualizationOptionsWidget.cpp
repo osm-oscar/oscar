@@ -2,8 +2,8 @@
 
 namespace oscar_gui {
 
-VisualizationOptionsWidget::VisualizationOptionsWidget(QWidget* parent, Qt::WindowFlags f) :
-QWidget(parent, f)
+VisualizationOptionsWidget::VisualizationOptionsWidget(const States & states) :
+QWidget()
 {
 	
 }

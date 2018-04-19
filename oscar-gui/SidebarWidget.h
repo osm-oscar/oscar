@@ -1,6 +1,6 @@
 #ifndef OSCAR_GUI_SIDEBAR_WIDGET_H
 #define OSCAR_GUI_SIDEBAR_WIDGET_H
-#include <QtGui/QWidget>
+#include <QWidget>
 
 #include "States.h"
 

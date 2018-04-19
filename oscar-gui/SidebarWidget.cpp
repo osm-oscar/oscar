@@ -1,7 +1,7 @@
 #include "SidebarWidget.h"
 
-#include <QtGui/QTabWidget>
-#include <QtGui/QHBoxLayout>
+#include <QTabWidget>
+#include <QHBoxLayout>
 
 #include "SearchInputWidget.h"
 #include "GeometryInputWidget.h"
@@ -14,10 +14,10 @@ namespace oscar_gui {
 SidebarWidget::SidebarWidget(const States & states) :
 m_tabs(new QTabWidget()),
 m_si(new SearchInputWidget()),
-m_sr(new SearchResultsWidget()),
-m_id(new ItemDetailsWidget()),
+m_sr(new SearchResultsWidget(states)),
+m_id(new ItemDetailsWidget(states)),
 m_gi(new GeometryInputWidget(states)),
-m_vo(new VisualizationOptionsWidget())
+m_vo(new VisualizationOptionsWidget(states))
 {
 	connect(this, SIGNAL(searchTextChanged(QString)), m_si, SIGNAL(searchTextChanged(QString)));
 

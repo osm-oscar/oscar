@@ -1,6 +1,6 @@
 #ifndef OSCAR_GUI_GEOMETRY_INPUT_WIDGET_H
 #define OSCAR_GUI_GEOMETRY_INPUT_WIDGET_H
-#include <QtGui/QWidget>
+#include <QWidget>
 
 #include <liboscar/StaticOsmCompleter.h>
 

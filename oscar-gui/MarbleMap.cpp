@@ -8,7 +8,8 @@
 #include <marble/MarbleWidgetPopupMenu.h>
 #include <marble/MarbleWidgetInputHandler.h>
 #include <QAction>
-#include <QtGui/QHBoxLayout>
+#include <QHBoxLayout>
+#include <QColor>
 
 namespace oscar_gui {
 
@@ -171,23 +172,28 @@ MyLockableBaseLayer(renderPos, zVal, data)
 
 MarbleMap::MyGeometryLayer::~MyGeometryLayer() {}
 
-bool MarbleMap::MyGeometryLayer::render(Marble::GeoPainter* painter, Marble::ViewportParams* /*viewport*/, const QString& /*renderPos*/, Marble::GeoSceneLayer* /*layer*/) {
-	QPen pen(QColor(Qt::blue));
+bool MarbleMap::MyGeometryLayer::render(Marble::GeoPainter* painter, Marble::ViewportParams* viewport, const QString&
+ renderPos, Marble::GeoSceneLayer* layer) {
+	QPen pen(( QColor(Qt::blue) ));
 	QColor fillColor(0, 0, 255, 50);
 	QBrush brush(fillColor);
+	return render(painter, viewport, renderPos, layer, pen, brush, data()->sgs);
+}
 	
-	
+bool MarbleMap::MyGeometryLayer::render(Marble::GeoPainter* painter, Marble::ViewportParams* /*viewport*/, const QString&
+ /*renderPos*/, Marble::GeoSceneLayer* /*layer*/, QPen pen, const QBrush & brush, std::shared_ptr<SearchGeometryState> data) {
+
 	painter->setBrush(brush);
 	
-	auto lock(data()->sgs->readLock());
+	auto lock(data->readLock());
 	
 	pen.setWidth(5);
 	painter->setPen(pen);
-	for(uint32_t i(0), s(data()->sgs->size()); i < s; ++i) {
-		auto at = data()->sgs->active(i);
+	for(uint32_t i(0), s(data->size()); i < s; ++i) {
+		auto at = data->active(i);
 		if (at & SearchGeometryState::AT_SHOW) {
-			const auto & d = data()->sgs->data(i);
-			switch (data()->sgs->type(i)) {
+			const auto & d = data->data(i);
+			switch (data->type(i)) {
 			case SearchGeometryState::DT_POINT:
 				painter->drawEllipse(d.first(), 20, 20);
 				break;
@@ -203,7 +209,7 @@ bool MarbleMap::MyGeometryLayer::render(Marble::GeoPainter* painter, Marble::Vie
 				painter->drawPolyline(d);
 				break;
 			case SearchGeometryState::DT_POLYGON:
-				painter->drawPolygon(d);
+				painter->drawPolyline(d);
 				break;
 			default:
 				break;
@@ -213,18 +219,18 @@ bool MarbleMap::MyGeometryLayer::render(Marble::GeoPainter* painter, Marble::Vie
 	
 	pen.setWidth(1);
 	painter->setPen(pen);
-	for(uint32_t i(0), s(data()->sgs->size()); i < s; ++i) {
-		auto at = data()->sgs->active(i);
+	for(uint32_t i(0), s(data->size()); i < s; ++i) {
+		auto at = data->active(i);
 		if (at & SearchGeometryState::AT_TRIANGLES) {
-			const auto & triangles = data()->sgs->triangles(i);
+			const auto & triangles = data->triangles(i);
 			for(uint32_t faceId : triangles) {
-				this->doRender(data()->trs.tds().face(faceId), brush, QString::number(faceId), painter);
+				this->doRender(this->data()->trs.tds().face(faceId), brush, QString::number(faceId), painter);
 			}
 		}
 		if (at & SearchGeometryState::AT_CELLS) {
-			const auto & cells = data()->sgs->cells(i);
+			const auto & cells = data->cells(i);
 			for(uint32_t cellId : cells) {
-				this->doRender(data()->trs.cfGraph(cellId), brush, QString(), painter);
+				this->doRender(this->data()->trs.cfGraph(cellId), brush, QString(), painter);
 			}
 		}
 	}
@@ -250,7 +256,7 @@ bool MarbleMap::MyInputSearchGeometryLayer::render(Marble::GeoPainter* painter, 
 	if (!m_d.size()) {
 		return true;
 	}
-	QBrush brush(QColor(Qt::red));
+	QBrush brush(( QColor(Qt::red) ));
 	painter->setBrush(brush);
 	
 	if (m_d.size() == 1) {
@@ -265,6 +271,35 @@ bool MarbleMap::MyInputSearchGeometryLayer::render(Marble::GeoPainter* painter, 
 
 
 //END MyInputSearchGeometryLayer
+
+//BEGIN MyItemLayer
+
+MarbleMap::MyItemLayer::MyItemLayer(const QStringList & renderPos, qreal zVal, const DataPtr & trs) :
+MyGeometryLayer(renderPos, zVal, trs)
+{}
+
+bool MarbleMap::MyItemLayer::render(Marble::GeoPainter *painter, Marble::ViewportParams * viewport, const QString & renderPos, Marble::GeoSceneLayer * layer) {
+	QPen pen(( QColor(Qt::green) ));
+	QColor fillColor(0, 0, 255, 50);
+	QBrush brush(fillColor);
+	return MyGeometryLayer::render(painter, viewport, renderPos, layer, pen, brush, std::static_pointer_cast<SearchGeometryState>(data()->igs));
+}
+
+void MarbleMap::MyItemLayer::clear() {
+	m_items.clear();
+}
+
+void MarbleMap::MyItemLayer::addItem(uint32_t itemId) {
+	if (!m_items.count(itemId)) {
+		auto shape = data()->store.at(itemId).geoShape();
+	}
+}
+
+void MarbleMap::MyItemLayer::removeItem(uint32_t itemId) {
+	m_items.erase(itemId);
+}
+
+//END MyItemLayer
 
 //BEGIN Data
 
@@ -316,11 +351,13 @@ m_data(new Data(store, states))
 	m_cellLayer = new MarbleMap::MyCellLayer({"HOVERS_ABOVE_SURFACE"}, 0.0, m_data);
 	m_geometryLayer = new MarbleMap::MyGeometryLayer({"HOVERS_ABOVE_SURFACE"}, 0.0, m_data);
 	m_isgLayer = new MarbleMap::MyInputSearchGeometryLayer({"HOVERS_ABOVE_SURFACE"}, 0.0, m_data);
+	m_itemLayer = new MarbleMap::MyItemLayer({"HOVERS_ABOVE_SURFACE"}, 0.0, m_data);
 	
 	m_map->addLayer(m_triangleLayer);
 	m_map->addLayer(m_cellLayer);
 	m_map->addLayer(m_geometryLayer);
 	m_map->addLayer(m_isgLayer);
+	m_map->addLayer(m_itemLayer);
 
 
 	QAction * beginSearchGeometry = new QAction("Begin search geometry", this);
@@ -376,20 +413,50 @@ MarbleMap::~MarbleMap() {
 	m_map->removeLayer(m_cellLayer);
 	m_map->removeLayer(m_geometryLayer);
 	m_map->removeLayer(m_isgLayer);
+	m_map->removeLayer(m_itemLayer);
 	
 	delete m_triangleLayer;
 	delete m_cellLayer;
 	delete m_geometryLayer;
 	delete m_isgLayer;
+	delete m_itemLayer;
 }
 
 void MarbleMap::zoomTo(const Marble::GeoDataLatLonBox& bbox) {
 	m_map->centerOn(bbox, true);
 }
 
+void MarbleMap::zoomToItem(uint32_t itemId) {
+	auto p = m_data->store.at(itemId);
+	auto b = p.geoShape().boundary();
+	Marble::GeoDataLatLonBox marbleBounds(b.maxLat(), b.minLat(), b.maxLon(), b.minLon(), Marble::GeoDataCoordinates::Degree);
+	zoomTo(marbleBounds);
+}
+
+void MarbleMap::addItem(uint32_t itemId) {
+	if (m_itemLayer) {
+		m_itemLayer->addItem(itemId);
+		this->update();
+	}
+}
+
+void MarbleMap::removeItem(uint32_t itemId) {
+	if (m_itemLayer) {
+		m_itemLayer->removeItem(itemId);
+		this->update();
+	}
+}
+
+void MarbleMap::clearItems() {
+	if (m_itemLayer) {
+		m_itemLayer->clear();
+		this->update();
+	}
+}
+
 void MarbleMap::zoomToTriangle(uint32_t triangleId) {
 	auto p = m_data->trs.tds().face( triangleId ).centroid();
-	Marble::GeoDataLatLonBox marbleBounds(p.lat(), p.lon(), p.lat(), p.lon(), Marble::GeoDataCoordinates::Degree);
+	Marble::GeoDataLatLonBox marbleBounds(p.lat(), p.lat(), p.lon(), p.lon(), Marble::GeoDataCoordinates::Degree);
 	zoomTo(marbleBounds);
 }
 

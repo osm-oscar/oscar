@@ -33,6 +33,7 @@ private:
 		TriangulationGeoHierarchyArrangement trs;
 		TracGraph cg;
 		std::shared_ptr<SearchGeometryState> sgs;
+		std::shared_ptr<ItemGeometryState> igs;
 	public:
 		Data(const liboscar::Static::OsmKeyValueObjectStore & store, const States & states);
 		QColor cellColor(uint32_t cellId, int cs) const;
@@ -128,8 +129,7 @@ private:
 		virtual ~MyGeometryLayer();
 	public:
 		virtual bool render(Marble::GeoPainter *painter, Marble::ViewportParams * viewport, const QString & renderPos, Marble::GeoSceneLayer * layer);
-	private:
-		std::shared_ptr<SearchGeometryState> m_sgs;
+		virtual bool render(Marble::GeoPainter *painter, Marble::ViewportParams * viewport, const QString & renderPos, Marble::GeoSceneLayer * layer, QPen pen, const QBrush & brush, std::shared_ptr<SearchGeometryState> data);
 	};
 
 	class MyInputSearchGeometryLayer: public MyBaseLayer {
@@ -144,11 +144,29 @@ private:
 		Marble::GeoDataLineString m_d;
 	};
 	
+	class MyItemLayer: public MyGeometryLayer {
+	public:
+		MyItemLayer(const QStringList & renderPos, qreal zVal, const DataPtr & trs);
+		virtual ~MyItemLayer() {}
+		virtual bool render(Marble::GeoPainter *painter, Marble::ViewportParams * viewport, const QString & renderPos, Marble::GeoSceneLayer * layer);
+	public:
+		void clear();
+		void addItem(uint32_t itemId);
+		void removeItem(uint32_t itemId);
+	public:
+		std::unordered_set<uint32_t> m_items;
+	};
+	
 public:
 	MarbleMap(const liboscar::Static::OsmKeyValueObjectStore & store, const States & states);
 	virtual ~MarbleMap();
 public slots:
 	void zoomTo(const Marble::GeoDataLatLonBox & bbox);
+public slots:
+	void zoomToItem(uint32_t itemId);
+	void addItem(uint32_t itemId);
+	void removeItem(uint32_t itemId);
+	void clearItems();
 public slots:
 	void zoomToCell(uint32_t cellId);
 	void addCell(uint32_t cellId);
@@ -178,6 +196,7 @@ private:
 	Marble::MarbleWidget * m_map;
 	MyTriangleLayer * m_triangleLayer;
 	MyCellLayer * m_cellLayer;
+	MyItemLayer * m_itemLayer;
 	MyGeometryLayer * m_geometryLayer;
 	MyPathLayer * m_pathLayer;
 	MyInputSearchGeometryLayer * m_isgLayer;

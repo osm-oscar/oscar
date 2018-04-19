@@ -1,10 +1,10 @@
 #include "GeometryInputWidget.h"
 
-#include <QtGui/QTableView>
-#include <QtGui/QHBoxLayout>
-#include <QtGui/QHeaderView>
-#include <QtGui/QLineEdit>
-#include <QtGui/QPushButton>
+#include <QTableView>
+#include <QHBoxLayout>
+#include <QHeaderView>
+#include <QLineEdit>
+#include <QPushButton>
 
 #include "SearchGeometryModel.h"
 
@@ -18,8 +18,8 @@ m_sgs(states.sgs)
 	m_sgm = new SearchGeometryModel(m_sgs);
 	
 	m_tbl->setModel(m_sgm);
-	m_tbl->horizontalHeader()->setResizeMode(QHeaderView::ResizeMode::ResizeToContents);
-	m_tbl->horizontalHeader()->setClickable(true);
+	m_tbl->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeMode::ResizeToContents);
+	m_tbl->horizontalHeader()->setSectionsClickable(true);
 	m_tbl->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
 	m_tbl->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
 	

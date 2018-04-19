@@ -1,6 +1,6 @@
 #include "MainWindow.h"
 
-#include <QtGui/QHBoxLayout>
+#include <QHBoxLayout>
 
 #include "MarbleMap.h"
 #include "SidebarWidget.h"

@@ -1,6 +1,55 @@
 #include "StateHandlers.h"
 
+#include <QtConcurrent/QtConcurrentRun>
+
 namespace oscar_gui {
+	
+//BEGIN TextSearchStateHandler
+	
+	
+SearchStateHandler::SearchStateHandler(const States & states) :
+m_tss(states.tss),
+m_rls(states.rls),
+m_cmp(states.cmp),
+m_pendingUpdate(false)
+{
+	connect(m_tss.get(), SIGNAL(searchTextChanged(const QString &)), this, SLOT(searchTextChanged(const QString &)));
+	connect(this, SIGNAL(searchResultsChanged(const QString &, const sserialize::ItemIndex &)), m_rls.get(), SLOT(setResult(const QString &, const sserialize::ItemIndex &)));
+}
+
+SearchStateHandler::~SearchStateHandler() {}
+
+void SearchStateHandler::searchTextChanged(const QString & queryString) {
+	auto l(writeLock());
+	if (m_pendingUpdate) {
+		m_qs = queryString;
+	}
+	else {
+		computeResult();
+	}
+}
+
+void SearchStateHandler::computationCompleted(const QString & queryString, const sserialize::ItemIndex & items) {
+	emit(searchResultsChanged(queryString, items));
+	auto l(writeLock());
+	if (m_pendingUpdate) {
+		m_pendingUpdate = false;
+		computeResult();
+	}
+}
+
+void SearchStateHandler::computeResult2(const QString & queryString) {
+	auto cqr = m_cmp->cqrComplete(queryString.toStdString(), true, 2);
+	sserialize::ItemIndex items = cqr.flaten(2);
+	computationCompleted(queryString, items);
+}
+
+void SearchStateHandler::computeResult() {
+	QString qs = m_qs;
+	auto fb = std::bind(&SearchStateHandler::computeResult2, this, qs);
+	QtConcurrent::run(fb);
+}
+//END
 
 SearchGeometryStateHandler::SearchGeometryStateHandler(const oscar_gui::States& states) :
 m_sgs(states.sgs),
@@ -83,7 +132,8 @@ void SearchGeometryStateHandler::dataChanged(int p) {
 }
 
 StateHandlers::StateHandlers(const States& states) :
-sgsh(new SearchGeometryStateHandler(states))
+sgsh(std::make_shared<SearchGeometryStateHandler>(states)),
+ssh(std::make_shared<SearchStateHandler>(states))
 {}
 
 

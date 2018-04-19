@@ -1,14 +1,25 @@
 #ifndef OSCAR_GUI_SEARCH_RESULTS_WIDGET_H
 #define OSCAR_GUI_SEARCH_RESULTS_WIDGET_H
-#include <QtGui/QWidget>
+#include <QWidget>
+
+#include "States.h"
+
+class QTableView;
 
 namespace oscar_gui {
+	
+class ResultsTableModel;
 
 class SearchResultsWidget: public QWidget {
 Q_OBJECT
 public:
-	explicit SearchResultsWidget(QWidget* parent = 0, Qt::WindowFlags f = 0);
+	explicit SearchResultsWidget(const States & states);
 	virtual ~SearchResultsWidget();
+signals:
+	
+private:
+	QTableView * m_rtbl;
+	ResultsTableModel * m_rmdl;
 };
 
 }//end namespace oscar_gui
