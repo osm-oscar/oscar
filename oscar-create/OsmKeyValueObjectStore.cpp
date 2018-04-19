@@ -641,6 +641,9 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 			ct.cc->numThreads
 		);
 		break;
+	case CellRefinementConfig::T_CONNECTED:
+		ct.trs.makeConnected();
+		break;
 	case CellRefinementConfig::T_NONE:
 	default:
 		break;

@@ -685,6 +685,9 @@ void CellRefinementConfig::update(const Json::Value & cfg, const std::string & /
 		if (token == "none") {
 			type = T_NONE;
 		}
+		else if (token == "connected") {
+			type = T_CONNECTED;
+		}
 		else if (token == "triangle-count") {
 			type = T_TRIANGLE_COUNT;
 			v = cfg["value"];

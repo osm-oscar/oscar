@@ -75,7 +75,7 @@ struct TriangleRefinementConfig {
 	double maxEdgeLength;
 };
 struct CellRefinementConfig {
-	typedef enum {T_NONE, T_TRIANGLE_COUNT, T_CELL_DIAG} Type;
+	typedef enum {T_NONE, T_CONNECTED, T_TRIANGLE_COUNT, T_CELL_DIAG} Type;
 	CellRefinementConfig();
 	CellRefinementConfig(const Json::Value & cfg, const std::string & basePath);
 	void update(const Json::Value & cfg, const std::string & basePath);
