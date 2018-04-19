@@ -13,14 +13,12 @@ namespace oscar_gui {
 
 SidebarWidget::SidebarWidget(const States & states) :
 m_tabs(new QTabWidget()),
-m_si(new SearchInputWidget()),
+m_si(new SearchInputWidget(states)),
 m_sr(new SearchResultsWidget(states)),
 m_id(new ItemDetailsWidget(states)),
 m_gi(new GeometryInputWidget(states)),
 m_vo(new VisualizationOptionsWidget(states))
 {
-	connect(this, SIGNAL(searchTextChanged(QString)), m_si, SIGNAL(searchTextChanged(QString)));
-
 	QHBoxLayout * mainLayout = new QHBoxLayout();
 	mainLayout->addWidget(m_tabs);
 	m_tabs->addTab(m_si, "Search");
@@ -33,9 +31,5 @@ m_vo(new VisualizationOptionsWidget(states))
 
 
 SidebarWidget::~SidebarWidget() {}
-
-void SidebarWidget::setSearchText(const QString & s) {
-	m_si->setSearchText(s);
-}
 
 } //end namespace oscar_gui

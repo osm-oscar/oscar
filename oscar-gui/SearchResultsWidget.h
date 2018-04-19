@@ -15,8 +15,6 @@ Q_OBJECT
 public:
 	explicit SearchResultsWidget(const States & states);
 	virtual ~SearchResultsWidget();
-signals:
-	
 private:
 	QTableView * m_rtbl;
 	ResultsTableModel * m_rmdl;

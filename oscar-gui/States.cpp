@@ -31,7 +31,7 @@ void SearchGeometryState::add(const QString & name, const Marble::GeoDataLineStr
 	std::size_t p = m_entries.size();
 	{
 		auto l(writeLock());
-		m_entries[p] = Entry(name, data, t);
+		m_entries.emplace_back(name, data, t);
 	}
 	emit dataChanged(p);
 }
@@ -39,7 +39,7 @@ void SearchGeometryState::add(const QString & name, const Marble::GeoDataLineStr
 void SearchGeometryState::remove(std::size_t p) {
 	{
 		auto l(writeLock());
-		m_entries.erase(p);
+		m_entries.erase(m_entries.begin()+p);
 	}
 	emit dataChanged(m_entries.size());
 }
@@ -101,10 +101,7 @@ const QString & SearchGeometryState::name(std::size_t p) const {
 
 SearchGeometryState::ActiveType SearchGeometryState::active(std::size_t p) const {
 	auto l(readLock());
-	if (m_entries.count(p)) {
-		return (ActiveType) m_entries.at(p).active;
-	}
-	return AT_NONE;
+	return (ActiveType) m_entries.at(p).active;
 }
 
 SearchGeometryState::DataType SearchGeometryState::type(std::size_t p) const {
@@ -136,18 +133,68 @@ QString TextSearchState::searchText() const {
 }
 
 void TextSearchState::setSearchText(const QString & value) {
-	auto l(writeLock());
-	m_searchText = value;
+	{
+		auto l(writeLock());
+		m_searchText = value;
+	}
 	emit( searchTextChanged(value) );
 }
 
 //END TextSearchState
+//BEGIN ItemGeometryState
+
+
+ItemGeometryState::ItemGeometryState(const liboscar::Static::OsmKeyValueObjectStore & store) :
+m_store(store)
+{}
+
+void ItemGeometryState::activate(uint32_t itemId, ActiveType at) {
+	auto l(writeLock());
+	if (!m_entries.count(itemId)) {
+		addItem(itemId);
+	}
+	m_entries.at(itemId).active |= at;
+	emit( dataChanged() );
+}
+
+void ItemGeometryState::deactivate(uint32_t itemId, ActiveType at) {
+	auto l(writeLock());
+	if (m_entries.count(itemId)) {
+		m_entries.at(itemId).active &= ~at;
+		if (m_entries.at(itemId).active == AT_NONE) {
+			m_entries.erase(itemId);
+		}
+		emit( dataChanged() );
+	}
+}
+
+void ItemGeometryState::toggleItem(uint32_t itemId, ActiveType at) {
+	auto l(writeLock());
+	if (!m_entries.count(itemId)) {
+		addItem(itemId);
+	}
+	if (m_entries.at(itemId).active & at) {
+		m_entries[itemId].active &= ~at;
+	}
+	else {
+		m_entries.at(itemId).active |= at;
+	}
+	if (m_entries.at(itemId).active == AT_NONE) {
+		m_entries.erase(itemId);
+	}
+	emit( dataChanged() );
+}
+
+//END ItemGeometryState
 //BEGIN ResultListState
 
-void ResultListState::setResult(const QString & queryString, const sserialize::ItemIndex & items) {
-	auto l(writeLock());
-	m_qs = queryString;
-	m_items = items;
+void ResultListState::setResult(const QString & queryString, const sserialize::CellQueryResult & cqr, const sserialize::ItemIndex & items) {
+	{
+		auto l(writeLock());
+		m_qs = queryString;
+		m_cqr = cqr;
+		m_items = items;
+	}
 	emit( dataChanged() );
 }
 
@@ -179,7 +226,7 @@ std::size_t ResultListState::size() const {
 States::States(const std::shared_ptr<liboscar::Static::OsmCompleter> & cmp) :
 cmp(cmp),
 sgs(std::make_shared<SearchGeometryState>()),
-igs(std::make_shared<ItemGeometryState>()),
+igs(std::make_shared<ItemGeometryState>(cmp->store())),
 tss(std::make_shared<TextSearchState>()),
 rls(std::make_shared<ResultListState>())
 {}

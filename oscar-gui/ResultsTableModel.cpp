@@ -9,7 +9,8 @@ m_rls(states.rls)
 {
 	m_nameStrId = m_store.keyStringTable().find("name");
 	connect(m_igs.get(), SIGNAL(dataChanged(int)), this, SIGNAL(modelReset()));
-	connect(m_rls.get(), SIGNAL(dataChanged(int)), this, SIGNAL(modelReset()));
+	connect(m_rls.get(), SIGNAL(dataChanged()), this, SIGNAL(modelReset()));
+	connect(this, &ResultsTableModel::toggleItemState, m_igs.get(), &SearchGeometryState::toggle);
 }
 
 ResultsTableModel::~ResultsTableModel() {}
@@ -70,6 +71,8 @@ QVariant ResultsTableModel::headerData(int section, Qt::Orientation orientation,
 				return QVariant("Show");
 			case CD_SHOW_CELLS:
 				return QVariant("Show cells");
+			case CD_SCORE:
+				return QVariant("Score");
 			case CD_NAME:
 				return QVariant("Name");
 			default:
@@ -88,10 +91,10 @@ void ResultsTableModel::doubleClicked(const QModelIndex & index) {
 	auto itemId = m_rls->itemId(index.row());
 	switch (index.column()) {
 	case CD_SHOW:
-		emit itemClicked(itemId);
+		emit toggleItemState(itemId, GeometryState::AT_SHOW);
 		break;
 	case CD_SHOW_CELLS:
-		emit showItemCellsClicked(itemId);
+		emit toggleItemState(itemId, GeometryState::AT_CELLS);
 		break;
 	default:
 		break;

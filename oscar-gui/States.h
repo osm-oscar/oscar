@@ -33,7 +33,7 @@ public:
 public:
 	GeometryState() {}
 	virtual ~GeometryState() {}
-protected:
+public:
 	struct Entry {
 		QString name;
 		Marble::GeoDataLineString data;
@@ -73,10 +73,10 @@ public:
 signals:
 	void dataChanged(int p);
 private:
-	std::unordered_map<std::size_t, Entry> m_entries;
+	std::vector<Entry> m_entries;
 };
 
-class TextSearchState: public LockableState {
+class TextSearchState: public GeometryState {
 Q_OBJECT
 public:
 	TextSearchState() {}
@@ -91,11 +91,25 @@ private:
 	QString m_searchText;
 };
 
-class ItemGeometryState: public SearchGeometryState {
+class ItemGeometryState: public GeometryState {
 Q_OBJECT
 public:
-	ItemGeometryState() {}
+	using const_iterator = std::unordered_map<uint32_t, Entry>::const_iterator;
+public:
+	ItemGeometryState(const liboscar::Static::OsmKeyValueObjectStore & store);
 	virtual ~ItemGeometryState() {}
+public:
+	void activate(uint32_t itemId, ActiveType at);
+	void deactivate(uint32_t itemId, ActiveType at);
+	void toggleItem(uint32_t itemId, ActiveType at);
+signals:
+	void dataChanged();
+private:
+	///not thread-safe
+	void addItem(uint32_t itemId);
+private:
+	liboscar::Static::OsmKeyValueObjectStore m_store;
+	std::unordered_map<uint32_t, Entry> m_entries;
 };
 
 class ResultListState: public LockableState {
@@ -104,16 +118,17 @@ public:
 	ResultListState() {}
 	virtual ~ResultListState() {}
 public:
-	void setResult(const QString & queryString, const sserialize::ItemIndex & items);
-public:
 	QString queryString() const;
 	sserialize::ItemIndex items() const;
 	uint32_t itemId(uint32_t pos) const;
 	std::size_t size() const;
+public slots:
+	void setResult(const QString & queryString, const sserialize::CellQueryResult & cqr, const sserialize::ItemIndex & items);
 signals:
 	void dataChanged();
 private:
 	QString m_qs;
+	sserialize::CellQueryResult m_cqr;
 	sserialize::ItemIndex m_items;
 };
 

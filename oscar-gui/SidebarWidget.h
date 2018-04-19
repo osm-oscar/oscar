@@ -19,10 +19,6 @@ Q_OBJECT
 public:
 	explicit SidebarWidget(const States & states);
 	virtual ~SidebarWidget();
-public slots:
-	void setSearchText(const QString &);
-signals:
-	void searchTextChanged(const QString &);
 private:
 	QTabWidget * m_tabs;
 	SearchInputWidget * m_si;

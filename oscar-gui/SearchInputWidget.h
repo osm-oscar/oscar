@@ -12,19 +12,21 @@ namespace oscar_gui {
 class SearchInputWidget: public QWidget {
 Q_OBJECT
 public:
-	explicit SearchInputWidget();
+	explicit SearchInputWidget(const States & states);
 	virtual ~SearchInputWidget();
 public slots:
 	void setSearchText(const QString &);
-signals:
-	void searchTextChanged(const QString&);
 private slots:
 	void goButtonPressed();
 	void clearButtonPressed();
+private: //obey this
+signals:
+	void searchTextChanged(const QString&);
 private:
 	QPushButton * m_goButton;
 	QPushButton * m_clearButton;
 	QLineEdit * m_search;
+	std::shared_ptr<TextSearchState> m_tss;
 };
 
 }//end namespace oscar_gui

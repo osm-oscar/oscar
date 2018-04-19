@@ -12,7 +12,7 @@ namespace oscar_gui {
 class ResultsTableModel: public QAbstractItemModel {
 Q_OBJECT
 public:
-	typedef enum {CD_ID=0, CD_SHOW=1, CD_SHOW_CELLS=2, CD_SCORE=3, CD_NAME=4, __CD_COUNT=4} ColDefs;
+	typedef enum {CD_ID=0, CD_SHOW=1, CD_SHOW_CELLS=2, CD_SCORE=3, CD_NAME=4, __CD_COUNT=5} ColDefs;
 	static constexpr int ITEMID = Qt::UserRole;
 public:
 	ResultsTableModel(const States & states);
@@ -28,8 +28,7 @@ public slots:
 	void doubleClicked(const QModelIndex&);
 	void clicked(const QModelIndex&);
 signals:
-	void itemClicked(uint32_t itemId);
-	void showItemCellsClicked(uint32_t itemId);
+	void toggleItemState(uint32_t itemId, ItemGeometryState::ActiveType at);
 private:
 	liboscar::Static::OsmKeyValueObjectStore m_store;
 	uint32_t m_nameStrId;

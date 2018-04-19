@@ -282,7 +282,7 @@ bool MarbleMap::MyItemLayer::render(Marble::GeoPainter *painter, Marble::Viewpor
 	QPen pen(( QColor(Qt::green) ));
 	QColor fillColor(0, 0, 255, 50);
 	QBrush brush(fillColor);
-	return MyGeometryLayer::render(painter, viewport, renderPos, layer, pen, brush, std::static_pointer_cast<SearchGeometryState>(data()->igs));
+	return true;
 }
 
 void MarbleMap::MyItemLayer::clear() {
@@ -308,7 +308,8 @@ MarbleMap::Data::Data(const liboscar::Static::OsmKeyValueObjectStore& store, con
 store(store),
 trs(store.regionArrangement()),
 cg(store.cellGraph()),
-sgs(states.sgs)
+sgs(states.sgs),
+igs(states.igs)
 {
 	std::vector<uint8_t> tmpColors(cg.size(), Qt::GlobalColor::color0);
 	for(uint32_t i(0), s(cg.size()); i < s; ++i) {

@@ -6,14 +6,17 @@
 
 namespace oscar_gui {
 
-SearchInputWidget::SearchInputWidget() :
+SearchInputWidget::SearchInputWidget(const States & states) :
 QWidget(),
 m_goButton(new QPushButton("Go")),
 m_clearButton(new QPushButton("Clear")),
-m_search(new QLineEdit())
+m_search(new QLineEdit()),
+m_tss(states.tss)
 {
-	connect(m_goButton, SIGNAL(pressed()), this, SLOT(goButtonPressed()));
-	connect(m_clearButton, SIGNAL(pressed()), this, SLOT(clearButtonPressed()));
+	connect(m_goButton, &QPushButton::pressed, this, &SearchInputWidget::goButtonPressed);
+	connect(m_clearButton, &QPushButton::pressed, this, &SearchInputWidget::clearButtonPressed);
+	connect(this, &SearchInputWidget::searchTextChanged, m_tss.get(), &TextSearchState::searchTextChanged);
+	
 	QVBoxLayout * mainLayout = new QVBoxLayout();
 	mainLayout->addWidget(m_search);
 	mainLayout->addWidget(m_goButton);

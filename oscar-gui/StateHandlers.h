@@ -5,7 +5,7 @@
 
 namespace oscar_gui {
 	
-class SearchStateHandler: LockableState {
+class SearchStateHandler: public LockableState {
 Q_OBJECT
 public:
 	SearchStateHandler(const States & states);
@@ -13,11 +13,11 @@ public:
 public slots:
 	void searchTextChanged(const QString & queryString);
 signals:
-	void searchResultsChanged(const QString & queryString, const sserialize::ItemIndex & items);
+	void searchResultsChanged(const QString & queryString, const sserialize::CellQueryResult & cqr, const sserialize::ItemIndex & items);
 private slots:
 	void computeResult();
 	void computeResult2(const QString & queryString);
-	void computationCompleted(const QString & queryString, const sserialize::ItemIndex & items);
+	void computationCompleted(const QString & queryString, const sserialize::CellQueryResult & cqr, const sserialize::ItemIndex & items);
 private:
 	std::shared_ptr<TextSearchState> m_tss;
 	std::shared_ptr<ResultListState> m_rls;
@@ -38,7 +38,9 @@ private:
 	SearchGeometryHelper m_sgh;
 };
 
-struct StateHandlers {
+class StateHandlers: QObject {
+Q_OBJECT
+public:
 	std::shared_ptr<SearchGeometryStateHandler> sgsh;
 	std::shared_ptr<SearchStateHandler> ssh;
 

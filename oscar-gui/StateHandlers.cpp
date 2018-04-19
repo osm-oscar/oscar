@@ -13,41 +13,45 @@ m_rls(states.rls),
 m_cmp(states.cmp),
 m_pendingUpdate(false)
 {
-	connect(m_tss.get(), SIGNAL(searchTextChanged(const QString &)), this, SLOT(searchTextChanged(const QString &)));
-	connect(this, SIGNAL(searchResultsChanged(const QString &, const sserialize::ItemIndex &)), m_rls.get(), SLOT(setResult(const QString &, const sserialize::ItemIndex &)));
+	connect(m_tss.get(), &TextSearchState::searchTextChanged, this, &SearchStateHandler::searchTextChanged);
+	connect(this, &SearchStateHandler::searchResultsChanged, m_rls.get(), &ResultListState::setResult);
 }
 
 SearchStateHandler::~SearchStateHandler() {}
 
 void SearchStateHandler::searchTextChanged(const QString & queryString) {
 	auto l(writeLock());
-	if (m_pendingUpdate) {
-		m_qs = queryString;
-	}
-	else {
+	m_qs = queryString;
+	if (!m_pendingUpdate) {
+		m_pendingUpdate = true;
+		l.unlock();
 		computeResult();
 	}
 }
 
-void SearchStateHandler::computationCompleted(const QString & queryString, const sserialize::ItemIndex & items) {
-	emit(searchResultsChanged(queryString, items));
-	auto l(writeLock());
-	if (m_pendingUpdate) {
-		m_pendingUpdate = false;
-		computeResult();
-	}
+void SearchStateHandler::computationCompleted(const QString & queryString, const sserialize::CellQueryResult & cqr, const sserialize::ItemIndex & items) {
+	emit(searchResultsChanged(queryString, cqr, items));
+	computeResult();
 }
 
 void SearchStateHandler::computeResult2(const QString & queryString) {
 	auto cqr = m_cmp->cqrComplete(queryString.toStdString(), true, 2);
+	if (cqr.flags() & sserialize::CellQueryResult::FF_CELL_LOCAL_ITEM_IDS) {
+		cqr = cqr.toGlobalItemIds();
+	}
 	sserialize::ItemIndex items = cqr.flaten(2);
-	computationCompleted(queryString, items);
+	emit( computationCompleted(queryString, cqr, items) );
 }
 
 void SearchStateHandler::computeResult() {
-	QString qs = m_qs;
-	auto fb = std::bind(&SearchStateHandler::computeResult2, this, qs);
-	QtConcurrent::run(fb);
+	auto l(writeLock());
+	if (m_pendingUpdate) {
+		m_pendingUpdate = false;
+		QString qs = m_qs;
+		l.unlock();
+		auto fb = std::bind(&SearchStateHandler::computeResult2, this, qs);
+		QtConcurrent::run(fb);
+	}
 }
 //END
 
