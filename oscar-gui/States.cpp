@@ -27,6 +27,14 @@ SearchGeometryState::SearchGeometryState() {}
 SearchGeometryState::~SearchGeometryState() {}
 
 
+SearchGeometryState::const_iterator SearchGeometryState::begin() const {
+	return const_iterator::fromIterator(m_entries.begin());
+}
+
+SearchGeometryState::const_iterator SearchGeometryState::end() const {
+	return const_iterator::fromIterator(m_entries.end());
+}
+
 void SearchGeometryState::add(const QString & name, const Marble::GeoDataLineString & data, DataType t) {
 	std::size_t p = m_entries.size();
 	{
@@ -148,6 +156,24 @@ ItemGeometryState::ItemGeometryState(const liboscar::Static::OsmKeyValueObjectSt
 m_store(store)
 {}
 
+ItemGeometryState::const_iterator ItemGeometryState::begin() const {
+	using TransformIterator = sserialize::TransformIterator<GetSecond, const Entry&, std::unordered_map<uint32_t, Entry>::const_iterator>;
+	return const_iterator::fromIterator( TransformIterator(m_entries.begin()) );
+}
+
+ItemGeometryState::const_iterator ItemGeometryState::end() const {
+	using TransformIterator = sserialize::TransformIterator<GetSecond, const Entry&, std::unordered_map<uint32_t, Entry>::const_iterator>;
+	return const_iterator::fromIterator( TransformIterator(m_entries.begin()) );
+}
+
+
+int ItemGeometryState::active(uint32_t itemId) const {
+	if (m_entries.count(itemId)) {
+		return m_entries.at(itemId).active;
+	}
+	return AT_NONE;
+}
+
 void ItemGeometryState::activate(uint32_t itemId, ActiveType at) {
 	auto l(writeLock());
 	if (!m_entries.count(itemId)) {
@@ -183,6 +209,17 @@ void ItemGeometryState::toggleItem(uint32_t itemId, ActiveType at) {
 		m_entries.erase(itemId);
 	}
 	emit( dataChanged() );
+}
+
+void ItemGeometryState::addItem(uint32_t itemId) {
+	using Item = liboscar::Static::OsmKeyValueObjectStore::Item;
+	Item item = m_store.at(itemId);
+	auto namePos = item.findKey("name");
+	QString name;
+	if (namePos != item.npos) {
+		name = QString::fromStdString( item.value(namePos) );
+	}
+	sserialize::ItemIndex cells(item.cells());
 }
 
 //END ItemGeometryState

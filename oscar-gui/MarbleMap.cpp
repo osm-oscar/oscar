@@ -177,23 +177,31 @@ bool MarbleMap::MyGeometryLayer::render(Marble::GeoPainter* painter, Marble::Vie
 	QPen pen(( QColor(Qt::blue) ));
 	QColor fillColor(0, 0, 255, 50);
 	QBrush brush(fillColor);
-	return render(painter, viewport, renderPos, layer, pen, brush, data()->sgs);
+	auto lock(data()->sgs->readLock());
+	return render(painter, viewport, renderPos, layer, pen, brush, data()->sgs->begin(), data()->sgs->end());
 }
 	
-bool MarbleMap::MyGeometryLayer::render(Marble::GeoPainter* painter, Marble::ViewportParams* /*viewport*/, const QString&
- /*renderPos*/, Marble::GeoSceneLayer* /*layer*/, QPen pen, const QBrush & brush, std::shared_ptr<SearchGeometryState> data) {
+bool MarbleMap::MyGeometryLayer::render(
+	Marble::GeoPainter* painter,
+	Marble::ViewportParams* /*viewport*/,
+	const QString& /*renderPos*/,
+	Marble::GeoSceneLayer* /*layer*/,
+	QPen pen,
+	const QBrush & brush,
+	sserialize::AbstractArrayIterator<const GeometryState::Entry&> begin,
+	sserialize::AbstractArrayIterator<const GeometryState::Entry&> end)
+{
 
 	painter->setBrush(brush);
 	
-	auto lock(data->readLock());
 	
 	pen.setWidth(5);
 	painter->setPen(pen);
-	for(uint32_t i(0), s(data->size()); i < s; ++i) {
-		auto at = data->active(i);
+	for(auto it(begin); it != end; ++it) {
+		auto at = (*it).active;
 		if (at & SearchGeometryState::AT_SHOW) {
-			const auto & d = data->data(i);
-			switch (data->type(i)) {
+			const auto & d = (*it).data;
+			switch ((*it).type) {
 			case SearchGeometryState::DT_POINT:
 				painter->drawEllipse(d.first(), 20, 20);
 				break;
@@ -219,16 +227,16 @@ bool MarbleMap::MyGeometryLayer::render(Marble::GeoPainter* painter, Marble::Vie
 	
 	pen.setWidth(1);
 	painter->setPen(pen);
-	for(uint32_t i(0), s(data->size()); i < s; ++i) {
-		auto at = data->active(i);
+	for(auto it(begin); it != end; ++it) {
+		auto at = (*it).active;
 		if (at & SearchGeometryState::AT_TRIANGLES) {
-			const auto & triangles = data->triangles(i);
+			const auto & triangles = (*it).triangles;
 			for(uint32_t faceId : triangles) {
 				this->doRender(this->data()->trs.tds().face(faceId), brush, QString::number(faceId), painter);
 			}
 		}
 		if (at & SearchGeometryState::AT_CELLS) {
-			const auto & cells = data->cells(i);
+			const auto & cells = (*it).cells;
 			for(uint32_t cellId : cells) {
 				this->doRender(this->data()->trs.cfGraph(cellId), brush, QString(), painter);
 			}
@@ -282,7 +290,8 @@ bool MarbleMap::MyItemLayer::render(Marble::GeoPainter *painter, Marble::Viewpor
 	QPen pen(( QColor(Qt::green) ));
 	QColor fillColor(0, 0, 255, 50);
 	QBrush brush(fillColor);
-	return true;
+	auto lock( data()->igs->readLock() );
+	return MyGeometryLayer::render(painter, viewport, renderPos, layer, pen, brush, data()->igs->begin(), data()->igs->end());
 }
 
 void MarbleMap::MyItemLayer::clear() {

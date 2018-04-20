@@ -7,6 +7,9 @@
 
 #include <liboscar/StaticOsmCompleter.h>
 
+#include <sserialize/iterator/TransformIterator.h>
+#include <sserialize/containers/AbstractArray.h>
+
 #include "SemaphoreLocker.h"
 
 namespace oscar_gui {
@@ -46,13 +49,19 @@ public:
 		name(name), data(data), active(AT_NONE), type(t)
 		{}
 	};
+	using const_iterator = sserialize::AbstractArrayIterator<const Entry&>;
 };
 
 class SearchGeometryState: public GeometryState {
 Q_OBJECT
 public:
+	
+public:
 	SearchGeometryState();
 	virtual ~SearchGeometryState();
+public:
+	const_iterator begin() const;
+	const_iterator end() const;
 public:
 	void add(const QString & name, const Marble::GeoDataLineString & data, DataType t);
 	void remove(std::size_t p);
@@ -94,10 +103,18 @@ private:
 class ItemGeometryState: public GeometryState {
 Q_OBJECT
 public:
-	using const_iterator = std::unordered_map<uint32_t, Entry>::const_iterator;
+	struct GetSecond {
+		const Entry & operator()(const std::pair<const uint32_t, Entry> & v) const { return v.second; }
+		Entry & operator()(std::pair<const uint32_t, Entry> & v) const { return v.second; }
+	};
 public:
 	ItemGeometryState(const liboscar::Static::OsmKeyValueObjectStore & store);
 	virtual ~ItemGeometryState() {}
+public:
+	const_iterator begin() const;
+	const_iterator end() const;
+public:
+	int active(uint32_t itemId) const;
 public:
 	void activate(uint32_t itemId, ActiveType at);
 	void deactivate(uint32_t itemId, ActiveType at);

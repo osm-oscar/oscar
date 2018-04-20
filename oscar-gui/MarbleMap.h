@@ -129,7 +129,15 @@ private:
 		virtual ~MyGeometryLayer();
 	public:
 		virtual bool render(Marble::GeoPainter *painter, Marble::ViewportParams * viewport, const QString & renderPos, Marble::GeoSceneLayer * layer);
-		virtual bool render(Marble::GeoPainter *painter, Marble::ViewportParams * viewport, const QString & renderPos, Marble::GeoSceneLayer * layer, QPen pen, const QBrush & brush, std::shared_ptr<SearchGeometryState> data);
+		virtual bool render(
+			Marble::GeoPainter *painter,
+			Marble::ViewportParams * viewport,
+			const QString & renderPos,
+			Marble::GeoSceneLayer * layer,
+			QPen pen,
+			const QBrush & brush,
+			sserialize::AbstractArrayIterator<const GeometryState::Entry&> begin,
+			sserialize::AbstractArrayIterator<const GeometryState::Entry&> end);
 	};
 
 	class MyInputSearchGeometryLayer: public MyBaseLayer {

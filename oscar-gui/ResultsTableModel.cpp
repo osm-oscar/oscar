@@ -10,7 +10,7 @@ m_rls(states.rls)
 	m_nameStrId = m_store.keyStringTable().find("name");
 	connect(m_igs.get(), SIGNAL(dataChanged(int)), this, SIGNAL(modelReset()));
 	connect(m_rls.get(), SIGNAL(dataChanged()), this, SIGNAL(modelReset()));
-	connect(this, &ResultsTableModel::toggleItemState, m_igs.get(), &SearchGeometryState::toggle);
+	connect(this, &ResultsTableModel::toggleItem, m_igs.get(), &ItemGeometryState::toggleItem);
 }
 
 ResultsTableModel::~ResultsTableModel() {}
@@ -42,9 +42,9 @@ QVariant ResultsTableModel::data(const QModelIndex& index, int role) const {
 	case CD_ID:
 		return QVariant( itemId );
 	case CD_SHOW:
-		return QVariant( m_igs->active(index.row()) & SearchGeometryState::AT_SHOW ? "True" : "False" );
+		return QVariant( m_igs->active(itemId) & SearchGeometryState::AT_SHOW ? "True" : "False" );
 	case CD_SHOW_CELLS:
-		return QVariant( m_igs->active(index.row()) & SearchGeometryState::AT_CELLS ? "True" : "False" );
+		return QVariant( m_igs->active(itemId) & SearchGeometryState::AT_CELLS ? "True" : "False" );
 	case CD_SCORE:
 		return QVariant( item.score() );
 	case CD_NAME:
@@ -91,10 +91,10 @@ void ResultsTableModel::doubleClicked(const QModelIndex & index) {
 	auto itemId = m_rls->itemId(index.row());
 	switch (index.column()) {
 	case CD_SHOW:
-		emit toggleItemState(itemId, GeometryState::AT_SHOW);
+		emit toggleItem(itemId, GeometryState::AT_SHOW);
 		break;
 	case CD_SHOW_CELLS:
-		emit toggleItemState(itemId, GeometryState::AT_CELLS);
+		emit toggleItem(itemId, GeometryState::AT_CELLS);
 		break;
 	default:
 		break;
