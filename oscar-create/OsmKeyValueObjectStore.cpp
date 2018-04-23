@@ -620,9 +620,9 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 		ct.trs.snapTriangulation(ct.cc->geometryCleanType, removedEdges);
 		std::cout << "Could not re-add " << num_removed_edges << " edges" << std::endl;
 	}
-	ct.trs.initGrid(ct.cc->rc.polyStoreLatCount, ct.cc->rc.polyStoreLonCount);
 	
 	ct.trs.assignCellIds(ct.cc->numThreads);
+	ct.trs.initGrid(ct.cc->rc.polyStoreLatCount, ct.cc->rc.polyStoreLonCount);
 	
 	switch(ct.cc->rc.cellRefineCfg.type) { //refine cells
 	case CellRefinementConfig::T_TRIANGLE_COUNT:
