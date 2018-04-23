@@ -19,6 +19,7 @@ Q_OBJECT
 public:
 	explicit SidebarWidget(const States & states);
 	virtual ~SidebarWidget();
+	VisualizationOptionsWidget * vo() { return m_vo; }
 private:
 	QTabWidget * m_tabs;
 	SearchInputWidget * m_si;

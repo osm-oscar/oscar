@@ -34,6 +34,7 @@ private:
 		TracGraph cg;
 		std::shared_ptr<SearchGeometryState> sgs;
 		std::shared_ptr<ItemGeometryState> igs;
+		std::shared_ptr<ResultListState> rls;
 	public:
 		Data(const liboscar::Static::OsmKeyValueObjectStore & store, const States & states);
 		QColor cellColor(uint32_t cellId, int cs) const;
@@ -96,7 +97,11 @@ private:
 	
 	class MyCellLayer: public MyBaseLayer {
 	private:
-		typedef std::unordered_map<uint32_t, CFGraph> GraphMap;
+		struct DrawData {
+			CFGraph graph;
+			float alpha; //between 0.0 and 1.0
+		};
+		typedef std::unordered_map<uint32_t, DrawData> GraphMap;
 	private:
 		GraphMap m_cgi;
 		int m_colorScheme;
@@ -106,7 +111,7 @@ private:
 		virtual bool render(Marble::GeoPainter *painter, Marble::ViewportParams * viewport, const QString & renderPos, Marble::GeoSceneLayer * layer);
 	public:
 		void clear();
-		void addCell(uint32_t cellId);
+		void addCell(uint32_t cellId, float alpha = 1.0);
 		void removeCell(uint32_t cellId);
 	public:
 		inline void setColorScheme(int colorScheme) { m_colorScheme = colorScheme; }
@@ -161,8 +166,20 @@ private:
 		void clear();
 		void addItem(uint32_t itemId);
 		void removeItem(uint32_t itemId);
-	public:
+	private:
 		std::unordered_set<uint32_t> m_items;
+	};
+	
+	class MyCellQueryResultLayer: public MyCellLayer {
+	public:
+		MyCellQueryResultLayer(const QStringList & renderPos, qreal zVal, const DataPtr & trs);
+		virtual ~MyCellQueryResultLayer() {}
+	public:
+		void disable();
+		void enable();
+		void dataChanged();
+	private:
+		bool m_enabled;
 	};
 	
 public:
@@ -192,6 +209,9 @@ public slots:
 public slots:
 	void setCellOpacity(int cellOpacity);
 	void setColorScheme(int colorScheme);
+public slots:
+	void displayCqrCells(bool enable);
+	void cqrDataChanged();
 private slots:
 	void rmbRequested(int x, int y);
 	void beginSearchGeometryTriggered();
@@ -208,6 +228,7 @@ private:
 	MyGeometryLayer * m_geometryLayer;
 	MyPathLayer * m_pathLayer;
 	MyInputSearchGeometryLayer * m_isgLayer;
+	MyCellQueryResultLayer * m_cqrLayer;
 	DataPtr m_data;
 	int m_cellOpacity;
 	int m_colorScheme;

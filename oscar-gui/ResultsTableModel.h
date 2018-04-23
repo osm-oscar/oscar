@@ -29,6 +29,9 @@ public slots:
 	void clicked(const QModelIndex&);
 signals:
 	void toggleItem(uint32_t itemId, ItemGeometryState::ActiveType at);
+	void zoomToItem(uint32_t itemId);
+private slots:
+	void resetModel();
 private:
 	liboscar::Static::OsmKeyValueObjectStore m_store;
 	uint32_t m_nameStrId;

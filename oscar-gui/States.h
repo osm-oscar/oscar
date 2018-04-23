@@ -120,6 +120,7 @@ public:
 	void deactivate(uint32_t itemId, ActiveType at);
 	void toggleItem(uint32_t itemId, ActiveType at);
 signals:
+	void zoomToItem(uint32_t itemId);
 	void dataChanged();
 private:
 	///not thread-safe
@@ -137,6 +138,7 @@ public:
 public:
 	QString queryString() const;
 	sserialize::ItemIndex items() const;
+	sserialize::CellQueryResult cqr() const;
 	uint32_t itemId(uint32_t pos) const;
 	std::size_t size() const;
 public slots:

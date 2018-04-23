@@ -8,9 +8,10 @@ m_igs(states.igs),
 m_rls(states.rls)
 {
 	m_nameStrId = m_store.keyStringTable().find("name");
-	connect(m_igs.get(), SIGNAL(dataChanged(int)), this, SIGNAL(modelReset()));
-	connect(m_rls.get(), SIGNAL(dataChanged()), this, SIGNAL(modelReset()));
+	connect(m_igs.get(), &ItemGeometryState::dataChanged, this, &ResultsTableModel::resetModel);
+	connect(m_rls.get(), &ResultListState::dataChanged, this, &ResultsTableModel::resetModel);
 	connect(this, &ResultsTableModel::toggleItem, m_igs.get(), &ItemGeometryState::toggleItem);
+	connect(this, &ResultsTableModel::zoomToItem, m_igs.get(), &ItemGeometryState::zoomToItem);
 }
 
 ResultsTableModel::~ResultsTableModel() {}
@@ -97,6 +98,7 @@ void ResultsTableModel::doubleClicked(const QModelIndex & index) {
 		emit toggleItem(itemId, GeometryState::AT_CELLS);
 		break;
 	default:
+		emit zoomToItem(itemId);
 		break;
 	}
 }
@@ -105,5 +107,10 @@ void ResultsTableModel::clicked(const QModelIndex& index) {
 	doubleClicked(index);
 }
 
+
+void ResultsTableModel::resetModel() {
+	beginResetModel();
+	endResetModel();
+}
 
 } //end namespace oscar_gui

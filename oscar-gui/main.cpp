@@ -4,6 +4,7 @@
 int main(int argc, char** argv)
 {
 	qRegisterMetaType<sserialize::ItemIndex>("sserialize::ItemIndex");
+	qRegisterMetaType<sserialize::CellQueryResult>("sserialize::CellQueryResult");
 	
 	QApplication app(argc, argv);
 	QStringList cmdline_args = QCoreApplication::arguments();

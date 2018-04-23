@@ -17,8 +17,8 @@ m_rmdl(new ResultsTableModel(states))
 	m_rtbl->horizontalHeader()->setSectionsClickable(true);
 	m_rtbl->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
 	m_rtbl->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
-	connect(m_rtbl, SIGNAL(doubleClicked(QModelIndex)), m_rmdl, SLOT(doubleClicked(QModelIndex)));
-	connect(m_rtbl, SIGNAL(clicked(QModelIndex)), m_rmdl, SLOT(clicked(QModelIndex)));
+	connect(m_rtbl, &QTableView::doubleClicked, m_rmdl, &ResultsTableModel::doubleClicked);
+	connect(m_rtbl, &QTableView::clicked, m_rmdl,  &ResultsTableModel::clicked);
 
 	QVBoxLayout * mainLayout = new QVBoxLayout();
 	mainLayout->addWidget(m_rtbl);

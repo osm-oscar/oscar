@@ -107,27 +107,29 @@ m_colorScheme(CS_DIFFERENT)
 {}
 
 bool MarbleMap::MyCellLayer::render(Marble::GeoPainter * painter, Marble::ViewportParams* /*viewport*/, const QString& /*renderPos*/, Marble::GeoSceneLayer* /*layer*/) {
-	for(std::pair<const uint32_t, CFGraph> & gi : m_cgi) {
+	for(std::pair<const uint32_t, DrawData> & gi : m_cgi) {
 		uint32_t cellId = gi.first;
 		QColor lineColor(data()->cellColor(cellId, colorScheme() ));
-		lineColor.setAlpha(255);
+		lineColor.setAlpha(255*gi.second.alpha);
 		painter->setPen(QPen(QBrush(lineColor, Qt::BrushStyle::SolidPattern), 1));
 		QColor fillColor(lineColor);
-		fillColor.setAlpha(opacity());
+		fillColor.setAlpha(opacity()*gi.second.alpha);
 		QBrush brush(fillColor, Qt::SolidPattern);
 
-		if( !MyBaseLayer::doRender(gi.second, brush, "", painter)) {
+		if( !MyBaseLayer::doRender(gi.second.graph, brush, "", painter)) {
 			return false;
 		}
 	}
 	return true;
 }
 
-void MarbleMap::MyCellLayer::addCell(uint32_t cellId) {
+void MarbleMap::MyCellLayer::addCell(uint32_t cellId, float alpha) {
 	if (m_cgi.count(cellId)) {
 		return;
 	}
-	m_cgi[cellId] = data()->trs.cfGraph(cellId);
+	DrawData & dd =  m_cgi[cellId];
+	dd.graph = data()->trs.cfGraph(cellId);
+	dd.alpha = alpha;
 }
 
 void MarbleMap::MyCellLayer::removeCell(uint32_t cellId) {
@@ -309,7 +311,38 @@ void MarbleMap::MyItemLayer::removeItem(uint32_t itemId) {
 }
 
 //END MyItemLayer
+//BEGIN MyCellQueryResultLayer
 
+MarbleMap::MyCellQueryResultLayer::MyCellQueryResultLayer(const QStringList & renderPos, qreal zVal, const DataPtr & trs) :
+MyCellLayer(renderPos, zVal, trs),
+m_enabled(false)
+{}
+
+void MarbleMap::MyCellQueryResultLayer::disable() {
+	clear();
+	m_enabled = false;
+}
+
+void MarbleMap::MyCellQueryResultLayer::enable() {
+	sserialize::Static::spatial::GeoHierarchy gh = data()->store.geoHierarchy();
+	auto cqr = data()->rls->cqr();
+	for(uint32_t i(0), s(cqr.cellCount()); i < s; ++i) {
+		double fmc = gh.cellItemsCount(cqr.cellId(i));
+		double rmc = cqr.idxSize(i);
+		float alpha = rmc/fmc;
+		addCell(cqr.cellId(i), alpha);
+	}
+	m_enabled = true;
+}
+
+void MarbleMap::MyCellQueryResultLayer::dataChanged() {
+	clear();
+	if (m_enabled) {
+		enable();
+	}
+}
+
+//END MyCellQueryResultLayer
 //BEGIN Data
 
 
@@ -318,7 +351,8 @@ store(store),
 trs(store.regionArrangement()),
 cg(store.cellGraph()),
 sgs(states.sgs),
-igs(states.igs)
+igs(states.igs),
+rls(states.rls)
 {
 	std::vector<uint8_t> tmpColors(cg.size(), Qt::GlobalColor::color0);
 	for(uint32_t i(0), s(cg.size()); i < s; ++i) {
@@ -368,6 +402,7 @@ m_data(new Data(store, states))
 	m_map->addLayer(m_geometryLayer);
 	m_map->addLayer(m_isgLayer);
 	m_map->addLayer(m_itemLayer);
+	m_map->addLayer(m_cqrLayer);
 
 
 	QAction * beginSearchGeometry = new QAction("Begin search geometry", this);
@@ -389,25 +424,26 @@ m_data(new Data(store, states))
 	m_map->popupMenu()->addAction(Qt::MouseButton::RightButton, endAsPolygon);
 	
 	//get mouse clicks
-	connect(m_map->inputHandler(), SIGNAL(rmbRequest(int,int)), this, SLOT(rmbRequested(int,int)));
-	connect(beginSearchGeometry, SIGNAL(triggered(bool)), this, SLOT(beginSearchGeometryTriggered()));
-	connect(addToSearchGeometry, SIGNAL(triggered(bool)), this, SLOT(addToSearchGeometryTriggered()));
+	connect(m_map->inputHandler(), &Marble::MarbleWidgetInputHandler::rmbRequest, this, &MarbleMap::rmbRequested);
+	connect(beginSearchGeometry, &QAction::triggered, this, &MarbleMap::beginSearchGeometryTriggered);
+	connect(addToSearchGeometry, &QAction::triggered, this, &MarbleMap::addToSearchGeometryTriggered);
 	
-	connect(endAsPoint, SIGNAL(triggered(bool)), this, SLOT(endSearchGeometryAsPointTriggered()));
-	connect(endAsRect, SIGNAL(triggered(bool)), this, SLOT(endSearchGeometryAsRectTriggered()));
-	connect(endAsPath, SIGNAL(triggered(bool)), this, SLOT(endSearchGeometryAsPathTriggered()));
-	connect(endAsPolygon, SIGNAL(triggered(bool)), this, SLOT(endSearchGeometryAsPolygonTriggered()));
+	connect(endAsPoint, &QAction::triggered, this, &MarbleMap::endSearchGeometryAsPointTriggered);
+	connect(endAsRect, &QAction::triggered, this, &MarbleMap::endSearchGeometryAsRectTriggered);
+	connect(endAsPath, &QAction::triggered, this, &MarbleMap::endSearchGeometryAsPathTriggered);
+	connect(endAsPolygon, &QAction::triggered, this, &MarbleMap::endSearchGeometryAsPolygonTriggered);
 	
 	//data changes
-	connect(states.sgs.get(), SIGNAL(dataChanged(int)), this, SLOT(geometryDataChanged(int)));
+	connect(states.sgs.get(), &SearchGeometryState::dataChanged, this, &MarbleMap::geometryDataChanged);
+	connect(states.igs.get(), &ItemGeometryState::zoomToItem, this, &MarbleMap::zoomToItem);
+	connect(states.rls.get(), &ResultListState::dataChanged, this, &MarbleMap::cqrDataChanged);
 	
 	QHBoxLayout * mainLayout = new QHBoxLayout();
 	mainLayout->addWidget(m_map);
 	this->setLayout(mainLayout);
 	
 	sserialize::spatial::GeoRect bounds = states.cmp->store().boundary();
-	Marble::GeoDataLatLonBox mbounds(bounds.maxLat()*Marble::DEG2RAD, bounds.minLat()*Marble::DEG2RAD, bounds.minLon()*Marble::DEG2RAD+M_PI, bounds.maxLon()*Marble::DEG2RAD+M_PI, Marble::GeoDataCoordinates::Radian);
-	qDebug() << "Zoom to" << mbounds.toString(Marble::GeoDataCoordinates::Degree);
+	Marble::GeoDataLatLonBox mbounds(bounds.maxLat(), bounds.minLat(), bounds.maxLon(), bounds.minLon(), Marble::GeoDataCoordinates::Degree);
 	this->zoomTo(mbounds);
 }
 
@@ -424,15 +460,18 @@ MarbleMap::~MarbleMap() {
 	m_map->removeLayer(m_geometryLayer);
 	m_map->removeLayer(m_isgLayer);
 	m_map->removeLayer(m_itemLayer);
+	m_map->removeLayer(m_cqrLayer);
 	
 	delete m_triangleLayer;
 	delete m_cellLayer;
 	delete m_geometryLayer;
 	delete m_isgLayer;
 	delete m_itemLayer;
+	delete m_cqrLayer;
 }
 
 void MarbleMap::zoomTo(const Marble::GeoDataLatLonBox& bbox) {
+	qDebug() << "Zoom to" << bbox.toString(Marble::GeoDataCoordinates::Degree);
 	m_map->centerOn(bbox, true);
 }
 
@@ -538,6 +577,24 @@ void MarbleMap::setColorScheme(int colorScheme) {
 	if (m_cellLayer) {
 		m_cellLayer->setColorScheme(m_colorScheme);
 		this->update();
+	}
+}
+
+void MarbleMap::cqrDataChanged() {
+	if (m_cqrLayer) {
+		m_cqrLayer->dataChanged();
+		this->update();
+	}
+}
+
+void MarbleMap::displayCqrCells(bool enable) {
+	if (m_cqrLayer) {
+		if (enable) {
+			m_cqrLayer->enable();
+		}
+		else {
+			m_cqrLayer->disable();
+		}
 	}
 }
 

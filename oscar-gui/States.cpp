@@ -1,4 +1,7 @@
 #include "States.h"
+#include <sserialize/Static/GeoWay.h>
+#include <sserialize/Static/GeoPolygon.h>
+#include <sserialize/Static/GeoMultiPolygon.h>
 
 namespace oscar_gui {
 	
@@ -163,7 +166,7 @@ ItemGeometryState::const_iterator ItemGeometryState::begin() const {
 
 ItemGeometryState::const_iterator ItemGeometryState::end() const {
 	using TransformIterator = sserialize::TransformIterator<GetSecond, const Entry&, std::unordered_map<uint32_t, Entry>::const_iterator>;
-	return const_iterator::fromIterator( TransformIterator(m_entries.begin()) );
+	return const_iterator::fromIterator( TransformIterator(m_entries.end()) );
 }
 
 
@@ -213,13 +216,52 @@ void ItemGeometryState::toggleItem(uint32_t itemId, ActiveType at) {
 
 void ItemGeometryState::addItem(uint32_t itemId) {
 	using Item = liboscar::Static::OsmKeyValueObjectStore::Item;
+	Entry & entry = m_entries[itemId];
 	Item item = m_store.at(itemId);
 	auto namePos = item.findKey("name");
-	QString name;
 	if (namePos != item.npos) {
-		name = QString::fromStdString( item.value(namePos) );
+		entry.name = QString::fromStdString( item.value(namePos) );
 	}
-	sserialize::ItemIndex cells(item.cells());
+	entry.cells = sserialize::ItemIndex(item.cells());
+	auto shape = item.geoShape();
+	switch (shape.type()) {
+	case sserialize::spatial::GS_POINT:
+	{
+		auto p = shape.get<sserialize::Static::spatial::GeoPoint>();
+		entry.type = DT_POINT;
+		entry.data.append(Marble::GeoDataCoordinates(p->lon(), p->lat(), 0.0, Marble::GeoDataCoordinates::Degree));
+		break;
+	}
+	case sserialize::spatial::GS_WAY:
+	{
+		auto gs = shape.get<sserialize::Static::spatial::GeoWay>();
+		entry.type = DT_PATH;
+		for(sserialize::Static::spatial::GeoPoint p : *gs) {
+			entry.data.append(Marble::GeoDataCoordinates(p.lon(), p.lat(), 0.0, Marble::GeoDataCoordinates::Degree));
+		}
+		break;
+	}
+	case sserialize::spatial::GS_POLYGON:
+	{
+		auto gs = shape.get<sserialize::Static::spatial::GeoPolygon>();
+		entry.type = DT_POLYGON;
+		for(sserialize::Static::spatial::GeoPoint p : *gs) {
+			entry.data.append(Marble::GeoDataCoordinates(p.lon(), p.lat(), 0.0, Marble::GeoDataCoordinates::Degree));
+		}
+		break;
+	}
+	case sserialize::spatial::GS_MULTI_POLYGON:
+	{
+		auto gs = shape.get<sserialize::Static::spatial::GeoMultiPolygon>();
+		entry.type = DT_POLYGON;
+		for(sserialize::Static::spatial::GeoPoint p : gs->outerPolygons().front()) {
+			entry.data.append(Marble::GeoDataCoordinates(p.lon(), p.lat(), 0.0, Marble::GeoDataCoordinates::Degree));
+		}
+		break;
+	}
+	default:
+		break;
+	};
 }
 
 //END ItemGeometryState
@@ -243,6 +285,12 @@ QString ResultListState::queryString() const {
 sserialize::ItemIndex ResultListState::items() const {
 	auto l(readLock());
 	auto cp = m_items;
+	return cp;
+}
+
+sserialize::CellQueryResult ResultListState::cqr() const {
+	auto l(readLock());
+	auto cp = m_cqr;
 	return cp;
 }
 

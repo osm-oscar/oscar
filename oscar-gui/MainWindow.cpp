@@ -4,6 +4,7 @@
 
 #include "MarbleMap.h"
 #include "SidebarWidget.h"
+#include "VisualizationOptionsWidget.h"
 
 namespace oscar_gui {
 
@@ -19,6 +20,7 @@ m_stateHandlers(m_states)
 	
 	connect(this, SIGNAL(cellAdded(uint32_t)), m_map, SLOT(addCell(uint32_t)));
 	connect(this, SIGNAL(cellRemoved(uint32_t)), m_map, SLOT(removeCell(uint32_t)));
+	connect(m_sidebar->vo(), &VisualizationOptionsWidget::displayCqrCells, m_map, &MarbleMap::displayCqrCells);
 	
 	QHBoxLayout * mainLayout = new QHBoxLayout();
 	mainLayout->addWidget(m_sidebar, 1);
@@ -28,6 +30,7 @@ m_stateHandlers(m_states)
 	QWidget * centralWidget = new QWidget(this);
 	centralWidget->setLayout(mainLayout);
 	setCentralWidget(centralWidget);
+	
 }
 
 MainWindow::~MainWindow() {}

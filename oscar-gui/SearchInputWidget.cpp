@@ -13,6 +13,7 @@ m_clearButton(new QPushButton("Clear")),
 m_search(new QLineEdit()),
 m_tss(states.tss)
 {
+	connect(m_search, &QLineEdit::returnPressed, this, &SearchInputWidget::goButtonPressed);
 	connect(m_goButton, &QPushButton::pressed, this, &SearchInputWidget::goButtonPressed);
 	connect(m_clearButton, &QPushButton::pressed, this, &SearchInputWidget::clearButtonPressed);
 	connect(this, &SearchInputWidget::searchTextChanged, m_tss.get(), &TextSearchState::searchTextChanged);
