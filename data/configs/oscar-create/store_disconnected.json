@@ -1,5 +1,8 @@
 {
 	"store" : {
+		"triangleRefining" : {
+			"type" : "none"
+		},
 		"cellRefining" : {
 			"type" : "none"
 		}
