@@ -16,7 +16,7 @@ namespace oscar_gui {
 class MarbleMap : public QWidget {
 	Q_OBJECT
 public:
-	typedef enum {CS_DIFFERENT=0, CS_SAME=1, __CS_COUNT=2} ColorScheme;
+	typedef enum {CS_DIFFERENT=0, CS_SAME=1, CS_INITIAL=CS_DIFFERENT, __CS_COUNT=2} ColorScheme;
 private:
 
 	typedef sserialize::Static::spatial::TriangulationGeoHierarchyArrangement TriangulationGeoHierarchyArrangement;
@@ -144,6 +144,11 @@ private:
 			const QBrush & brush,
 			sserialize::AbstractArrayIterator<const GeometryState::Entry&> begin,
 			sserialize::AbstractArrayIterator<const GeometryState::Entry&> end);
+	public:
+		inline void setColorScheme(int colorScheme) { m_colorScheme = colorScheme; }
+		inline int colorScheme() const { return m_colorScheme; }
+	private:
+		int m_colorScheme;
 	};
 
 	class MyInputSearchGeometryLayer: public MyBaseLayer {

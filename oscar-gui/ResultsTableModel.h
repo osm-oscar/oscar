@@ -27,6 +27,7 @@ public:
 public slots:
 	void doubleClicked(const QModelIndex&);
 	void clicked(const QModelIndex&);
+	void headerClicked(int index);
 signals:
 	void toggleItem(uint32_t itemId, ItemGeometryState::ActiveType at);
 	void zoomToItem(uint32_t itemId);

@@ -103,7 +103,7 @@ void MarbleMap::MyTriangleLayer::clear() {
 
 MarbleMap::MyCellLayer::MyCellLayer(const QStringList & renderPos, qreal zVal, const DataPtr & data) :
 MyBaseLayer(renderPos, zVal, data),
-m_colorScheme(CS_DIFFERENT)
+m_colorScheme(CS_INITIAL)
 {}
 
 bool MarbleMap::MyCellLayer::render(Marble::GeoPainter * painter, Marble::ViewportParams* /*viewport*/, const QString& /*renderPos*/, Marble::GeoSceneLayer* /*layer*/) {
@@ -169,7 +169,8 @@ void MarbleMap::MyPathLayer::changePath(const sserialize::spatial::GeoWay& w) {
 //BEGIN MyGeometryLayer
 
 MarbleMap::MyGeometryLayer::MyGeometryLayer(const QStringList & renderPos, qreal zVal, const DataPtr & data) :
-MyLockableBaseLayer(renderPos, zVal, data)
+MyLockableBaseLayer(renderPos, zVal, data),
+m_colorScheme(CS_INITIAL)
 {}
 
 MarbleMap::MyGeometryLayer::~MyGeometryLayer() {}
@@ -228,18 +229,25 @@ bool MarbleMap::MyGeometryLayer::render(
 	
 	pen.setWidth(1);
 	painter->setPen(pen);
+	QBrush myBrush(brush);
+	for(auto it(begin); it != end; ++it) {
+		auto at = (*it).active;
+		if (at & SearchGeometryState::AT_CELLS) {
+			const auto & cells = (*it).cells;
+			for(uint32_t cellId : cells) {
+				QColor fillColor(data()->cellColor(cellId, colorScheme() ));
+				fillColor.setAlpha(opacity());
+				myBrush.setColor(fillColor);
+				this->doRender(this->data()->trs.cfGraph(cellId), myBrush, QString(), painter);
+			}
+		}
+	}
 	for(auto it(begin); it != end; ++it) {
 		auto at = (*it).active;
 		if (at & SearchGeometryState::AT_TRIANGLES) {
 			const auto & triangles = (*it).triangles;
 			for(uint32_t faceId : triangles) {
 				this->doRender(this->data()->trs.tds().face(faceId), brush, QString::number(faceId), painter);
-			}
-		}
-		if (at & SearchGeometryState::AT_CELLS) {
-			const auto & cells = (*it).cells;
-			for(uint32_t cellId : cells) {
-				this->doRender(this->data()->trs.cfGraph(cellId), brush, QString(), painter);
 			}
 		}
 	}
@@ -362,7 +370,7 @@ rls(states.rls)
 				neighborColors |= static_cast<uint32_t>(1) << tmpColors.at(nn.cellId());
 			}
 			//start with blue, since red is used for removed edges, and green for edges intersected by removed edges
-			for(uint8_t color(Qt::GlobalColor::blue); color < Qt::GlobalColor::darkYellow; ++color) {
+			for(uint8_t color(Qt::GlobalColor::cyan); color < Qt::GlobalColor::darkYellow; ++color) {
 				if ((neighborColors & (static_cast<uint32_t>(1) << color)) == 0) {
 					tmpColors.at(i) = color;
 					break;
@@ -580,6 +588,9 @@ void MarbleMap::setCellOpacity(int cellOpacity) {
 	if (m_cqrLayer) {
 		m_cqrLayer->opacity(m_cellOpacity);
 	}
+	if (m_geometryLayer) {
+		m_geometryLayer->opacity(m_cellOpacity);
+	}
 	this->redrawMap();
 }
 
@@ -590,6 +601,9 @@ void MarbleMap::setColorScheme(int colorScheme) {
 	}
 	if (m_cqrLayer) {
 		m_cqrLayer->setColorScheme(m_colorScheme);
+	}
+	if (m_geometryLayer) {
+		m_geometryLayer->setColorScheme(m_colorScheme);
 	}
 	this->redrawMap();
 }

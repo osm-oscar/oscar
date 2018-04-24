@@ -1,6 +1,7 @@
 #include "MainWindow.h"
 
 #include <QHBoxLayout>
+#include <QDockWidget>
 
 #include "MarbleMap.h"
 #include "SidebarWidget.h"
@@ -26,8 +27,11 @@ m_stateHandlers(m_states)
 	connect(m_stateHandlers.ssh.get(), &SearchStateHandler::searchResultsChanged, this, &MainWindow::searchResultsChanged);
 	
 	QHBoxLayout * mainLayout = new QHBoxLayout();
-	mainLayout->addWidget(m_sidebar, 1);
-	mainLayout->addWidget(m_map, 2);
+	QDockWidget * dock = new QDockWidget("Sidebar", this);
+	dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+	dock->setWidget(m_sidebar);
+	addDockWidget(Qt::LeftDockWidgetArea, dock);
+	mainLayout->addWidget(m_map);
 	
 	//set the central widget
 	QWidget * centralWidget = new QWidget(this);
