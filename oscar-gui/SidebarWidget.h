@@ -20,6 +20,7 @@ public:
 	explicit SidebarWidget(const States & states);
 	virtual ~SidebarWidget();
 	VisualizationOptionsWidget * vo() { return m_vo; }
+	void focus();
 private:
 	QTabWidget * m_tabs;
 	SearchInputWidget * m_si;

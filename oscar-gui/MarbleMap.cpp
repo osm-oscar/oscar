@@ -192,8 +192,7 @@ bool MarbleMap::MyGeometryLayer::render(
 	const QBrush & brush,
 	sserialize::AbstractArrayIterator<const GeometryState::Entry&> begin,
 	sserialize::AbstractArrayIterator<const GeometryState::Entry&> end)
-{
-
+{	
 	painter->setBrush(brush);
 	
 	
@@ -329,7 +328,7 @@ void MarbleMap::MyCellQueryResultLayer::enable() {
 	for(uint32_t i(0), s(cqr.cellCount()); i < s; ++i) {
 		double fmc = gh.cellItemsCount(cqr.cellId(i));
 		double rmc = cqr.idxSize(i);
-		float alpha = rmc/fmc;
+		float alpha = rmc/fmc*0.5 + 0.5;
 		addCell(cqr.cellId(i), alpha);
 	}
 	m_enabled = true;
@@ -378,7 +377,9 @@ rls(states.rls)
 			tmpColors.at(i) = Qt::GlobalColor::white;
 		}
 	}
-	for(uint32_t i(0), s(cellColors.size()); i < s; ++i) {
+	
+	cellColors.resize(tmpColors.size());
+	for(uint32_t i(0), s(tmpColors.size()); i < s; ++i) {
 		cellColors.at(i) = QColor((Qt::GlobalColor) tmpColors.at(i));
 	}
 }
@@ -387,7 +388,8 @@ rls(states.rls)
 
 MarbleMap::MarbleMap(const liboscar::Static::OsmKeyValueObjectStore & store, const States & states):
 m_map( new Marble::MarbleWidget() ),
-m_data(new Data(store, states))
+m_data(new Data(store, states)),
+m_cellOpacity(255)
 {
 	m_map->setMapThemeId("earth/openstreetmap/openstreetmap.dgml");
 
@@ -396,6 +398,7 @@ m_data(new Data(store, states))
 	m_geometryLayer = new MarbleMap::MyGeometryLayer({"HOVERS_ABOVE_SURFACE"}, 0.0, m_data);
 	m_isgLayer = new MarbleMap::MyInputSearchGeometryLayer({"HOVERS_ABOVE_SURFACE"}, 0.0, m_data);
 	m_itemLayer = new MarbleMap::MyItemLayer({"HOVERS_ABOVE_SURFACE"}, 0.0, m_data);
+	m_cqrLayer = new MarbleMap::MyCellQueryResultLayer({"HOVERS_ABOVE_SURFACE"}, 0.0, m_data);
 	
 	m_map->addLayer(m_triangleLayer);
 	m_map->addLayer(m_cellLayer);
@@ -435,8 +438,10 @@ m_data(new Data(store, states))
 	
 	//data changes
 	connect(states.sgs.get(), &SearchGeometryState::dataChanged, this, &MarbleMap::geometryDataChanged);
-	connect(states.igs.get(), &ItemGeometryState::zoomToItem, this, &MarbleMap::zoomToItem);
+	connect(states.igs.get(), &ItemGeometryState::dataChanged, this, &MarbleMap::redrawMap);
 	connect(states.rls.get(), &ResultListState::dataChanged, this, &MarbleMap::cqrDataChanged);
+	
+	connect(states.igs.get(), &ItemGeometryState::zoomToItem, this, &MarbleMap::zoomToItem);
 	
 	QHBoxLayout * mainLayout = new QHBoxLayout();
 	mainLayout->addWidget(m_map);
@@ -470,36 +475,39 @@ MarbleMap::~MarbleMap() {
 	delete m_cqrLayer;
 }
 
+
+void MarbleMap::zoomTo(const sserialize::spatial::GeoRect & b) {
+	Marble::GeoDataLatLonBox marbleBounds(b.maxLat(), b.minLat(), b.maxLon(), b.minLon(), Marble::GeoDataCoordinates::Degree);
+	this->zoomTo(marbleBounds);
+}
+
 void MarbleMap::zoomTo(const Marble::GeoDataLatLonBox& bbox) {
 	qDebug() << "Zoom to" << bbox.toString(Marble::GeoDataCoordinates::Degree);
 	m_map->centerOn(bbox, true);
 }
 
 void MarbleMap::zoomToItem(uint32_t itemId) {
-	auto p = m_data->store.at(itemId);
-	auto b = p.geoShape().boundary();
-	Marble::GeoDataLatLonBox marbleBounds(b.maxLat(), b.minLat(), b.maxLon(), b.minLon(), Marble::GeoDataCoordinates::Degree);
-	zoomTo(marbleBounds);
+	zoomTo(m_data->store.at(itemId).geoShape().boundary());
 }
 
 void MarbleMap::addItem(uint32_t itemId) {
 	if (m_itemLayer) {
 		m_itemLayer->addItem(itemId);
-		this->update();
+		this->redrawMap();
 	}
 }
 
 void MarbleMap::removeItem(uint32_t itemId) {
 	if (m_itemLayer) {
 		m_itemLayer->removeItem(itemId);
-		this->update();
+		this->redrawMap();
 	}
 }
 
 void MarbleMap::clearItems() {
 	if (m_itemLayer) {
 		m_itemLayer->clear();
-		this->update();
+		this->redrawMap();
 	}
 }
 
@@ -516,74 +524,80 @@ void MarbleMap::zoomToCell(uint32_t cellId) {
 void MarbleMap::addTriangle(uint32_t triangleId) {
 	if (m_triangleLayer) {
 		m_triangleLayer->addTriangle(triangleId);
-		this->update();
+		this->redrawMap();
 	}
 }
 
 void MarbleMap::removeTriangle(uint32_t triangleId) {
 	if (m_triangleLayer) {
 		m_triangleLayer->removeTriangle(triangleId);
-		this->update();
+		this->redrawMap();
 	}
 }
 
 void MarbleMap::clearTriangles() {
 	if (m_triangleLayer) {
 		m_triangleLayer->clear();
-		this->update();
+		this->redrawMap();
 	}
 }
 
 void MarbleMap::addCell(uint32_t cellId) {
 	if (m_cellLayer) {
 		m_cellLayer->addCell(cellId);
-		this->update();
+		this->redrawMap();
 	}
 }
 
 void MarbleMap::removeCell(uint32_t cellId) {
 	if (m_cellLayer) {
 		m_cellLayer->removeCell(cellId);
-		this->update();
+		this->redrawMap();
 	}
 }
 
 void MarbleMap::clearCells() {
 	if (m_cellLayer) {
 		m_cellLayer->clear();
-		this->update();
+		this->redrawMap();
 	}
 }
 
 void MarbleMap::showPath(const sserialize::spatial::GeoWay& p) {
 	m_pathLayer->changePath(p);
-	this->update();
+	this->redrawMap();
 }
 
 void MarbleMap::geometryDataChanged(int) {
-	this->update();
+	this->redrawMap();
 }
 
 void MarbleMap::setCellOpacity(int cellOpacity) {
 	m_cellOpacity = cellOpacity;
 	if (m_cellLayer) {
 		m_cellLayer->opacity(m_cellOpacity);
-		this->update();
 	}
+	if (m_cqrLayer) {
+		m_cqrLayer->opacity(m_cellOpacity);
+	}
+	this->redrawMap();
 }
 
 void MarbleMap::setColorScheme(int colorScheme) {
 	m_colorScheme = colorScheme;
 	if (m_cellLayer) {
 		m_cellLayer->setColorScheme(m_colorScheme);
-		this->update();
 	}
+	if (m_cqrLayer) {
+		m_cqrLayer->setColorScheme(m_colorScheme);
+	}
+	this->redrawMap();
 }
 
 void MarbleMap::cqrDataChanged() {
 	if (m_cqrLayer) {
 		m_cqrLayer->dataChanged();
-		this->update();
+		this->redrawMap();
 	}
 }
 
@@ -596,6 +610,7 @@ void MarbleMap::displayCqrCells(bool enable) {
 			m_cqrLayer->disable();
 		}
 	}
+	this->redrawMap();
 }
 
 void MarbleMap::rmbRequested(int x, int y) {
@@ -612,7 +627,7 @@ void MarbleMap::addToSearchGeometryTriggered() {
 	qDebug() << "Adding " << pos.toString() << " to search geometry from lon=" << m_lastRmbClickLon << "; lat=" << m_lastRmbClickLat;
 	m_isg.append(pos);
 	m_isgLayer->update(m_isg);
-	this->update();
+	this->redrawMap();
 }
 
 void MarbleMap::endSearchGeometryAsPointTriggered() {
@@ -646,6 +661,9 @@ void MarbleMap::endSearchGeometryAsPolygonTriggered() {
 }
 
 
+void MarbleMap::redrawMap() {
+	m_map->repaint();
+}
 
 
 } //end namespace oscar_gui

@@ -27,6 +27,11 @@ m_tss(states.tss)
 
 SearchInputWidget::~SearchInputWidget() {}
 
+
+void SearchInputWidget::focus() {
+	m_search->setFocus();
+}
+
 void SearchInputWidget::setSearchText(const QString & s) {
 	m_search->setText(s);
 }

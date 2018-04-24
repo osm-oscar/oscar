@@ -7,7 +7,7 @@
 #include "VisualizationOptionsWidget.h"
 
 namespace oscar_gui {
-
+	
 MainWindow::MainWindow(const std::shared_ptr<liboscar::Static::OsmCompleter> & cmp) :
 m_states(cmp),
 m_stateHandlers(m_states)
@@ -21,6 +21,9 @@ m_stateHandlers(m_states)
 	connect(this, SIGNAL(cellAdded(uint32_t)), m_map, SLOT(addCell(uint32_t)));
 	connect(this, SIGNAL(cellRemoved(uint32_t)), m_map, SLOT(removeCell(uint32_t)));
 	connect(m_sidebar->vo(), &VisualizationOptionsWidget::displayCqrCells, m_map, &MarbleMap::displayCqrCells);
+	connect(m_sidebar->vo(), &VisualizationOptionsWidget::colorSchemeChanged, m_map, &MarbleMap::setColorScheme);
+	connect(m_sidebar->vo(), &VisualizationOptionsWidget::cellOpacityChanged, m_map, &MarbleMap::setCellOpacity);
+	connect(m_stateHandlers.ssh.get(), &SearchStateHandler::searchResultsChanged, this, &MainWindow::searchResultsChanged);
 	
 	QHBoxLayout * mainLayout = new QHBoxLayout();
 	mainLayout->addWidget(m_sidebar, 1);
@@ -31,12 +34,14 @@ m_stateHandlers(m_states)
 	centralWidget->setLayout(mainLayout);
 	setCentralWidget(centralWidget);
 	
+	m_sidebar->focus();
+}
+
+
+void MainWindow::searchResultsChanged(const QString &, const sserialize::CellQueryResult & cqr, const sserialize::ItemIndex &) {
+	m_map->zoomTo( cqr.boundary() );
 }
 
 MainWindow::~MainWindow() {}
-
-void MainWindow::changeColorScheme(int index) {
-	m_map->setColorScheme(index);
-}
 
 }//end namespace oscar_gui

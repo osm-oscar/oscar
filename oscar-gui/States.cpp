@@ -178,11 +178,21 @@ int ItemGeometryState::active(uint32_t itemId) const {
 }
 
 void ItemGeometryState::activate(uint32_t itemId, ActiveType at) {
-	auto l(writeLock());
-	if (!m_entries.count(itemId)) {
-		addItem(itemId);
+	{
+		auto l(writeLock());
+		if (!m_entries.count(itemId)) {
+			addItem(itemId);
+		}
+		m_entries.at(itemId).active |= at;
 	}
-	m_entries.at(itemId).active |= at;
+	emit( dataChanged() );
+}
+
+void ItemGeometryState::clear() {
+	{
+		auto l(writeLock());
+		m_entries.clear();
+	}
 	emit( dataChanged() );
 }
 
@@ -193,23 +203,26 @@ void ItemGeometryState::deactivate(uint32_t itemId, ActiveType at) {
 		if (m_entries.at(itemId).active == AT_NONE) {
 			m_entries.erase(itemId);
 		}
+		l.unlock();
 		emit( dataChanged() );
 	}
 }
 
 void ItemGeometryState::toggleItem(uint32_t itemId, ActiveType at) {
-	auto l(writeLock());
-	if (!m_entries.count(itemId)) {
-		addItem(itemId);
-	}
-	if (m_entries.at(itemId).active & at) {
-		m_entries[itemId].active &= ~at;
-	}
-	else {
-		m_entries.at(itemId).active |= at;
-	}
-	if (m_entries.at(itemId).active == AT_NONE) {
-		m_entries.erase(itemId);
+	{
+		auto l(writeLock());
+		if (!m_entries.count(itemId)) {
+			addItem(itemId);
+		}
+		if (m_entries.at(itemId).active & at) {
+			m_entries[itemId].active &= ~at;
+		}
+		else {
+			m_entries.at(itemId).active |= at;
+		}
+		if (m_entries.at(itemId).active == AT_NONE) {
+			m_entries.erase(itemId);
+		}
 	}
 	emit( dataChanged() );
 }
@@ -314,7 +327,9 @@ sgs(std::make_shared<SearchGeometryState>()),
 igs(std::make_shared<ItemGeometryState>(cmp->store())),
 tss(std::make_shared<TextSearchState>()),
 rls(std::make_shared<ResultListState>())
-{}
+{
+	connect(rls.get(), &ResultListState::dataChanged, igs.get(), &ItemGeometryState::clear);
+}
 
 //END States
 

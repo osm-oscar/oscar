@@ -35,11 +35,11 @@ signals:
 	
 	void itemAdded(uint32_t itemId);
 	void itemRemoved(uint32_t itemId);
+private slots:
+	void searchResultsChanged(const QString &, const sserialize::CellQueryResult & cqr, const sserialize::ItemIndex &);
 private://GUI
 	MarbleMap * m_map;
 	SidebarWidget * m_sidebar;
-private slots:
-	void changeColorScheme(int index);
 private:
 	std::shared_ptr<liboscar::Static::OsmCompleter> m_completer;
 	States m_states;

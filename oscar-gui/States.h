@@ -115,7 +115,8 @@ public:
 	const_iterator end() const;
 public:
 	int active(uint32_t itemId) const;
-public:
+public slots:
+	void clear();
 	void activate(uint32_t itemId, ActiveType at);
 	void deactivate(uint32_t itemId, ActiveType at);
 	void toggleItem(uint32_t itemId, ActiveType at);

@@ -15,6 +15,7 @@ public:
 	explicit SearchInputWidget(const States & states);
 	virtual ~SearchInputWidget();
 public slots:
+	void focus();
 	void setSearchText(const QString &);
 private slots:
 	void goButtonPressed();

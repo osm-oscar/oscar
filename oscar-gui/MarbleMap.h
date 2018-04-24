@@ -15,6 +15,8 @@ namespace oscar_gui {
 
 class MarbleMap : public QWidget {
 	Q_OBJECT
+public:
+	typedef enum {CS_DIFFERENT=0, CS_SAME=1, __CS_COUNT=2} ColorScheme;
 private:
 
 	typedef sserialize::Static::spatial::TriangulationGeoHierarchyArrangement TriangulationGeoHierarchyArrangement;
@@ -25,7 +27,6 @@ private:
 	
 	typedef Triangulation::Face Face;
 	
-	typedef enum {CS_DIFFERENT=0, CS_SAME=1, __CS_COUNT=2} ColorScheme;
 	
 	class Data {
 	public:
@@ -186,6 +187,7 @@ public:
 	MarbleMap(const liboscar::Static::OsmKeyValueObjectStore & store, const States & states);
 	virtual ~MarbleMap();
 public slots:
+	void zoomTo(const sserialize::spatial::GeoRect & bounds);
 	void zoomTo(const Marble::GeoDataLatLonBox & bbox);
 public slots:
 	void zoomToItem(uint32_t itemId);
@@ -220,6 +222,7 @@ private slots:
 	void endSearchGeometryAsRectTriggered();
 	void endSearchGeometryAsPathTriggered();
 	void endSearchGeometryAsPolygonTriggered();
+	void redrawMap();
 private:
 	Marble::MarbleWidget * m_map;
 	MyTriangleLayer * m_triangleLayer;

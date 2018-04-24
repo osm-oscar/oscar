@@ -5,6 +5,7 @@
 #include "States.h"
 
 class QComboBox;
+class QSlider;
 
 namespace oscar_gui {
 
@@ -15,10 +16,16 @@ public:
 	virtual ~VisualizationOptionsWidget();
 signals:
 	void displayCqrCells(bool enabled);
+	void colorSchemeChanged(int scheme);
+	void cellOpacityChanged(int value);
 private slots:
-	void dspCqrCellsChanged(int index);
+	void ps_displayCqrCells(int index);
+	void ps_colorSchemeChanged(int index);
 private:
 	QComboBox * m_dspCqrCells;
+	QComboBox * m_colorScheme;
+	QSlider * m_cellOpacity;
+
 };
 
 }//end namespace oscar_gui

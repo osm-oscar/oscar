@@ -32,4 +32,9 @@ m_vo(new VisualizationOptionsWidget(states))
 
 SidebarWidget::~SidebarWidget() {}
 
+
+void SidebarWidget::focus() {
+	m_si->focus();
+}
+
 } //end namespace oscar_gui
