@@ -6,6 +6,7 @@
 #include <sserialize/stats/ProgressInfo.h>
 #include <sserialize/iterator/TransformIterator.h>
 #include <liboscar/AdvancedCellOpTree.h>
+#include <sserialize/utility/exceptions.h>
 #include <limits>
 #include <algorithm>
 #include <fstream>
@@ -24,8 +25,9 @@ Config()
 	std::vector<std::string> splitted = sserialize::split< std::vector<std::string> >(str, ',', '\\');
 	for(const std::string & splitString : splitted) {
 		std::vector<std::string> realOpts = sserialize::split< std::vector<std::string> >(splitString, '=', '\\');
-		if (realOpts.size() != 2)
-			continue;
+		if (realOpts.size() != 2) {
+			throw sserialize::ConfigurationException("Benchmarker", "Invalid option:" + splitString);
+		}
 		if (realOpts[0] == "o") {
 			outFileName = realOpts[1];
 		}
@@ -49,8 +51,7 @@ Config()
 				ct = CT_GEOCELL_DECELLED;
 			}
 			else {
-				throw std::runtime_error("Benchmarker::Config: invalid completer type: " + realOpts[1]);
-				return;
+				throw sserialize::ConfigurationException("Benchmarker", "invalid completer type: " + realOpts[1]);
 			}
 		}
 		else if (realOpts[0] == "tc") {
@@ -85,6 +86,12 @@ Config()
 	if (ct == CT_GEOCELL_DECELLED) {
 		computeSubSet = false;
 		computeItems = true;
+	}
+	if (completionStringsFileName.empty()) {
+		throw sserialize::ConfigurationException("Benchmarker", "No input file name set");
+	}
+	if (outFileName.empty()) {
+		throw sserialize::ConfigurationException("Benchmarker", "No output file name set");
 	}
 }
 
