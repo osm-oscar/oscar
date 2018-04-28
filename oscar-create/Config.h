@@ -68,11 +68,12 @@ struct TriangleRefinementConfig {
 	void update(const Json::Value & cfg, const std::string & basePath);
 	std::ostream & print(std::ostream & out) const;
 	bool valid() const;
-	Type type;
-	double maxCentroidDistance;
-	double maxCentroidDistanceRatio;
-	double maxEdgeLengthRatio;
-	double maxEdgeLength;
+	bool simplify = false;
+	Type type = T_NONE;
+	double maxCentroidDistance = std::numeric_limits<double>::max();
+	double maxCentroidDistanceRatio = std::numeric_limits<double>::max();
+	double maxEdgeLengthRatio = std::numeric_limits<double>::max();
+	double maxEdgeLength = std::numeric_limits<double>::max();
 };
 struct CellRefinementConfig {
 	typedef enum {T_NONE, T_CONNECTED, T_TRIANGLE_COUNT, T_CELL_DIAG} Type;

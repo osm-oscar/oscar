@@ -565,6 +565,10 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 	
 	ct.trs.init(ct.polyStore, ct.cc->numThreads);
 	
+	if (ct.cc->rc.triangRefineCfg.simplify) {
+		ct.trs.simplify();
+	}
+	
 	switch (ct.cc->rc.triangRefineCfg.type) { //refine triangulation
 	case TriangleRefinementConfig::T_CONFORMING:
 		ct.trs.refineTriangulation(osmtools::OsmTriangulationRegionStore::TRAS_ConformingTriangulation);

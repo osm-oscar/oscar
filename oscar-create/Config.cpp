@@ -566,11 +566,7 @@ void TagStoreConfig::update(const Json::Value& cfg, const std::string& basePath)
 	}
 }
 
-TriangleRefinementConfig::TriangleRefinementConfig() :
-type(T_NONE),
-maxCentroidDistance(std::numeric_limits<double>::max()),
-maxCentroidDistanceRatio(std::numeric_limits<double>::max())
-{}
+TriangleRefinementConfig::TriangleRefinementConfig() {}
 
 TriangleRefinementConfig::TriangleRefinementConfig(const Json::Value & cfg, const std::string & basePath) :
 TriangleRefinementConfig()
@@ -634,6 +630,10 @@ void TriangleRefinementConfig::update(const Json::Value & cfg, const std::string
 		else {
 			throw sserialize::ConfigurationException("TriangleRefinementConfig", "Unknown type: " + token);
 		}
+	}
+	v = cfg["simplify"];
+	if (v.isBool()) {
+		simplify = v.asBool();
 	}
 }
 

@@ -46,6 +46,7 @@
 			"config" : "scores of keys and key:values"
 		},
 		"triangleRefining" : {
+			"simplify" : "true|false",
 			"type" : "none|conforming|gabriel|max-centroid-distance|lipschitz|max-edge-length-ratio|max-edge-length",
 			"_comment" : {
 				"conformin|gabriel" : "no options",
