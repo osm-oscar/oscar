@@ -234,11 +234,19 @@ bool MarbleMap::MyGeometryLayer::render(
 		auto at = (*it).active;
 		if (at & SearchGeometryState::AT_CELLS) {
 			const auto & cells = (*it).cells;
+			uint32_t counter = 0;
+			uint32_t counterFreq = std::max<uint32_t>(100, cells.size()/100);
 			for(uint32_t cellId : cells) {
 				QColor fillColor(data()->cellColor(cellId, colorScheme() ));
 				fillColor.setAlpha(opacity());
 				myBrush.setColor(fillColor);
-				this->doRender(this->data()->trs.cfGraph(cellId), myBrush, QString(), painter);
+				if (counter%counterFreq == 0) {
+					this->doRender(this->data()->trs.cfGraph(cellId), myBrush, QString::number(cellId), painter);
+				}
+				else {
+					this->doRender(this->data()->trs.cfGraph(cellId), myBrush, QString(), painter);
+				}
+				++counter;
 			}
 		}
 	}
