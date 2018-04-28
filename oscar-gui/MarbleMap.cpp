@@ -274,7 +274,9 @@ bool MarbleMap::MyInputSearchGeometryLayer::render(Marble::GeoPainter* painter, 
 		return true;
 	}
 	QBrush brush(( QColor(Qt::red) ));
+	QPen pen(brush, 5);
 	painter->setBrush(brush);
+	painter->setPen(pen);
 	
 	if (m_d.size() == 1) {
 		painter->drawPoint(m_d.first());
