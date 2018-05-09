@@ -1,8 +1,8 @@
 {
 	"store" : {
 		"enabled" : true,
-		"threadCount" : 8,
-		"blobFetchCount" : 5,
+		"threadCount" : 1,
+		"blobFetchCount" : 1,
 		"fullRegionIndex" : false,
 		"addRegionsToCells" : false,
 		"addParentInfo" : false,
