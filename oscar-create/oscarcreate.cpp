@@ -92,7 +92,7 @@ int main(int argc, char ** argv) {
 			idxStore = sserialize::Static::ItemIndexStore( sserialize::UByteArrayAdapter::openRo(idxStoreFileName, false) );
 		}
 		catch (sserialize::Exception & e) {
-			std::cerr << "Failed to initial index at " << idxStoreFileName << " with error message: " << e.what();
+			std::cerr << "Failed to initialize index at " << idxStoreFileName << " with error message: " << e.what();
 			return -1;
 		}
 		//switch deduplication off in case the initial store was build without it
