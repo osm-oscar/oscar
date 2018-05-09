@@ -67,6 +67,10 @@ void doPrintStats(std::ostream & out, liboscar::Static::OsmCompleter & completer
 			completer.textSearch().get<liboscar::TextSearch::GEOCELL>(i).printStats(out);
 			out << '\n';
 		}
+		for(uint32_t i(0), s(completer.textSearch().size(liboscar::TextSearch::OOMGEOCELL)); i < s; ++i) {
+			completer.textSearch().get<liboscar::TextSearch::OOMGEOCELL>(i).printStats(out);
+			out << '\n';
+		}
 	}
 	if (which & PS_GEO) {
 		out << completer.geoCompleter()->describe();
