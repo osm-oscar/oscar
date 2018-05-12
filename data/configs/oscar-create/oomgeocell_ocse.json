@@ -1,0 +1,60 @@
+{
+	"textsearch" :
+	[
+		{
+			"type" : "oomgeocell",
+			"id" : "oomgeocell",
+			"config" : {
+				"enabled" : true,
+				"items" : {
+					"values" : {
+						"prefix" : {
+							"enabled" : true,
+							"file" : "lists/k_values_substring_prefix.txt",
+							"caseSensitive" : false,
+							"diacriticSensitive" : true
+						},
+						"substring" : {
+							"enabled" : true,
+							"file" : "lists/k_values_substring_prefix.txt",
+							"caseSensitive" : false,
+							"diacriticSensitive" : true
+						}
+					},
+					"tags" : {
+						"prefix" : {
+							"enabled" : true,
+							"file" : "lists/allkeys.txt",
+							"caseSensitive" : false,
+							"diacriticSensitive" : true
+						}
+					}
+				},
+				"regions" : {
+					"values" : {
+						"prefix" : {
+							"enabled" : true,
+							"file" : "lists/k_values_substring_prefix.txt",
+							"caseSensitive" : false,
+							"diacriticSensitive" : true
+						},
+						"substring" : {
+							"enabled" : true,
+							"file" : "lists/k_values_substring_prefix.txt",
+							"caseSensitive" : false,
+							"diacriticSensitive" : true
+						}
+					},
+					"tags" : {
+						"prefix" : {
+							"enabled" : true,
+							"file" : "lists/allkeys.txt",
+							"caseSensitive" : false,
+							"diacriticSensitive" : true
+						}
+					}
+				}
+			}
+		}
+	]
+}

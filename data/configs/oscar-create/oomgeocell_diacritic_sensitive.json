@@ -1,0 +1,41 @@
+{
+	"textsearch" :
+	[
+		{
+			"type" : "oomgeocell",
+			"id" : "oomgeocell",
+			"config" : {
+				"items" : {
+					"values" : {
+						"prefix" : {
+							"diacriticSensitive" : true
+						},
+						"substring" : {
+							"diacriticSensitive" : true
+						}
+					},
+					"tags" : {
+						"prefix" : {
+							"diacriticSensitive" : true
+						}
+					}
+				},
+				"regions" : {
+					"values" : {
+						"prefix" : {
+							"diacriticSensitive" : true
+						},
+						"substring" : {
+							"diacriticSensitive" : true
+						}
+					},
+					"tags" : {
+						"prefix" : {
+							"diacriticSensitive" : true
+						}
+					}
+				}
+			}
+		}
+	]
+}
