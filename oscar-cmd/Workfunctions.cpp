@@ -645,6 +645,9 @@ void Worker::lockMemory(WD_LockMemory& d) {
 		auto data = completer.data(fc);
 		data.advice(sserialize::UByteArrayAdapter::AT_LOCK, data.size());
 	}
+	else {
+		std::cerr << "mlock: invalid file spec: " << d.value << std::endl;
+	}
 }
 
 void Worker::unlockMemory(WD_UnlockMemory& d) {
@@ -653,6 +656,9 @@ void Worker::unlockMemory(WD_UnlockMemory& d) {
 		auto data = completer.data(fc);
 		data.advice(sserialize::UByteArrayAdapter::AT_UNLOCK, data.size());
 	}
+	else {
+		std::cerr << "munlock: invalid file spec: " << d.value << std::endl;
+	}
 }
 
 void Worker::loadMemory(WD_LoadMemory & d) {
@@ -660,6 +666,9 @@ void Worker::loadMemory(WD_LoadMemory & d) {
 	if (fc != liboscar::FC_INVALID) {
 		auto data = completer.data(fc);
 		data.advice(sserialize::UByteArrayAdapter::AT_LOAD, data.size());
+	}
+	else {
+		std::cerr << "mload: invalid file spec: " << d.value << std::endl;
 	}
 }
 
