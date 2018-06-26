@@ -28,7 +28,8 @@ include(add_buildtype_lto)
 include(add_buildtype_sanitize_debug)
 include(add_buildtype_ultra)
 
-set(MY_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wno-unknown-pragmas -Wstrict-overflow=3")
+# set -Wshadow-compatible-local as soon as supported
+set(MY_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wno-unknown-pragmas -Wstrict-overflow=3 ")
 set(MY_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-unknown-pragmas -Wstrict-overflow=3")# -Wshorten-64-to-32")
 set(DEBUG_FLAGS "${DEBUG_FLAGS}")#-Wconversion")
 
