@@ -61,11 +61,6 @@ SET(OSCAR_CREATE_LINK_LIBS
 	${ICU_LIBRARIES}
 	${ICU_I18N_LIBRARIES}
 	${LIBRT_LIBRARIES}
-	"CGAL"
-	"mpfr"
-	"gmp"
-	"boost_thread"
-	"boost_system"
 )
 
 target_compile_definitions(lib${PROJECT_NAME} PUBLIC ${MY_COMPILE_DEFINITIONS})
