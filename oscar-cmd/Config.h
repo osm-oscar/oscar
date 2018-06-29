@@ -53,6 +53,7 @@ struct WD_PairValue: public WD_base {
 typedef WD_PairValue<int, int> WD_SelectTextCompleter;
 typedef WD_SingleValue<int> WD_SelectGeoCompleter;
 
+typedef WD_SingleValue<std::string> WD_SelectCellDistance;
 typedef WD_SingleValue<std::string> WD_LockMemory;
 typedef WD_SingleValue<std::string> WD_UnlockMemory;
 typedef WD_SingleValue<std::string> WD_LoadMemory;
@@ -271,7 +272,8 @@ class Config {
 public:
 	struct WorkItem {
 		typedef enum {
-			SELECT_TEXT_COMPLETER, SELECT_GEO_COMPLETER, PRINT_SELECTED_TEXT_COMPLETER, PRINT_SELECTED_GEO_COMPLETER,
+			SELECT_TEXT_COMPLETER, SELECT_GEO_COMPLETER, SELECT_CELL_DISTANCE,
+			PRINT_SELECTED_TEXT_COMPLETER, PRINT_SELECTED_GEO_COMPLETER,
 			DUMP_INDEX, DUMP_ITEM, DUMP_ALL_ITEMS, DUMP_GH_REGION, DUMP_GH_CELL, DUMP_GH_CELL_PARENTS, DUMP_GH_CELL_ITEMS, DUMP_GH_REGION_ITEMS, DUMP_GH, DUMP_GH_PATH,
 			DUMP_KEY_STRING_TABLE, DUMP_VALUE_STRING_TABLE, DUMP_ITEM_TAGS, DUMP_GH_REGION_CHILDREN,
 			GH_ID_2_STORE_ID, STORE_ID_2_GH_ID,

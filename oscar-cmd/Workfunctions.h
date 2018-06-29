@@ -32,6 +32,7 @@ struct Worker {
 
 	void selectTextCompleter(WD_SelectTextCompleter & d);
 	void selectGeoCompleter(WD_SelectGeoCompleter & d);
+	void selectCellDistance(WD_SelectCellDistance & d);
 	void lockMemory(WD_LockMemory & d);
 	void unlockMemory(WD_UnlockMemory & d);
 	void loadMemory(WD_LoadMemory & d);

@@ -639,6 +639,21 @@ void Worker::selectGeoCompleter(WD_SelectGeoCompleter & d) {
 	}
 }
 
+void Worker::selectCellDistance(WD_SelectCellDistance & d) {
+	if (d.value == "anulus") {
+		completer.setCellDistance(liboscar::Static::OsmCompleter::CDT_ANULUS);
+	}
+	else if (d.value == "sphere") {
+		completer.setCellDistance(liboscar::Static::OsmCompleter::CDT_SPHERE);
+	}
+	else if (d.value == "minsphere") {
+		completer.setCellDistance(liboscar::Static::OsmCompleter::CDT_MIN_SPHERE);
+	}
+	else {
+		completer.setCellDistance(liboscar::Static::OsmCompleter::CDT_CENTER_OF_MASS);
+	}
+}
+
 void Worker::lockMemory(WD_LockMemory& d) {
 	auto fc = liboscar::fileConfigFromString(d.value);
 	if (fc != liboscar::FC_INVALID) {

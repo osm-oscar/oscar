@@ -56,6 +56,7 @@ void Config::printHelp() {
 --create-completion-strings num\tcreate num completion strings from the store \n \
 -ssc ts,ct\tselect the textsearch completer ts=(items|geoh|geocell),ct=num \n \
 -sgc num\tselect geo completer \n \
+-scd string\tselect cell distance function: (anulus|mass|sphere|minsphere) \n \
 -cfq list cqr from query\n \
 -csp num\tpartial complete string and seek num items \n \
 -css ms,mr\tsimple complete string with minStrLen=ms and maxResultSetSize=mr \n \
@@ -140,7 +141,7 @@ int Config::parseSingleArg(int argc, char ** argv, int & i, int & printNumResult
 		std::vector<std::string> tmp = sserialize::split< std::vector<std::string> >(std::string(argv[i+1]),',');
 		uint32_t count = atoi(tmp.at(1).c_str());
 		workItems.emplace_back(WorkItem::CREATE_COMPLETION_STRINGS, new WD_CreateCompletionStrings(tmp.at(0), count) );
-		i++;
+		++i;
 	}
 	
 	//completion selection opts
@@ -150,12 +151,16 @@ int Config::parseSingleArg(int argc, char ** argv, int & i, int & printNumResult
 		liboscar::TextSearch::Type ts = textSearchTypeFromString(tmp.at(0));
 		int tsc = atoi(tmp.at(1).c_str());
 		workItems.emplace_back(Config::WorkItem::SELECT_TEXT_COMPLETER, new WD_SelectTextCompleter(ts, tsc));
-		i += 1;
+		++i;
 	}
 	else if (arg == "-sgc" && i+1 < argc) {
 		int sc = atoi(argv[i+1]); 
 		workItems.emplace_back(Config::WorkItem::SELECT_GEO_COMPLETER, new WD_SelectGeoCompleter(sc));
-		i++;
+		++i;
+	}
+	else if (arg == "-scd" && i+1 < argc) {
+		workItems.emplace_back(Config::WorkItem::SELECT_CELL_DISTANCE, new WD_SelectCellDistance(argv[i+1]));
+		++i;
 	}
 	
 	//completion with string

@@ -60,6 +60,9 @@ int main(int argc, char **argv) {
 			case Config::WorkItem::SELECT_GEO_COMPLETER:
 				worker.selectGeoCompleter(*workItem.data->as<WD_SelectGeoCompleter>());
 				break;
+			case Config::WorkItem::SELECT_CELL_DISTANCE:
+				worker.selectCellDistance(*workItem.data->as<WD_SelectCellDistance>());
+				break;
 			case Config::WorkItem::PRINT_SELECTED_TEXT_COMPLETER:
 				worker.printSelectedTextCompleter();
 				break;
