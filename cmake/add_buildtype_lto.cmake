@@ -2,6 +2,15 @@ cmake_minimum_required(VERSION 3.0)
 
 IF(CMAKE_BUILD_TYPE MATCHES "^lto$")
 	include(setup-lto)
+	
+	set(SSERIALIZE_INLINE_IN_LTO_ENABLED
+		True
+		CACHE
+		BOOL
+		"Enable manual inline statements in lto builds"
+		FORCE
+	)
+	
 ENDIF()
 
 IF ( (NOT LTO_BUILD_TYPE_ADDED) )
