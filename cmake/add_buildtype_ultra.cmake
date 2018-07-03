@@ -38,14 +38,26 @@ IF(CMAKE_BUILD_TYPE MATCHES "^ultra$")
 	include(setup-lto)
 
 	SET(LIBOSCAR_NO_DATA_REFCOUNTING_ENABLED
-		"True"
-		CACHE STRING "Disable data refcounting in liboscar"
+		True
+		CACHE
+		BOOL
+		"Disable data refcounting in liboscar"
+		FORCE
+	)
+	
+	set(SSERIALIZE_INLINE_IN_LTO_ENABLED
+		True
+		CACHE
+		BOOL
+		"Enable manual inline statements in lto builds"
 		FORCE
 	)
 
 	SET(SSERIALIZE_CONTIGUOUS_UBA_ONLY_SOFT_FAIL_ENABLED
-		"True"
-		CACHE STRING "Disable non-contiguous UBA"
+		True
+		CACHE
+		BOOL
+		"Disable non-contiguous UBA"
 		FORCE
 	)
 ENDIF()
