@@ -56,7 +56,7 @@ void Config::printHelp() {
 --create-completion-strings num\tcreate num completion strings from the store \n \
 -ssc ts,ct\tselect the textsearch completer ts=(items|geoh|geocell),ct=num \n \
 -sgc num\tselect geo completer \n \
--scd string\tselect cell distance function: (anulus|mass|sphere|minsphere) \n \
+-scd string\tselect cell distance function: (annulus|mass|sphere|minsphere) \n \
 -cfq list cqr from query\n \
 -csp num\tpartial complete string and seek num items \n \
 -css ms,mr\tsimple complete string with minStrLen=ms and maxResultSetSize=mr \n \
@@ -159,7 +159,7 @@ int Config::parseSingleArg(int argc, char ** argv, int & i, int & printNumResult
 		++i;
 	}
 	else if (arg == "-scd" && i+1 < argc) {
-		workItems.emplace_back(Config::WorkItem::SELECT_CELL_DISTANCE, new WD_SelectCellDistance(argv[i+1]));
+		workItems.emplace_back(Config::WorkItem::SELECT_CELL_DISTANCE, new WD_SelectCellDistance(argv[i+1], threadCount));
 		++i;
 	}
 	

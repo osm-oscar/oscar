@@ -640,17 +640,17 @@ void Worker::selectGeoCompleter(WD_SelectGeoCompleter & d) {
 }
 
 void Worker::selectCellDistance(WD_SelectCellDistance & d) {
-	if (d.value == "anulus") {
-		completer.setCellDistance(liboscar::Static::OsmCompleter::CDT_ANULUS);
+	if (d.value == "annulus") {
+		completer.setCellDistance(liboscar::Static::OsmCompleter::CDT_ANULUS, d.threadCount);
 	}
 	else if (d.value == "sphere") {
-		completer.setCellDistance(liboscar::Static::OsmCompleter::CDT_SPHERE);
+		completer.setCellDistance(liboscar::Static::OsmCompleter::CDT_SPHERE, d.threadCount);
 	}
 	else if (d.value == "minsphere") {
-		completer.setCellDistance(liboscar::Static::OsmCompleter::CDT_MIN_SPHERE);
+		completer.setCellDistance(liboscar::Static::OsmCompleter::CDT_MIN_SPHERE, d.threadCount);
 	}
 	else {
-		completer.setCellDistance(liboscar::Static::OsmCompleter::CDT_CENTER_OF_MASS);
+		completer.setCellDistance(liboscar::Static::OsmCompleter::CDT_CENTER_OF_MASS, d.threadCount);
 	}
 }
 

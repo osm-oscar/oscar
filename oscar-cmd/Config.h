@@ -53,7 +53,6 @@ struct WD_PairValue: public WD_base {
 typedef WD_PairValue<int, int> WD_SelectTextCompleter;
 typedef WD_SingleValue<int> WD_SelectGeoCompleter;
 
-typedef WD_SingleValue<std::string> WD_SelectCellDistance;
 typedef WD_SingleValue<std::string> WD_LockMemory;
 typedef WD_SingleValue<std::string> WD_UnlockMemory;
 typedef WD_SingleValue<std::string> WD_LoadMemory;
@@ -109,6 +108,16 @@ typedef WD_SingleValue<std::string> WD_DumpValueStringTable;
 typedef WD_SingleValue<std::string> WD_DumpItemTags;
 typedef WD_SingleValue<bool> WD_InteractiveFull;
 typedef WD_SingleValue<std::string> WD_ConsistencyCheck;
+
+struct WD_SelectCellDistance: public WD_base {
+	WD_SelectCellDistance(const std::string & value, uint32_t threadCount) :
+	value(value),
+	threadCount(threadCount)
+	{}
+	virtual ~WD_SelectCellDistance() {}
+	std::string value;
+	uint32_t threadCount;
+};
 
 struct WD_CellsFromQuery: public WD_base {
 	WD_CellsFromQuery(const std::string & value, uint32_t threadCount) :
