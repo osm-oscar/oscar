@@ -8,7 +8,7 @@ namespace oscar_cmd {
 	
 class DecelledACOT final {
 public:
-	using Node = liboscar::detail::AdvancedCellOpTree::Node;
+	using Node = liboscar::AdvancedCellOpTree::Node;
 public:
 	DecelledACOT(liboscar::AdvancedCellOpTree & tree);
 	DecelledACOT(const DecelledACOT &) = delete;
