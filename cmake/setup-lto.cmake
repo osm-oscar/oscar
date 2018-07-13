@@ -44,20 +44,26 @@ IF ( (NOT LTO_PLUGIN_PARAMETERS_SET) OR (CMAKE_GCC_VERSION_FOR_LTO))
 			FORCE
 		)
 
+		find_path(CMAKE_LTO_PLUGIN_DIR
+			"liblto_plugin.so"
+			HINTS
+			"/usr/lib/gcc/x86_64-linux-gnu/${CMAKE_GCC_VERSION_FOR_LTO}"
+			"/usr/libexec/gcc/x86_64-pc-linux-gnu/${CMAKE_GCC_VERSION_FOR_LTO}"
+		)
 		SET(CMAKE_LTO_PLUGIN_PATH
-			"/usr/lib/gcc/x86_64-linux-gnu/${CMAKE_GCC_VERSION_FOR_LTO}/liblto_plugin.so"
-			CACHE INTERNAL ""
+			"${CMAKE_LTO_PLUGIN_DIR}/liblto_plugin.so"
+			CACHE STRING "path to gcc liblto plugin"
 			FORCE
 		)
 
 		SET(CMAKE_C_ARCHIVE_CREATE
-			"<CMAKE_AR> qcs --plugin ${CMAKE_LTO_PLUGIN_PATH} <TARGET> <OBJECTS>"
+			"<CMAKE_AR> rcs --plugin ${CMAKE_LTO_PLUGIN_PATH} <TARGET> <OBJECTS>"
 			CACHE INTERNAL ""
 			FORCE
 		)
 
 		SET(CMAKE_CXX_ARCHIVE_CREATE
-			"<CMAKE_AR> qcs --plugin ${CMAKE_LTO_PLUGIN_PATH} <TARGET> <OBJECTS>"
+			"<CMAKE_AR> rcs --plugin ${CMAKE_LTO_PLUGIN_PATH} <TARGET> <OBJECTS>"
 			CACHE INTERNAL ""
 			FORCE
 		)
