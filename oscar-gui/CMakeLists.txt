@@ -1,8 +1,5 @@
 project(oscar-gui)
-cmake_minimum_required(VERSION 3.7)
-include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_SOURCE_DIR})
-
-set(CMAKE_CXX_STANDARD 14)
+cmake_minimum_required(VERSION 3.9)
 
 find_package(Qt5Widgets REQUIRED)
 find_package(Qt5Gui REQUIRED)
@@ -11,8 +8,7 @@ find_package(LIBRT)
 
 IF (MARBLE_FOUND)
 
-	include_directories(
-		${LIBOSCAR_INCLUDE_DIR}
+	set(MY_INCLUDE_DIRS
 		${QT_INCLUDES}
 		${MARBLE_INCLUDE_DIR}
 		${CMAKE_CURRENT_BINARY_DIR}
@@ -53,15 +49,16 @@ IF (MARBLE_FOUND)
 	qt5_wrap_cpp(SOURCES_MOC_CPP ${SOURCES_MOC_H})
 
 
-	SET(OSCAR_LINK_LIBS
-		${LIBOSCAR_LINK_LIBRARIES}
+	SET(MY_LINK_LIBS
+		liboscar
+		sserialize
 		${MARBLE_LIBRARIES}
 		Qt5::Widgets
 		Qt5::Gui
 	)
 
 	add_executable(${PROJECT_NAME} ${SOURCES_CPP} ${SOURCES_MOC_CPP})
-	add_dependencies(${PROJECT_NAME} liboscar sserialize)
-	target_link_libraries(${PROJECT_NAME} ${OSCAR_LINK_LIBS})
+	target_include_directories(${PROJECT_NAME} PRIVATE ${MY_INCLUDE_DIRS})
+	target_link_libraries(${PROJECT_NAME} ${MY_LINK_LIBS})
 
 ENDIF(MARBLE_FOUND)
