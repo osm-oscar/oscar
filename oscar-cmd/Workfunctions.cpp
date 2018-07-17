@@ -9,6 +9,7 @@
 #include <sserialize/stats/ProgressInfo.h>
 #include <sserialize/stats/statfuncs.h>
 #include <sserialize/spatial/LatLonCalculations.h>
+#include <liboscar/KVStats.h>
 
 namespace oscarcmd {
 
@@ -108,6 +109,43 @@ void Worker::listCompleters() {
 	std::cout << std::flush;
 }
 
+
+void Worker::kvstats(const WD_KVStats & data) {
+	sserialize::ItemIndex items;
+	if (completer.textSearch().hasSearch(liboscar::TextSearch::GEOCELL)) {
+		items = completer.cqrComplete(data.str, true, data.threadCount).flaten(data.threadCount);
+	}
+	else if (completer.textSearch().hasSearch(liboscar::TextSearch::ITEMS)) {
+		items = completer.complete(data.str).index();
+	}
+	else {
+		throw sserialize::ConfigurationException("Worker::kvstats", "No search structures available");
+	}
+	
+	const auto & keyStringTable = completer.store().keyStringTable();
+	const auto & valueStringTable = completer.store().valueStringTable();
+	
+	std::cout << "Calculating kvstats..." << std::flush;
+	sserialize::TimeMeasurer tm;
+	tm.begin();
+	auto stats = liboscar::KVStats(completer.store()).stats(items, data.threadCount);
+	tm.end();
+	std::cout << "took " << tm.elapsedMilliSeconds() << "ms" << std::endl;
+	
+	auto topKeys = stats.topk(data.printNumResults, [](const liboscar::KVStats::KeyInfo & a, const liboscar::KVStats::KeyInfo & b) { return a.count < b.count; });
+	
+	std::cout << "Top " << data.printNumResults << " keys and their top " << data.printNumResults << " values:" << std::endl;
+	for(uint32_t keyId : topKeys) {
+		const auto & ki = stats.key(keyId);
+		
+		std::cout << keyStringTable.at(keyId) << ": " << ki.count << std::endl;
+		auto topValues = ki.topk(data.printNumResults, [](const liboscar::KVStats::ValueInfo & a, const liboscar::KVStats::ValueInfo & b) { return a.count < b.count; });
+		for(uint32_t pos : topValues) {
+			const auto & vi = ki.values.at(pos);
+			std::cout << "\t" << valueStringTable.at(vi.valueId) << ": " << vi.count << std::endl;
+		}
+	}
+}
 
 void Worker::printStats(const WD_PrintStats & data) {
 	if (data.printStats != PS_NONE) {

@@ -72,6 +72,7 @@ void Config::printHelp() {
 -cfc file\tgeocell complete strings from file \n \
 -cfct file\tgeocell complete strings from file with treed cqr \n \
 --symdiff-items-completers c1,c2\tprint symmetric difference between completer c1 and completer c2 \n \
+--kvstats\tprint key value stats of given query \n \
 -ds which\tprint stats: all,idxstore,completer(compitems,comphierarchy,compgeocell),db,geo,tag \n \
 -dcs\tdump cell statistics \n \
 -dpsdb file\tprint db paper stats, file sets the interesting tags \n \
@@ -248,7 +249,10 @@ int Config::parseSingleArg(int argc, char ** argv, int & i, int & printNumResult
 	}
 
 	//statistic opts
-	
+
+	else if (arg == "--kvstats") {
+		workItems.emplace_back(Config::WorkItem::KVSTATS, new WD_KVStats(completionString, printNumResults, threadCount));
+	}
 	else if (arg == "-ds" && i+1 < argc) {
 		PrintStatsSelection p = printStatsfromString( std::string(argv[i+1]) );
 		workItems.emplace_back(WorkItem::PRINT_STATS, new WD_PrintStats(p) );

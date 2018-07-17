@@ -222,6 +222,13 @@ struct WD_CompleteStringClusteredTreedCqr: public WD_CompleteStringClustered {
 	virtual ~WD_CompleteStringClusteredTreedCqr() {}
 };
 
+struct WD_KVStats: public WD_CompleteStringClusteredTreedCqr {
+	WD_KVStats(const std::string & str, int printNumResults, uint32_t threadCount) : 
+	WD_CompleteStringClusteredTreedCqr(str, printNumResults, threadCount)
+	{}
+	virtual ~WD_KVStats() {}
+};
+
 struct WD_CompleteFromFileBase: public WD_CompletionBase {
 	WD_CompleteFromFileBase(int printNumResults, const std::string & fileName) :
 	WD_CompletionBase(printNumResults), fileName(fileName)
@@ -286,6 +293,7 @@ public:
 			DUMP_INDEX, DUMP_ITEM, DUMP_ALL_ITEMS, DUMP_GH_REGION, DUMP_GH_CELL, DUMP_GH_CELL_PARENTS, DUMP_GH_CELL_ITEMS, DUMP_GH_REGION_ITEMS, DUMP_GH, DUMP_GH_PATH,
 			DUMP_KEY_STRING_TABLE, DUMP_VALUE_STRING_TABLE, DUMP_ITEM_TAGS, DUMP_GH_REGION_CHILDREN,
 			GH_ID_2_STORE_ID, STORE_ID_2_GH_ID,
+			KVSTATS,
 			PRINT_STATS, PRINT_CELL_STATS, PRINT_STATS_SINGLE, PRINT_PAPER_STATS_DB, PRINT_PAPER_STATS_GH, PRINT_CTC_STATS, PRINT_CTC_SELECTIVE_STATS, PRINT_CQR_DATA_SIZE, DUMP_ALL_ITEM_TAGS_WITH_INHERITED_TAGS, PRINT_CELL_NEIGHBOR_STATS,
 			LIST_COMPLETERS,
 			ITEMS_FROM_QUERY,

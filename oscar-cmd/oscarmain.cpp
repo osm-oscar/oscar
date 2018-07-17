@@ -63,6 +63,9 @@ int main(int argc, char **argv) {
 			case Config::WorkItem::SELECT_CELL_DISTANCE:
 				worker.selectCellDistance(*workItem.data->as<WD_SelectCellDistance>());
 				break;
+			case Config::WorkItem::KVSTATS:
+				worker.kvstats(*workItem.data->as<WD_KVStats>());
+				break;
 			case Config::WorkItem::PRINT_SELECTED_TEXT_COMPLETER:
 				worker.printSelectedTextCompleter();
 				break;
