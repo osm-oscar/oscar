@@ -1,0 +1,19 @@
+{
+	"include": [
+		"oomgeocell_substring.json",
+		"tempdir-slow-on-fast.json"
+	],
+	"textsearch" :
+	[
+		{
+			"type" : "oomgeocell",
+			"id" : "oomgeocell",
+			"config" : {
+				"threadCount" : 8,
+				"sortConcurrency" : 2,
+				"payloadConcurrency" : 8,
+				"maxMemoryUsage" : 8192
+			}
+		}
+	]
+}
