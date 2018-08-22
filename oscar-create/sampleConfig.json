@@ -49,7 +49,7 @@
 			"simplify" : "true|false",
 			"type" : "none|conforming|gabriel|max-centroid-distance|lipschitz|max-edge-length-ratio|max-edge-length",
 			"_comment" : {
-				"conformin|gabriel" : "no options",
+				"conforming|gabriel" : "no options",
 				"max-centroid-distance" : "value : maximum centroid distance in meter",
 				"lipschitz" : "value : maximum ratio of centroid distance between neighboring triangles",
 				"max-edge-length-ratio" : "value : maximum ratio of longest edge to shortest edge",
@@ -61,7 +61,7 @@
 			"type" : "none|connected|triangle-count|cell-diag",
 			"_comment" : {
 				"triangle-count" : " value : maximum triangle count",
-				"cell-daig" : "value : maximum cell diagonal in meter"
+				"cell-diag" : "value : maximum cell diagonal in meter"
 			},
 			"value" : "see comment"
 		},
