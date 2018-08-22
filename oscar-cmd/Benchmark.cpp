@@ -154,61 +154,64 @@ void Benchmarker::doGeocellBench() {
 			}
 			::sleep(1);
 		}
-		opTree.parse(str);
-
-		auto start = std::chrono::high_resolution_clock::now();
-
-		if (config.ct == Config::CT_GEOCELL_TREED) {
-			cqr = opTree.calc<sserialize::TreedCellQueryResult>(config.threadCount).toCQR(config.threadCount);
-		}
-		else if (config.ct == Config::CT_GEOCELL) {
-			cqr = opTree.calc<sserialize::CellQueryResult>(config.threadCount);
-		}
-		else if (config.ct == Config::CT_GEOCELL_DECELLED) {
-			dOpTree.clear();
-			dOpTree.prepare();
-			dOpTree.flaten(config.threadCount);
-		}
-		auto stop = std::chrono::high_resolution_clock::now();
-		stat.cqr = std::chrono::duration_cast<Stats::meas_res>(stop-start);
+		//only the last run counts
+		uint32_t benchRuns = (config.coldCache ? 1 : 2);
+		for(uint32_t j(0); j < benchRuns; ++j) {
 		
-		start = std::chrono::high_resolution_clock::now();
-		if (config.computeSubSet) {
-			auto subSet = ghs.subSet(cqr, false, config.threadCount);
-		}
-		stop = std::chrono::high_resolution_clock::now();
-		stat.subgraph = std::chrono::duration_cast<Stats::meas_res>(stop-start);
-		
-		if (config.computeItems) {
-			if (cqr.flags() & sserialize::CellQueryResult::FF_CELL_LOCAL_ITEM_IDS) {
-				start = std::chrono::high_resolution_clock::now();
-				cqr = cqr.toGlobalItemIds(config.threadCount);
-				stop = std::chrono::high_resolution_clock::now();
-				
-				stat.toGlobalIds = std::chrono::duration_cast<Stats::meas_res>(stop-start);	
+			opTree.parse(str);
+			auto start = std::chrono::high_resolution_clock::now();
+			if (config.ct == Config::CT_GEOCELL_TREED) {
+				cqr = opTree.calc<sserialize::TreedCellQueryResult>(config.threadCount).toCQR(config.threadCount);
 			}
-			
-			sserialize::ItemIndex items;
+			else if (config.ct == Config::CT_GEOCELL) {
+				cqr = opTree.calc<sserialize::CellQueryResult>(config.threadCount);
+			}
+			else if (config.ct == Config::CT_GEOCELL_DECELLED) {
+				dOpTree.clear();
+				dOpTree.prepare();
+				dOpTree.flaten(config.threadCount);
+			}
+			auto stop = std::chrono::high_resolution_clock::now();
+			stat.cqr = std::chrono::duration_cast<Stats::meas_res>(stop-start);
 			
 			start = std::chrono::high_resolution_clock::now();
-			switch (config.ct) {
-			case Config::CT_GEOCELL:
-			case Config::CT_GEOCELL_TREED:
-				items = cqr.flaten(config.threadCount);
-				break;
-			case Config::CT_GEOCELL_DECELLED:
-				items = dOpTree.execute();
-				break;
-			default:
-				break;
-			};
+			if (config.computeSubSet) {
+				auto subSet = ghs.subSet(cqr, false, config.threadCount);
+			}
 			stop = std::chrono::high_resolution_clock::now();
-		
-			stat.flaten = std::chrono::duration_cast<Stats::meas_res>(stop-start);	
-			stat.itemCount = items.size();
+			stat.subgraph = std::chrono::duration_cast<Stats::meas_res>(stop-start);
+			
+			if (config.computeItems) {
+				if (cqr.flags() & sserialize::CellQueryResult::FF_CELL_LOCAL_ITEM_IDS) {
+					start = std::chrono::high_resolution_clock::now();
+					cqr = cqr.toGlobalItemIds(config.threadCount);
+					stop = std::chrono::high_resolution_clock::now();
+					
+					stat.toGlobalIds = std::chrono::duration_cast<Stats::meas_res>(stop-start);	
+				}
+				
+				sserialize::ItemIndex items;
+				
+				start = std::chrono::high_resolution_clock::now();
+				switch (config.ct) {
+				case Config::CT_GEOCELL:
+				case Config::CT_GEOCELL_TREED:
+					items = cqr.flaten(config.threadCount);
+					break;
+				case Config::CT_GEOCELL_DECELLED:
+					items = dOpTree.execute();
+					break;
+				default:
+					break;
+				};
+				stop = std::chrono::high_resolution_clock::now();
+			
+				stat.flaten = std::chrono::duration_cast<Stats::meas_res>(stop-start);	
+				stat.itemCount = items.size();
+			}
+			
+			stat.cellCount = cqr.cellCount();
 		}
-		
-		stat.cellCount = cqr.cellCount();
 		
 		stats.push_back(stat);
 		
