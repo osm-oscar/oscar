@@ -7,6 +7,6 @@
 		"cellRefining" : {
 			"type" : "cell-diag",
 			"value" : 5000
-		},
+		}
 	}
 }
