@@ -149,13 +149,10 @@ void Benchmarker::doGeocellBench() {
 		const std::string & str  = m_strs[i];
 		Stats stat;
 		if (config.coldCache) {
-			::sync();
-			::sleep(5);
-			if (2 != ::write(fd, "3\n", 2)) {
+			if (2 != ::write(fd, "1\n", 2)) {
 				throw std::runtime_error("Benchmarker: could not drop caches");
 			}
-			::sync();
-			::sleep(5);
+			::sleep(1);
 		}
 		opTree.parse(str);
 
