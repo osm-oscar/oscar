@@ -147,6 +147,60 @@ void Worker::kvstats(const WD_KVStats & data) {
 	}
 }
 
+void Worker::shannonKvstats(const WD_ShannonKVStats & data) {
+	sserialize::ItemIndex items;
+	if (completer.textSearch().hasSearch(liboscar::TextSearch::GEOCELL)) {
+		items = completer.cqrComplete(data.str, true, data.threadCount).flaten(data.threadCount);
+	}
+	else if (completer.textSearch().hasSearch(liboscar::TextSearch::ITEMS)) {
+		items = completer.complete(data.str).index();
+	}
+	else {
+		throw sserialize::ConfigurationException("Worker::kvstats", "No search structures available");
+	}
+	
+	const auto & keyStringTable = completer.store().keyStringTable();
+	const auto & valueStringTable = completer.store().valueStringTable();
+	
+	std::cout << "Calculating kvstats..." << std::flush;
+	sserialize::TimeMeasurer tm;
+	tm.begin();
+	auto stats = liboscar::KVStats(completer.store()).stats(items, data.threadCount);
+	tm.end();
+	std::cout << "took " << tm.elapsedMilliSeconds() << "ms" << std::endl;
+	
+	uint32_t split = data.threshold*items.size();
+	auto dist = [split](const liboscar::KVStats::KeyValueInfo & v) -> uint32_t {
+		if (split < v.valueCount) {
+			return v.valueCount - split;
+		}
+		else {
+			return split - v.valueCount;
+		}
+	};
+	auto cmp = [&dist](const liboscar::KVStats::KeyValueInfo & a, const liboscar::KVStats::KeyValueInfo & b) {
+		return !(dist(a) < dist(b));
+	};
+	auto topkv = stats.topkv(data.printNumResults, cmp);
+	
+	std::cout << "Top " << data.printNumResults << " key-values with a splitting threshold of " << split << std::endl;
+	for(const auto & x : topkv) {
+		std::cout << keyStringTable.at(x.keyId) << ":";
+		if (x.isKeyOnly()) {
+			std::cout << ' ';
+		}
+		else {
+			std::cout << valueStringTable.at(x.valueId) << ": ";
+		}
+		std::cout << x.valueCount << "=" << (100*uint64_t(x.valueCount))/items.size() << '%';
+		if (debug) {
+			std::cout << "; splitdist=" << dist(x) << "=" << (100*uint64_t(dist(x)))/split << '%';
+		}
+		std::cout << '\n';
+	}
+	std::cout << std::flush;
+}
+
 void Worker::printStats(const WD_PrintStats & data) {
 	if (data.printStats != PS_NONE) {
 		if (data.fileName.size()) {

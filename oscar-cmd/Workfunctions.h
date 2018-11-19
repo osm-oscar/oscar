@@ -16,9 +16,12 @@ struct Worker {
 
 	liboscar::Static::OsmCompleter completer;
 	
+	bool debug{false};
+	
 	void listCompleters();
 	
 	void kvstats(const WD_KVStats & data);
+	void shannonKvstats(const WD_ShannonKVStats & data);
 	void printPaperStatsDb(const WD_PrintPaperStatsDb & data);
 	void printPaperStatsGh(const WD_PrintPaperStatsGh & data);
 	void printCellNeighborStats(const WD_PrintCellNeighborStats & data);

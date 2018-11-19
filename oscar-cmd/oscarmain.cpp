@@ -66,6 +66,9 @@ int main(int argc, char **argv) {
 			case Config::WorkItem::KVSTATS:
 				worker.kvstats(*workItem.data->as<WD_KVStats>());
 				break;
+			case Config::WorkItem::SHANNON_KVSTATS:
+				worker.shannonKvstats(*workItem.data->as<WD_ShannonKVStats>());
+				break;
 			case Config::WorkItem::PRINT_SELECTED_TEXT_COMPLETER:
 				worker.printSelectedTextCompleter();
 				break;
@@ -146,6 +149,9 @@ int main(int argc, char **argv) {
 				break;
 			case Config::WorkItem::LIST_COMPLETERS:
 				worker.listCompleters();
+				break;
+			case Config::WorkItem::TOGGLE_DEBUG_MODE:
+				worker.debug = !worker.debug;
 				break;
 			case Config::WorkItem::ITEMS_FROM_QUERY:
 				worker.itemsFromQuery(*workItem.data->as<WD_ItemsFromQuery>());

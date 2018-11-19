@@ -73,6 +73,7 @@ void Config::printHelp() {
 -cfct file\tgeocell complete strings from file with treed cqr \n \
 --symdiff-items-completers c1,c2\tprint symmetric difference between completer c1 and completer c2 \n \
 --kvstats\tprint key value stats of given query \n \
+--shannon-kvstats th\tprint key value stats of given query with a threshold of th (in percent)\n \
 -ds which\tprint stats: all,idxstore,completer(compitems,comphierarchy,compgeocell),db,geo,tag \n \
 -dcs\tdump cell statistics \n \
 -dpsdb file\tprint db paper stats, file sets the interesting tags \n \
@@ -134,6 +135,9 @@ int Config::parseSingleArg(int argc, char ** argv, int & i, int & printNumResult
 	else if (arg == "-t" && i+1 < argc) {
 		threadCount = atoi(argv[i+1]);
 		i++;
+	}
+	else if (arg == "--debug") {
+		workItems.emplace_back(WorkItem::TOGGLE_DEBUG_MODE);
 	}
 	
 	//data creation opts
@@ -253,6 +257,12 @@ int Config::parseSingleArg(int argc, char ** argv, int & i, int & printNumResult
 	else if (arg == "--kvstats") {
 		workItems.emplace_back(Config::WorkItem::KVSTATS, new WD_KVStats(completionString, printNumResults, threadCount));
 	}
+	else if (arg == "--shannon-kvstats" && i+1 < argc) {
+		double th = std::atof(argv[i+1])/100;
+		workItems.emplace_back(Config::WorkItem::SHANNON_KVSTATS, new WD_ShannonKVStats(completionString, printNumResults, threadCount, th));
+		i++;
+	}
+	
 	else if (arg == "-ds" && i+1 < argc) {
 		PrintStatsSelection p = printStatsfromString( std::string(argv[i+1]) );
 		workItems.emplace_back(WorkItem::PRINT_STATS, new WD_PrintStats(p) );
