@@ -116,7 +116,7 @@ bool ConsistencyChecker::checkGh(const liboscar::Static::OsmKeyValueObjectStore&
 		sserialize::Static::spatial::GeoHierarchy::Region r = gh.region(i);
 	
 		sserialize::Static::spatial::GeoShape rgs = store.geoShape(r.storeId());
-		const sserialize::spatial::GeoRegion * rgsr = rgs.get<sserialize::spatial::GeoRegion>();
+		auto rgsr = rgs.get<sserialize::spatial::GS_REGION>();
 		if (!rgsr) {
 			std::cout << "Could not cast region " << i << " with storeId=" << r.storeId() << ", ghId=" << r.ghId() << " to a GeoRegion" << std::endl;
 			allOk = false;
@@ -129,10 +129,10 @@ bool ConsistencyChecker::checkGh(const liboscar::Static::OsmKeyValueObjectStore&
 			sserialize::Static::spatial::GeoShape igs = store.geoShape( regionsItems.at(j) );
 			bool ok = true;
 			if (igs.type() == sserialize::spatial::GS_POINT) {
-				ok = rgsr->contains( *igs.get<sserialize::Static::spatial::GeoPoint>() );
+				ok = rgsr->contains( *igs.get<sserialize::spatial::GS_POINT>() );
 			}
 			else {
-				ok = rgsr->intersects( *igs.get<sserialize::spatial::GeoRegion>() );
+				ok = rgsr->intersects( *igs.get<sserialize::spatial::GS_REGION>() );
 			}
 			if (!ok) {
 				++invalidItemCount;

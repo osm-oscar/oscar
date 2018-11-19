@@ -240,14 +240,14 @@ void ItemGeometryState::addItem(uint32_t itemId) {
 	switch (shape.type()) {
 	case sserialize::spatial::GS_POINT:
 	{
-		auto p = shape.get<sserialize::Static::spatial::GeoPoint>();
+		auto p = shape.get<sserialize::spatial::GS_POINT>();
 		entry.type = DT_POINT;
 		entry.data.append(Marble::GeoDataCoordinates(p->lon(), p->lat(), 0.0, Marble::GeoDataCoordinates::Degree));
 		break;
 	}
 	case sserialize::spatial::GS_WAY:
 	{
-		auto gs = shape.get<sserialize::Static::spatial::GeoWay>();
+		auto gs = shape.get<sserialize::spatial::GS_WAY>();
 		entry.type = DT_PATH;
 		for(sserialize::Static::spatial::GeoPoint p : *gs) {
 			entry.data.append(Marble::GeoDataCoordinates(p.lon(), p.lat(), 0.0, Marble::GeoDataCoordinates::Degree));
@@ -256,7 +256,7 @@ void ItemGeometryState::addItem(uint32_t itemId) {
 	}
 	case sserialize::spatial::GS_POLYGON:
 	{
-		auto gs = shape.get<sserialize::Static::spatial::GeoPolygon>();
+		auto gs = shape.get<sserialize::spatial::GS_POLYGON>();
 		entry.type = DT_POLYGON;
 		for(sserialize::Static::spatial::GeoPoint p : *gs) {
 			entry.data.append(Marble::GeoDataCoordinates(p.lon(), p.lat(), 0.0, Marble::GeoDataCoordinates::Degree));
@@ -265,7 +265,7 @@ void ItemGeometryState::addItem(uint32_t itemId) {
 	}
 	case sserialize::spatial::GS_MULTI_POLYGON:
 	{
-		auto gs = shape.get<sserialize::Static::spatial::GeoMultiPolygon>();
+		auto gs = shape.getsserialize::spatial::GS_MULTI_POLYGON>();
 		entry.type = DT_POLYGON;
 		for(sserialize::Static::spatial::GeoPoint p : gs->outerPolygons().front()) {
 			entry.data.append(Marble::GeoDataCoordinates(p.lon(), p.lat(), 0.0, Marble::GeoDataCoordinates::Degree));
