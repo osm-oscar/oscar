@@ -265,7 +265,7 @@ void ItemGeometryState::addItem(uint32_t itemId) {
 	}
 	case sserialize::spatial::GS_MULTI_POLYGON:
 	{
-		auto gs = shape.getsserialize::spatial::GS_MULTI_POLYGON>();
+		auto gs = shape.get<sserialize::spatial::GS_MULTI_POLYGON>();
 		entry.type = DT_POLYGON;
 		for(sserialize::Static::spatial::GeoPoint p : gs->outerPolygons().front()) {
 			entry.data.append(Marble::GeoDataCoordinates(p.lon(), p.lat(), 0.0, Marble::GeoDataCoordinates::Degree));
