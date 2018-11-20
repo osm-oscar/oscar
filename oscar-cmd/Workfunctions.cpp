@@ -169,32 +169,19 @@ void Worker::shannonKvstats(const WD_ShannonKVStats & data) {
 	tm.end();
 	std::cout << "took " << tm.elapsedMilliSeconds() << "ms" << std::endl;
 	
+	
 	uint32_t split = data.threshold*items.size();
-	auto dist = [split](const liboscar::KVStats::KeyValueInfo & v) -> uint32_t {
-		if (split < v.valueCount) {
-			return v.valueCount - split;
-		}
-		else {
-			return split - v.valueCount;
-		}
-	};
-	auto cmp = [&dist](const liboscar::KVStats::KeyValueInfo & a, const liboscar::KVStats::KeyValueInfo & b) {
-		return !(dist(a) < dist(b));
-	};
-	auto topkv = stats.topkv(data.printNumResults, cmp);
+	auto sc = liboscar::kvclustering::ShannonClustering::make_unique(std::move(stats), split, split);
+	
+	auto topkv = sc->topKeyValues(data.printNumResults);
 	
 	std::cout << "Top " << data.printNumResults << " key-values with a splitting threshold of " << split << std::endl;
 	for(const auto & x : topkv) {
-		std::cout << keyStringTable.at(x.keyId) << ":";
-		if (x.isKeyOnly()) {
-			std::cout << ' ';
-		}
-		else {
-			std::cout << valueStringTable.at(x.valueId) << ": ";
-		}
-		std::cout << x.valueCount << "=" << (100*uint64_t(x.valueCount))/items.size() << '%';
+		std::cout << keyStringTable.at(x.ki.keyId) << ":" << valueStringTable.at(x.vi.valueId) << ": ";
+		std::cout << x.vi.valueStats << "=" << (100*uint64_t(x.vi.valueStats))/items.size() << '%';
 		if (debug) {
-			std::cout << "; splitdist=" << dist(x) << "=" << (100*uint64_t(dist(x)))/split << '%';
+			auto dist = liboscar::kvclustering::shannon::CompareBase(split).map(x.vi.valueStats);
+			std::cout << "; splitdist=" << dist << "=" << (100*uint64_t(dist))/split << '%';
 		}
 		std::cout << '\n';
 	}
