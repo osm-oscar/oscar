@@ -173,27 +173,27 @@ void Worker::shannonKvstats(const WD_ShannonKVStats & data) {
 	uint32_t split = data.threshold*items.size();
 	auto sc = liboscar::kvclustering::ShannonClustering::make_unique(std::move(stats), split, split);
 	if (data.keyExclusions.size()) {
-		auto ke = std::make_shared<liboscar::kvclustering::KeyExclusions>(completer.store().keyStringTable());
+		liboscar::kvclustering::KeyExclusions ke(completer.store().keyStringTable());
 		for(const auto & x : data.keyExclusions) {
 			if (!x.size()) {
 				continue;
 			}
 			if (x.back() == '?') {
-				ke->addPrefix(x.substr(0, x.size()-1));
+				ke.addPrefix(x.substr(0, x.size()-1));
 			}
 			else {
-				ke->add(x);
+				ke.add(x);
 			}
 		}
-		ke->preprocess();
-		sc->apply(ke);
+		ke.preprocess();
+		sc->exclude(ke);
 	}
 	if (data.keyValueExclusions.size()) {
-		auto kve = std::make_shared<liboscar::kvclustering::KeyValueExclusions>(completer.store().keyStringTable(), completer.store().valueStringTable());
+		liboscar::kvclustering::KeyValueExclusions kve(completer.store().keyStringTable(), completer.store().valueStringTable());
 		for(const auto & x : data.keyValueExclusions) {
-			kve->add(x.first, x.second);
+			kve.add(x.first, x.second);
 		}
-		sc->apply(kve);
+		sc->exclude(kve);
 	}
 	
 	auto topkv = sc->topKeyValues(data.printNumResults);
