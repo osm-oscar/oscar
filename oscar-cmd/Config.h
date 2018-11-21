@@ -236,6 +236,8 @@ struct WD_ShannonKVStats: public WD_KVStats {
 	{}
 	virtual ~WD_ShannonKVStats() {}
 	double threshold;
+	std::vector<std::string> keyExclusions;
+	std::vector<std::pair<std::string, std::string>> keyValueExclusions;
 };
 
 struct WD_CompleteFromFileBase: public WD_CompletionBase {

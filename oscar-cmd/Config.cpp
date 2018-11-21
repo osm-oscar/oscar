@@ -259,8 +259,30 @@ int Config::parseSingleArg(int argc, char ** argv, int & i, int & printNumResult
 	}
 	else if (arg == "--shannon-kvstats" && i+1 < argc) {
 		double th = std::atof(argv[i+1])/100;
-		workItems.emplace_back(Config::WorkItem::SHANNON_KVSTATS, new WD_ShannonKVStats(completionString, printNumResults, threadCount, th));
+		WD_ShannonKVStats * wi = new WD_ShannonKVStats(completionString, printNumResults, threadCount, th);
 		i++;
+		int j(i+1);
+		for(; j < argc; ++j) {
+			std::string token(argv[j]);
+			if (token.substr(0, 3) == "ke:") {
+				wi->keyExclusions.emplace_back(token.substr(3, std::string::npos));
+			}
+			else if (token.substr(0,4) == "kve:") {
+				token = token.substr(4, std::string::npos);
+				auto kv = sserialize::split<std::vector<std::string>>(token, '=', '\\');
+				if (kv.size() == 2) {
+					wi->keyValueExclusions.emplace_back(kv.front(), kv.back());
+				}
+				else {
+					std::cerr << "Unkown key-value exception: " << token << std::endl;
+				}
+			}
+			else {
+				break;
+			}
+		}
+		i = j-1;
+		workItems.emplace_back(Config::WorkItem::SHANNON_KVSTATS, wi);
 	}
 	
 	else if (arg == "-ds" && i+1 < argc) {
@@ -462,6 +484,10 @@ bool Config::fromCommandline(int argc, char ** argv) {
 				std::cout << "The error was: " << e.what() << std::endl;
 				return false;
 			}
+		}
+		if (!sserialize::MmappedFile::isDirectory(inFileName)) {
+			std::cerr << "Input file: " << inFileName << " is not a directory" << std::endl;
+			return false;
 		}
 	}
 	else {
