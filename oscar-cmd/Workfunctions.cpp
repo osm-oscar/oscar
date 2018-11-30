@@ -233,13 +233,14 @@ void Worker::printStats(const WD_PrintStats & data) {
 void Worker::printCQRDataSize(const WD_PrintCQRDataSize& data) {
 	std::string qstr = data.value;
 	const sserialize::Static::spatial::GeoHierarchy & gh = completer.store().geoHierarchy();
+	auto ci = sserialize::Static::spatial::GeoHierarchyCellInfo::makeRc(gh);
 	const sserialize::Static::ItemIndexStore & idxStore = completer.indexStore();
 	sserialize::Static::CellTextCompleter cmp( completer.textSearch().get<liboscar::TextSearch::Type::GEOCELL>() );
 	sserialize::StringCompleter::QuerryType qt = sserialize::StringCompleter::normalize(qstr);
 	sserialize::Static::CellTextCompleter::Payload::Type t = cmp.typeFromCompletion(qstr, qt);
 	sserialize::ItemIndex fmIdx = idxStore.at( t.fmPtr() );
 	sserialize::ItemIndex pmIdx = idxStore.at( t.pPtr() );
-	sserialize::CellQueryResult r(fmIdx, pmIdx, t.pItemsPtrBegin(), gh, idxStore, cmp.flags());
+	sserialize::CellQueryResult r(fmIdx, pmIdx, t.pItemsPtrBegin(), ci, idxStore, cmp.flags());
 	std::vector<sserialize::UByteArrayAdapter::SizeType> idxDataSizes;
 	std::vector<uint32_t> idxSizes;
 	idxDataSizes.reserve(r.cellCount());
