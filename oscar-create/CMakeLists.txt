@@ -1,9 +1,5 @@
 cmake_minimum_required(VERSION 3.9)
 project(oscar-create)
-
-find_package(Protobuf REQUIRED)
-find_package(ZLIB REQUIRED)
-find_package(ICU 4.9 REQUIRED)
 find_package(LIBRT REQUIRED)
 find_package(OpenMP)
 
@@ -15,7 +11,6 @@ if (LIBOSCAR_NO_DATA_REFCOUNTING_ENABLED)
 endif(LIBOSCAR_NO_DATA_REFCOUNTING_ENABLED)
 
 set(MY_INCLUDE_DIRS
-	${ICU_INCLUDE_DIRS}
 	${CMAKE_SOURCE_DIR}/vendor/jsoncpp/include
 )
 
@@ -46,8 +41,6 @@ SET(MY_LINK_LIBS
 	liboscar
 	sserialize
 	osmpbf
-	${ICU_LIBRARIES}
-	${ICU_I18N_LIBRARIES}
 	${LIBRT_LIBRARIES}
 )
 
