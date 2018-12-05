@@ -101,7 +101,7 @@ void Config::printHelp() {
 -dgh file\tdump gh as dot file to file \n \
 -dghr storeid\tdump gh region \n \
 -dghc id\tdump gh cell \n \
---check type\tcheck type=(index|store|gh|tds) \n \
+--check type\tcheck type=(index|store|gh|tds|geocell) \n \
 --benchmark i=strings,o=out-prefix,t=(tgeocell|geocell|items|decelled),cc=(true|false),tc=<num>,ghsg=(mem|pass),subset(true|false),items=(true|false) \n \
 --mlock index,kvstore,textsearch\tlock memory of specified file\n \
 --munlock index,kvstore,textsearch\tunlock memory of specified file\n \

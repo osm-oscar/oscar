@@ -6,7 +6,8 @@
 
 namespace oscarcmd {
 
-bool ConsistencyChecker::checkIndex(const sserialize::Static::ItemIndexStore& indexStore) {
+bool ConsistencyChecker::checkIndex() {
+	const sserialize::Static::ItemIndexStore & indexStore = cmp.indexStore();
 	sserialize::ProgressInfo pinfo;
 	uint32_t idxStoreSize = indexStore.size();
 	bool allOk = true;
@@ -23,7 +24,9 @@ bool ConsistencyChecker::checkIndex(const sserialize::Static::ItemIndexStore& in
 	return allOk;
 }
 
-bool ConsistencyChecker::checkGh(const liboscar::Static::OsmKeyValueObjectStore& store, const sserialize::Static::ItemIndexStore & indexStore) {
+bool ConsistencyChecker::checkGh() {
+	const liboscar::Static::OsmKeyValueObjectStore& store = cmp.store();
+	const sserialize::Static::ItemIndexStore & indexStore = cmp.indexStore();
 	const sserialize::Static::spatial::GeoHierarchy & gh = store.geoHierarchy();
 	uint32_t ghSize = gh.regionSize();
 	sserialize::ProgressInfo pinfo;
@@ -186,7 +189,8 @@ bool ConsistencyChecker::checkGh(const liboscar::Static::OsmKeyValueObjectStore&
 	return allOk;
 }
 
-bool ConsistencyChecker::checkTriangulation(const liboscar::Static::OsmKeyValueObjectStore& store) {
+bool ConsistencyChecker::checkTriangulation() {
+	const liboscar::Static::OsmKeyValueObjectStore& store = cmp.store();
 	if (!store.regionArrangement().tds().selfCheck()) {
 		return false;
 	}
@@ -208,7 +212,8 @@ bool ConsistencyChecker::checkTriangulation(const liboscar::Static::OsmKeyValueO
 	return true;
 }
 
-bool ConsistencyChecker::checkStore(const liboscar::Static::OsmKeyValueObjectStore & store) {
+bool ConsistencyChecker::checkStore() {
+	const liboscar::Static::OsmKeyValueObjectStore & store = cmp.store();
 	sserialize::ProgressInfo pinfo;
 	sserialize::Static::StringTable::SizeType keyCount = store.keyStringTable().size();
 	sserialize::Static::StringTable::SizeType valueCount = store.valueStringTable().size();
@@ -245,5 +250,81 @@ bool ConsistencyChecker::checkStore(const liboscar::Static::OsmKeyValueObjectSto
 }
 
 
+bool ConsistencyChecker::checkCTC() {
+	using CellTextCompleter = sserialize::Static::CellTextCompleter;
+	if (!cmp.textSearch().hasSearch(liboscar::TextSearch::OOMGEOCELL)) {
+		std::cout << "ConsistencyChecker: No geocell text search available" << std::endl;
+		return true;
+	}
+	CellTextCompleter ctc = cmp.textSearch().get<liboscar::TextSearch::OOMGEOCELL>();
+	auto indexStore = cmp.indexStore();
+	auto gh = cmp.store().geoHierarchy();
+	
+	
+	auto triePtr = ctc.trie().as<CellTextCompleter::FlatTrieType>();
+	if (!triePtr) {
+		std::cout << "No geocell completer with flat trie" << std::endl;
+		return true;
+	}
+	
+	auto trie = triePtr->trie();
+	
+	std::array<int, 4> checkTypes{{
+		sserialize::StringCompleter::QT_EXACT,
+		sserialize::StringCompleter::QT_PREFIX,
+		sserialize::StringCompleter::QT_SUFFIX,
+		sserialize::StringCompleter::QT_SUBSTRING
+	}};
+	
+	uint32_t cellCount = gh.cellSize();
+	
+	bool ok = true;
+	
+	#pragma omp parallel for schedule(dynamic, 1)
+	for(uint32_t i(0), s(trie.size()); i < s; ++i) {
+		CellTextCompleter::Payload payload = trie.at(i);
+		int types = payload.types();
+		for(int ct : checkTypes) {
+			if ((types & ct) == 0) {
+				continue;
+			}
+			CellTextCompleter::Payload::Type td = payload.type(ct);
+			sserialize::ItemIndex fmCells = indexStore.at(td.fmPtr());
+			sserialize::ItemIndex pmCells = indexStore.at(td.pPtr());
+			
+			if (fmCells.size() && fmCells.back() >= cellCount) {
+				ok = false;
+				if (debug) {
+					#pragma omp critical
+					std::cout << "Broken ctc fm entry at " << i << " = " << trie.strAt(i) << std::endl;
+				}
+			}
+			if (pmCells.size() && pmCells.back() >= cellCount) {
+				ok = false;
+				if (debug) {
+					#pragma omp critical
+					std::cout << "Broken ctc pm entry at " << i << " = " << trie.strAt(i) << std::endl;
+				}
+			}
+			
+			auto pmItemsPtrIt = td.pItemsPtrBegin();
+			for(uint32_t pmCellId : pmCells) {
+				sserialize::ItemIndex items = indexStore.at(*pmItemsPtrIt);
+				sserialize::ItemIndex cellItems = indexStore.at( gh.cellItemsPtr(pmCellId) );
+				sserialize::ItemIndex diff = items - cellItems;
+				if (diff.size()) {
+					ok = false;
+					if (debug) {
+						#pragma omp critical
+						std::cout << "Broken ctc pm items at " << i << " = " << trie.strAt(i) << std::endl;
+						std::cout << "Elements in index that are not in the cell: " << diff << std::endl;
+					}
+				}
+				++pmItemsPtrIt;
+			}
+		}
+	}
+	return ok;
+}
 
 }//end namespace

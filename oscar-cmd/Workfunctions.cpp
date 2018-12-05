@@ -812,10 +812,10 @@ void Worker::printSelectedGeoCompleter() {
 }
 
 void Worker::consistencyCheck(WD_ConsistencyCheck & d) {
-	ConsistencyChecker checker;
+	ConsistencyChecker checker(completer);
 	checker.debug = debug;
 	if (d.value == "index") {
-		if (!checker.checkIndex(completer.indexStore())) {
+		if (!checker.checkIndex()) {
 			std::cout << "Index Store is BROKEN" << std::endl;
 		}
 		else {
@@ -823,7 +823,7 @@ void Worker::consistencyCheck(WD_ConsistencyCheck & d) {
 		}
 	}
 	else if (d.value == "store") {
-		if (!checker.checkStore(completer.store())) {
+		if (!checker.checkStore()) {
 			std::cout << "Store is BROKEN" << std::endl;
 		}
 		else {
@@ -831,7 +831,7 @@ void Worker::consistencyCheck(WD_ConsistencyCheck & d) {
 		}
 	}
 	else if (d.value == "gh") {
-		if (!checker.checkGh(completer.store(), completer.indexStore())) {
+		if (!checker.checkGh()) {
 			std::cout << "GeoHierarchy is BROKEN" << std::endl;
 		}
 		else {
@@ -839,11 +839,19 @@ void Worker::consistencyCheck(WD_ConsistencyCheck & d) {
 		}
 	}
 	else if (d.value == "tds") {
-		if (!checker.checkTriangulation(completer.store())) {
+		if (!checker.checkTriangulation()) {
 			std::cout << "Triangulation is BROKEN" << std::endl;
 		}
 		else {
 			std::cout << "Triangulation is OK" << std::endl;
+		}
+	}
+	else if (d.value == "ctc" || d.value == "geocell") {
+		if (!checker.checkCTC()) {
+			std::cout << "CellTextCompleter is BROKEN" << std::endl;
+		}
+		else {
+			std::cout << "CellTextCompleter is OK" << std::endl;
 		}
 	}
 }
