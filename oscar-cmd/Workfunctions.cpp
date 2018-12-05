@@ -812,8 +812,10 @@ void Worker::printSelectedGeoCompleter() {
 }
 
 void Worker::consistencyCheck(WD_ConsistencyCheck & d) {
+	ConsistencyChecker checker;
+	checker.debug = debug;
 	if (d.value == "index") {
-		if (!ConsistencyChecker::checkIndex(completer.indexStore())) {
+		if (!checker.checkIndex(completer.indexStore())) {
 			std::cout << "Index Store is BROKEN" << std::endl;
 		}
 		else {
@@ -821,7 +823,7 @@ void Worker::consistencyCheck(WD_ConsistencyCheck & d) {
 		}
 	}
 	else if (d.value == "store") {
-		if (!ConsistencyChecker::checkStore(completer.store())) {
+		if (!checker.checkStore(completer.store())) {
 			std::cout << "Store is BROKEN" << std::endl;
 		}
 		else {
@@ -829,7 +831,7 @@ void Worker::consistencyCheck(WD_ConsistencyCheck & d) {
 		}
 	}
 	else if (d.value == "gh") {
-		if (!ConsistencyChecker::checkGh(completer.store(), completer.indexStore())) {
+		if (!checker.checkGh(completer.store(), completer.indexStore())) {
 			std::cout << "GeoHierarchy is BROKEN" << std::endl;
 		}
 		else {
@@ -837,7 +839,7 @@ void Worker::consistencyCheck(WD_ConsistencyCheck & d) {
 		}
 	}
 	else if (d.value == "tds") {
-		if (!ConsistencyChecker::checkTriangulation(completer.store())) {
+		if (!checker.checkTriangulation(completer.store())) {
 			std::cout << "Triangulation is BROKEN" << std::endl;
 		}
 		else {

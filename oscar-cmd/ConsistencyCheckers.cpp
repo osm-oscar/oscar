@@ -2,6 +2,7 @@
 #include <sserialize/spatial/GeoRegion.h>
 #include <sserialize/stats/ProgressInfo.h>
 #include <sserialize/vendor/utf8/checked.h>
+#include <sserialize/utility/printers.h>
 
 namespace oscarcmd {
 
@@ -67,31 +68,38 @@ bool ConsistencyChecker::checkGh(const liboscar::Static::OsmKeyValueObjectStore&
 		std::cout << "At least one region has cells with non-contained boundary" << std::endl;
 	}
 	
-	pinfo.begin(gh.regionSize(), "ConsistencyChecker::GH: indexes");
-	#pragma omp parallel for schedule(dynamic, 1)
-	for(uint32_t i = 0; i < ghSize; ++i) {
-		sserialize::Static::spatial::GeoHierarchy::Region r = gh.region(i);
-		sserialize::ItemIndex cellIdx = indexStore.at( r.cellIndexPtr() );
-		std::vector<sserialize::ItemIndex> cellsItemIdcs;
-		for(uint32_t j = 0, js = cellIdx.size(); j < js; ++j) {
-			sserialize::Static::spatial::GeoHierarchy::Cell c = gh.cell(cellIdx.at(j));
-			cellsItemIdcs.push_back( indexStore.at( c.itemPtr() ) );
-		}
-		sserialize::ItemIndex cellsItems = sserialize::ItemIndex::unite(cellsItemIdcs);
-		sserialize::ItemIndex regionsItems = indexStore.at( r.itemsPtr() );
-		if (cellsItems != regionsItems) {
-			#pragma omp critical
-			{
-				sserialize::ItemIndex symDif = cellsItems ^ regionsItems;
-				std::cout << "Error in region " << i << ": merged items from cells don't match regions items." << std::endl;
-				std::cout << "symdiff index: " << symDif << std::endl;
+	if (gh.hasRegionItems()) {
+		pinfo.begin(gh.regionSize(), "ConsistencyChecker::GH: indexes");
+		#pragma omp parallel for schedule(dynamic, 1)
+		for(uint32_t i = 0; i < ghSize; ++i) {
+			sserialize::Static::spatial::GeoHierarchy::Region r = gh.region(i);
+			sserialize::ItemIndex cellIdx = indexStore.at( r.cellIndexPtr() );
+			std::vector<sserialize::ItemIndex> cellsItemIdcs;
+			for(uint32_t j = 0, js = cellIdx.size(); j < js; ++j) {
+				sserialize::Static::spatial::GeoHierarchy::Cell c = gh.cell(cellIdx.at(j));
+				cellsItemIdcs.push_back( indexStore.at( c.itemPtr() ) );
 			}
-			allOk = false;
+			sserialize::ItemIndex cellsItems = sserialize::ItemIndex::unite(cellsItemIdcs);
+			sserialize::ItemIndex regionsItems = indexStore.at( r.itemsPtr() );
+			if (cellsItems != regionsItems) {
+				#pragma omp critical
+				{
+					std::cout << "Error in region " << i << ": merged items from cells don't match regions items." << std::endl;
+					if (debug) {
+						sserialize::ItemIndex symDif = cellsItems ^ regionsItems;
+						std::cout << "symdiff index: " << symDif << std::endl;
+					}
+				}
+				allOk = false;
+			}
+			#pragma omp critical
+			pinfo(i);
 		}
-		#pragma omp critical
-		pinfo(i);
+		pinfo.end();
 	}
-	pinfo.end();
+	else {
+		std::cout << "Cannot check index since GeoHierarchy does not have region item info" << std::endl;
+	}
 	
 	pinfo.begin(gh.regionSize(), "ConsistencyChecker::GH: store/gh region boundaries");
 	#pragma omp parallel for schedule(dynamic, 1)
@@ -110,6 +118,8 @@ bool ConsistencyChecker::checkGh(const liboscar::Static::OsmKeyValueObjectStore&
 	
 	uint32_t regionsWithInvalidItems = 0;
 	uint32_t invalidItemsInRegions = 0;
+	uint32_t itemsWithUnkownConsistency = 0;
+	std::vector<std::pair<uint32_t, uint32_t>> brokenRegionItemInclusion;
 	pinfo.begin(gh.regionSize(), "ConsistencyChecker::GH: inclusion");
 	#pragma omp parallel for schedule(dynamic, 1)
 	for(uint32_t i = 0; i < ghSize; ++i) {
@@ -123,19 +133,36 @@ bool ConsistencyChecker::checkGh(const liboscar::Static::OsmKeyValueObjectStore&
 		}
 		
 		uint32_t invalidItemCount = 0;
-		
-		sserialize::ItemIndex regionsItems = indexStore.at( r.itemsPtr() );
-		for(uint32_t j = 0, js = regionsItems.size(); j < js; ++j) {
-			sserialize::Static::spatial::GeoShape igs = store.geoShape( regionsItems.at(j) );
+		sserialize::ItemIndex regionsItems;
+		if (r.hasItemsInfo()) {
+			regionsItems = indexStore.at( r.itemsPtr() );
+		}
+		else {
+			std::vector<sserialize::ItemIndex> cellItems;
+			sserialize::ItemIndex cellItemIdx = indexStore.at( r.cellIndexPtr() );
+			for(uint32_t cellIdxId : cellItemIdx) {
+				cellItems.emplace_back( indexStore.at( cellIdxId ) );
+			}
+			regionsItems = sserialize::ItemIndex::unite(cellItems);
+		}
+		for(uint32_t itemId : regionsItems) {
+			sserialize::Static::spatial::GeoShape igs = store.geoShape(itemId);
 			bool ok = true;
 			if (igs.type() == sserialize::spatial::GS_POINT) {
 				ok = rgsr->contains( *igs.get<sserialize::spatial::GS_POINT>() );
 			}
 			else {
-				ok = rgsr->intersects( *igs.get<sserialize::spatial::GS_REGION>() );
+				try {
+					ok = rgsr->intersects( *igs.get<sserialize::spatial::GS_REGION>() );
+				}
+				catch (const sserialize::UnimplementedFunctionException & e) {
+					#pragma omp atomic
+					itemsWithUnkownConsistency += 1;
+				}
 			}
 			if (!ok) {
 				++invalidItemCount;
+				brokenRegionItemInclusion.emplace_back(i, itemId);
 			}
 		}
 		if (invalidItemCount) {
@@ -151,6 +178,11 @@ bool ConsistencyChecker::checkGh(const liboscar::Static::OsmKeyValueObjectStore&
 	
 	std::cout << "Found " << regionsWithInvalidItems << " regions having non-intersecting items\n";
 	std::cout << "Found " << invalidItemsInRegions << " items having non-intersecting region\n";
+	std::cout << "Found " << brokenRegionItemInclusion.size() << " broken region-item inclusion relations\n";
+	if (debug) {
+		std::cout << "Broken relations follow: " << std::endl;
+		sserialize::operator<<(std::cout, brokenRegionItemInclusion) << std::endl;
+	}
 	return allOk;
 }
 
