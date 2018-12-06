@@ -4,6 +4,7 @@
 #include <marble/GeoDataPoint.h>
 #include <marble/GeoDataLineString.h>
 #include <marble/GeoDataLinearRing.h>
+#include <marble/GeoDataLatLonAltBox.h>
 
 #include <liboscar/StaticOsmCompleter.h>
 
@@ -16,7 +17,7 @@ public:
 	SearchGeometryHelper(const std::shared_ptr<liboscar::Static::OsmCompleter> & cmp);
 public:
 	sserialize::ItemIndex cells(const Marble::GeoDataPoint & point);
-	sserialize::ItemIndex cells(const Marble::GeoDataLatLonBox & rect);
+	sserialize::ItemIndex cells(const Marble::GeoDataLatLonAltBox & rect);
 	sserialize::ItemIndex cells(const Marble::GeoDataLineString & path);
 	sserialize::ItemIndex cells(const Marble::GeoDataLinearRing & polygon);
 public:
@@ -24,7 +25,7 @@ public:
 	sserialize::ItemIndex triangles(const Marble::GeoDataLineString & path);
 public:
 	QString toOscarQuery(const Marble::GeoDataPoint & point);
-	QString toOscarQuery(const Marble::GeoDataLatLonBox & rect);
+	QString toOscarQuery(const Marble::GeoDataLatLonAltBox & rect);
 	QString toOscarQuery(const Marble::GeoDataLineString & path);
 	QString toOscarQuery(const Marble::GeoDataLinearRing & point);
 private:

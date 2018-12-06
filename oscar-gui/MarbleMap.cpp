@@ -4,12 +4,14 @@
 #include <marble/GeoDataLineString.h>
 #include <marble/GeoDataLinearRing.h>
 #include <marble/GeoDataPolygon.h>
+#include <marble/GeoDataLatLonAltBox.h>
 #include <marble/ViewportParams.h>
 #include <marble/MarbleWidgetPopupMenu.h>
 #include <marble/MarbleWidgetInputHandler.h>
 #include <QAction>
 #include <QHBoxLayout>
 #include <QColor>
+#include <QDebug>
 
 namespace oscar_gui {
 

@@ -1,7 +1,10 @@
 #ifndef OSCAR_GUI_STATES_H
 #define OSCAR_GUI_STATES_H
 
+#include <QObject>
+
 #include <marble/GeoDataLineString.h>
+#include <marble/GeoDataCoordinates.h>
 
 #include <memory>
 

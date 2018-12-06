@@ -20,7 +20,7 @@ public:
 	GeometryInputWidget(const States & states);
 	virtual ~GeometryInputWidget();
 signals:
-	void zoomTo(const Marble::GeoDataLatLonBox & bbox);
+	void zoomTo(const Marble::GeoDataLatLonAltBox & bbox);
 private slots:
 	void showGeometryClicked(int p);
 	void showTrianglesClicked(int p);

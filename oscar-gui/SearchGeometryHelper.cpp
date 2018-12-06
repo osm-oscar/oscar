@@ -11,7 +11,7 @@ sserialize::ItemIndex SearchGeometryHelper::cells(const Marble::GeoDataPoint & p
 	return m_cmp->cqrComplete(toOscarQuery(point).toStdString()).cells();
 }
 
-sserialize::ItemIndex SearchGeometryHelper::cells(const Marble::GeoDataLatLonBox & rect) {
+sserialize::ItemIndex SearchGeometryHelper::cells(const Marble::GeoDataLatLonAltBox & rect) {
 	return m_cmp->cqrComplete(toOscarQuery(rect).toStdString()).cells();
 }
 
@@ -54,7 +54,7 @@ QString SearchGeometryHelper::toOscarQuery(const Marble::GeoDataPoint & point) {
 	);
 }
 
-QString SearchGeometryHelper::toOscarQuery(const Marble::GeoDataLatLonBox & rect) {
+QString SearchGeometryHelper::toOscarQuery(const Marble::GeoDataLatLonAltBox & rect) {
 	return QString("$rect:%1,%2,%3,%4").arg(
 		rect.west(Marble::GeoDataCoordinates::Degree),
 		rect.south(Marble::GeoDataCoordinates::Degree),
