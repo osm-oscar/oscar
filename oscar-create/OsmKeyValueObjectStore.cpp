@@ -1038,6 +1038,7 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 						if (ct.nodeIdToGeoPoint.count(*it) > 0) {
 							const RawGeoPoint & rgp = ct.nodeIdToGeoPoint[*it];
 							SSERIALIZE_NORMAL_ASSERT(sserialize::spatial::GeoPoint(rgp).valid());
+							SSERIALIZE_NORMAL_ASSERT(sserialize::spatial::GeoPoint(rgp).isSnapped());
 							gw->points().emplace_back(rgp);
 						}
 					}

@@ -377,6 +377,7 @@ void OsmKeyValueObjectStore::createCell(OsmKeyValueRawItem & item, Context & ctx
 		MyGeoWay * gw = static_cast<MyGeoWay*>(item.data.shape);
 		MyCellMap tmp;
 		for(typename MyGeoWay::const_iterator pit(gw->cbegin()), pend(gw->cend()); pit != pend; ++pit) {
+			SSERIALIZE_NORMAL_ASSERT(pit->isSnapped());
 			uint32_t cellId = ctx.trs.cellId(*pit);
 			if (cellId == osmtools::OsmTriangulationRegionStore::InfiniteFacesCellId) {
 				continue;
@@ -396,6 +397,7 @@ void OsmKeyValueObjectStore::createCell(OsmKeyValueRawItem & item, Context & ctx
 	}
 	else if (dynamic_cast<const sserialize::spatial::GeoPoint*>(item.data.shape) ) {
 		const sserialize::spatial::GeoPoint * gp = static_cast<const sserialize::spatial::GeoPoint*>(item.data.shape);
+		SSERIALIZE_NORMAL_ASSERT(gp->isSnapped());
 		uint32_t cellId = ctx.trs.cellId(*gp);
 		SSERIALIZE_CHEAP_ASSERT_NOT_EQUAL(cellId, osmtools::OsmTriangulationRegionStore::InfiniteFacesCellId);
 		ctx.cellMap.insert(cellId, itemId, gp->boundary());
@@ -409,6 +411,7 @@ void OsmKeyValueObjectStore::createCell(OsmKeyValueRawItem & item, Context & ctx
 		for(typename MyGMP::PolygonList::const_iterator it(gmp->outerPolygons().begin()), end(gmp->outerPolygons().end()); it != end; ++it) {
 			typename MyGMP::PolygonList::const_reference gw = *it;
 			for(typename MyP::const_iterator pit(gw.cbegin()), pend(gw.cend()); pit != pend; ++pit) {
+				SSERIALIZE_NORMAL_ASSERT(pit->isSnapped());
 				uint32_t cellId = ctx.trs.cellId(*pit);
 				if (cellId == osmtools::OsmTriangulationRegionStore::InfiniteFacesCellId) {
 					continue;
