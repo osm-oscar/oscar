@@ -214,6 +214,7 @@ bool ConsistencyChecker::checkTriangulation() {
 
 bool ConsistencyChecker::checkStore() {
 	const liboscar::Static::OsmKeyValueObjectStore & store = cmp.store();
+	const auto & ra = store.regionArrangement();
 	sserialize::ProgressInfo pinfo;
 	sserialize::Static::StringTable::SizeType keyCount = store.keyStringTable().size();
 	sserialize::Static::StringTable::SizeType valueCount = store.valueStringTable().size();
@@ -223,22 +224,48 @@ bool ConsistencyChecker::checkStore() {
 	#pragma omp parallel for schedule(dynamic, 1)
 	for(uint32_t i = 0;  i < storeSize; ++i) {
 		liboscar::Static::OsmKeyValueObjectStore::Item item(store.at(i));
+		bool itemIsBroken = false;
 		for(uint32_t j(0), js(item.size()); j < js; ++j) {
 			uint32_t keyId = item.keyId(j);
 			uint32_t valueId = item.valueId(j);
 			if (keyId >= keyCount || valueId >= valueCount) {
-				#pragma omp atomic
-				++brokenItems;
+				itemIsBroken = true;
 				break;
 			}
 			std::string key = item.key(j);
 			std::string value = item.value(j);
 			if (!utf8::is_valid(key.cbegin(), key.cend()) || !utf8::is_valid(value.cbegin(), value.cend())) {
-				#pragma omp atomic
-				++brokenItems;
+				itemIsBroken = true;
 				break;
 			}
 		}
+		if (!item.isRegion()) {
+			auto itemCells = item.cells();
+			std::set<uint32_t> cellIds;
+			item.geoShape().visitPoints([this,&item,&cellIds,&ra](const sserialize::Static::spatial::GeoPoint & gp) {
+				uint32_t cellId = ra.cellId(gp);
+				if (cellId == ra.NullCellId) {
+					cellId = 0;
+				}
+				cellIds.insert(cellId);
+			});
+
+			if (cellIds != sserialize::ItemIndex(item.cells())) {
+				itemIsBroken = true;
+				
+				if (this->debug) {
+					std::cout << "Item " << item.id() << " is in cells ";
+					sserialize::operator<<(std::cout, cellIds);
+					std::cout << " but its cell list is " << sserialize::ItemIndex(item.cells()) << std::endl;
+				}
+			}
+		}
+		
+		if (itemIsBroken) {
+			#pragma omp atomic
+			++brokenItems;
+		}
+		
 		#pragma omp critical
 		pinfo(i);
 	}
@@ -280,8 +307,12 @@ bool ConsistencyChecker::checkCTC() {
 	
 	bool ok = true;
 	
+	sserialize::ProgressInfo pinfo;
+	pinfo.begin(trie.size(), "ConsistencyChecker:ctc: indexes");
+	
+	uint32_t trieSize = trie.size();
 	#pragma omp parallel for schedule(dynamic, 1)
-	for(uint32_t i(0), s(trie.size()); i < s; ++i) {
+	for(uint32_t i = 0; i < trieSize; ++i) {
 		CellTextCompleter::Payload payload = trie.at(i);
 		int types = payload.types();
 		for(int ct : checkTypes) {
@@ -322,8 +353,13 @@ bool ConsistencyChecker::checkCTC() {
 				}
 				++pmItemsPtrIt;
 			}
+			#pragma omp critical
+			{
+				pinfo(i);
+			}
 		}
 	}
+	pinfo.end();
 	return ok;
 }
 
