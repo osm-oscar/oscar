@@ -21,5 +21,12 @@ SET(MY_LINK_LIBS
 	${CAIRO_LIBRARIES}
 )
 
+if (OpenMP_FOUND)
+	SET(MY_LINK_LIBS
+		${MY_LINK_LIBS}
+		OpenMP::OpenMP_C
+	)
+endif()
+
 add_executable(${PROJECT_NAME} ${OSCAR_CMD_SOURCES_CPP})
 target_link_libraries(${PROJECT_NAME} ${MY_LINK_LIBS})
