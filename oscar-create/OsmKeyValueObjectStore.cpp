@@ -327,7 +327,7 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 	tm.begin();
 	osmtools::OsmTriangulationRegionStore trs;
 	auto polyStore = std::make_shared< osmtools::OsmGridRegionTree<RegionInfo> >();
-	osmtools::AreaExtractor ae;
+	osmtools::AreaExtractor ae(false, true);
 
 	{//fetch all residential areas without a name, try to name them with their city-node
 		std::cout << "Fetching residential areas without matching tags but with a place-node inside" << std::endl;
@@ -935,7 +935,7 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 		}
 		
 		{//handle relation multi polygons skip the ones that are in the store
-			osmtools::AreaExtractor ae;
+			osmtools::AreaExtractor ae(false, true);
 			generics::RCPtr<osmpbf::AbstractTagFilter> myRegionFilter(new MyRegionFilter(&ct.regionItems));
 			osmpbf::InversionFilter::invert(myRegionFilter);
 			auto wf = [&ct, &wct, &rwct](const std::shared_ptr<sserialize::spatial::GeoRegion> & region, osmpbf::IPrimitive & primitive) {
