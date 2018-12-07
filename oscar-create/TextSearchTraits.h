@@ -79,7 +79,7 @@ public:
 				*out = tmp;
 				++out;
 				if (cap.diacritcInSensitive) {
-					*out = m_dr(tmp);
+					*out = sserialize::unicode_to_lower(m_dr(tmp));
 					++out;
 				}
 			}
