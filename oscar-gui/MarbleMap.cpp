@@ -320,9 +320,7 @@ void MarbleMap::MyItemLayer::clear() {
 }
 
 void MarbleMap::MyItemLayer::addItem(uint32_t itemId) {
-	if (!m_items.count(itemId)) {
-		auto shape = data()->store.at(itemId).geoShape();
-	}
+	m_items.insert(itemId);
 }
 
 void MarbleMap::MyItemLayer::removeItem(uint32_t itemId) {
