@@ -44,22 +44,23 @@ bool MarbleMap::MyBaseLayer::doRender(const CFGraph & cg, const QBrush & brush, 
 
 
 bool MarbleMap::MyBaseLayer::doRender(const Face & f, const QBrush & brush, const QString& label, Marble::GeoPainter* painter) {
+	painter->setBrush( brush );
+	
 	Marble::GeoDataLinearRing l;
+	double lat{0};
+	double lon{0};
 	for(int i(0); i < 3; ++i) {
 		auto p = f.point(i);
+		lat += p.lat();
+		lon += p.lon();
 		l.append(Marble::GeoDataCoordinates(p.lon(), p.lat(), 0.0, Marble::GeoDataCoordinates::Degree));
 	}
-	painter->setBrush( brush );
-	painter->drawPolygon(l);
+	
 	if (!label.isEmpty()) {
-		double lat, lon;
-		lat = lon = 0.0;
-		for(const auto & x : l) {
-			lat += x.latitude();
-			lon += x.longitude();
-		}
 		painter->drawText(Marble::GeoDataCoordinates(lon/3, lat/3), label);
 	}
+	
+	painter->drawPolygon(l);
 	return true;
 }
 
