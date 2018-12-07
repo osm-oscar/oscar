@@ -603,6 +603,9 @@ void MarbleMap::setCellOpacity(int cellOpacity) {
 	if (m_geometryLayer) {
 		m_geometryLayer->opacity(m_cellOpacity);
 	}
+	if (m_itemLayer) {
+		m_itemLayer->opacity(m_cellOpacity);
+	}
 	this->redrawMap();
 }
 
