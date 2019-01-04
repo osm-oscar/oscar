@@ -102,7 +102,7 @@ int main(int argc, char ** argv) {
 		for(std::size_t i = 0, s = tmp.size(); i < s; ++i) {
 			if (i != tmp[i])  {
 				std::cout << "ItemIndexFactory::insert is broken" << std::endl;
-				std::cout << tmp << std::endl;
+				sserialize::operator<<(std::cout, tmp) << std::endl;
 				return -1;
 			}
 		}
