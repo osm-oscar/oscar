@@ -2,6 +2,7 @@
 #include <memory>
 #include <sserialize/stats/TimeMeasuerer.h>
 #include <sserialize/stats/memusage.h>
+#include <sserialize/utility/printers.h>
 #include "OsmKeyValueObjectStore.h"
 #include "helpers.h"
 #include "readwritefuncs.h"
