@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.9)
 
 find_package(Qt5Widgets REQUIRED)
 find_package(Qt5Gui REQUIRED)
-find_package(Marble REQUIRED)
+find_package(Marble)
 find_package(LIBRT)
 
 IF (MARBLE_FOUND)
