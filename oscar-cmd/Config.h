@@ -17,6 +17,7 @@ typedef enum {
 	PS_TAG=0x80,
 	PS_GH=0x100,
 	PS_RA=0x200,
+	PS_GH_CELLINFO=0x800,
 	PS_ALL=0xFFFFFFFF
 } PrintStatsSelection;
 

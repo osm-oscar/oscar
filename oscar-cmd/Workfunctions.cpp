@@ -35,6 +35,10 @@ std::string statsFileNameSuffix(uint32_t which) {
 		return "tag";
 	case PS_GH:
 		return "gh";
+	case PS_RA:
+		return "ra";
+	case PS_GH_CELLINFO:
+		return "cells";
 	case PS_NONE:
 		return "none";
 	default:
@@ -89,6 +93,17 @@ void doPrintStats(std::ostream & out, liboscar::Static::OsmCompleter & completer
 	if (which & PS_RA) {
 		completer.store().regionArrangement().stats(out);
 		out << '\n';
+	}
+	if (which & PS_GH_CELLINFO) {
+		auto const & gh = completer.store().geoHierarchy();
+		out << "cell id;area;number of items;number of ancestors\n";
+		for(uint32_t cellId(0), s(gh.cellSize()); cellId < s; ++cellId) {
+			out << cellId << ';'
+				<< gh.cellBoundary(cellId).area() << ';'
+				<< gh.cellItemsCount(cellId) << ';'
+				<< gh.cellParentsSize(cellId)
+				<< '\n';
+		}
 	}
 }
 
