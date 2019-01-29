@@ -24,6 +24,8 @@ PrintStatsSelection printStatsfromString(const std::string & istr) {
 		return PS_DB;
 	else if("gh" == str)
 		return PS_GH;
+	else if("ra" == str)
+		return PS_RA;
 	else if("geo" == str)
 		return PS_GEO;
 	else if("tag" == str)
@@ -74,7 +76,7 @@ void Config::printHelp() {
 --symdiff-items-completers c1,c2\tprint symmetric difference between completer c1 and completer c2 \n \
 --kvstats\tprint key value stats of given query \n \
 --shannon-kvstats th\tprint key value stats of given query with a threshold of th (in percent)\n \
--ds which\tprint stats: all,idxstore,completer(compitems,comphierarchy,compgeocell),db,geo,tag \n \
+-ds which\tprint stats: all,idxstore,completer(compitems,comphierarchy,compgeocell),db,geo,tag,gh,ra \n \
 -dcs\tdump cell statistics \n \
 -dpsdb file\tprint db paper stats, file sets the interesting tags \n \
 -dpsgh file\tprint gh paper stats, file is outfile \n \

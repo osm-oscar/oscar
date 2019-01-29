@@ -16,6 +16,7 @@ typedef enum {
 	PS_GEO=0x40,
 	PS_TAG=0x80,
 	PS_GH=0x100,
+	PS_RA=0x200,
 	PS_ALL=0xFFFFFFFF
 } PrintStatsSelection;
 
@@ -226,6 +227,8 @@ struct WD_KVStats: public WD_CompleteStringClusteredTreedCqr {
 	WD_KVStats(const std::string & str, int printNumResults, uint32_t threadCount) : 
 	WD_CompleteStringClusteredTreedCqr(str, printNumResults, threadCount)
 	{}
+	std::vector<std::string> keyExclusions;
+	std::vector<std::pair<std::string, std::string>> keyValueExclusions;
 	virtual ~WD_KVStats() {}
 };
 
@@ -236,8 +239,6 @@ struct WD_ShannonKVStats: public WD_KVStats {
 	{}
 	virtual ~WD_ShannonKVStats() {}
 	double threshold;
-	std::vector<std::string> keyExclusions;
-	std::vector<std::pair<std::string, std::string>> keyValueExclusions;
 };
 
 struct WD_CompleteFromFileBase: public WD_CompletionBase {

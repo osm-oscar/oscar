@@ -83,6 +83,11 @@ void doPrintStats(std::ostream & out, liboscar::Static::OsmCompleter & completer
 	}
 	if (which & PS_GH) {
 		completer.store().geoHierarchy().printStats(out, completer.indexStore());
+		completer.store().regionArrangement().statsSummary(out);
+		out << '\n';
+	}
+	if (which & PS_RA) {
+		completer.store().regionArrangement().stats(out);
 		out << '\n';
 	}
 }
