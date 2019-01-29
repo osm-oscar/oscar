@@ -96,9 +96,10 @@ void doPrintStats(std::ostream & out, liboscar::Static::OsmCompleter & completer
 	}
 	if (which & PS_GH_CELLINFO) {
 		auto const & gh = completer.store().geoHierarchy();
-		out << "cell id;area;number of items;number of ancestors\n";
+		out << "cell id;diagonal;area;number of items;number of ancestors\n";
 		for(uint32_t cellId(0), s(gh.cellSize()); cellId < s; ++cellId) {
 			out << cellId << ';'
+				<< gh.cellBoundary(cellId).diagInM() << ';'
 				<< gh.cellBoundary(cellId).area() << ';'
 				<< gh.cellItemsCount(cellId) << ';'
 				<< gh.cellParentsSize(cellId)
