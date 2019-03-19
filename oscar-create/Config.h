@@ -62,7 +62,15 @@ struct TagStoreConfig {
 };
 
 struct TriangleRefinementConfig {
-	typedef enum { T_NONE, T_CONFORMING, T_GABRIEL, T_MAX_CENTROID_DISTANCE, T_LIPSCHITZ, T_MAX_EDGE_LENGTH_RATIO, T_MAX_EDGE_LENGTH} Type;
+	typedef enum {
+		T_NONE,T_CONFORMING,
+		T_GABRIEL,
+		T_MAX_CENTROID_DISTANCE,
+		T_LIPSCHITZ,
+		T_MAX_EDGE_LENGTH_RATIO,
+		T_MAX_EDGE_LENGTH,
+		T_MAX_EDGE_LENGTH_CGAL
+	} Type;
 	TriangleRefinementConfig();
 	TriangleRefinementConfig(const Json::Value & cfg, const std::string & basePath);
 	void update(const Json::Value & cfg, const std::string & basePath);

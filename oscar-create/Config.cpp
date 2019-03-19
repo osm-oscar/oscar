@@ -627,6 +627,16 @@ void TriangleRefinementConfig::update(const Json::Value & cfg, const std::string
 				throw sserialize::ConfigurationException("TriangleRefinementConfig", "Missing parameter: value");
 			}
 		}
+		else if (token == "max-edge-length-cgal") {
+			type = T_MAX_EDGE_LENGTH_CGAL;
+			v = cfg["value"];
+			if (v.isNumeric()) {
+				maxEdgeLength = v.asDouble();
+			}
+			else {
+				throw sserialize::ConfigurationException("TriangleRefinementConfig", "Missing parameter: value");
+			}
+		}
 		else {
 			throw sserialize::ConfigurationException("TriangleRefinementConfig", "Unknown type: " + token);
 		}

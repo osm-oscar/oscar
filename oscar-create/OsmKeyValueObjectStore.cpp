@@ -612,6 +612,15 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 		ct.trs.refineTriangulation(osmtools::OsmTriangulationRegionStore::TRAS_Osmtools, refiner);
 	}
 		break;
+	case TriangleRefinementConfig::T_MAX_EDGE_LENGTH_CGAL:
+	{
+		using TDS = osmtools::OsmTriangulationRegionStore::Triangulation;
+		osmtools::EdgeLengthMeshCriteria<TDS> refinerBase(ct.cc->rc.triangRefineCfg.maxEdgeLength);
+		osmtools::RefineTrianglesWithCellIdMeshCriteria<decltype(refinerBase)> refiner(refinerBase);
+		ct.trs.assignCellIds(ct.cc->numThreads);
+		ct.trs.refineTriangulation(osmtools::OsmTriangulationRegionStore::TRAS_DelaunayMesher, refiner);
+	}
+		break;
 	case TriangleRefinementConfig::T_NONE:
 	default:
 		break;
@@ -624,6 +633,7 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 		ct.trs.snapTriangulation(ct.cc->geometryCleanType, removedEdges);
 		std::cout << "Could not re-add " << num_removed_edges << " edges" << std::endl;
 	}
+	//BUG:this may produce a unrefined triangulation due to 
 	
 	ct.trs.initGrid(ct.cc->rc.polyStoreLatCount, ct.cc->rc.polyStoreLonCount);
 	ct.trs.assignCellIds(ct.cc->numThreads);
