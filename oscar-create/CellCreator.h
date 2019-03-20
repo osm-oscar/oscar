@@ -30,6 +30,7 @@ public:
 		struct CellItemEntry {
 			uint32_t cellId;
 			uint32_t itemId;
+			CellItemEntry() : CellItemEntry(std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max()) {}
 			CellItemEntry(uint32_t cellId, uint32_t itemId) : cellId(cellId), itemId(itemId) {}
 		};
 		

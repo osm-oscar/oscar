@@ -180,6 +180,7 @@ struct ChildrenOfGeoRegion {
 			uint64_t size;
 		} o;
 	} u;
+	ChildrenOfGeoRegion() : ChildrenOfGeoRegion(0, 0) {}
 	ChildrenOfGeoRegion(uint32_t * begin, uint32_t * end) { u.p.m_begin = begin; u.p.m_end = end;}
 	uint32_t * begin() { return u.p.m_begin; }
 	uint32_t * end() { return u.p.m_end; }
