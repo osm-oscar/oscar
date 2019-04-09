@@ -17,14 +17,47 @@ This is a simple command line program to search with the files created by oscar-
 #### oscar-gui
 This is a qt-based gui application to search the files created by oscar-create
 
-# Setup
-Initialize all submodules and their submodules or clone with --recursive
+# Clone
+```
+git clone --recursive https://github.com/dbahrdt/oscar
+```
+
+# Prerequisites
+In order to compile and run OSCAR you at least need the following libraries:
+
+- ragel
+- CGAL
+- Google Protobuf
+- zlib
+- Cairo
+- libmarble
+- Qt5
+
+
+Note that on some distributions these libraries are split into multiple packages with extra packages for the development files.
+These are usually denoted with a "dev" at the end.
 
 # Building
 
-## LTO and ultra builds
+## Debug builds
+```
 mkdir build && cd build
-CMAKE_GCC_VERSION_FOR_LTO=4.9 cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/setup-lto.cmake -DCMAKE_BUILD_TYPE=ultra ../
+cmake ../
+make
+```
+
+## LTO and ultra builds
+This currently only works with gcc. You first have to determine your version of gcc and its full path.
+On Debian Buster this is GCC 8.2 with the full path beeing `/usr/bin/gcc-8`.
+We only need the version numbers at the end:
+
+```
+mkdir build && cd build
+CMAKE_GCC_VERSION_FOR_LTO=8 cmake -DCMAKE_BUILD_TYPE=ultra ../
+```
 
 Note that changing build types afterwards is not supported as this does not set the correct compiler flags
+
+## AutoFDO
+ * Get a not too recent perf (should work with 4.12)
 
