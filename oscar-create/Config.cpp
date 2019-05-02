@@ -965,7 +965,7 @@ void TextSearchConfig::update(const Json::Value& cf, const std::string& basePath
 	if (v.isBool()) {
 		enabled = v.asBool();
 	}
-	
+
 	v = cf["items"];
 	if (v.isObject()) {
 		parseTagTypeObject(v, basePath, ItemType::ITEM);
@@ -1304,6 +1304,11 @@ void OOMGeoCellConfig::updateSelf(const Json::Value& cfg) {
 	v = cfg["cellLocalIds"];
 	if (v.isBool()) {
 		cellLocalIds = v.asBool();
+	}
+	
+	v = cfg["foreignObjects"];
+	if (v.isBool()) {
+		foreignObjects = v.asBool();
 	}
 }
 

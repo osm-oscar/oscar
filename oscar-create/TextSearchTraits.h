@@ -41,11 +41,15 @@ struct BaseSearchTraitsState {
 };
 
 struct OOM_SA_CTC_TraitsState {
+	liboscar::Static::OsmKeyValueObjectStore store;
 	sserialize::Static::spatial::GeoHierarchy gh;
 	sserialize::Static::ItemIndexStore idxStore;
-	OOM_SA_CTC_TraitsState(const sserialize::Static::spatial::GeoHierarchy & gh, const sserialize::Static::ItemIndexStore & idxStore) :
-	gh(gh),
-	idxStore(idxStore)
+	bool withForeignObjects;
+	OOM_SA_CTC_TraitsState(const liboscar::Static::OsmKeyValueObjectStore & store, const sserialize::Static::ItemIndexStore & idxStore, bool withForeignObjects) :
+	store(store),
+	gh(store.geoHierarchy()),
+	idxStore(idxStore),
+	withForeignObjects(withForeignObjects)
 	{}
 };
 
@@ -163,15 +167,109 @@ public:
 	private:
 		std::shared_ptr<OOM_SA_CTC_TraitsState> m_state;
 	};
+	
+	class ForeignObjectsPredicate {
+	private:
+		bool m_withForeignObjects;
+	public:
+		ForeignObjectsPredicate(bool foreignMatches) : m_withForeignObjects(foreignMatches) {}
+		bool operator()(const item_type &) {
+			return T_ITEM_TYPE == TextSearchConfig::ItemType::REGION && m_withForeignObjects;
+		}
+	};
+	
+	class ForeignObjects {
+	public:
+		ForeignObjects(const std::shared_ptr<OOM_SA_CTC_TraitsState> & state) :
+		m_state(state)
+		{}
+	public:
+		template<typename TOutputIterator>
+		void cells(const item_type & item, TOutputIterator out) {
+			if (currentItemId() != item.id()) {
+				extract(item);
+			}
+			cells(out);
+		}
+		template<typename TOutputIterator>
+		void items(const item_type & item, uint32_t cellId, TOutputIterator out) {
+			if (currentItemId() != item.id()) {
+				extract(item);
+			}
+			items(cellId, out);
+		}
+	private:
+		uint32_t currentItemId() const {
+			return m_cItemId;
+		}
+		
+		void extract(item_type const & item) {
+			if (!item.isRegion()) {
+				return;
+			}
+			uint32_t ghId = m_state->gh.storeIdToGhId(item.id());
+			
+			sserialize::ItemIndex regionCells(m_state->idxStore.at(m_state->gh.regionCellIdxPtr(ghId)));
+			m_regionCells.insert(regionCells.begin(), regionCells.end());
+			
+			sserialize::ItemIndex regionItems;
+			
+			if (m_state->gh.hasRegionItems()) {
+				regionItems = m_state->idxStore.at(m_state->gh.regionItemsPtr(ghId));
+			}
+			else {
+				std::vector<sserialize::ItemIndex> tmp;
+				for(uint32_t cellId : regionCells) {
+					tmp.emplace_back(m_state->idxStore.at(m_state->gh.cellItemsPtr(cellId)));
+				}
+				regionItems = sserialize::ItemIndex::unite(tmp);
+			}
+			
+			for(uint32_t itemId : regionItems) {
+				auto itemCells = m_state->store.at(itemId).cells();
+				for(uint32_t cellId : itemCells) {
+					if (!m_regionCells.count(cellId)) {
+						m_cell2Items[cellId].push_back(itemId);
+					}
+				}
+			}
+			
+			m_regionCells.clear();
+			m_cItemId = item.id();
+		}
+		
+		template<typename TOutputIterator>
+		void cells(TOutputIterator out) const {
+			for(auto const & x : m_cell2Items) {
+				*out = x.first;
+				++out;
+			}
+		}
+		
+		template<typename TOutputIterator>
+		void items(uint32_t cellId, TOutputIterator out) const {
+			if (m_cell2Items.count(cellId)) {
+				auto const & x = m_cell2Items.at(cellId);
+				std::copy(x.begin(), x.end(), out);
+			}
+		}
+	private:
+		std::shared_ptr<OOM_SA_CTC_TraitsState> m_state;
+		uint32_t m_cItemId{liboscar::Static::OsmKeyValueObjectStore::npos};
+		std::unordered_set<uint32_t> m_regionCells;
+		std::unordered_map<uint32_t, std::vector<uint32_t>> m_cell2Items;
+	};
 public:
 	inline ExactStrings exactStrings() { return ExactStrings(m_state); }
 	inline SuffixStrings suffixStrings() { return SuffixStrings(m_state); }
 	inline ItemId itemId() { return ItemId(); }
 	inline ItemCells itemCells() { return ItemCells(m_itemCellsState); }
+	inline ForeignObjectsPredicate foreignObjectsPredicate() { return ForeignObjectsPredicate(m_itemCellsState->withForeignObjects); }
+	inline ForeignObjects foreignObjects() { return ForeignObjects(m_itemCellsState); }
 public:
-	OOM_SA_CTC_Traits(const TextSearchConfig & tsc, const liboscar::Static::OsmKeyValueObjectStore & store, const sserialize::Static::ItemIndexStore & idxStore) : 
-	m_state(new State(store.kvStore(), tsc)),
-	m_itemCellsState(new OOM_SA_CTC_TraitsState(store.geoHierarchy(), idxStore)) {}
+	OOM_SA_CTC_Traits(const OOMGeoCellConfig & cfg, const liboscar::Static::OsmKeyValueObjectStore & store, const sserialize::Static::ItemIndexStore & idxStore) : 
+	m_state(new State(store.kvStore(), cfg)),
+	m_itemCellsState(new OOM_SA_CTC_TraitsState(store, idxStore, cfg.foreignObjects)) {}
 	OOM_SA_CTC_Traits(const std::shared_ptr<State> & state) : m_state(state) {}
 protected:
 	inline const StateSharedPtr & state() const { return m_state; }
@@ -215,7 +313,6 @@ public:
 					return cId2lId.second;
 				}
 			}
-			sserialize::breakHereIf(true);
 			throw std::out_of_range("Could not find item " + std::to_string(id) + " in cell " + std::to_string(cellId));
 			return 0;
 		}
@@ -232,7 +329,7 @@ public:
 	inline ItemId itemId() { return ItemId(m_cellLocalItemIds); }
 public:
 	OOM_SA_CTC_CellLocalIds_Traits(
-		const TextSearchConfig & tsc,
+		const OOMGeoCellConfig & tsc,
 		const liboscar::Static::OsmKeyValueObjectStore & store,
 		const sserialize::Static::ItemIndexStore & idxStore,
 		const std::shared_ptr<OOM_SA_CTC_CellLocalIds_TraitsState> & cellLocalItemIds) : 

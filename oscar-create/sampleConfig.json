@@ -141,7 +141,8 @@
 			"_comment"  : "oomgeocell config",
 			"threadCount" : 0,
 			"maxMemoryUsage _in_Mebibytes_" : 16,
-			"cellLocalIds" : false
+			"cellLocalIds" : false,
+			"foreignObjects": false
 		}
 	}
 }

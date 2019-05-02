@@ -252,6 +252,7 @@ public:
 	uint32_t payloadConcurrency;
 	sserialize::OffsetType maxMemoryUsage;
 	bool cellLocalIds;
+	bool foreignObjects{false};
 };
 
 class Config {
