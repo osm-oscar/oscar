@@ -4,7 +4,9 @@
 		{
 			"type" : "oomgeocell",
 			"id" : "oomgeocell",
-			"foreignObjects" true
+			"config" : {
+				"foreignObjects" : true
+			}
 		}
 	]
 }

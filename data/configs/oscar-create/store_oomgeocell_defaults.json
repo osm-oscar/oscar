@@ -1,0 +1,12 @@
+{
+	"include": [
+		"common.json",
+		"store_all.json",
+		"store_cellsplit1k.json",
+		"store_grid100.json",
+		"store_threads8.json",
+		"oomgeocell.json",
+		"oomgeocell_substring.json",
+		"oomgeocell_threads8.json"
+	]
+}

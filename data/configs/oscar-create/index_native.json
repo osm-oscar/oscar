@@ -1,0 +1,7 @@
+{
+	"index" : {
+		"type" : "native",
+		"check" : false,
+		"deduplicate" : true
+	}
+}
