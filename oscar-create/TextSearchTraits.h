@@ -9,10 +9,6 @@
 //This is currently not the case but should be done
 //There should probably be an extra query to support that so that one can explicitly search for regions as items
 
-//BUG: If an item spans multiple regions then the item also has to be added to the respective reiong search strings
-//consider the query (@highway fellbach) / (@highway:stuttgart) which should result in all highways that are in stuttgart and fellbach
-//in order for this to work correctly fellbach/stuttgart needs to deref into the enclosed full-match cells AND partial-match cells containing the items that are part of fellbach/stuttgart AND part of something else
-
 namespace oscar_create {
 
 class FilterState {
@@ -204,9 +200,12 @@ public:
 		}
 		
 		void extract(item_type const & item) {
-			if (!item.isRegion()) {
+			if (!item.isRegion() || T_ITEM_TYPE != TextSearchConfig::ItemType::REGION) {
 				return;
 			}
+			m_cell2Items.clear();
+			m_cItemId = item.id();
+			
 			uint32_t ghId = m_state->gh.storeIdToGhId(item.id());
 			
 			sserialize::ItemIndex regionCells(m_state->idxStore.at(m_state->gh.regionCellIdxPtr(ghId)));
@@ -235,7 +234,6 @@ public:
 			}
 			
 			m_regionCells.clear();
-			m_cItemId = item.id();
 		}
 		
 		template<typename TOutputIterator>
