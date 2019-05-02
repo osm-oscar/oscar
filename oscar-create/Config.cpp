@@ -1425,41 +1425,53 @@ Config::ReturnValues Config::fromCmdLineArgs(int argc, char** argv) {
 		std::string basePath( sserialize::MmappedFile::dirName(path) );
 		Json::Value root;
 		
-		inFileStream.open(path);
-		if (!inFileStream.is_open()) {
-			std::cerr << "could not open config file " << path << std::endl;
-			return RV_FAILED;
-		}
-		inFileStream >> root;
-		
-		Json::Value incDv = root["include"];
-		if (incDv.isString()) { //single include
-			self( toAbsolutePath( incDv.asString(), basePath) );
-		}
-		else if (incDv.isArray()) {
-			for(Json::ArrayIndex j(0), s(incDv.size()); j < s; ++j) {
-				if (!incDv[j].isString()) {
-					std::cerr << "Invalid config option in file " << path << ": include directive takes a string or an array of strings" << std::endl;
-					return RV_FAILED;
-				}
-				if ( RV_OK != self( toAbsolutePath( incDv[j].asString(), basePath) ) ) {
-					return RV_FAILED;
-				}
-				
+		try {
+			inFileStream.open(path);
+			if (!inFileStream.is_open()) {
+				std::cerr << "could not open config file " << path << std::endl;
+				return RV_FAILED;
 			}
+			inFileStream >> root;
+			
+			Json::Value incDv = root["include"];
+			if (incDv.isString()) { //single include
+				self( toAbsolutePath( incDv.asString(), basePath) );
+			}
+			else if (incDv.isArray()) {
+				for(Json::ArrayIndex j(0), s(incDv.size()); j < s; ++j) {
+					if (!incDv[j].isString()) {
+						std::cerr << "Invalid config option in file " << path << ": include directive takes a string or an array of strings" << std::endl;
+						return RV_FAILED;
+					}
+					if ( RV_OK != self( toAbsolutePath( incDv[j].asString(), basePath) ) ) {
+						return RV_FAILED;
+					}
+					
+				}
+			}
+			else if (!incDv.isNull()) {
+				std::cerr << "Invalid config option in file " << path << ": include directive takes a string or an array of strings" << std::endl;
+				return RV_FAILED;
+			}
+			
+			//and append our own data changes to the processing queue
+			configData.emplace_back( path, std::move(root) );
 		}
-		else if (!incDv.isNull()) {
-			std::cerr << "Invalid config option in file " << path << ": include directive takes a string or an array of strings" << std::endl;
+		catch(std::exception const & e) {
+			std::cerr << "An error occured while parsing file " << path << ":\n" << e.what() << std::endl;
 			return RV_FAILED;
 		}
-		
-		//and append our own data changes to the processing queue
-		configData.emplace_back( path, std::move(root) );
 		return RV_OK;
 	});
 	
 	for(std::size_t i(0); i < configFiles.size(); ++i) {
-		auto rt = handleConfigFile( toAbsolutePath(configFiles.at(i), ".") );
+		Config::ReturnValues rt = Config::RV_FAILED;
+		try {
+			rt = handleConfigFile( toAbsolutePath(configFiles.at(i), ".") );
+		}
+		catch (std::exception const & e) {
+			std::cerr << "An error occured while parsing file " << configData.at(i).first << ":\n" << e.what() << std::endl;
+		}
 		if (rt != oscar_create::Config::RV_OK) {
 			return rt;
 		}
@@ -1571,7 +1583,7 @@ Config::ReturnValues Config::fromCmdLineArgs(int argc, char** argv) {
 				}
 			}
 		}
-		catch (const sserialize::ConfigurationException & e) {
+		catch (const std::exception & e) {
 			std::cerr << "An error occured while parsing file " << configData.at(i).first << ": " << e.what() << std::endl;
 			return oscar_create::Config::RV_FAILED;
 		}
