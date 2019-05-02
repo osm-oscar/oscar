@@ -306,7 +306,8 @@ std::ostream & OOMGeoCellConfig::print(std::ostream& out) const {
 	out << "Sort concurrency: " << sortConcurrency << '\n';
 	out << "Payload concurrency: " << payloadConcurrency << '\n';
 	out << "Max memory usage: " << sserialize::prettyFormatSize(maxMemoryUsage) << '\n';
-	out << "Cell local ids: " << (cellLocalIds ? "yes" : "no");
+	out << "Cell local ids: " << (cellLocalIds ? "yes" : "no") << '\n';
+	out << "foreignObjects: " << toString(foreignObjects);
 	return out;
 }
 
