@@ -3,7 +3,7 @@
 		"threadCount" : 6,
 		"blobFetchCount" : 5,
 		"nodeTableSize" : 100000000,
-		"grtMinDiag" : 1000,
+		"grtMinDiag" : 1000
 	},
 	"textsearch" :
 	[
