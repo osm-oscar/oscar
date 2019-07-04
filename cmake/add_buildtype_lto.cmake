@@ -16,12 +16,12 @@ ENDIF()
 IF ( (NOT LTO_BUILD_TYPE_ADDED) )
 
 	SET(CMAKE_CXX_FLAGS_LTO
-		"-DNDEBUG -g -O3 -march=native -flto -fno-fat-lto-objects -frounding-math"
+		"-DNDEBUG -g -O3 -march=native -flto -fno-fat-lto-objects"
 		CACHE STRING "Flags used by the C++ compiler during lto builds."
 		FORCE
 	)
 	SET(CMAKE_C_FLAGS_LTO
-		"-DNDEBUG -g -O3 -march=native -flto -fno-fat-lto-objects -frounding-math"
+		"-DNDEBUG -g -O3 -march=native -flto -fno-fat-lto-objects"
 		CACHE STRING "Flags used by the C compiler during lto builds."
 		FORCE
 	)
