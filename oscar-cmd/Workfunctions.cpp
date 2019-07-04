@@ -894,6 +894,20 @@ void Worker::dumpItem(WD_DumpItem& d) {
 	std::cout << std::endl;
 }
 
+void Worker::dumpItemParents(WD_DumpItemParents & d) {
+	std::set<uint32_t> parents;
+	for(auto x : completer.store().at(d.value).cells()) {
+		auto cell = completer.store().geoHierarchy().cell(x);
+		for(uint32_t i(0), s(cell.parentsSize()); i < s; ++i) {
+			parents.insert(cell.parent(i));
+		}
+	}
+	for(auto x : parents) {
+		completer.store().at(completer.store().geoHierarchy().ghIdToStoreId(x)).print(std::cout, false);
+		std::cout << std::endl;
+	}
+}
+
 void Worker::dumpAllItems(WD_DumpAllItems& d) {
 	for(uint32_t i(0), s(completer.store().size()); i < s; ++i) {
 		completer.store().at(i).print(std::cout, d.value);

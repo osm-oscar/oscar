@@ -49,6 +49,7 @@ struct Worker {
 	
 	void dumpIndex(WD_DumpIndex& d);
 	void dumpItem(WD_DumpItem & d);
+	void dumpItemParents(WD_DumpItemParents & d);
 	void dumpAllItems(WD_DumpAllItems & d);
 	void dumpGhRegion(WD_DumpGhRegion & d);
 	void dumpGhCell(WD_DumpGhCell & d);

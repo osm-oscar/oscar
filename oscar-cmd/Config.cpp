@@ -90,6 +90,7 @@ void Config::printHelp() {
 -dss which,selector\tprint single stat \n \
 -dx num\tdump index with id=num \n \
 -di num\tdump item num \n \
+-dip num\tdump item parents \n \
 --dump-all-items\tdump all items \n \
 --dump-all-itemtags-with-inherited-tags k=keyfile,o=outfile\tdump all items \n \
 -dks file\tdump key string table to file \n \
@@ -352,6 +353,10 @@ int Config::parseSingleArg(int argc, char ** argv, int & i, int & printNumResult
 	}
 	else if (arg == "-di" && i+1 < argc) {
 		workItems.emplace_back(WorkItem::DUMP_ITEM, new WD_DumpItem(atoi(argv[i+1])) );
+		++i;
+	}
+	else if (arg == "-dip" && i+1 < argc) {
+		workItems.emplace_back(WorkItem::DUMP_ITEM_PARENTS, new WD_DumpItemParents(atoi(argv[i+1])) );
 		++i;
 	}
 	else if (arg == "--dump-all-items") {

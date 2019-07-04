@@ -87,6 +87,9 @@ int main(int argc, char **argv) {
 			case Config::WorkItem::DUMP_ITEM:
 				worker.dumpItem(*workItem.data->as<WD_DumpItem>());
 				break;
+			case Config::WorkItem::DUMP_ITEM_PARENTS:
+				worker.dumpItemParents(*workItem.data->as<WD_DumpItemParents>());
+				break;
 			case Config::WorkItem::DUMP_ALL_ITEMS:
 				worker.dumpAllItems(*workItem.data->as<WD_DumpAllItems>());
 				break;
