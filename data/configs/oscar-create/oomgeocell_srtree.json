@@ -1,0 +1,9 @@
+{
+	"include": [
+		"oomgeocell.json",
+		"oomgeocell_substring.json",
+		"oomgeocell_threads8.json",
+		"oomgeocell_foreignobjects.json",
+		"oomgeocell_diacritic_sensitive.json"
+	]
+}
