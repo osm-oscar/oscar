@@ -192,7 +192,7 @@ int Config::parseSingleArg(int argc, char ** argv, int & i, int & printNumResult
 	else if (arg == "-csc") {
 		workItems.emplace_back(Config::WorkItem::COMPLETE_STRING_CLUSTERED, new WD_CompleteStringClustered(completionString, printNumResults, threadCount));
 	}
-	else if (arg == "cscd") {
+	else if (arg == "-cscd") {
 		workItems.emplace_back(Config::WorkItem::COMPLETE_STRING_DECELLED, new WD_CompleteStringDecelled(completionString, printNumResults, threadCount));
 	}
 	else if (arg == "-csct") {
