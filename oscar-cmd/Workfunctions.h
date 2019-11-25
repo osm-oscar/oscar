@@ -75,6 +75,7 @@ struct Worker {
 	void completeStringSimple(WD_CompleteStringSimple& d);
 	void completeStringFull(WD_CompleteStringFull& d);
 	void completeStringClustered(WD_CompleteStringClustered & d, bool treedCQR);
+	void completeStringDecelled(WD_CompleteStringDecelled & d);
 	
 	void completeFromFilePartial(WD_CompleteFromFilePartial & d);
 	void completeFromFileSimple(WD_CompleteFromFileSimple& d);

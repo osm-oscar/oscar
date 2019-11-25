@@ -29,6 +29,7 @@ public:
 	void doSimpleCompletion(const std::vector< std::string > & completionStrings, int count, int minStrLen, int printNumResults);
 	void doPartialCompletion(const std::vector<std::string> & completionStrings, int count, int printNumResults);
 	void doClusteredComplete(const std::vector<std::string> & completionStrings, int printNumResults, bool treedCQR, uint32_t threadCount);
+	void doDecelledComplete(const std::vector<std::string> & completionStrings, int printNumResults, uint32_t threadCount);
 
 	void doFullCompletion(bool printStats);
 	void doSimpleCompletion(uint32_t count, uint32_t minStrLen, bool printStats);

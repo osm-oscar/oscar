@@ -6,6 +6,8 @@
 #include <liboscar/AdvancedCellOpTree.h>
 #include <liboscar/CQRFromComplexSpatialQuery.h>
 
+#include "DecelledACOT.h"
+
 using namespace std;
 using namespace liboscar;
 
@@ -223,6 +225,44 @@ void LiveCompletion::doClusteredComplete(const std::vector<std::string> & comple
 		
 		cs.idxTime.begin();
 		retIdx = cqr.flaten(threadCount);
+		cs.idxTime.end();
+
+		return liboscar::Static::OsmItemSet(c->store(), retIdx);
+	};
+	auto uf = [&cf](liboscar::Static::OsmItemSet & s, LiveCompletion::CompletionStats & cs) -> void {
+		s = cf(cs);
+	};
+	completionBase(completionStrings, cf, printNumResults, uf);
+}
+
+void
+LiveCompletion::doDecelledComplete(const std::vector<std::string> & completionStrings, int printNumResults, uint32_t threadCount) {
+	liboscar::Static::OsmCompleter * c = &m_completer;
+	auto cf = [&c, threadCount](LiveCompletion::CompletionStats & cs) -> liboscar::Static::OsmItemSet {
+		sserialize::ItemIndex retIdx;
+	
+		if (!c->textSearch().hasSearch(liboscar::TextSearch::Type::GEOCELL)) {
+			throw sserialize::UnsupportedFeatureException("OsmCompleter::cqrComplete data has no CellTextCompleter");
+		}
+		sserialize::Static::CellTextCompleter cmp( c->textSearch().get<liboscar::TextSearch::Type::GEOCELL>() );
+		sserialize::Static::CQRDilator cqrd(c->store().cellCenterOfMass(), c->store().cellGraph());
+		CQRFromPolygon cqrfp(c->store(), c->indexStore());
+		CQRFromComplexSpatialQuery csq(c->ghsg(), cqrfp);
+
+		cs.parseTime.begin();
+		AdvancedCellOpTree opTree(cmp, cqrd, csq, c->ghsg());
+		opTree.parse(cs.query);
+		cs.parseTime.end();
+		
+		cs.calcTime.begin();
+		oscar_cmd::DecelledACOT dOpTree(opTree);
+		dOpTree.clear();
+		dOpTree.prepare();
+		dOpTree.flaten(threadCount);
+		cs.calcTime.end();
+		
+		cs.idxTime.begin();
+		retIdx = dOpTree.execute();
 		cs.idxTime.end();
 
 		return liboscar::Static::OsmItemSet(c->store(), retIdx);

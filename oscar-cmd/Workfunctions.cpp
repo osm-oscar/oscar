@@ -1316,6 +1316,12 @@ void Worker::completeStringClustered(WD_CompleteStringClustered & d, bool treedC
 	liveCompleter.doClusteredComplete(strs, d.printNumResults, treedCQR, d.threadCount);
 }
 
+void Worker::completeStringDecelled(WD_CompleteStringDecelled & d) {
+	std::vector<std::string> strs(1, d.str);
+	LiveCompletion liveCompleter(completer);
+	liveCompleter.doDecelledComplete(strs, d.printNumResults, d.threadCount);
+}
+
 void Worker::completeFromFilePartial(WD_CompleteFromFilePartial & d) {
 	std::vector<std::string> strs;
 	readCompletionStringsFromFile(d.fileName, std::back_insert_iterator< std::vector<std::string> >(strs));

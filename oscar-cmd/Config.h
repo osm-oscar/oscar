@@ -225,6 +225,13 @@ struct WD_CompleteStringClusteredTreedCqr: public WD_CompleteStringClustered {
 	virtual ~WD_CompleteStringClusteredTreedCqr() {}
 };
 
+struct WD_CompleteStringDecelled: public WD_CompleteStringBase {
+	WD_CompleteStringDecelled(const std::string & str, int printNumResults, uint32_t threadCount) : 
+	WD_CompleteStringBase(str, printNumResults), threadCount(threadCount) {}
+	virtual ~WD_CompleteStringDecelled() {}
+	uint32_t threadCount;
+};
+
 struct WD_KVStats: public WD_CompleteStringClusteredTreedCqr {
 	WD_KVStats(const std::string & str, int printNumResults, uint32_t threadCount) : 
 	WD_CompleteStringClusteredTreedCqr(str, printNumResults, threadCount)
@@ -313,7 +320,7 @@ public:
 			ITEMS_FROM_QUERY,
 			CELLS_FROM_QUERY, CELL_IMAGE_FROM_QUERY,
 			INTERACTIVE_PARTIAL, INTERACTIVE_SIMPLE, INTERACTIVE_FULL,
-			COMPLETE_STRING_PARTIAL, COMPLETE_STRING_SIMPLE, COMPLETE_STRING_FULL, COMPLETE_STRING_CLUSTERED, COMPLETE_STRING_CLUSTERED_TREED_CQR,
+			COMPLETE_STRING_PARTIAL, COMPLETE_STRING_SIMPLE, COMPLETE_STRING_FULL, COMPLETE_STRING_CLUSTERED, COMPLETE_STRING_CLUSTERED_TREED_CQR, COMPLETE_STRING_DECELLED,
 			COMPLETE_FROM_FILE_PARTIAL, COMPLETE_FROM_FILE_SIMPLE, COMPLETE_FROM_FILE_FULL, COMPLETE_FROM_FILE_CLUSTERED, COMPLETE_FROM_FILE_CLUSTERED_TREED_CQR,
 			SYMDIFF_ITEMS_COMPLETERS,
 			CREATE_COMPLETION_STRINGS, BENCHMARK, CONSISTENCY_CHECK,

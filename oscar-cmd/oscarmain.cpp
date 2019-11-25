@@ -189,6 +189,9 @@ int main(int argc, char **argv) {
 			case Config::WorkItem::COMPLETE_STRING_CLUSTERED_TREED_CQR:
 				worker.completeStringClustered(*workItem.data->as<WD_CompleteStringClustered>(), true);
 				break;
+			case Config::WorkItem::COMPLETE_STRING_DECELLED:
+				worker.completeStringDecelled(*workItem.data->as<WD_CompleteStringDecelled>());
+				break;
 			case Config::WorkItem::COMPLETE_FROM_FILE_PARTIAL:
 				worker.completeFromFilePartial(*workItem.data->as<WD_CompleteFromFilePartial>());
 				break;

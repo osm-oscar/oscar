@@ -67,6 +67,7 @@ void Config::printHelp() {
 -csf\tfull complete string \n \
 -csc\tgeocell complete string \n \
 -csct\tgeocell with treed-cqr complete string \n \
+-cscd\tgeocell with decelled complete string \n \
 -cip num\tinteractive partial complete and seek num items \n \
 -cis ms,mr\tinteractive simple complete with minStrLen=ms and maxResultSetSize=mr \n \
 -cif\tinteractive full complete \n \
@@ -190,6 +191,9 @@ int Config::parseSingleArg(int argc, char ** argv, int & i, int & printNumResult
 	}
 	else if (arg == "-csc") {
 		workItems.emplace_back(Config::WorkItem::COMPLETE_STRING_CLUSTERED, new WD_CompleteStringClustered(completionString, printNumResults, threadCount));
+	}
+	else if (arg == "cscd") {
+		workItems.emplace_back(Config::WorkItem::COMPLETE_STRING_DECELLED, new WD_CompleteStringDecelled(completionString, printNumResults, threadCount));
 	}
 	else if (arg == "-csct") {
 		workItems.emplace_back(Config::WorkItem::COMPLETE_STRING_CLUSTERED_TREED_CQR, new WD_CompleteStringClusteredTreedCqr(completionString, printNumResults, threadCount));
