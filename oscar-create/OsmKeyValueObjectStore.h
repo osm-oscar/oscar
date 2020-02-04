@@ -37,6 +37,7 @@ struct OsmKeyValueRawItem {
 		OsmKeyValueDataPayload(const OsmKeyValueDataPayload & other) : osmIdType(other.osmIdType), shape(other.shape), score(other.score), id(other.id) {}
 		///shape has to be manualy deleted
 		~OsmKeyValueDataPayload() {}
+		OsmKeyValueDataPayload & operator=(OsmKeyValueDataPayload const &) = default;
 		liboscar::OsmIdType osmIdType;
 		sserialize::spatial::GeoShape * shape;
 		uint32_t score;
@@ -213,6 +214,7 @@ private:
 		RawGeoPoint(const std::pair<double, double> & other) : std::pair<double, double>(other) {}
 		RawGeoPoint(const RawGeoPoint & other) : std::pair<double, double>(other) {}
 		~RawGeoPoint() {}
+		RawGeoPoint & operator=(RawGeoPoint const &) = default;
 	};
 	
 	struct RegionInfo {
