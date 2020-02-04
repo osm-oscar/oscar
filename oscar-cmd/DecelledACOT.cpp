@@ -60,7 +60,8 @@ sserialize::ItemIndex DecelledACOT::execute(Node * node) {
 		switch(node->subType) {
 		case Node::FM_CONVERSION_OP:
 		case Node::CELL_DILATION_OP:
-		case Node::REGION_DILATION_OP:
+		case Node::REGION_DILATION_BY_CELL_COVERAGE_OP:
+		case Node::REGION_DILATION_BY_ITEM_COVERAGE_OP:
 		case Node::COMPASS_OP:
 		case Node::RELEVANT_ELEMENT_OP:
 		case Node::QUERY_EXCLUSIVE_CELLS:
@@ -149,7 +150,8 @@ void DecelledACOT::prepare(Node * node) {
 		case Node::CELL_DILATION_OP:
 			throw sserialize::UnsupportedFeatureException("DecelledACOT: CELL_DILATION_OP");
 			break;
-		case Node::REGION_DILATION_OP:
+		case Node::REGION_DILATION_BY_CELL_COVERAGE_OP:
+		case Node::REGION_DILATION_BY_ITEM_COVERAGE_OP:
 			throw sserialize::UnsupportedFeatureException("DecelledACOT: REGION_DILATION_OP");
 			break;
 		case Node::COMPASS_OP:
