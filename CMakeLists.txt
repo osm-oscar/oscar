@@ -11,18 +11,6 @@ set(CMAKE_MODULE_PATH
 	${CMAKE_SOURCE_DIR}/vendor/sserialize/cmake/
 )
 
-include_directories(
-	${CMAKE_SOURCE_DIR}
-	${CMAKE_CURRENT_BINARY_DIR}
-	${CMAKE_CURRENT_SOURCE_DIR}
-	${CMAKE_CURRENT_SOURCE_DIR}/vendor/osmpbf
-	${CMAKE_CURRENT_SOURCE_DIR}/vendor/osmpbf/osmpbf/include
-	${CMAKE_CURRENT_SOURCE_DIR}/vendor/libosmtools/include
-	${CMAKE_CURRENT_SOURCE_DIR}/liboscar/include
-	${CMAKE_CURRENT_SOURCE_DIR}/liboscar/vendor/sserialize/include
-	${LIBDTS2_INCLUDE_DIR}
-)
-
 include(set_highest_cpp)
 include(add_buildtype_lto)
 include(add_buildtype_sanitize_debug)
