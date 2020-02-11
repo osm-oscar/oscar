@@ -15,7 +15,7 @@ void addWidgetWithLabel(QLayout * layout, QWidget * widget, const QString & labe
 	layout->addWidget(widget);
 }
 
-VisualizationOptionsWidget::VisualizationOptionsWidget(const States & states) :
+VisualizationOptionsWidget::VisualizationOptionsWidget(const States & /*states*/) :
 QWidget(),
 m_dspCqrCells(new QComboBox()),
 m_colorScheme(new QComboBox()),

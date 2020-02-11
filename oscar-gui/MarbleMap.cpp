@@ -501,7 +501,6 @@ void MarbleMap::zoomTo(const sserialize::spatial::GeoRect & b) {
 }
 
 void MarbleMap::zoomTo(const Marble::GeoDataLatLonBox& bbox) {
-	qDebug() << "Zoom to" << bbox.toString(Marble::GeoDataCoordinates::Degree);
 	m_map->centerOn(bbox, true);
 }
 

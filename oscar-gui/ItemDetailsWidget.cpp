@@ -2,7 +2,7 @@
 
 namespace oscar_gui {
 
-ItemDetailsWidget::ItemDetailsWidget(const States & states) :
+ItemDetailsWidget::ItemDetailsWidget(const States & /*states*/) :
 QWidget()
 {}
 

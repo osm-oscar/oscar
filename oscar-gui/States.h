@@ -159,8 +159,6 @@ class States: QObject {
 Q_OBJECT
 public:
 	explicit States(const std::shared_ptr<liboscar::Static::OsmCompleter> & cmp);
-	States(const States & other) = default;
-	States & operator=(const States & other) = default;
 public:
 	std::shared_ptr<liboscar::Static::OsmCompleter> cmp;
 	std::shared_ptr<SearchGeometryState> sgs;

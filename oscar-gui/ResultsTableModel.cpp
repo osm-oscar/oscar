@@ -107,7 +107,7 @@ void ResultsTableModel::clicked(const QModelIndex& index) {
 	doubleClicked(index);
 }
 
-void ResultsTableModel::headerClicked(int index) {
+void ResultsTableModel::headerClicked(int /*index*/) {
 	;
 }
 

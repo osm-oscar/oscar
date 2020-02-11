@@ -11,11 +11,16 @@ public:
 	SemaphoreLocker(QSemaphore & s, const int c = READ_LOCK) : m_s(s), m_c(c), m_locked(false) {
 		lock();
 	}
-	SemaphoreLocker(SemaphoreLocker &&) = default;
+	SemaphoreLocker(SemaphoreLocker && other) :
+	m_s(other.m_s),
+	m_c(other.m_c),
+	m_locked(other.m_locked)
+	{
+		other.m_locked = false;
+	}
 	~SemaphoreLocker() {
 		unlock();
 	}
-	SemaphoreLocker & operator=(SemaphoreLocker &&) = default;
 	inline void unlock() {
 		if (m_locked) {
 			m_s.release(m_c);
