@@ -12,9 +12,9 @@
 			"id" : "oomgeocell",
 			"config" : {
 				"threadCount" : 12,
-				"sortConcurrency" : 4,
+				"sortConcurrency" : 8,
 				"payloadConcurrency" : 12,
-				"maxMemoryUsage" : 65536
+				"maxMemoryUsage" : 131072
 			}
 		}
 	]
