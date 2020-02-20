@@ -1,6 +1,7 @@
 #ifndef OSCAR_CMD_LIVE_COMPLETER_H
 #define OSCAR_CMD_LIVE_COMPLETER_H
 #include <liboscar/StaticOsmCompleter.h>
+#include <sserialize/stats/TimeMeasuerer.h>
 
 namespace oscarcmd {
 
