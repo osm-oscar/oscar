@@ -1,12 +1,11 @@
 project(oscar-gui)
 cmake_minimum_required(VERSION 3.9)
 
-find_package(Qt5Widgets REQUIRED)
-find_package(Qt5Gui REQUIRED)
+find_package(Qt5 COMPONENTS Core Widgets Gui)
 find_package(Marble)
 find_package(LIBRT)
 
-IF (MARBLE_FOUND)
+IF (Qt5Widgets_FOUND AND Qt5Gui_FOUND AND MARBLE_FOUND)
 
 	set(MY_INCLUDE_DIRS
 		${QT_INCLUDES}
@@ -60,5 +59,6 @@ IF (MARBLE_FOUND)
 	add_executable(${PROJECT_NAME} ${SOURCES_CPP} ${SOURCES_MOC_CPP})
 	target_include_directories(${PROJECT_NAME} PRIVATE ${MY_INCLUDE_DIRS})
 	target_link_libraries(${PROJECT_NAME} ${MY_LINK_LIBS})
-
-ENDIF(MARBLE_FOUND)
+ELSE()
+	message(STATUS "Will not build oscar-gui")
+ENDIF()
