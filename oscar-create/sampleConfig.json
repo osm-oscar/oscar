@@ -142,7 +142,8 @@
 			"threadCount" : 0,
 			"maxMemoryUsage _in_Mebibytes_" : 16,
 			"cellLocalIds" : false,
-			"foreignObjects": false
+			"foreignObjects": false,
+			"tmpFileType" : "slow file|fast file|shared|program memory"
 		}
 	}
 }

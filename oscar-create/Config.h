@@ -253,6 +253,7 @@ public:
 	sserialize::OffsetType maxMemoryUsage;
 	bool cellLocalIds;
 	bool foreignObjects{false};
+	sserialize::MmappedMemoryType tmpFileType{sserialize::MM_SLOW_FILEBASED};
 };
 
 class Config {

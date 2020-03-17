@@ -363,7 +363,11 @@ void handleOOMCellTextSearch(OOMGeoCellConfig & cfg, State & state, sserialize::
 			state.store.begin(), state.store.end(),
 			state.store.begin(), state.store.begin()+state.store.geoHierarchy().regionSize(),
 			itemTraits, regionTraits,
-			cfg.maxMemoryUsage, cfg.threadCount, cfg.sortConcurrency, cfg.payloadConcurrency,
+			cfg.maxMemoryUsage,
+			cfg.threadCount,
+			cfg.sortConcurrency,
+			cfg.payloadConcurrency,
+			cfg.tmpFileType,
 			(sserialize::StringCompleter::SupportedQuerries)sq,
 			state.indexFactory,
 			dest
@@ -377,8 +381,12 @@ void handleOOMCellTextSearch(OOMGeoCellConfig & cfg, State & state, sserialize::
 			state.store.begin(), state.store.end(),
 			state.store.begin(), state.store.begin()+state.store.geoHierarchy().regionSize(),
 			itemTraits, regionTraits,
-			cfg.maxMemoryUsage, cfg.threadCount, cfg.sortConcurrency, cfg.payloadConcurrency,
-			(sserialize::StringCompleter::SupportedQuerries)sq,
+			cfg.maxMemoryUsage,
+			cfg.threadCount,
+			cfg.sortConcurrency,
+			cfg.payloadConcurrency,
+			cfg.tmpFileType,
+			sserialize::StringCompleter::SupportedQuerries(sq),
 			state.indexFactory,
 			dest
 		);

@@ -295,6 +295,7 @@ std::ostream & OOMGeoCellConfig::print(std::ostream& out) const {
 	out << "Max memory usage: " << sserialize::prettyFormatSize(maxMemoryUsage) << '\n';
 	out << "Cell local ids: " << (cellLocalIds ? "yes" : "no") << '\n';
 	out << "foreignObjects: " << toString(foreignObjects);
+	out << "tmpFileType: " << sserialize::toString(tmpFileType);
 	return out;
 }
 
@@ -1297,6 +1298,10 @@ void OOMGeoCellConfig::updateSelf(const Json::Value& cfg) {
 	v = cfg["foreignObjects"];
 	if (v.isBool()) {
 		foreignObjects = v.asBool();
+	}
+	v = cfg[""];
+	if (v.isString()) {
+		sserialize::from(v.asString(), tmpFileType);
 	}
 }
 
