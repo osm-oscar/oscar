@@ -14,7 +14,8 @@
 				"threadCount" : 12,
 				"sortConcurrency" : 12,
 				"payloadConcurrency" : 12,
-				"maxMemoryUsage" : 131072
+				"maxMemoryUsage" : 131072,
+				"tmpFileType" : "fast file"
 			}
 		}
 	]
