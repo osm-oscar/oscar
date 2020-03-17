@@ -15,19 +15,6 @@ std::string toString(bool v) {
 	return (v ? "yes" : "no");
 }
 
-std::string toString(sserialize::MmappedMemoryType mmt) {
-	switch (mmt) {
-	case sserialize::MM_FILEBASED:
-		return "file-based";
-	case sserialize::MM_PROGRAM_MEMORY:
-		return "program memory";
-	case sserialize::MM_SHARED_MEMORY:
-		return "shared memory";
-	default:
-		return "invalid";
-	}
-}
-
 std::string toString(sserialize::ItemIndex::Types v) {
 	switch (v) {
 	case (sserialize::ItemIndex::T_WAH):
@@ -252,7 +239,7 @@ std::ostream & ItemSearchConfig::print(std::ostream& out) const {
 	out << "\tMaximum merge count for no full suffix index:" << maxSuffixIndexMergeCount << std::endl;
 	out << "\tNodeType: " << toString(nodeType) << std::endl;
 	out << "\tAggressive memory usage: " <<  sserialize::toString(aggressiveMem) << std::endl;
-	out << "\tMemory storage type: " << toString(mmType) << "\n";
+	out << "\tMemory storage type: " << sserialize::toString(mmType) << "\n";
 	out << "\tMerge Index: " << sserialize::toString(mergeIndex) <<  std::endl;
 	out << "\tTrie-Type: ";
 	if (trieType == TrieType::FULL_INDEX_TRIE) {
@@ -295,7 +282,7 @@ std::ostream & GeoCellConfig::print(std::ostream& out) const {
 	else if (trieType == TrieType::FLAT_TRIE) {
 		out << "flattrie";
 	}
-	out << "\nmmt: " << toString(mmType);
+	out << "\nmmt: " << sserialize::toString(mmType);
 	out << "\ncheck: " << toString(check);
 	return out;
 }
