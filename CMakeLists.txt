@@ -15,6 +15,7 @@ include(set_highest_cpp)
 include(add_buildtype_lto)
 include(add_buildtype_sanitize_debug)
 include(add_buildtype_ultra)
+include(add_buildtype_ultra_sanitize)
 
 # set -Wshadow-compatible-local as soon as supported
 set(MY_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wno-unknown-pragmas -Wstrict-overflow=3")
