@@ -13,6 +13,9 @@ IF ( (NOT LTO_PLUGIN_PARAMETERS_SET) OR (CMAKE_GCC_VERSION_FOR_LTO))
 	
 	if ("${CMAKE_GCC_VERSION_FOR_LTO}" MATCHES "disable")
 		message(STATUS "LTO Setup: Will not try to configure lto. You have to provide proper gcc, nm, ar on your own.")
+		if (NOT EXISTS "${CMAKE_LTO_PLUGIN_PATH}")
+			message(WARNING "Since you did not set CMAKE_LTO_PLUGIN_PATH you also have to set CMAKE_C_ARCHIVE_CREATE and CMAKE_CXX_ARCHIVE_CREATE")
+		endif()
 	else()
 		SET(CMAKE_C_COMPILER
 			/usr/bin/gcc-${CMAKE_GCC_VERSION_FOR_LTO}
@@ -70,17 +73,19 @@ IF ( (NOT LTO_PLUGIN_PARAMETERS_SET) OR (CMAKE_GCC_VERSION_FOR_LTO))
 		endif()
 	endif()
 	
-	SET(CMAKE_C_ARCHIVE_CREATE
-		"<CMAKE_AR> rcs --plugin ${CMAKE_LTO_PLUGIN_PATH} <TARGET> <OBJECTS>"
-		CACHE INTERNAL ""
-		FORCE
-	)
+	if (EXISTS "${CMAKE_LTO_PLUGIN_PATH}")
+		SET(CMAKE_C_ARCHIVE_CREATE
+			"<CMAKE_AR> rcs --plugin ${CMAKE_LTO_PLUGIN_PATH} <TARGET> <OBJECTS>"
+			CACHE INTERNAL ""
+			FORCE
+		)
 
-	SET(CMAKE_CXX_ARCHIVE_CREATE
-		"<CMAKE_AR> rcs --plugin ${CMAKE_LTO_PLUGIN_PATH} <TARGET> <OBJECTS>"
-		CACHE INTERNAL ""
-		FORCE
-	)
+		SET(CMAKE_CXX_ARCHIVE_CREATE
+			"<CMAKE_AR> rcs --plugin ${CMAKE_LTO_PLUGIN_PATH} <TARGET> <OBJECTS>"
+			CACHE INTERNAL ""
+			FORCE
+		)
+	endif()
 	
 	SET(LTO_PLUGIN_PARAMETERS_SET
 		"True"
