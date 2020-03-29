@@ -1299,7 +1299,7 @@ void OOMGeoCellConfig::updateSelf(const Json::Value& cfg) {
 	if (v.isBool()) {
 		foreignObjects = v.asBool();
 	}
-	v = cfg[""];
+	v = cfg["tmpFileType"];
 	if (v.isString()) {
 		sserialize::from(v.asString(), tmpFileType);
 	}
