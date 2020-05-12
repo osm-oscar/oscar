@@ -55,9 +55,14 @@ We only need the version numbers at the end:
 mkdir build && cd build
 CMAKE_GCC_VERSION_FOR_LTO=8 cmake -DCMAKE_BUILD_TYPE=ultra ../
 ```
+On Arch this won't work due to different naming of dirs and gcc version. Instead you have to explicitly set the lto plugin:
+```
+CMAKE_GCC_VERSION_FOR_LTO=disable cmake -DCMAKE_LTO_PLUGIN_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/9.3.0/liblto_plugin.so -DCMAKE_BUILD_TYPE=ultra ../
+```
 
 Note that changing build types afterwards is not supported as this does not set the correct compiler flags
 
 ## AutoFDO
  * Get a not too recent perf (should work with 4.12)
+
 
