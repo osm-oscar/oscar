@@ -1002,7 +1002,7 @@ CellTextCompleter<TBaseTrieType>::create(const liboscar::Static::OsmKeyValueObje
 				}
 			}
 			uint32_t totalStorageNeed = 0;
-			for(const std::pair<uint32_t, uint32_t> & x : assocCellIdItemCount) {
+			for(const auto & x : assocCellIdItemCount) {
 				if (x.second != std::numeric_limits<uint32_t>::max()) {
 					assocCellIdOffset[x.first] = totalStorageNeed;
 					totalStorageNeed += x.second;
@@ -1027,14 +1027,14 @@ CellTextCompleter<TBaseTrieType>::create(const liboscar::Static::OsmKeyValueObje
 			}
 			{//recalculate offsets
 				uint32_t totalStorageNeed = 0;
-				for(const std::pair<uint32_t, uint32_t> & x : assocCellIdItemCount) {
+				for(const auto & x : assocCellIdItemCount) {
 					if (x.second != std::numeric_limits<uint32_t>::max()) {
 						assocCellIdOffset[x.first] = totalStorageNeed;
 						totalStorageNeed += x.second;
 					}
 				}
 			}
-			for(const std::pair<uint32_t, uint32_t> & x : assocCellIdItemCount) {
+			for(const auto & x : assocCellIdItemCount) {
 				if (x.second == std::numeric_limits<uint32_t>::max()) {
 					continue;
 				}
