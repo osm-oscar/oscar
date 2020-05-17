@@ -33,6 +33,7 @@ struct MyNodeStorageHTKey {
 	MyNodeStorageHTKey() : nodeId(0), cellId(0) {}
 	MyNodeStorageHTKey(uint32_t nodeId, uint32_t cellId) : nodeId(nodeId), cellId(cellId) {}
 	MyNodeStorageHTKey(const MyNodeStorageHTKey & o) : nodeId(o.nodeId), cellId(o.cellId) {}
+	MyNodeStorageHTKey & operator=(MyNodeStorageHTKey const &) = default;
 	inline bool operator==(const MyNodeStorageHTKey & other) const { return nodeId == other.nodeId && cellId == other.cellId; }
 	inline bool operator!=(const MyNodeStorageHTKey & other) const { return nodeId != other.nodeId || cellId != other.cellId; }
 	inline bool operator<(const MyNodeStorageHTKey & other) const { return (nodeId == other.nodeId ? (cellId < other.cellId) : (nodeId < other.nodeId)); }
