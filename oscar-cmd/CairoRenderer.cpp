@@ -4,13 +4,17 @@
 
 namespace oscarcmd {
 
-static double mercator_project_lon(double lon, double lon0) {
-	return lon-lon0;
-}
+namespace {
 
-static double mercator_project_lat(double lat) {
+// double mercator_project_lon(double lon, double lon0) {
+// 	return lon-lon0;
+// }
+
+double mercator_project_lat(double lat) {
 	double tmp = ::log( ::tan(M_PI/4 + (lat/360*2*M_PI)/4) ); 
 	return tmp;
+}
+
 }
 
 void CairoRenderer::Color::setRGB(uint8_t v) {
