@@ -5,7 +5,7 @@ namespace oscar_cmd {
 
 DecelledACOT::DecelledACOT(liboscar::AdvancedCellOpTree & tree) :
 m_tree(tree),
-m_calc(m_tree.ctc(), m_tree.cqrd(), m_tree.csq(), m_tree.ghsg(), 0)
+m_calc(m_tree.ctc(), m_tree.cqrd(), m_tree.csq(), m_tree.ghsg(), m_tree.cqrr(), 0)
 {}
 
 DecelledACOT::~DecelledACOT() {}
