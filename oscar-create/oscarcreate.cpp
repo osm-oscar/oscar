@@ -115,6 +115,10 @@ int main(int argc, char ** argv) {
 		SSERIALIZE_CHEAP_ASSERT_EQUAL(idxStore.size(), state.indexFactory.size());
 	}
 	kvTime.end();
+    
+	if (opts.statsConfig.memUsage) {
+		sserialize::MemUsage().print("kvstore creation finished", "kvstore creation finished");
+	}
 
 	//open the store
 	try {
