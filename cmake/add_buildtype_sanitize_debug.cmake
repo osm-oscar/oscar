@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.0)
 
 SET(CMAKE_CXX_FLAGS_SANITIZEDEBUG
-	"-g -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer"
+	"-g -fsanitize=address -fsanitize=undefined -fsanitize=thread -fno-omit-frame-pointer"
 	CACHE STRING "Flags used by the C++ compiler during SanitizeDebug builds."
 	FORCE
 )
 SET(CMAKE_C_FLAGS_SANITIZEDEBUG
-	"-g -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer"
+	"-g -fsanitize=address -fsanitize=undefined -fsanitize=thread -fno-omit-frame-pointer"
 	CACHE STRING "Flags used by the C compiler during SanitizeDebug builds."
 	FORCE
 )
