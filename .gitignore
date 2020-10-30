@@ -2,3 +2,4 @@ build*
 .kdev4*
 oscar.kdev4
 .vscode/*
+cmake-build*
