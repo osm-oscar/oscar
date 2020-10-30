@@ -466,9 +466,10 @@ m_cellOpacity(255)
 	mainLayout->addWidget(m_map);
 	this->setLayout(mainLayout);
 	
-	sserialize::spatial::GeoRect bounds = states.cmp->store().boundary();
-	Marble::GeoDataLatLonBox mbounds(bounds.maxLat(), bounds.minLat(), bounds.maxLon(), bounds.minLon(), Marble::GeoDataCoordinates::Degree);
-	this->zoomTo(mbounds);
+	//This is slow for large files
+	// sserialize::spatial::GeoRect bounds = states.cmp->store().boundary();
+	// Marble::GeoDataLatLonBox mbounds(bounds.maxLat(), bounds.minLat(), bounds.maxLon(), bounds.minLon(), Marble::GeoDataCoordinates::Degree);
+	// this->zoomTo(mbounds);
 }
 
 QColor MarbleMap::Data::cellColor(uint32_t cellId, int cs) const {
