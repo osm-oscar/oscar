@@ -6,6 +6,10 @@
 
 // Kaputt: cell anzeigen von :north-of #"Stuttgart" für bw Datensatz von plankton
 
+void help() {
+	std::cout << "prg -f <path to oscar data> -cd (annulus|sphere|minsphere|mass)" << std::endl;
+}
+
 int main(int argc, char** argv)
 {
 	qRegisterMetaType<sserialize::ItemIndex>("sserialize::ItemIndex");
@@ -14,7 +18,7 @@ int main(int argc, char** argv)
 	QApplication app(argc, argv);
 	QStringList cmdline_args = QCoreApplication::arguments();
 	QString initialCmpFileName;
-	liboscar::Static::OsmCompleter::CellDistanceType cd = liboscar::Static::OsmCompleter::CDT_ANULUS;
+	liboscar::Static::OsmCompleter::CellDistanceType cd = liboscar::Static::OsmCompleter::CDT_CENTER_OF_MASS;
 	
 	
 	for(int i(1), s(cmdline_args.size()); i < s; ++i) {
@@ -35,13 +39,22 @@ int main(int argc, char** argv)
 			else if (token == "minsphere") {
 				cd = liboscar::Static::OsmCompleter::CDT_MIN_SPHERE;
 			}
-			else {
+			else if (token == "mass") {
 				cd = liboscar::Static::OsmCompleter::CDT_CENTER_OF_MASS;
+			}
+			else {
+				std::cerr << "Unkown cell distance: " << token.toStdString() << std::endl;
+				return -1;
 			}
 			++i;
 		}
+		else if (token == "--help" || token == "-h") {
+			help();
+			return 0;
+		}
 		else {
 			std::cerr << "Unkown commandline argument: " << token.toStdString() << std::endl;
+			return -1;
 		}
 	}
 	
