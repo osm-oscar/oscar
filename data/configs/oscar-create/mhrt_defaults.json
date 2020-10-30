@@ -1,0 +1,6 @@
+{
+	"include": [
+		"osic_defaults.json",
+		"oomgeocell_diacritic_sensitive.json"
+	]
+}

@@ -1,0 +1,12 @@
+{
+	"textsearch" :
+	[
+		{
+			"type" : "oomgeocell",
+			"id" : "oomgeocell",
+			"config" : {
+				"foreignObjects" : false
+			}
+		}
+	]
+}
