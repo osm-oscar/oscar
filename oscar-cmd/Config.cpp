@@ -267,7 +267,7 @@ int Config::parseSingleArg(int argc, char ** argv, int & i, int & printNumResult
 		workItems.emplace_back(Config::WorkItem::KVSTATS, new WD_KVStats(completionString, printNumResults, threadCount));
 	}
 	else if (arg == "--shannon-kvstats" && i+1 < argc) {
-		double th = std::atof(argv[i+1])/100;
+		double th = sserialize::toDouble(argv[i+1])/100;
 		WD_ShannonKVStats * wi = new WD_ShannonKVStats(completionString, printNumResults, threadCount, th);
 		i++;
 		int j(i+1);
