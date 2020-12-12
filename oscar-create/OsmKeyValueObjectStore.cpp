@@ -745,6 +745,10 @@ void OsmKeyValueObjectStore::addPolyStoreItems(Context & ctx) {
 		}
 		void processItem(uint32_t regionId, osmpbf::IPrimitive & primitive) {
 			OsmKeyValueRawItem & rawItem = rawItems.at(regionId);
+			if (rawItem.data.valid()) {
+				std::cerr << "\nSkipping duplicate region: " << rawItem.data.osmIdType << std::endl;
+				return;
+			}
 			ctx.inflateValues(rawItem, primitive);
 			rawItem.data.osmIdType = ctx.polyStore->values().at(regionId).osmIdType;
 			rawItem.data.setShape( ctx.polyStore->regions().at(regionId) );
