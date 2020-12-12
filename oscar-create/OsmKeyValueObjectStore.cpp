@@ -589,8 +589,10 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 			if (relevantRegions.isSet(i)) {
 				auto & r = polyStore->regions().at(i);
 				auto & v = polyStore->values().at(i);
-				ct.polyStore->push_back(*r, RegionInfo(v.osmIdType, r->type(), r->boundary()));
-				ct.regionItems.insert(v.osmIdType);
+				if (!ct.regionItems.count(v.osmIdType)) {
+					ct.polyStore->push_back(*r, RegionInfo(v.osmIdType, r->type(), r->boundary()));
+					ct.regionItems.insert(v.osmIdType);
+				}
 			}
 		}
 		polyStore->clear();
