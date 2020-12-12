@@ -32,17 +32,33 @@ struct OsmKeyValueRawItem {
 	typedef std::vector< std::pair<std::string, std::string> > KeyValues;
 	//This is BAD!!!
 	typedef std::map< std::string, std::set<std::string> > RawKeyValuesContainer;
-	struct OsmKeyValueDataPayload {
-		OsmKeyValueDataPayload() : osmIdType(), shape(0), id(0xFFFFFFFF) {}
-		OsmKeyValueDataPayload(const OsmKeyValueDataPayload & other) : osmIdType(other.osmIdType), shape(other.shape), score(other.score), id(other.id) {}
-		///shape has to be manualy deleted
+	class OsmKeyValueDataPayload final {
+	public:
+		OsmKeyValueDataPayload() = default;
+		OsmKeyValueDataPayload(const OsmKeyValueDataPayload & other) = default;
+		OsmKeyValueDataPayload(OsmKeyValueDataPayload && other) = default;
 		~OsmKeyValueDataPayload() {}
 		OsmKeyValueDataPayload & operator=(OsmKeyValueDataPayload const &) = default;
+		OsmKeyValueDataPayload & operator=(OsmKeyValueDataPayload &&) = default;
+	public:
+		bool valid() const;
+	public:
+		void setId(uint32_t id);
+		uint32_t id() const;
+		
+		void setShape(sserialize::spatial::GeoShape * p);
+		sserialize::spatial::GeoShape * shape();
+		sserialize::spatial::GeoShape const * shape() const;
+		
+		void setScore(uint32_t v);
+		uint32_t score() const;
+
 		liboscar::OsmIdType osmIdType;
-		sserialize::spatial::GeoShape * shape;
-		uint32_t score;
+	private:
+		sserialize::spatial::GeoShape * m_shape{nullptr};
+		uint32_t m_score{std::numeric_limits<uint32_t>::max()};
 		///only used temporarily
-        uint32_t id;
+        uint32_t m_id{std::numeric_limits<uint32_t>::max()};
 	};
 	
 	RawKeyValuesContainer rawKeyValues;
@@ -289,10 +305,10 @@ private:
 		void push_back(T_IT begin, T_IT end, bool deleteShape) {
 			itemFlushLock.lock();
 			for(T_IT it(begin); it != end; ++it) {
-				SSERIALIZE_CHEAP_ASSERT_SMALLER(it->data.id, totalItemCount);
+				SSERIALIZE_CHEAP_ASSERT_SMALLER(it->data.id(), totalItemCount);
 				uint32_t realItemId = (uint32_t) itemIdForCells.size();
-				itemIdForCells.push_back(it->data.id);
-				itemScores.push_back(it->data.score);
+				itemIdForCells.push_back(it->data.id());
+				itemScores.push_back(it->data.score());
 				parent->push_back(*it);
 				if (relationItems.count(begin->data.osmIdType)) {
 					relationItems[begin->data.osmIdType] = realItemId;
@@ -301,7 +317,8 @@ private:
 			itemFlushLock.unlock();
 			if (deleteShape) {
 				for(T_IT it(begin); it != end; ++it) {
-					delete it->data.shape;
+					delete it->data.shape();
+					it->data.setShape(nullptr);
 				}
 			}
 		}
@@ -374,9 +391,9 @@ void OsmKeyValueObjectStore::createCell(OsmKeyValueRawItem & item, Context & ctx
 	typedef typename T_PolygonType::MyBaseClass MyGeoWay;
 	typedef std::unordered_map<uint32_t, sserialize::spatial::GeoRect> MyCellMap;
 	std::unordered_set<uint32_t> polys;
-	uint32_t itemId = item.data.id;
-	if ( dynamic_cast<MyGeoWay*>( item.data.shape ) ) { //ways
-		MyGeoWay * gw = static_cast<MyGeoWay*>(item.data.shape);
+	uint32_t itemId = item.data.id();
+	if ( dynamic_cast<MyGeoWay*>( item.data.shape() ) ) { //ways
+		MyGeoWay * gw = static_cast<MyGeoWay*>(item.data.shape());
 		MyCellMap tmp;
 		for(typename MyGeoWay::const_iterator pit(gw->cbegin()), pend(gw->cend()); pit != pend; ++pit) {
 			SSERIALIZE_NORMAL_ASSERT(pit->isSnapped());
@@ -391,24 +408,23 @@ void OsmKeyValueObjectStore::createCell(OsmKeyValueRawItem & item, Context & ctx
 				tmp[cellId] = (*pit).boundary();
 			}
 		}
-		SSERIALIZE_CHEAP_ASSERT(tmp.size());
 		for(MyCellMap::iterator it(tmp.begin()), end(tmp.end()); it != end; ++it) {
 			//snap boundary here. All points creating the rect are snapped to the same coords anyway
-			ctx.cellMap.insert(it->first, item.data.id, it->second);
+			ctx.cellMap.insert(it->first, item.data.id(), it->second);
 		}
 	}
-	else if (dynamic_cast<const sserialize::spatial::GeoPoint*>(item.data.shape) ) {
-		const sserialize::spatial::GeoPoint * gp = static_cast<const sserialize::spatial::GeoPoint*>(item.data.shape);
+	else if (dynamic_cast<const sserialize::spatial::GeoPoint*>(item.data.shape()) ) {
+		const sserialize::spatial::GeoPoint * gp = static_cast<const sserialize::spatial::GeoPoint*>(item.data.shape());
 		SSERIALIZE_NORMAL_ASSERT(gp->isSnapped());
 		uint32_t cellId = ctx.trs.cellId(*gp);
 		SSERIALIZE_CHEAP_ASSERT_NOT_EQUAL(cellId, osmtools::OsmTriangulationRegionStore::InfiniteFacesCellId);
 		ctx.cellMap.insert(cellId, itemId, gp->boundary());
 	}
-	else if (dynamic_cast<const T_MultiPolygonType*>(item.data.shape)) {
+	else if (dynamic_cast<const T_MultiPolygonType*>(item.data.shape())) {
 		typedef T_MultiPolygonType MyGMP;
 		typedef typename MyGMP::PolygonList::value_type MyP;
 		
-		MyGMP * gmp = static_cast<MyGMP*>(item.data.shape);
+		MyGMP * gmp = static_cast<MyGMP*>(item.data.shape());
 		MyCellMap tmp;
 		for(typename MyGMP::PolygonList::const_iterator it(gmp->outerPolygons().begin()), end(gmp->outerPolygons().end()); it != end; ++it) {
 			typename MyGMP::PolygonList::const_reference gw = *it;
@@ -428,7 +444,7 @@ void OsmKeyValueObjectStore::createCell(OsmKeyValueRawItem & item, Context & ctx
 		}
 		SSERIALIZE_CHEAP_ASSERT(tmp.size());
 		for(MyCellMap::iterator it(tmp.begin()), end(tmp.end()); it != end; ++it) {
-			ctx.cellMap.insert(it->first, item.data.id, it->second);
+			ctx.cellMap.insert(it->first, item.data.id(), it->second);
 		}
 	}
 }

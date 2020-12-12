@@ -73,7 +73,7 @@ void inflateValues(const std::string& value, std::set< std::string >& destinatio
 
 ///thread-safe
 void addScore(OsmKeyValueRawItem & item, ScoreCreator & scoreCreator) {
-	uint32_t & score = item.data.score = 0;
+	uint32_t score = 0;
 	for(OsmKeyValueRawItem::RawKeyValuesContainer::const_iterator it(item.rawKeyValues.begin()); it != item.rawKeyValues.end(); ++it) {
 		if (scoreCreator.hasScore(it->first)) {
 			score = std::max<uint32_t>(scoreCreator.score(it->first), score);
@@ -82,6 +82,49 @@ void addScore(OsmKeyValueRawItem & item, ScoreCreator & scoreCreator) {
 			}
 		}
 	}
+	item.data.setScore(score);
+}
+
+void
+OsmKeyValueRawItem::OsmKeyValueDataPayload::setId(uint32_t id) {
+	SSERIALIZE_CHEAP_ASSERT_SMALLER(id, std::numeric_limits<uint32_t>::max());
+	m_id = id;
+}
+
+uint32_t
+OsmKeyValueRawItem::OsmKeyValueDataPayload::id() const {
+	SSERIALIZE_CHEAP_ASSERT_SMALLER(m_id, std::numeric_limits<uint32_t>::max());
+	return m_id;
+}
+
+void
+OsmKeyValueRawItem::OsmKeyValueDataPayload::setShape(sserialize::spatial::GeoShape * p) {
+	m_shape = p;
+}
+
+sserialize::spatial::GeoShape *
+OsmKeyValueRawItem::OsmKeyValueDataPayload::shape() {
+	return m_shape;
+}
+
+sserialize::spatial::GeoShape const *
+OsmKeyValueRawItem::OsmKeyValueDataPayload::shape() const {
+	return m_shape;
+}
+
+void
+OsmKeyValueRawItem::OsmKeyValueDataPayload::setScore(uint32_t v) {
+	m_score = v;
+}
+uint32_t
+OsmKeyValueRawItem::OsmKeyValueDataPayload::score() const {
+	SSERIALIZE_CHEAP_ASSERT_SMALLER(m_score, std::numeric_limits<uint32_t>::max());
+	return m_score;
+}
+
+bool
+OsmKeyValueRawItem::OsmKeyValueDataPayload::valid() const {
+	return m_id != std::numeric_limits<uint32_t>::max() && m_shape != nullptr && m_score != std::numeric_limits<uint32_t>::max() && osmIdType.valid();
 }
 
 bool OsmKeyValueObjectStore::SaveDirector::saveItem(OsmKeyValueRawItem& item) const {
@@ -252,14 +295,15 @@ void OsmKeyValueObjectStore::Context::getNodes() {
 uint32_t OsmKeyValueObjectStore::Context::push_back(OsmKeyValueRawItem& rawItem, bool deleteShape) {
 	uint32_t realItemId;
 	itemFlushLock.lock();
-	SSERIALIZE_CHEAP_ASSERT_SMALLER(rawItem.data.id, totalItemCount);
+	SSERIALIZE_CHEAP_ASSERT_SMALLER(rawItem.data.id(), totalItemCount);
 	realItemId = sserialize::narrow_check<uint32_t>( itemIdForCells.size() );
-	itemIdForCells.push_back(rawItem.data.id);
-	itemScores.push_back(rawItem.data.score);
+	itemIdForCells.push_back(rawItem.data.id());
+	itemScores.push_back(rawItem.data.score());
 	parent->push_back(rawItem);
 	itemFlushLock.unlock();
 	if (deleteShape) {
-		delete rawItem.data.shape;
+		delete rawItem.data.shape();
+		rawItem.data.setShape(nullptr);
 	}
 	if (relationItems.count(rawItem.data.osmIdType)) {
 		relationItems[rawItem.data.osmIdType] = realItemId;
@@ -701,8 +745,8 @@ void OsmKeyValueObjectStore::addPolyStoreItems(Context & ctx) {
 			OsmKeyValueRawItem & rawItem = rawItems.at(regionId);
 			ctx.inflateValues(rawItem, primitive);
 			rawItem.data.osmIdType = ctx.polyStore->values().at(regionId).osmIdType;
-			rawItem.data.shape = ctx.polyStore->regions().at(regionId);
-			rawItem.data.id = regionId;
+			rawItem.data.setShape( ctx.polyStore->regions().at(regionId) );
+			rawItem.data.setId(regionId);
 			
 			++foundRegionsCounter;
 			
@@ -954,9 +998,9 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 				if (ct.cc->itemSaveDirector->process(rawItem)) {
 					rawItem.data.osmIdType.id(primitive.id());
 					rawItem.data.osmIdType.type(liboscar::OSMIT_RELATION);
-					rawItem.data.shape = region.get();
+					rawItem.data.setShape(region.get());
 					OsmKeyValueObjectStore::orient(region.get());
-					rawItem.data.id = wct.itemId.fetch_add(1);
+					rawItem.data.setId( wct.itemId.fetch_add(1) );
 					oscar_create::addScore(rawItem, ct.scoreCreator);
 					ct.parent->createCell<sserialize::spatial::GeoPolygon, sserialize::spatial::GeoMultiPolygon>(rawItem, ct);
 					ct.push_back(rawItem, false);
@@ -1023,11 +1067,13 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 				if (ct.cc->itemSaveDirector->process(rawItem)) {
 					rawItem.data.osmIdType.id(node.id());
 					rawItem.data.osmIdType.type(liboscar::OSMIT_NODE);
-					rawItem.data.shape = new sserialize::spatial::GeoPoint(
-						sserialize::spatial::GeoPoint::snapLat(node.latd()),
-						sserialize::spatial::GeoPoint::snapLon(node.lond())
+					rawItem.data.setShape(
+						new sserialize::spatial::GeoPoint(
+							sserialize::spatial::GeoPoint::snapLat(node.latd()),
+							sserialize::spatial::GeoPoint::snapLon(node.lond())
+						)
 					);
-					rawItem.data.id = wct.itemId.fetch_add(1);
+					rawItem.data.setId( wct.itemId.fetch_add(1) );
 					oscar_create::addScore(rawItem, ct.scoreCreator);
 					ct.parent->createCell<sserialize::spatial::GeoPolygon, sserialize::spatial::GeoMultiPolygon>(rawItem, ct);
 					tmpItems.emplace_back(std::move(rawItem));
@@ -1054,8 +1100,8 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 					}
 					gw->recalculateBoundary();
 					
-					rawItem.data.id = wct.itemId.fetch_add(1);
-					rawItem.data.shape = gw;
+					rawItem.data.setId( wct.itemId.fetch_add(1) );
+					rawItem.data.setShape(gw);
 					
 					oscar_create::addScore(rawItem, ct.scoreCreator);
 					ct.parent->createCell<sserialize::spatial::GeoPolygon, sserialize::spatial::GeoMultiPolygon>(rawItem, ct);
@@ -1464,8 +1510,8 @@ sserialize::UByteArrayAdapter::OffsetType OsmKeyValueObjectStore::serialize(sser
 
 sserialize::UByteArrayAdapter operator<<(sserialize::UByteArrayAdapter & dest, const OsmKeyValueRawItem::OsmKeyValueDataPayload & src) {
 	dest << src.osmIdType;
-	dest.putVlPackedUint32(src.score);
-	return sserialize::spatial::GeoShape::appendWithTypeInfo(src.shape, dest);
+	dest.putVlPackedUint32(src.score());
+	return sserialize::spatial::GeoShape::appendWithTypeInfo(src.shape(), dest);
 }
 
 
