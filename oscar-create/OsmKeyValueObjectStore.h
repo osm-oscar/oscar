@@ -193,6 +193,7 @@ public:
 		std::string prioStringsFn;//needed if sortOrder == ISO_SCORE_PRIO_STRINGS
 		bool addRegionsToCells;
 		sserialize::Static::spatial::Triangulation::GeometryCleanType geometryCleanType;
+		bool removeDuplicates{true};
 		struct RegionConfig {
 			//a filter that defines regions
 			generics::RCPtr<osmpbf::AbstractTagFilter> regionFilter;

@@ -917,6 +917,8 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 	struct WorkContext {
 		std::mutex nodesToStoreLock;
 		std::atomic<uint32_t> itemId;
+		std::unordered_set<liboscar::OsmIdType> processedItems; 
+		std::mutex processedItemsLock;
 		uint32_t roundsToProcess;
 		WorkContext() : roundsToProcess(0) {}
 	} wct;
@@ -1001,18 +1003,26 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 			auto wf = [&ct, &wct, &rwct](const std::shared_ptr<sserialize::spatial::GeoRegion> & region, osmpbf::IPrimitive & primitive) {
 				OsmKeyValueRawItem rawItem;
 				ct.inflateValues(rawItem, primitive);
-				if (ct.cc->itemSaveDirector->process(rawItem)) {
-					rawItem.data.osmIdType.id(primitive.id());
-					rawItem.data.osmIdType.type(liboscar::OSMIT_RELATION);
-					rawItem.data.setShape(region.get());
-					OsmKeyValueObjectStore::orient(region.get());
-					rawItem.data.setId( wct.itemId.fetch_add(1) );
-					oscar_create::addScore(rawItem, ct.scoreCreator);
-					ct.parent->createCell<sserialize::spatial::GeoPolygon, sserialize::spatial::GeoMultiPolygon>(rawItem, ct);
-					ct.push_back(rawItem, false);
-					std::lock_guard<std::mutex> lck(rwct.multiPolyItemsLock);
-					rwct.multiPolyItems.insert(liboscar::OsmIdType(primitive.id(), liboscar::OSMIT_RELATION));
+				if (!ct.cc->itemSaveDirector->process(rawItem)) {
+					return;
 				}
+				rawItem.data.osmIdType.id(primitive.id());
+				rawItem.data.osmIdType.type(liboscar::OSMIT_RELATION);
+				if (ct.cc->removeDuplicates) {
+					std::lock_guard<std::mutex> lck(wct.processedItemsLock);
+					if (wct.processedItems.count(rawItem.data.osmIdType)) {
+						return;
+					}
+					wct.processedItems.insert(rawItem.data.osmIdType);
+				}
+				rawItem.data.setShape(region.get());
+				OsmKeyValueObjectStore::orient(region.get());
+				rawItem.data.setId( wct.itemId.fetch_add(1) );
+				oscar_create::addScore(rawItem, ct.scoreCreator);
+				ct.parent->createCell<sserialize::spatial::GeoPolygon, sserialize::spatial::GeoMultiPolygon>(rawItem, ct);
+				ct.push_back(rawItem, false);
+				std::lock_guard<std::mutex> lck(rwct.multiPolyItemsLock);
+				rwct.multiPolyItems.insert(liboscar::OsmIdType(primitive.id(), liboscar::OSMIT_RELATION));
 			};
 			ae.extract(ct.inFile, wf, osmtools::AreaExtractor::ET_ALL_MULTIPOLYGONS, myRegionFilter, ct.cc->numThreads, "Fetching multipolygon items");
 
@@ -1070,20 +1080,30 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 					continue;
 				OsmKeyValueRawItem rawItem;
 				ct.inflateValues(rawItem, node);
-				if (ct.cc->itemSaveDirector->process(rawItem)) {
-					rawItem.data.osmIdType.id(node.id());
-					rawItem.data.osmIdType.type(liboscar::OSMIT_NODE);
-					rawItem.data.setShape(
-						new sserialize::spatial::GeoPoint(
-							sserialize::spatial::GeoPoint::snapLat(node.latd()),
-							sserialize::spatial::GeoPoint::snapLon(node.lond())
-						)
-					);
-					rawItem.data.setId( wct.itemId.fetch_add(1) );
-					oscar_create::addScore(rawItem, ct.scoreCreator);
-					ct.parent->createCell<sserialize::spatial::GeoPolygon, sserialize::spatial::GeoMultiPolygon>(rawItem, ct);
-					tmpItems.emplace_back(std::move(rawItem));
+				if (!ct.cc->itemSaveDirector->process(rawItem)) {
+					continue;
 				}
+				
+				rawItem.data.osmIdType.id(node.id());
+				rawItem.data.osmIdType.type(liboscar::OSMIT_NODE);
+				if (ct.cc->removeDuplicates) {
+					std::lock_guard<std::mutex> lck(wct.processedItemsLock);
+					if (wct.processedItems.count(rawItem.data.osmIdType)) {
+						continue;
+					}
+					wct.processedItems.insert(rawItem.data.osmIdType);
+				}
+				
+				rawItem.data.setShape(
+					new sserialize::spatial::GeoPoint(
+						sserialize::spatial::GeoPoint::snapLat(node.latd()),
+						sserialize::spatial::GeoPoint::snapLon(node.lond())
+					)
+				);
+				rawItem.data.setId( wct.itemId.fetch_add(1) );
+				oscar_create::addScore(rawItem, ct.scoreCreator);
+				ct.parent->createCell<sserialize::spatial::GeoPolygon, sserialize::spatial::GeoMultiPolygon>(rawItem, ct);
+				tmpItems.emplace_back(std::move(rawItem));
 			}
 				
 			for(osmpbf::IWayStream way = pbi.getWayStream(); !way.isNull(); way.next()) {
@@ -1092,27 +1112,38 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 				}
 				OsmKeyValueRawItem rawItem;
 				ct.inflateValues(rawItem, way);
-				if (ct.cc->itemSaveDirector->process(rawItem)) {
-					rawItem.data.osmIdType.id(way.id());
-					rawItem.data.osmIdType.type(liboscar::OSMIT_WAY);
-					sserialize::spatial::GeoWay * gw = new sserialize::spatial::GeoWay();
-					for(osmpbf::IWayStream::RefIterator it = way.refBegin(); it != way.refEnd(); ++it) {
-						if (ct.nodeIdToGeoPoint.count(*it) > 0) {
-							const RawGeoPoint & rgp = ct.nodeIdToGeoPoint[*it];
-							SSERIALIZE_NORMAL_ASSERT(sserialize::spatial::GeoPoint(rgp).valid());
-							SSERIALIZE_NORMAL_ASSERT(sserialize::spatial::GeoPoint(rgp).isSnapped());
-							gw->points().emplace_back(rgp);
-						}
-					}
-					gw->recalculateBoundary();
-					
-					rawItem.data.setId( wct.itemId.fetch_add(1) );
-					rawItem.data.setShape(gw);
-					
-					oscar_create::addScore(rawItem, ct.scoreCreator);
-					ct.parent->createCell<sserialize::spatial::GeoPolygon, sserialize::spatial::GeoMultiPolygon>(rawItem, ct);
-					tmpItems.emplace_back(std::move(rawItem));
+				if (!ct.cc->itemSaveDirector->process(rawItem)) {
+					continue;
 				}
+				
+				rawItem.data.osmIdType.id(way.id());
+				rawItem.data.osmIdType.type(liboscar::OSMIT_WAY);
+				
+				if (ct.cc->removeDuplicates) {
+					std::lock_guard<std::mutex> lck(wct.processedItemsLock);
+					if (wct.processedItems.count(rawItem.data.osmIdType)) {
+						continue;
+					}
+					wct.processedItems.insert(rawItem.data.osmIdType);
+				}
+				
+				sserialize::spatial::GeoWay * gw = new sserialize::spatial::GeoWay();
+				for(osmpbf::IWayStream::RefIterator it = way.refBegin(); it != way.refEnd(); ++it) {
+					if (ct.nodeIdToGeoPoint.count(*it) > 0) {
+						const RawGeoPoint & rgp = ct.nodeIdToGeoPoint[*it];
+						SSERIALIZE_NORMAL_ASSERT(sserialize::spatial::GeoPoint(rgp).valid());
+						SSERIALIZE_NORMAL_ASSERT(sserialize::spatial::GeoPoint(rgp).isSnapped());
+						gw->points().emplace_back(rgp);
+					}
+				}
+				gw->recalculateBoundary();
+				
+				rawItem.data.setId( wct.itemId.fetch_add(1) );
+				rawItem.data.setShape(gw);
+				
+				oscar_create::addScore(rawItem, ct.scoreCreator);
+				ct.parent->createCell<sserialize::spatial::GeoPolygon, sserialize::spatial::GeoMultiPolygon>(rawItem, ct);
+				tmpItems.emplace_back(std::move(rawItem));
 			}
 			//flush items to store
 			ct.push_back(tmpItems.begin(), tmpItems.end(), true);
