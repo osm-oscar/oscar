@@ -733,6 +733,7 @@ void OsmKeyValueObjectStore::addPolyStoreItems(Context & ctx) {
 		std::atomic<uint32_t> foundRegionsCounter;
 		std::vector<OsmKeyValueRawItem> rawItems;
 		osmpbf::RCFilterPtr placeMarkerFilter;
+		osmpbf::PrimitiveBlockInputAdaptor * pbi;
 		Worker(Context & ctx, WorkContext & wct) :
 		ctx(ctx), wct(wct),
 		foundRegionsCounter(0), rawItems(ctx.polyStore->size()),
@@ -778,6 +779,7 @@ void OsmKeyValueObjectStore::addPolyStoreItems(Context & ctx) {
 		}
 		void operator()(osmpbf::PrimitiveBlockInputAdaptor & pbi) {
 			ctx.progressInfo(ctx.inFile.dataPosition());
+			placeMarkerFilter->assignInputAdaptor(&pbi);
 			for(osmpbf::INodeStream node(pbi.getNodeStream()); !node.isNull(); node.next()) {
 				if (placeMarkerFilter->matches(node)) {
 					processPlaceMarker(node);
