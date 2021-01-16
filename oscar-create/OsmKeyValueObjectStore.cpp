@@ -720,56 +720,75 @@ void OsmKeyValueObjectStore::addPolyStoreItems(Context & ctx) {
 		return;
 	}
 	struct WorkContext {
-		std::unordered_map<liboscar::OsmIdType, uint32_t> osmIdToRegionId;
-		WorkContext() {}
-	} wct;
-	for(uint32_t i(0), s((uint32_t) ctx.polyStore->values().size()); i < s; ++i) {
-		wct.osmIdToRegionId[ctx.polyStore->values().at(i).osmIdType] = i;
-	}
-	
-	struct Worker {
 		Context & ctx;
-		WorkContext & wct;
+		std::unordered_map<liboscar::OsmIdType, uint32_t> osmIdToRegionId;
 		std::atomic<uint32_t> foundRegionsCounter;
+		std::vector<std::atomic<bool>> itemLock;
 		std::vector<OsmKeyValueRawItem> rawItems;
-		osmpbf::RCFilterPtr placeMarkerFilter;
-		osmpbf::PrimitiveBlockInputAdaptor * pbi;
-		Worker(Context & ctx, WorkContext & wct) :
-		ctx(ctx), wct(wct),
-		foundRegionsCounter(0), rawItems(ctx.polyStore->size()),
-		placeMarkerFilter(ctx.placeMarkerFilter())
-		{}
-		Worker(Worker & o) : ctx(o.ctx), wct(o.wct) { throw std::runtime_error("Illegal function call");}
+		WorkContext(Context & ctx) :
+		ctx(ctx),
+		foundRegionsCounter(0),
+		itemLock(ctx.polyStore->size()),
+		rawItems(ctx.polyStore->size())
+		{
+			for(auto & x : itemLock) {
+				x.store(false);
+			}
+			for(uint32_t i(0), s((uint32_t) ctx.polyStore->values().size()); i < s; ++i) {
+				SSERIALIZE_CHEAP_ASSERT(!osmIdToRegionId.count(ctx.polyStore->values().at(i).osmIdType));
+				osmIdToRegionId[ctx.polyStore->values().at(i).osmIdType] = i;
+			}
+		}
 		void flush() {
 			SSERIALIZE_CHEAP_ASSERT_EQUAL(foundRegionsCounter.load(), ctx.polyStore->size());
+			for(std::size_t i(0), s(rawItems.size()); i < s; ++i) {
+				if (!rawItems.at(i).data.valid()) {
+					std::cerr << "Polystore item " << i << " with " << ctx.polyStore->values().at(i).osmIdType << " is not valid" << std::endl;
+				}
+			}
 			ctx.push_back(rawItems.begin(), rawItems.end(), false);
 		}
+	} wct(ctx);
+
+	
+	struct Worker {
+		WorkContext & wct;
+		osmpbf::RCFilterPtr placeMarkerFilter;
+		osmpbf::PrimitiveBlockInputAdaptor * pbi;
+		Worker(WorkContext & wct) :
+		wct(wct),
+		placeMarkerFilter(wct.ctx.placeMarkerFilter())
+		{}
+		Worker(Worker const & o) : Worker(o.wct) {}
+		Worker(Worker && o) : Worker(o.wct) {}
 		void processItem(uint32_t regionId, osmpbf::IPrimitive & primitive) {
-			OsmKeyValueRawItem & rawItem = rawItems.at(regionId);
-			if (rawItem.data.valid()) {
-				std::cerr << "\nSkipping duplicate region: " << rawItem.data.osmIdType << std::endl;
+			if (wct.itemLock.at(regionId).exchange(true)) {
+				std::cerr << "\nSkipping duplicate region" << std::endl;
 				return;
 			}
-			ctx.inflateValues(rawItem, primitive);
-			rawItem.data.osmIdType = ctx.polyStore->values().at(regionId).osmIdType;
-			rawItem.data.setShape( ctx.polyStore->regions().at(regionId) );
+			++wct.foundRegionsCounter;
+			
+			OsmKeyValueRawItem & rawItem = wct.rawItems.at(regionId);
+			SSERIALIZE_CHEAP_ASSERT(!rawItem.data.valid()); //Otherwise we would process the item twice
+			
+			wct.ctx.inflateValues(rawItem, primitive);
+			rawItem.data.osmIdType = wct.ctx.polyStore->values().at(regionId).osmIdType;
+			rawItem.data.setShape( wct.ctx.polyStore->regions().at(regionId) );
 			rawItem.data.setId(regionId);
 			
-			++foundRegionsCounter;
-			
-			ctx.cc->itemSaveDirector->process(rawItem);
-			oscar_create::addScore(rawItem, ctx.scoreCreator);
+			wct.ctx.cc->itemSaveDirector->process(rawItem);
+			oscar_create::addScore(rawItem, wct.ctx.scoreCreator);
 		}
 		void processPlaceMarker(osmpbf::INode & node) {
-			uint32_t myCellId = ctx.trs.cellId(node.latd(), node.lond());
-			const auto & cellRegions = ctx.trs.regions(myCellId);
+			uint32_t myCellId = wct.ctx.trs.cellId(node.latd(), node.lond());
+			const auto & cellRegions = wct.ctx.trs.regions(myCellId);
 			for(const uint32_t & regionId : cellRegions) {
-				const  RegionInfo & ri = ctx.polyStore->values().at(regionId);
-				if (ctx.residentialRegions.count(ri.osmIdType)) {
-					OsmKeyValueRawItem & destRawItem = rawItems.at(regionId);
+				const RegionInfo & ri = wct.ctx.polyStore->values().at(regionId);
+				if (wct.ctx.residentialRegions.count(ri.osmIdType)) {
+					OsmKeyValueRawItem & destRawItem = wct.rawItems.at(regionId);
 					OsmKeyValueRawItem tmpRawItem;
-					ctx.inflateValues(tmpRawItem, node);
-					if (ctx.cc->itemSaveDirector->process(tmpRawItem)) {
+					wct.ctx.inflateValues(tmpRawItem, node);
+					if (wct.ctx.cc->itemSaveDirector->process(tmpRawItem)) {
 						for(const auto & x : tmpRawItem.rawKeyValues) {
 							destRawItem.rawKeyValues[x.first].insert(x.second.begin(), x.second.end());
 						}
@@ -778,7 +797,7 @@ void OsmKeyValueObjectStore::addPolyStoreItems(Context & ctx) {
 			}
 		}
 		void operator()(osmpbf::PrimitiveBlockInputAdaptor & pbi) {
-			ctx.progressInfo(ctx.inFile.dataPosition());
+			wct.ctx.progressInfo(wct.ctx.inFile.dataPosition());
 			placeMarkerFilter->assignInputAdaptor(&pbi);
 			for(osmpbf::INodeStream node(pbi.getNodeStream()); !node.isNull(); node.next()) {
 				if (placeMarkerFilter->matches(node)) {
@@ -799,11 +818,11 @@ void OsmKeyValueObjectStore::addPolyStoreItems(Context & ctx) {
 			}
 		}
 	};
-	Worker w(ctx, wct);
+	Worker w(wct);
 	ctx.progressInfo.begin(ctx.inFile.dataSize(), "Adding items from polystore");
 	ctx.inFile.reset();
-	osmpbf::parseFileCPPThreads<Worker*>(ctx.inFile, &w, ctx.cc->numThreads, ctx.cc->blobFetchCount);
-	w.flush();
+	osmpbf::parseFileCPPThreads(ctx.inFile, w, ctx.cc->numThreads, ctx.cc->blobFetchCount, true);
+	wct.flush();
 	ctx.progressInfo.end();
 	
 	//add regions to their cells
