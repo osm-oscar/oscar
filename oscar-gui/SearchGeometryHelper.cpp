@@ -24,12 +24,12 @@ sserialize::ItemIndex SearchGeometryHelper::cells(const Marble::GeoDataLinearRin
 }
 
 sserialize::ItemIndex SearchGeometryHelper::triangles(const Marble::GeoDataPoint & point) {
-	uint32_t faceId = m_cmp->store().regionArrangement().grid().faceId(
+	auto faceId = m_cmp->store().regionArrangement().grid().faceId(
 		point.coordinates().latitude(Marble::GeoDataCoordinates::Degree),
 		point.coordinates().longitude(Marble::GeoDataCoordinates::Degree)
 	);
 	if (faceId != m_cmp->store().regionArrangement().tds().NullFace) {
-		return sserialize::ItemIndex(std::vector<uint32_t>(1, faceId));
+		return sserialize::ItemIndex(std::vector<uint32_t>(1, static_cast<uint32_t>(faceId.ut())));
 	}
 	return sserialize::ItemIndex();
 }

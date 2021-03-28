@@ -23,12 +23,12 @@ m_sgs(states.sgs)
 	m_tbl->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
 	m_tbl->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
 	
-	connect(m_tbl, SIGNAL(doubleClicked(QModelIndex)), m_sgm, SLOT(doubleClicked(QModelIndex)));
-	connect(m_tbl, SIGNAL(clicked(QModelIndex)), m_sgm, SLOT(clicked(QModelIndex)));
+	connect(m_tbl, &QTableView::doubleClicked, m_sgm, &SearchGeometryModel::doubleClicked);
+	connect(m_tbl, &QTableView::clicked, m_sgm, &SearchGeometryModel::clicked);
 	
-	connect(m_sgm, SIGNAL(showGeometryClicked(int)), this, SLOT(showGeometryClicked(int)));
-	connect(m_sgm, SIGNAL(showTrianglesClicked(int)), this, SLOT(showTrianglesClicked(int)));
-	connect(m_sgm, SIGNAL(showCellsClicked(int)), this, SLOT(showCellsClicked(int)));
+	connect(m_sgm, &SearchGeometryModel::showGeometryClicked, this, &GeometryInputWidget::showGeometryClicked);
+	connect(m_sgm, &SearchGeometryModel::showTrianglesClicked, this, &GeometryInputWidget::showTrianglesClicked);
+	connect(m_sgm, &SearchGeometryModel::showCellsClicked, this, &GeometryInputWidget::showCellsClicked);
 	
 	m_sgt = new QLineEdit();
 	m_sgt->setPlaceholderText("Search query to create geometry");

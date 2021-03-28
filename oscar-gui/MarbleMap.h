@@ -17,8 +17,6 @@ class MarbleMap : public QWidget {
 	Q_OBJECT
 public:
 	typedef enum {CS_DIFFERENT=0, CS_SAME=1, CS_INITIAL=CS_DIFFERENT, __CS_COUNT=2} ColorScheme;
-private:
-
 	typedef sserialize::Static::spatial::TriangulationGeoHierarchyArrangement TriangulationGeoHierarchyArrangement;
 	typedef sserialize::Static::spatial::TracGraph TracGraph;
 	
@@ -26,8 +24,10 @@ private:
 	typedef TriangulationGeoHierarchyArrangement::CFGraph CFGraph;
 	
 	typedef Triangulation::Face Face;
+	using FaceId = Triangulation::FaceId;
+	using VertexId = Triangulation::VertexId;
 	
-	
+private:
 	class Data {
 	public:
 		liboscar::Static::OsmKeyValueObjectStore store;
@@ -83,7 +83,7 @@ private:
 	
 	class MyTriangleLayer: public MyBaseLayer {
 	private:
-		typedef std::unordered_set<uint32_t> TriangleSet;
+		typedef std::unordered_set<FaceId> TriangleSet;
 	private:
 		TriangleSet m_cgi;
 	public:
@@ -92,8 +92,8 @@ private:
 		virtual bool render(Marble::GeoPainter *painter, Marble::ViewportParams * viewport, const QString & renderPos, Marble::GeoSceneLayer * layer);
 	public:
 		void clear();
-		void addTriangle(uint32_t cellId);
-		void removeTriangle(uint32_t cellId);
+		void addTriangle(FaceId faceId);
+		void removeTriangle(FaceId faceId);
 	};
 	
 	class MyCellLayer: public MyBaseLayer {
@@ -205,9 +205,9 @@ public slots:
 	void removeCell(uint32_t cellId);
 	void clearCells();
 public slots:
-	void zoomToTriangle(uint32_t triangleId);
-	void addTriangle(uint32_t triangleId);
-	void removeTriangle(uint32_t triangleId);
+	void zoomToTriangle(FaceId triangleId);
+	void addTriangle(FaceId triangleId);
+	void removeTriangle(FaceId triangleId);
 	void clearTriangles();
 public slots:
 	void showPath(const sserialize::spatial::GeoWay & p);

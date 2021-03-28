@@ -6,6 +6,7 @@
 
 #include "States.h"
 #include "StateHandlers.h"
+#include "MarbleMap.h"
 
 class QTableView;
 class QSpinBox;
@@ -27,8 +28,8 @@ public:
 signals:
 	void colorSchemeChanged(int colorScheme);
 	
-	void triangleAdded(uint32_t triangleId);
-	void triangleRemoved(uint32_t triangleId);
+	void triangleAdded(MarbleMap::FaceId triangleId);
+	void triangleRemoved(MarbleMap::FaceId triangleId);
 	
 	void cellAdded(uint32_t cellId);
 	void cellRemoved(uint32_t cellId);

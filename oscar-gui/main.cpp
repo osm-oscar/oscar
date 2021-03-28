@@ -14,6 +14,7 @@ int main(int argc, char** argv)
 {
 	qRegisterMetaType<sserialize::ItemIndex>("sserialize::ItemIndex");
 	qRegisterMetaType<sserialize::CellQueryResult>("sserialize::CellQueryResult");
+	qRegisterMetaType<sserialize::Static::spatial::Triangulation::FaceId>("sserialize::Static::spatial::Triangulation::FaceId");
 	
 	QApplication app(argc, argv);
 	QStringList cmdline_args = QCoreApplication::arguments();

@@ -26,7 +26,7 @@ private:
 	QString m_qs;
 };
 
-class SearchGeometryStateHandler: QObject {
+class SearchGeometryStateHandler: public QObject {
 Q_OBJECT
 public:
 	SearchGeometryStateHandler(const States & states);

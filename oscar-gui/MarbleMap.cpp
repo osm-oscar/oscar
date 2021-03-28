@@ -79,7 +79,7 @@ bool MarbleMap::MyTriangleLayer::render(Marble::GeoPainter * painter, Marble::Vi
 	QBrush brush(fillColor, Qt::SolidPattern);
 
 
-	for(uint32_t triangleId : m_cgi) {
+	for(FaceId triangleId : m_cgi) {
 		if( !MyBaseLayer::doRender(data()->trs.tds().face(triangleId), brush, "", painter)) {
 			return false;
 		}
@@ -87,11 +87,11 @@ bool MarbleMap::MyTriangleLayer::render(Marble::GeoPainter * painter, Marble::Vi
 	return true;
 }
 
-void MarbleMap::MyTriangleLayer::addTriangle(uint32_t triangleId) {
+void MarbleMap::MyTriangleLayer::addTriangle(FaceId triangleId) {
 	m_cgi.insert(triangleId);
 }
 
-void MarbleMap::MyTriangleLayer::removeTriangle(uint32_t triangleId) {
+void MarbleMap::MyTriangleLayer::removeTriangle(FaceId triangleId) {
 	m_cgi.erase(triangleId);
 }
 
@@ -258,7 +258,7 @@ bool MarbleMap::MyGeometryLayer::render(
 		if (at & SearchGeometryState::AT_TRIANGLES) {
 			const auto & triangles = (*it).triangles;
 			for(uint32_t faceId : triangles) {
-				this->doRender(this->data()->trs.tds().face(faceId), brush, QString::number(faceId), painter);
+				this->doRender(this->data()->trs.tds().face(FaceId(faceId)), brush, QString::number(faceId), painter);
 			}
 		}
 	}
@@ -530,7 +530,7 @@ void MarbleMap::clearItems() {
 	}
 }
 
-void MarbleMap::zoomToTriangle(uint32_t triangleId) {
+void MarbleMap::zoomToTriangle(FaceId triangleId) {
 	auto p = m_data->trs.tds().face( triangleId ).centroid();
 	Marble::GeoDataLatLonBox marbleBounds(p.lat(), p.lat(), p.lon(), p.lon(), Marble::GeoDataCoordinates::Degree);
 	zoomTo(marbleBounds);
@@ -540,14 +540,14 @@ void MarbleMap::zoomToCell(uint32_t cellId) {
 	zoomToTriangle(  m_data->trs.faceIdFromCellId(cellId) );
 }
 
-void MarbleMap::addTriangle(uint32_t triangleId) {
+void MarbleMap::addTriangle(FaceId triangleId) {
 	if (m_triangleLayer) {
 		m_triangleLayer->addTriangle(triangleId);
 		this->redrawMap();
 	}
 }
 
-void MarbleMap::removeTriangle(uint32_t triangleId) {
+void MarbleMap::removeTriangle(FaceId triangleId) {
 	if (m_triangleLayer) {
 		m_triangleLayer->removeTriangle(triangleId);
 		this->redrawMap();

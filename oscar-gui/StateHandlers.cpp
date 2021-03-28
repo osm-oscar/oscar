@@ -59,7 +59,7 @@ SearchGeometryStateHandler::SearchGeometryStateHandler(const oscar_gui::States& 
 m_sgs(states.sgs),
 m_sgh(states.cmp)
 {
-	connect(m_sgs.get(), SIGNAL(dataChanged(int)), this, SLOT(dataChanged(int)));
+	connect(m_sgs.get(), &SearchGeometryState::dataChanged, this, &SearchGeometryStateHandler::dataChanged);
 }
 
 SearchGeometryStateHandler::~SearchGeometryStateHandler() {}

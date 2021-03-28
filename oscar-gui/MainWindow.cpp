@@ -16,11 +16,11 @@ m_stateHandlers(m_states)
 	m_map = new MarbleMap(cmp->store(), m_states);
 	m_sidebar = new SidebarWidget(m_states);
 	
-	connect(this, SIGNAL(triangleAdded(uint32_t)), m_map, SLOT(addTriangle(uint32_t)));
-	connect(this, SIGNAL(triangleRemoved(uint32_t)), m_map, SLOT(removeTriangle(uint32_t)));
+	connect(this, &MainWindow::triangleAdded, m_map, &MarbleMap::addTriangle);
+	connect(this, &MainWindow::triangleRemoved, m_map, &MarbleMap::removeTriangle);
 	
-	connect(this, SIGNAL(cellAdded(uint32_t)), m_map, SLOT(addCell(uint32_t)));
-	connect(this, SIGNAL(cellRemoved(uint32_t)), m_map, SLOT(removeCell(uint32_t)));
+	connect(this, &MainWindow::cellAdded, m_map, &MarbleMap::addCell);
+	connect(this, &MainWindow::cellRemoved, m_map, &MarbleMap::removeCell);
 	connect(m_sidebar->vo(), &VisualizationOptionsWidget::displayCqrCells, m_map, &MarbleMap::displayCqrCells);
 	connect(m_sidebar->vo(), &VisualizationOptionsWidget::colorSchemeChanged, m_map, &MarbleMap::setColorScheme);
 	connect(m_sidebar->vo(), &VisualizationOptionsWidget::cellOpacityChanged, m_map, &MarbleMap::setCellOpacity);
