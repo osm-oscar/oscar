@@ -11,16 +11,23 @@ set(CMAKE_MODULE_PATH
 	${CMAKE_SOURCE_DIR}/vendor/sserialize/cmake/
 )
 
-include(set_highest_cpp)
-include(add_buildtype_lto)
-include(add_buildtype_sanitize_debug)
-include(add_buildtype_ultra)
-include(add_buildtype_ultra_sanitize)
+option(OPTIMIZE_ULTRA "Build oscar-web with lto and aggressive optimization settings for sserialize")
+if (OPTIMIZE_ULTRA)
+	set(LIBOSCAR_NO_DATA_REFCOUNTING_ENABLED TRUE)
+	set(SSERIALIZE_INLINE_IN_LTO_ENABLED TRUE)
+	set(SSERIALIZE_CONTIGUOUS_UBA_ONLY_SOFT_FAIL_ENABLED TRUE)
+	set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+endif()
 
 # set -Wshadow-compatible-local as soon as supported
 set(MY_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wno-unknown-pragmas -Wstrict-overflow=3")
 set(MY_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-unknown-pragmas -Wstrict-overflow=3")# -Wshorten-64-to-32")
-# set(DEBUG_FLAGS "${DEBUG_FLAGS}")#-Wconversion")
+
+option(BUILD_WITH_SANITIZERS "Build binaries with additional instrumentation (address, undefined behaviour, thread) sanitizer" OFF)
+if (BUILD_WITH_SANITIZERS)
+	set(MY_C_FLAGS "${MY_C_FLAGS} -g -fsanitize=address -fsanitize=undefined -fsanitize=thread -fno-omit-frame-pointer")
+	set(MY_CXX_FLAGS "${MY_C_FLAGS} -g -fsanitize=address -fsanitize=undefined -fsanitize=thread -fno-omit-frame-pointer")
+endif()
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MY_C_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MY_CXX_FLAGS}")
