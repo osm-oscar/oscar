@@ -25,8 +25,8 @@ set(MY_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-unknown-pragmas -Wstrict
 
 option(BUILD_WITH_SANITIZERS "Build binaries with additional instrumentation (address, undefined behaviour, thread) sanitizer" OFF)
 if (BUILD_WITH_SANITIZERS)
-	set(MY_C_FLAGS "${MY_C_FLAGS} -g -fsanitize=address -fsanitize=undefined -fsanitize=thread -fno-omit-frame-pointer")
-	set(MY_CXX_FLAGS "${MY_C_FLAGS} -g -fsanitize=address -fsanitize=undefined -fsanitize=thread -fno-omit-frame-pointer")
+	set(MY_C_FLAGS "${MY_C_FLAGS} -g -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer")
+	set(MY_CXX_FLAGS "${MY_C_FLAGS} -g -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer")
 endif()
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MY_C_FLAGS}")
