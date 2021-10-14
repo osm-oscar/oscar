@@ -11,8 +11,8 @@ set(CMAKE_MODULE_PATH
 	${CMAKE_SOURCE_DIR}/vendor/sserialize/cmake/
 )
 
-option(OPTIMIZE_ULTRA "Build oscar-web with lto and aggressive optimization settings for sserialize")
-if (OPTIMIZE_ULTRA)
+option(OSCAR_OPTIMIZE_ULTRA "Build oscar-web with lto and aggressive optimization settings for sserialize")
+if (OSCAR_OPTIMIZE_ULTRA)
 	set(LIBOSCAR_NO_DATA_REFCOUNTING_ENABLED TRUE)
 	set(SSERIALIZE_INLINE_IN_LTO_ENABLED TRUE)
 	set(SSERIALIZE_CONTIGUOUS_UBA_ONLY_SOFT_FAIL_ENABLED TRUE)
@@ -23,8 +23,8 @@ endif()
 set(MY_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wno-unknown-pragmas -Wstrict-overflow=3")
 set(MY_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-unknown-pragmas -Wstrict-overflow=3")# -Wshorten-64-to-32")
 
-option(BUILD_WITH_SANITIZERS "Build binaries with additional instrumentation (address, undefined behaviour, thread) sanitizer" OFF)
-if (BUILD_WITH_SANITIZERS)
+option(OSCAR_BUILD_WITH_SANITIZERS "Build binaries with additional instrumentation (address, undefined behaviour, thread) sanitizer" OFF)
+if (OSCAR_BUILD_WITH_SANITIZERS)
 	set(MY_C_FLAGS "${MY_C_FLAGS} -g -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer")
 	set(MY_CXX_FLAGS "${MY_C_FLAGS} -g -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer")
 endif()
