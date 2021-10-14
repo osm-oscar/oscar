@@ -197,8 +197,9 @@ bool ConsistencyChecker::checkTriangulation() {
 	auto ra = store.regionArrangement();
 	auto gr = ra.grid();
 	auto tds = gr.tds();
-	for(uint32_t i(0), s(tds.faceCount()); i < s; ++i) {
-		auto f = tds.face(i);
+	using FaceId = decltype(tds)::FaceId;
+	for(decltype(tds)::SizeType i(0), s(tds.faceCount()); i < s; ++i) {
+		auto f = tds.face(FaceId(i));
 		auto cn = f.centroid();
 		if (gr.faceId(cn) != f.id()) {
 			std::cout << "Triangulation returns wrong face" << std::endl;
@@ -242,7 +243,7 @@ bool ConsistencyChecker::checkStore() {
 		if (!item.isRegion()) {
 			auto itemCells = item.cells();
 			std::set<uint32_t> cellIds;
-			item.geoShape().visitPoints([this,&item,&cellIds,&ra](const sserialize::Static::spatial::GeoPoint & gp) {
+			item.geoShape().visitPoints([&cellIds,&ra](const sserialize::Static::spatial::GeoPoint & gp) {
 				uint32_t cellId = ra.cellId(gp);
 				if (cellId == ra.NullCellId) {
 					cellId = 0;
