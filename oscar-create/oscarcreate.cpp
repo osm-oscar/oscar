@@ -90,7 +90,7 @@ int main(int argc, char ** argv) {
 		
 		sserialize::Static::ItemIndexStore idxStore;;
 		try {
-			idxStore = sserialize::Static::ItemIndexStore( sserialize::UByteArrayAdapter::openRo(idxStoreFileName, false) );
+			idxStore = sserialize::Static::ItemIndexStore( sserialize::UByteArrayAdapter::open(idxStoreFileName) );
 		}
 		catch (sserialize::Exception & e) {
 			std::cerr << "Failed to initialize index at " << idxStoreFileName << " with error message: " << e.what();
@@ -122,7 +122,7 @@ int main(int argc, char ** argv) {
 
 	//open the store
 	try {
-		state.storeData = sserialize::UByteArrayAdapter::openRo(storeFileName, false);
+		state.storeData = sserialize::UByteArrayAdapter::open(storeFileName);
 		#ifdef WITH_OSCAR_CREATE_NO_DATA_REFCOUNTING
 		state.storeData.disableRefCounting();
 		#endif
