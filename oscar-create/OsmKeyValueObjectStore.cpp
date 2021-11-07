@@ -682,8 +682,6 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 	//BUG:this may produce a unrefined triangulation due to 
 	
 	ct.trs.initGrid(ct.cc->rc.polyStoreLatCount, ct.cc->rc.polyStoreLonCount);
-	ct.trs.assignCellIds(ct.cc->numThreads);
-	
 	switch(ct.cc->rc.cellRefineCfg.type) { //refine cells
 	case CellRefinementConfig::T_TRIANGLE_COUNT:
 		ct.trs.refineCells(
