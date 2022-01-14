@@ -678,8 +678,9 @@ void OsmKeyValueObjectStore::createRegionStore(Context & ct) {
 		};
 		ct.trs.snapTriangulation(ct.cc->geometryCleanType, removedEdges);
 		std::cout << "Could not re-add " << num_removed_edges << " edges" << std::endl;
+		ct.trs.assignCellIds(ct.cc->numThreads);
 	}
-	//BUG:this may produce a unrefined triangulation due to 
+	//BUG:We may have an unrefined triangulation now due to the snapping algo
 	
 	ct.trs.initGrid(ct.cc->rc.polyStoreLatCount, ct.cc->rc.polyStoreLonCount);
 	switch(ct.cc->rc.cellRefineCfg.type) { //refine cells
