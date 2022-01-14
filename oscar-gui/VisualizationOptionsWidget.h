@@ -18,7 +18,7 @@ signals:
 	void displayCqrCells(bool enabled);
 	void colorSchemeChanged(int scheme);
 	void cellOpacityChanged(int value);
-private slots:
+public slots:
 	void ps_displayCqrCells(int index);
 	void ps_colorSchemeChanged(int index);
 private:
