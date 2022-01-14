@@ -29,6 +29,7 @@ bool ConsistencyChecker::checkGh() {
 	const sserialize::Static::ItemIndexStore & indexStore = cmp.indexStore();
 	const sserialize::Static::spatial::GeoHierarchy & gh = store.geoHierarchy();
 	uint32_t ghSize = gh.regionSize();
+	uint32_t cellSize = gh.cellSize();
 	sserialize::ProgressInfo pinfo;
 	bool allOk = true;
 	bool ok = true;
@@ -176,6 +177,26 @@ bool ConsistencyChecker::checkGh() {
 		}
 		#pragma omp critical
 		pinfo(i);
+	}
+	pinfo.end();
+	
+	pinfo.begin(cellSize, "ConsistencyChecker::GH: cell-item relations");
+	{
+		std::vector<std::vector<sserialize::ItemIndex::value_type>> cellItems;
+		for(uint32_t itemId(0), s(store.size()); itemId < s; ++itemId) {
+				auto item = store.at(itemId);
+				auto itemCells = item.payload().cells();
+				for(auto cellId : itemCells) {
+					cellItems.at(cellId).push_back(itemId);
+				}
+		}
+		for(uint32_t cellId = 0; cellId < cellSize; ++cellId) {
+			sserialize::ItemIndex tmp = indexStore.at( gh.cellItemsPtr(cellId) );
+			if(tmp != cellItems.at(cellId)) {
+				std::cerr << "Cell " << cellId << " has missmatched cell items" << std::endl;
+				allOk = false;
+			}
+		}
 	}
 	pinfo.end();
 	
