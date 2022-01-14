@@ -1055,7 +1055,7 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 	while (ct.inFile.hasNext()) {
 		++wct.roundsToProcess;
 		//save current position
-		osmpbf::OffsetType filePos = ct.inFile.dataPosition();
+		auto filePos = ct.inFile.dataPosition();
 
 		//first get the node refs for our ways
 		uint32_t blobsRead = osmpbf::parseFileCPPThreads(ct.inFile, [&ct, &wct](osmpbf::PrimitiveBlockInputAdaptor & pbi) -> bool {
@@ -1089,6 +1089,7 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 		
 		//assemble the ways and put them into storage
 		ct.inFile.dataSeek(filePos);
+		SSERIALIZE_CHEAP_ASSERT_EQUAL(ct.inFile.dataPosition(), filePos);
 		#ifdef SSERIALIZE_CHEAP_ASSERT_ENABLED
 		uint32_t tmp =
 		#endif
@@ -1168,8 +1169,9 @@ void OsmKeyValueObjectStore::insertItems(OsmKeyValueObjectStore::Context& ct) {
 			//flush items to store
 			ct.push_back(tmpItems.begin(), tmpItems.end(), true);
 		}, ct.cc->numThreads, 1, false, blobsRead);
-		SSERIALIZE_CHEAP_ASSERT_EQUAL(blobsRead, tmp);
 		SSERIALIZE_CHEAP_ASSERT_EQUAL(afterFilePos, ct.inFile.dataPosition());
+		SSERIALIZE_CHEAP_ASSERT_EQUAL(blobsRead, tmp);
+		
 		
 		//clear node table
 		ct.nodesToStore.clear();
