@@ -1,0 +1,14 @@
+{
+  "include": [
+    "common.json",
+    "store_all.json",
+    "store_notriangrefine.json",
+    "store_cellsplit1k.json",
+    "store_threads8.json",
+    "store_fullregionindex.json",
+    "oomgeocell.json",
+    "oomgeocell_substring.json",
+    "oomgeocell_threads8.json",
+    "oomgeocell_foreignobjects.json"
+  ]
+}
